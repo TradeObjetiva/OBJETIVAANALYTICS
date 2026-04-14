@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas Agência Objetiva</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Error', err));
+            });
+        }
+    </script>
+    <!-- SweetAlert2 for Global Notifications -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Topbar for Navigation -->
+        <header class="top-nav">
+            <div class="logo-area">
+                <div class="logo-icon">O</div>
+                <h1>Objetiva<span>Hub</span></h1>
+            </div>
+
+            <nav class="tabs" id="tabs">
+                <button class="tab-btn active" data-target="home">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Dashboard
+                </button>
+                <button class="tab-btn" data-target="relatorio">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Relatórios
+                </button>
+                <button class="tab-btn" data-target="cartas">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    Cartas
+                </button>
+                <button class="tab-btn" data-target="roteiro">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Roteiro
+                </button>
+                <button class="tab-btn" data-target="analytics">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Analytics
+                </button>
+            </nav>
+
+            <div class="nav-actions">
+                <button id="theme-toggle" class="action-btn" title="Alternar Tema">
+                    <svg class="sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+                <div class="user-profile">
+                    <div class="avatar">AO</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-area">
+            <!-- Home / Dashboard View -->
+            <div class="view-container active" id="home">
+                <div class="dashboard-grid">
+                    <section class="welcome-hero">
+                        <h2>Bem-vindo ao Objetiva<span>Hub</span></h2>
+                        <p>Selecione uma ferramenta no menu acima ou continue de onde parou.</p>
+                        <div class="stats-row">
+                            <div class="stat-card">
+                                <span class="label">Sistemas Ativos</span>
+                                <strong class="value">4</strong>
+                            </div>
+                            <div class="stat-card">
+                                <span class="label">Status Global</span>
+                                <strong class="value pulse">Online</strong>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="history-panel">
+                        <div class="panel-header">
+                            <h3>Atividades Recentes</h3>
+                            <button class="text-btn">Limpar Histórico</button>
+                        </div>
+                        <div class="history-list" id="global-history">
+                            <div class="empty-state">
+                                <p>Nenhuma atividade registrada ainda.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Iframe Containers -->
+            <div class="view-container" id="relatorio">
+                <iframe src="sistema de automatização de relatório/index.html" frameborder="0"></iframe>
+            </div>
+            <div class="view-container" id="cartas">
+                <iframe src="sistema de criação de cartas de loja/index.html" frameborder="0"></iframe>
+            </div>
+            <div class="view-container" id="analytics">
+                <iframe src="sistema de inteligencia de cobertura/index.html" frameborder="0"></iframe>
+            </div>
+            <div class="view-container" id="roteiro">
+                <iframe src="sistema de roteiro simplificado/index.html" frameborder="0"></iframe>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

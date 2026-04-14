@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O+ Analytics - Inteligência de Cobertura</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Analytics Assets -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Leaflet for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- jsPDF for Report Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="analytics-container">
+        <header class="page-header">
+            <div class="header-info">
+                <h1>O+ Analytics</h1>
+                <p>Inteligência de Cobertura e Tomada de Decisão</p>
+            </div>
+            <div class="header-actions">
+                <button id="exportCsvBtn" class="secondary-btn" style="display: none;">📊 Baixar Relação de Cobertura</button>
+                <button id="exportBtn" class="secondary-btn" style="display: none;">📄 Gerar Relatório PDF</button>
+                <button id="uploadBtn" class="primary-btn">Importar Planilha</button>
+                <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" hidden>
+            </div>
+        </header>
+
+        <div id="welcomeScreen" class="welcome-screen">
+            <div class="empty-icon">📊</div>
+            <h2>Aguardando Dados</h2>
+            <p>Importe sua planilha de "Roteiro vs Realizado" para gerar os insights de cobertura.</p>
+        </div>
+
+        <div id="dashboardContent" class="dashboard-content" style="display: none;">
+            <!-- Summary Slots -->
+            <div class="stats-grid">
+                <div class="stat-card critical">
+                    <span class="label">🚨 Pontos Críticos (Acima de 7 dias)</span>
+                    <strong id="criticalPoints" class="value">0</strong>
+                </div>
+                <div class="stat-card">
+                    <span class="label">Lojas Monitoradas</span>
+                    <strong id="monitoredStores" class="value">0</strong>
+                </div>
+                <div class="stat-card">
+                    <span class="label">Total Visitas Realizadas</span>
+                    <strong id="totalVisits" class="value">0</strong>
+                </div>
+            </div>
+
+            <div class="main-visuals">
+                <div id="mapContainer" class="chart-container map-box">
+                    <div class="map-controls">
+                        <h3>Visualização Geográfica de Cobertura</h3>
+                        <div class="controls-group">
+                            <select id="mapFilter" class="map-select">
+                                <option value="all">Ver Todas as Lojas</option>
+                                <option value="critical">Apenas Críticas</option>
+                                <option value="partial">Apenas Parciais</option>
+                                <option value="ok">Apenas 100%</option>
+                            </select>
+                            <button id="fullscreenBtn" class="icon-btn" title="Tela Cheia">⛶</button>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-container">
+                    <h3>Tendência de Cobertura Diária</h3>
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Performance por Marca/Cliente</h3>
+                    <canvas id="brandChart"></canvas>
+                </div>
+            </div>
+
+            <div class="rankings-row">
+                <div class="ranking-panel best">
+                    <h3>🏆 Top 10 - Melhor Execução</h3>
+                    <div id="bestList" class="rank-list"></div>
+                </div>
+                <div class="ranking-panel worst">
+                    <h3>⚠️ Top 10 - Alerta de Cobertura</h3>
+                    <div id="worstList" class="rank-list"></div>
+                </div>
+            </div>
+
+            <div class="insights-grid">
+                <section class="insight-panel">
+                    <h3>🚩 Lojas em Situação Crítica</h3>
+                    <div id="criticalList" class="data-list">
+                        <!-- Items injected by JS -->
+                    </div>
+                </section>
+
+                <section class="insight-panel">
+                    <h3>💡 Sugestões de Tomada de Decisão</h3>
+                    <div id="decisionList" class="decision-list">
+                        <!-- Items injected by JS -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
