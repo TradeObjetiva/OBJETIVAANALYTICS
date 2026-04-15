@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Map filtering is now handled dynamically inside initMap()
 
+    let globalStatsReference = null;
+
     function processData(data) {
         if (!data || data.length === 0) return;
         welcomeScreen.style.display = 'none';
@@ -117,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         data.forEach(row => {
             const formName = String(row['Formulário'] || '').trim().toUpperCase();
-            if (ignoredForms.includes(formName)) return; // Ignora tarefas administrativas
+            if (ignoredForms.includes(formName)) return; 
 
             const isDone = String(row['Feito']).toLowerCase() === 'sim';
             const agent = String(row['Agente'] || 'Indefinido').trim();
@@ -131,41 +133,37 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isDone) stats.doneTasks++;
             stats.monitoredStores.add(local);
 
-            // Time parsing
             const timeParts = duration.split(':');
             if (timeParts.length === 3) {
                 const secs = (parseInt(timeParts[0]) * 3600) + (parseInt(timeParts[1]) * 60) + parseInt(timeParts[2]);
                 stats.totalDuration += secs;
             }
 
-            // Grouping by Promoter
             if (!stats.promoters[agent]) stats.promoters[agent] = { name: agent, total: 0, done: 0 };
             stats.promoters[agent].total++;
             if (isDone) stats.promoters[agent].done++;
 
-            // Grouping by Client (Brand)
             if (!stats.clients[client]) stats.clients[client] = { name: client, total: 0, done: 0 };
             stats.clients[client].total++;
             if (isDone) stats.clients[client].done++;
 
-            // Grouping by Store (for map and criticality)
             if (!stats.stores[local]) {
-                stats.stores[local] = { name: local, network, lat, lng, lastVisit: null, taskCount: 0 };
+                stats.stores[local] = { name: local, network, lat, lng, done: 0, total: 0 };
             }
-            stats.stores[local].taskCount++;
-            if (isDone) stats.stores[local].lastVisit = new Date(); // In a real case, we'd parse 'Fim'
+            stats.stores[local].total++;
+            if (isDone) stats.stores[local].done++;
 
-            // Grouping by Network
             if (!stats.networks[network]) stats.networks[network] = { name: network, total: 0, done: 0 };
             stats.networks[network].total++;
             if (isDone) stats.networks[network].done++;
         });
 
+        globalStatsReference = stats;
+
         const effectiveness = Math.round((stats.doneTasks / stats.totalTasks) * 100);
         const avgSecs = stats.doneTasks > 0 ? stats.totalDuration / stats.doneTasks : 0;
         const avgFormatted = `${Math.floor(avgSecs / 60)}m ${Math.floor(avgSecs % 60)}s`;
 
-        // Update UI
         document.getElementById('globalEffectiveness').textContent = `${effectiveness}%`;
         document.getElementById('monitoredStores').textContent = stats.monitoredStores.size;
         document.getElementById('avgDuration').textContent = avgFormatted;
@@ -178,9 +176,61 @@ document.addEventListener('DOMContentLoaded', () => {
         renderNetworkSummary(stats.networks);
     }
 
+    // --- Helpers de Exportação ---
+    window.exportToCsv = function(filename, rows) {
+        const processRow = (row) => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';');
+        const csvContent = "\uFEFF" + rows.map(processRow).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", filename);
+        link.click();
+    };
+
+    window.exportPromoterStats = () => {
+        const rows = [['Promotor', 'Tarefas Totais', 'Concluídas', 'Efetividade %']];
+        Object.values(globalStatsReference.promoters).forEach(p => {
+            rows.push([p.name, p.total, p.done, Math.round((p.done/p.total)*100) + '%']);
+        });
+        exportToCsv('Efetividade_Promotores.csv', rows);
+    };
+
+    window.exportBrandStats = () => {
+        const rows = [['Cliente/Marca', 'Tarefas Totais', 'Concluídas', 'Execução %']];
+        Object.values(globalStatsReference.clients).forEach(c => {
+            rows.push([c.name, c.total, c.done, Math.round((c.done/c.total)*100) + '%']);
+        });
+        exportToCsv('Execucao_Marcas.csv', rows);
+    };
+
+    window.exportCriticalStores = () => {
+        const rows = [['Loja', 'Rede', 'Motivo']];
+        const criticals = Object.values(globalStatsReference.stores).filter(s => s.done === 0);
+        criticals.forEach(s => rows.push([s.name, s.network, 'Zero Execução']));
+        exportToCsv('Lojas_Sem_Visita.csv', rows);
+    };
+
+    window.exportPromoterVolume = () => {
+        const rows = [['Agente', 'Tarefas Realizadas']];
+        Object.values(globalStatsReference.promoters).forEach(p => rows.push([p.name, p.done]));
+        exportToCsv('Produtividade_Agentes.csv', rows);
+    };
+
+    window.exportNetworkSummary = () => {
+        const rows = [['Rede', 'Tarefas Totais', 'Concluídas', 'Efetividade']];
+        Object.values(globalStatsReference.networks).forEach(n => {
+            rows.push([n.name, n.total, n.done, Math.round((n.done/n.total)*100) + '%']);
+        });
+        exportToCsv('Resumo_Por_Rede.csv', rows);
+    };
+
+    window.toggleExpand = (chartId) => {
+        const container = document.getElementById(chartId).parentElement;
+        container.classList.toggle('expanded-chart');
+    };
+
     function initMap(data) {
         if (map) map.remove();
-        // Fallback or dynamic center
         const firstWithPos = data.find(d => !isNaN(parseFloat(d.Lat)));
         const center = firstWithPos ? [parseFloat(firstWithPos.Lat), parseFloat(firstWithPos.Lng)] : [-22.9068, -43.1729];
         
@@ -194,22 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isNaN(lat) && !isNaN(lng)) {
                 const isDone = String(row['Feito']).toLowerCase() === 'sim';
                 const color = isDone ? '#10B981' : '#f43f5e';
-                
-                const marker = L.circleMarker([lat, lng], {
-                    radius: 6,
-                    fillColor: color,
-                    color: "#fff",
-                    weight: 1,
-                    fillOpacity: 0.8,
-                    isDone: isDone
-                }).addTo(map);
-                
+                const marker = L.circleMarker([lat, lng], { radius: 6, fillColor: color, color: "#fff", weight: 1, fillOpacity: 0.8, isDone: isDone }).addTo(map);
                 marker.bindPopup(`<b>${row['Local']}</b><br>Agente: ${row['Agente']}<br>Tarefa: ${row['Formulário']}<br>Status: ${isDone ? 'Concluído' : 'Pendente'}`);
                 markers.push(marker);
             }
         });
 
-        // Update Map Filter logic
         const mapFilter = document.getElementById('mapFilter');
         mapFilter.onchange = (e) => {
             const val = e.target.value;
@@ -225,15 +265,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCharts(stats) {
         const promoterCtx = document.getElementById('promoterChart').getContext('2d');
         const brandCtx = document.getElementById('brandChart').getContext('2d');
-        if (chartEvolution) chartEvolution.destroy(); // Reuse the variable for promoterChart
+        if (chartEvolution) chartEvolution.destroy();
         if (chartBrand) chartBrand.destroy();
 
         const sortedPromoters = Object.values(stats.promoters)
-            .sort((a, b) => (b.done / b.total) - (a.done / a.total))
-            .slice(0, 10);
+            .sort((a, b) => (b.done / b.total) - (a.done / a.total));
 
         chartEvolution = new Chart(promoterCtx, {
             type: 'bar',
+            plugins: [ChartDataLabels],
             data: {
                 labels: sortedPromoters.map(p => p.name),
                 datasets: [{
@@ -243,14 +283,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderRadius: 6
                 }]
             },
-            options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+            options: { 
+                indexAxis: 'y', 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: { color: '#fff', anchor: 'end', align: 'left', font: { weight: 'bold' }, formatter: (v) => v + '%' }
+                },
+                scales: { x: { max: 110, grid: { display: false } } }
+            }
         });
 
-        const sortedClients = Object.values(stats.clients)
-            .sort((a,b) => (b.done/b.total) - (a.done/a.total));
-
+        const sortedClients = Object.values(stats.clients).sort((a,b) => (b.done/b.total) - (a.done/a.total));
         chartBrand = new Chart(brandCtx, {
             type: 'bar',
+            plugins: [ChartDataLabels],
             data: {
                 labels: sortedClients.map(c => c.name),
                 datasets: [{
@@ -260,7 +307,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     borderRadius: 6
                 }]
             },
-            options: { plugins: { legend: { display: false } } }
+            options: { 
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: { color: '#fff', anchor: 'end', align: 'top', font: { weight: 'bold' }, formatter: (v) => v + '%' }
+                },
+                scales: { y: { max: 110 } }
+            }
         });
     }
 
@@ -270,22 +323,23 @@ document.addEventListener('DOMContentLoaded', () => {
         criticalList.innerHTML = '';
         bestPromoters.innerHTML = '';
 
-        // Stores with most pending tasks
-        const storesArray = Object.values(stats.stores)
-            .map(s => {
-                const tasks = Object.values(stats.stores).filter(x => x.name === s.name); // Simplified, in real use we'd count correctly
-                // For this demo, let's just use the stores from the raw data that have 'Feito' === 'Não'
-                return s;
-            })
-            .slice(0, 10);
+        // LOJAS SEM VISITA: done === 0
+        const criticals = Object.values(stats.stores)
+            .filter(s => s.done === 0)
+            .sort((a, b) => a.name.localeCompare(b.name));
 
-        storesArray.forEach(s => {
-            criticalList.innerHTML += `<div class="rank-item"><span>${s.name}</span><span class="score">${s.network}</span></div>`;
+        criticals.forEach(s => {
+            criticalList.innerHTML += `
+                <div class="rank-item">
+                    <span>${s.name}</span>
+                    <span class="score" style="color: #f43f5e;">ZERO EXECUÇÃO</span>
+                </div>`;
         });
+
+        if (criticals.length === 0) criticalList.innerHTML = '<div class="rank-item"><span>Todas as lojas foram visitadas</span></div>';
 
         Object.values(stats.promoters)
             .sort((a, b) => b.done - a.done)
-            .slice(0, 10)
             .forEach(p => {
                 bestPromoters.innerHTML += `<div class="rank-item"><span>${p.name}</span><span class="score">${p.done} feitos</span></div>`;
             });
@@ -295,15 +349,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const decisionList = document.getElementById('decisionList');
         decisionList.innerHTML = '';
         const insights = [];
-
         if (eff < 70) insights.push({ icon: '⚠️', text: `A efetividade global está baixa (${eff}%). Verifique os agentes com maior volume de pendências.` });
-        
         const topGargalo = Object.values(stats.clients).sort((a,b) => (a.done/a.total) - (b.done/b.total))[0];
-        if (topGargalo) insights.push({ icon: '🏷️', text: `O cliente "${topGargalo.name}" possui a menor taxa de execução. Possível gargalo logístico ou de abastecimento.` });
-
+        if (topGargalo) insights.push({ icon: '🏷️', text: `O cliente "${topGargalo.name}" possui a menor taxa de execução.` });
         const bestAgente = Object.values(stats.promoters).sort((a,b) => b.done - a.done)[0];
-        if (bestAgente) insights.push({ icon: '🏆', text: `${bestAgente.name} é o agente mais produtivo hoje com ${bestAgente.done} tarefas concluídas.` });
-
+        if (bestAgente) insights.push({ icon: '🏆', text: `${bestAgente.name} é o agente mais produtivo com ${bestAgente.done} tarefas.` });
         insights.forEach(i => {
             const div = document.createElement('div');
             div.className = 'decision-item';
@@ -317,14 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
         list.innerHTML = '';
         Object.values(networks).sort((a,b) => b.total - a.total).forEach(n => {
             const perc = Math.round((n.done / n.total) * 100);
-            list.innerHTML += `
-                <div class="activity-item">
-                    <div class="activity-info">
-                        <strong>${n.name}</strong><br>
-                        <small>${n.done}/${n.total} tarefas • ${perc}%</small>
-                    </div>
-                </div>
-            `;
+            list.innerHTML += `<div class="activity-item"><div class="activity-info"><strong>${n.name}</strong><br><small>${n.done}/${n.total} tarefas • ${perc}%</small></div></div>`;
         });
     }
+});
 });

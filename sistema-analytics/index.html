@@ -77,37 +77,61 @@
 
             <div class="charts-row">
                 <div class="chart-container">
-                    <h3>Efetividade por Promotor (Agente)</h3>
-                    <canvas id="promoterChart"></canvas>
+                    <div class="chart-header">
+                        <h3>Efetividade por Promotor</h3>
+                        <div class="header-actions">
+                            <button class="expand-btn" onclick="toggleExpand('promoterChart')">🔍 Expandir</button>
+                            <button class="export-btn-mini" onclick="exportPromoterStats()">📊 Exportar</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="promoterChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-container">
-                    <h3>Execução por Cliente (Marca)</h3>
-                    <canvas id="brandChart"></canvas>
+                    <div class="chart-header">
+                        <h3>Execução por Cliente</h3>
+                        <button class="export-btn-mini" onclick="exportBrandStats()">📊 Exportar</button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="brandChart"></canvas>
+                    </div>
                 </div>
             </div>
 
             <div class="rankings-row">
                 <div class="ranking-panel worst">
-                    <h3>🚨 Lojas sem Visita (Mais Críticas)</h3>
-                    <div id="criticalStoresList" class="rank-list"></div>
+                    <div class="chart-header">
+                        <h3>🚨 Lojas sem Visita (Zero Execução)</h3>
+                        <button class="export-btn-mini" onclick="exportCriticalStores()">📊 Exportar</button>
+                    </div>
+                    <div id="criticalStoresList" class="rank-list scrollable"></div>
                 </div>
                 <div class="ranking-panel best">
-                    <h3>👷 Top Promotores (Produtividade)</h3>
-                    <div id="bestPromotersList" class="rank-list"></div>
+                    <div class="chart-header">
+                        <h3>👷 Produtividade dos Agentes</h3>
+                        <button class="export-btn-mini" onclick="exportPromoterVolume()">📊 Exportar</button>
+                    </div>
+                    <div id="bestPromotersList" class="rank-list scrollable"></div>
                 </div>
             </div>
 
             <div class="insights-grid">
                 <section class="insight-panel">
-                    <h3>💡 Insights de Produtividade</h3>
+                    <div class="chart-header">
+                        <h3>💡 Insights de Produtividade</h3>
+                    </div>
                     <div id="decisionList" class="decision-list">
                         <!-- Items injected by JS -->
                     </div>
                 </section>
                 
                 <section class="insight-panel">
-                    <h3>📂 Resumo por Rede</h3>
-                    <div id="networkSummary" class="data-list">
+                    <div class="chart-header">
+                        <h3>📂 Resumo por Rede</h3>
+                        <button class="export-btn-mini" onclick="exportNetworkSummary()">📊 Exportar</button>
+                    </div>
+                    <div id="networkSummary" class="data-list scrollable">
                         <!-- Items injected by JS -->
                     </div>
                 </section>
