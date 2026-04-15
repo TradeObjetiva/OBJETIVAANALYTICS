@@ -40,30 +40,33 @@
         <div id="dashboardContent" class="dashboard-content" style="display: none;">
             <!-- Summary Slots -->
             <div class="stats-grid">
-                <div class="stat-card critical">
-                    <span class="label">🚨 Pontos Críticos (Acima de 7 dias)</span>
-                    <strong id="criticalPoints" class="value">0</strong>
+                <div class="stat-card">
+                    <span class="label">🎯 Efetividade Global</span>
+                    <strong id="globalEffectiveness" class="value">0%</strong>
                 </div>
                 <div class="stat-card">
-                    <span class="label">Lojas Monitoradas</span>
+                    <span class="label">📍 Lojas Visitadas</span>
                     <strong id="monitoredStores" class="value">0</strong>
                 </div>
+                <div class="stat-card critical">
+                    <span class="label">🕒 Méd. Tempo em Loja</span>
+                    <strong id="avgDuration" class="value">00:00</strong>
+                </div>
                 <div class="stat-card">
-                    <span class="label">Total Visitas Realizadas</span>
-                    <strong id="totalVisits" class="value">0</strong>
+                    <span class="label">📝 Total de Tarefas</span>
+                    <strong id="totalTasks" class="value">0</strong>
                 </div>
             </div>
 
             <div class="main-visuals">
                 <div id="mapContainer" class="chart-container map-box">
                     <div class="map-controls">
-                        <h3>Visualização Geográfica de Cobertura</h3>
+                        <h3>Visualização Operacional de Campo</h3>
                         <div class="controls-group">
                             <select id="mapFilter" class="map-select">
-                                <option value="all">Ver Todas as Lojas</option>
-                                <option value="critical">Apenas Críticas</option>
-                                <option value="partial">Apenas Parciais</option>
-                                <option value="ok">Apenas 100%</option>
+                                <option value="all">Ver Todas as Tarefas</option>
+                                <option value="done">Apenas Realizadas</option>
+                                <option value="pending">Apenas Pendentes</option>
                             </select>
                             <button id="fullscreenBtn" class="icon-btn" title="Tela Cheia">⛶</button>
                         </div>
@@ -74,37 +77,37 @@
 
             <div class="charts-row">
                 <div class="chart-container">
-                    <h3>Tendência de Cobertura Diária</h3>
-                    <canvas id="evolutionChart"></canvas>
+                    <h3>Efetividade por Promotor (Agente)</h3>
+                    <canvas id="promoterChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>Performance por Marca/Cliente</h3>
+                    <h3>Execução por Cliente (Marca)</h3>
                     <canvas id="brandChart"></canvas>
                 </div>
             </div>
 
             <div class="rankings-row">
-                <div class="ranking-panel best">
-                    <h3>🏆 Top 10 - Melhor Execução</h3>
-                    <div id="bestList" class="rank-list"></div>
-                </div>
                 <div class="ranking-panel worst">
-                    <h3>⚠️ Top 10 - Alerta de Cobertura</h3>
-                    <div id="worstList" class="rank-list"></div>
+                    <h3>🚨 Lojas sem Visita (Mais Críticas)</h3>
+                    <div id="criticalStoresList" class="rank-list"></div>
+                </div>
+                <div class="ranking-panel best">
+                    <h3>👷 Top Promotores (Produtividade)</h3>
+                    <div id="bestPromotersList" class="rank-list"></div>
                 </div>
             </div>
 
             <div class="insights-grid">
                 <section class="insight-panel">
-                    <h3>🚩 Lojas em Situação Crítica</h3>
-                    <div id="criticalList" class="data-list">
+                    <h3>💡 Insights de Produtividade</h3>
+                    <div id="decisionList" class="decision-list">
                         <!-- Items injected by JS -->
                     </div>
                 </section>
-
+                
                 <section class="insight-panel">
-                    <h3>💡 Sugestões de Tomada de Decisão</h3>
-                    <div id="decisionList" class="decision-list">
+                    <h3>📂 Resumo por Rede</h3>
+                    <div id="networkSummary" class="data-list">
                         <!-- Items injected by JS -->
                     </div>
                 </section>
