@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const excelFile = document.getElementById('excelFile');
     const uploadBtn = document.getElementById('uploadBtn');
     const exportBtn = document.getElementById('exportBtn');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -7,15 +8,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeScreen = document.getElementById('welcomeScreen');
     const dashboardContent = document.getElementById('dashboardContent');
 
-    const excelFile = document.getElementById('excelFile');
-    
     let chartEvolution = null;
     let chartBrand = null;
     let map = null;
-    let markers = []; // Global marker tracking for filtering
-    let globalStoreList = []; // For exports
+    let markers = []; 
+    let globalStoreList = []; 
 
-    uploadBtn.addEventListener('click', () => excelFile.click());
+    if (uploadBtn && excelFile) {
+        uploadBtn.addEventListener('click', () => {
+            console.log('Botão de upload clicado');
+            excelFile.click();
+        });
+    } else {
+        console.warn('Botões de upload não encontrados (aguardando...)');
+    }
 
     excelFile.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -307,5 +313,4 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         });
     }
-});
 });
