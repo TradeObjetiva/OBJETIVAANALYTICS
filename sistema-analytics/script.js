@@ -1,3 +1,46 @@
+// --- Globals for File Handling (Available for inline HTML events) ---
+window.handleDragOver = (e) => {
+    e.preventDefault();
+    document.getElementById('welcomeScreen')?.classList.add('drag-over');
+};
+
+window.handleDragLeave = () => {
+    document.getElementById('welcomeScreen')?.classList.remove('drag-over');
+};
+
+window.handleDrop = (e) => {
+    e.preventDefault();
+    document.getElementById('welcomeScreen')?.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) window.handleFile(file);
+};
+
+window.handleFile = (file) => {
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) loader.style.display = 'flex';
+
+    setTimeout(() => {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(firstSheet);
+                console.log('Dados importados:', json.length, 'linhas');
+                // Chamamos a função processData que está no escopo global ou local
+                window.processDataInternal(json);
+            } catch (err) {
+                console.error('Erro ao ler planilha:', err);
+                alert('Erro ao processar arquivo. Verifique se é um Excel válido.');
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }, 100);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const excelFile = document.getElementById('excelFile');
     const uploadBtn = document.getElementById('uploadBtn');
@@ -12,119 +55,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let chartBrand = null;
     let map = null;
     let markers = []; 
-    let globalStoreList = []; 
+    let globalStatsReference = null;
 
     if (uploadBtn && excelFile) {
-        uploadBtn.addEventListener('click', () => {
-            console.log('Botão de upload clicado');
+        uploadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             excelFile.click();
         });
     }
 
-    // --- Drag and Drop Handlers ---
-    window.handleDragOver = (e) => {
-        e.preventDefault();
-        welcomeScreen.classList.add('drag-over');
-    };
-
-    window.handleDragLeave = () => {
-        welcomeScreen.classList.remove('drag-over');
-    };
-
-    window.handleDrop = (e) => {
-        e.preventDefault();
-        welcomeScreen.classList.remove('drag-over');
-        const file = e.dataTransfer.files[0];
-        if (file) handleFile(file);
-    };
-
-    excelFile.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) handleFile(file);
-    });
-
-    function handleFile(file) {
-        const loader = document.getElementById('loadingOverlay');
-        loader.style.display = 'flex';
-
-        // Usamos setTimeout para permitir que o browser renderize o loader antes do parsing pesado
-        setTimeout(() => {
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(firstSheet);
-                    processData(json);
-                } catch (err) {
-                    console.error('Erro ao ler planilha:', err);
-                    alert('Erro ao processar arquivo. Verifique se é um Excel válido.');
-                } finally {
-                    loader.style.display = 'none';
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }, 100);
+    if (excelFile) {
+        excelFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) window.handleFile(file);
+        });
     }
 
-    exportBtn.addEventListener('click', async () => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const element = document.querySelector('.analytics-container');
-        
-        const canvas = await html2canvas(element, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = 190;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        doc.setFontSize(18);
-        doc.text("Relatório de Cobertura - ObjetivaHub", 10, 10);
-        doc.addImage(imgData, 'PNG', 10, 20, imgWidth, imgHeight);
-        doc.save(`Relatorio_ObjetivaHub_${new Date().toLocaleDateString()}.pdf`);
-    });
-
-    exportCsvBtn.addEventListener('click', () => {
-        if (globalStoreList.length === 0) return;
-        
-        const headers = ["Loja", "Rede", "Planejado", "Realizado", "Cobertura %"];
-        const csvContent = [
-            headers.join(";"),
-            ...globalStoreList.map(s => [
-                s.name, 
-                s.rede, 
-                s.planned, 
-                s.realized, 
-                `${Math.round((s.realized/s.planned)*100)}%`
-            ].join(";"))
-        ].join("\n");
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", `Cobertura_Por_Loja_${new Date().toLocaleDateString()}.csv`);
-        link.click();
-    });
-
-    fullscreenBtn.addEventListener('click', () => {
-        const container = document.getElementById('mapContainer');
-        if (!document.fullscreenElement) {
-            container.requestFullscreen();
-        } else {
-            document.exitFullscreen();
-        }
-    });
-
-    // Map filtering is now handled dynamically inside initMap()
-
-    let globalStatsReference = null;
-
-    function processData(data) {
+    // Tornamos o processData acessível para o handleFile global
+    window.processDataInternal = function(data) {
         if (!data || data.length === 0) return;
         welcomeScreen.style.display = 'none';
         dashboardContent.style.display = 'block';
         exportBtn.style.display = 'block';
-        exportCsvBtn.style.display = 'block';
+        // Ocultamos botões legados se existirem
+        if(exportCsvBtn) exportCsvBtn.style.display = 'none';
 
         const stats = {
             totalTasks: data.length,
@@ -205,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderRankings(stats);
         renderInsights(effectiveness, stats);
         renderNetworkSummary(stats.networks);
-    }
+    };
 
     // --- Helpers de Exportação ---
     window.exportToCsv = function(filename, rows) {
@@ -281,16 +235,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        const mapFilter = document.getElementById('mapFilter');
-        mapFilter.onchange = (e) => {
-            const val = e.target.value;
-            markers.forEach(m => {
-                if (val === 'all') m.addTo(map);
-                else if (val === 'done' && m.options.isDone) m.addTo(map);
-                else if (val === 'pending' && !m.options.isDone) m.addTo(map);
-                else map.removeLayer(m);
-            });
-        };
+        if(mapFilter) {
+            mapFilter.onchange = (e) => {
+                const val = e.target.value;
+                markers.forEach(m => {
+                    if (val === 'all') m.addTo(map);
+                    else if (val === 'done' && m.options.isDone) m.addTo(map);
+                    else if (val === 'pending' && !m.options.isDone) m.addTo(map);
+                    else map.removeLayer(m);
+                });
+            };
+        }
     }
 
     function renderCharts(stats) {
@@ -354,7 +309,6 @@ document.addEventListener('DOMContentLoaded', () => {
         criticalList.innerHTML = '';
         bestPromoters.innerHTML = '';
 
-        // LOJAS SEM VISITA: done === 0
         const criticals = Object.values(stats.stores)
             .filter(s => s.done === 0)
             .sort((a, b) => a.name.localeCompare(b.name));
@@ -401,5 +355,4 @@ document.addEventListener('DOMContentLoaded', () => {
             list.innerHTML += `<div class="activity-item"><div class="activity-info"><strong>${n.name}</strong><br><small>${n.done}/${n.total} tarefas • ${perc}%</small></div></div>`;
         });
     }
-});
 });

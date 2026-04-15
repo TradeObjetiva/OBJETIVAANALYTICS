@@ -226,18 +226,54 @@ body {
 .decision-item .icon { font-size: 18px; }
 .decision-item p { margin: 0; font-size: 13px; line-height: 1.45; }
 
-.welcome-screen.drag-over {
-    background: var(--primary-soft);
+/* Welcome Screen - Mockup Style */
+.welcome-screen {
+    background: rgba(15, 23, 42, 0.4);
+    padding: 80px 40px;
+    text-align: center;
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 40px 0;
+}
+
+.welcome-screen:hover, .welcome-screen.drag-over {
+    background: rgba(15, 23, 42, 0.6);
     border-color: var(--primary);
-    transform: scale(1.02);
+    transform: translateY(-2px);
+}
+
+.upload-icon {
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    transition: var(--transition);
+}
+
+.welcome-screen:hover .upload-icon {
+    color: var(--primary);
+    transform: translateY(-5px);
+}
+
+.welcome-screen h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+}
+
+.welcome-screen p {
+    font-size: 13px;
+    color: var(--text-muted);
 }
 
 /* Loading Overlay */
 .loading-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
     z-index: 10000;
     display: flex;
     flex-direction: column;

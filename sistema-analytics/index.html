@@ -31,10 +31,15 @@
             </div>
         </header>
 
-        <div id="welcomeScreen" class="welcome-screen" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-            <div class="empty-icon">📂</div>
-            <h2>Importar Operação</h2>
-            <p>Clique no botão acima ou <strong>arraste sua planilha aqui</strong> para gerar os insights.</p>
+        <div id="welcomeScreen" class="welcome-screen" onclick="document.getElementById('excelFile').click()" 
+             ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+            <div class="upload-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                </svg>
+            </div>
+            <h2>Arraste e solte o seu arquivo CSV aqui</h2>
+            <p>Ou clique para procurar em seu computador (Funciona offline)</p>
         </div>
 
         <div id="loadingOverlay" class="loading-overlay" style="display: none;">
