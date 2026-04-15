@@ -226,13 +226,41 @@ body {
 .decision-item .icon { font-size: 18px; }
 .decision-item p { margin: 0; font-size: 13px; line-height: 1.45; }
 
-/* Welcome Screen */
-.welcome-screen {
-    background: var(--bg-card);
-    padding: 100px 40px;
-    text-align: center;
-    border-radius: 20px;
-    border: 2px dashed var(--border);
+.welcome-screen.drag-over {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    transform: scale(1.02);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #FFF;
+    border-bottom-color: var(--primary);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .empty-icon { font-size: 64px; margin-bottom: 20px; }

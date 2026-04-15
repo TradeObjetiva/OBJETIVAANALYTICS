@@ -19,23 +19,54 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Botão de upload clicado');
             excelFile.click();
         });
-    } else {
-        console.warn('Botões de upload não encontrados (aguardando...)');
     }
+
+    // --- Drag and Drop Handlers ---
+    window.handleDragOver = (e) => {
+        e.preventDefault();
+        welcomeScreen.classList.add('drag-over');
+    };
+
+    window.handleDragLeave = () => {
+        welcomeScreen.classList.remove('drag-over');
+    };
+
+    window.handleDrop = (e) => {
+        e.preventDefault();
+        welcomeScreen.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+    };
 
     excelFile.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            const data = new Uint8Array(evt.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(firstSheet);
-            processData(json);
-        };
-        reader.readAsArrayBuffer(file);
+        if (file) handleFile(file);
     });
+
+    function handleFile(file) {
+        const loader = document.getElementById('loadingOverlay');
+        loader.style.display = 'flex';
+
+        // Usamos setTimeout para permitir que o browser renderize o loader antes do parsing pesado
+        setTimeout(() => {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(firstSheet);
+                    processData(json);
+                } catch (err) {
+                    console.error('Erro ao ler planilha:', err);
+                    alert('Erro ao processar arquivo. Verifique se é um Excel válido.');
+                } finally {
+                    loader.style.display = 'none';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }, 100);
+    }
 
     exportBtn.addEventListener('click', async () => {
         const { jsPDF } = window.jspdf;
