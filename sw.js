@@ -4,7 +4,11 @@ const ASSETS = [
     './index.html',
     './style.css',
     './script.js',
-    './manifest.json'
+    './manifest.json',
+    './sistema-relatorios/index.html',
+    './sistema-cartas/index.html',
+    './sistema-analytics/index.html',
+    './sistema-roteiro/index.html'
 ];
 
 // Instalação: Cacheia os arquivos essenciais
