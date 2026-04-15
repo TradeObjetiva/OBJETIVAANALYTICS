@@ -104,7 +104,21 @@ document.addEventListener('DOMContentLoaded', () => {
             networks: {}
         };
 
+        const ignoredForms = [
+            'RETORNO DO INTERVALO',
+            'SAÍDA PARA O INTERVALO',
+            'CHECK IN',
+            'CHECK OUT',
+            'JUSTIFICAR PENDÊNCIA',
+            'INÍCIO DE DESLOCAMENTO',
+            'FIM DE DESLOCAMENTO',
+            'APOIO AO PROMOTOR'
+        ];
+
         data.forEach(row => {
+            const formName = String(row['Formulário'] || '').trim().toUpperCase();
+            if (ignoredForms.includes(formName)) return; // Ignora tarefas administrativas
+
             const isDone = String(row['Feito']).toLowerCase() === 'sim';
             const agent = String(row['Agente'] || 'Indefinido').trim();
             const client = String(row['Cliente'] || 'Geral').trim();
