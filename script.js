@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const tabBtns = document.querySelectorAll('.tab-btn');
     const mobileBtns = document.querySelectorAll('.nav-tab-mobile');
-    const actionCards = document.querySelectorAll('.action-card');
     const views = document.querySelectorAll('.view-container');
     const themeToggle = document.getElementById('theme-toggle');
     const installBtn = document.getElementById('installApp');
@@ -74,6 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // Expose for Global Access (used by shortcut cards)
+    window.app = { switchTab };
+
     // 3. Theme Management
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
@@ -107,15 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     root.setProperty('--text-main', themeVars.text);
                     root.setProperty('--text-muted', themeVars.textMuted);
                     root.setProperty('--border', themeVars.border);
-
-                    // Fallback mapping
-                    root.setProperty('--bg', themeVars.bg);
-                    root.setProperty('--card', themeVars.card);
-                    root.setProperty('--text', themeVars.text);
-                    root.setProperty('--line', themeVars.border);
                 }
             } catch (e) {
-                console.warn("Could not sync styles with iframe (Cross-origin/Not ready)");
+                // Silently ignore cross-origin errors
             }
         });
     };
@@ -142,14 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mobileBtns.forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.getAttribute('data-target')));
-    });
-
-    // Special listener for Action Cards on Home
-    actionCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const target = card.getAttribute('onclick').match(/'([^']+)'/)[1];
-            switchTab(target);
-        });
     });
 
     themeToggle.addEventListener('click', () => {

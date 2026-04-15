@@ -57,43 +57,34 @@
 
             <nav class="tabs" id="tabs">
                 <button class="tab-btn active" data-target="home">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                     Dashboard
                 </button>
                 <button class="tab-btn" data-target="relatorio">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
                     </svg>
                     Relatórios
                 </button>
                 <button class="tab-btn" data-target="cartas">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                        <path d="M3 8l9 6 9-6"></path>
                     </svg>
                     Cartas
                 </button>
                 <button class="tab-btn" data-target="roteiro">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
                     </svg>
-                    Roteiro
+                    Rotas
                 </button>
                 <button class="tab-btn" data-target="analytics">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <line x1="18" y1="20" x2="18" y2="10"></line>
                         <line x1="12" y1="20" x2="12" y2="4"></line>
                         <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -103,18 +94,10 @@
             </nav>
 
             <div class="nav-actions">
-                <button id="theme-toggle" class="action-btn" title="Alternar Tema">
-                    <svg class="sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
+                <button id="theme-toggle" class="action-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
                     </svg>
                 </button>
                 <button id="installApp" class="install-btn">Instalar App</button>
@@ -125,22 +108,92 @@
         </header>
 
         <main class="content-area">
-            <!-- Home / Dashboard View -->
+            <!-- New Product Dashboard Home -->
             <div class="view-container active" id="home">
-                <div class="welcome-hero">
-                    <h2>Bem-vindo ao <span>ObjetivaAnalytics</span></h2>
-                    <p>Selecione uma ferramenta no menu acima para começar a operar.</p>
-                    
-                    <div class="stats-row">
-                        <div class="stat-card">
-                            <span class="label">Sistemas Ativos</span>
-                            <strong class="value">4</strong>
+                <div class="dashboard-grid">
+                    <section class="main-col">
+                        <div class="welcome-hero">
+                            <h2>Bem-vindo, <span>Objetiva</span></h2>
+                            <p>Sua operação de campo está rodando agora. Veja o resumo do dia.</p>
+                            
+                            <div class="metrics-strip">
+                                <div class="metric-card">
+                                    <span class="label">Efetividade Global</span>
+                                    <div class="value">87% <span class="trend">↑ 4%</span></div>
+                                </div>
+                                <div class="metric-card">
+                                    <span class="label">Pontos Críticos</span>
+                                    <div class="value" style="color: #ef4444;">12 <span class="trend" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">-2</span></div>
+                                </div>
+                                <div class="metric-card">
+                                    <span class="label">Lojas Monitoradas</span>
+                                    <div class="value">342</div>
+                                </div>
+                            </div>
+
+                            <div class="section-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                                </svg>
+                                Atalhos Favoritos
+                            </div>
+                            <div class="shortcuts-grid">
+                                <div class="shortcut-card" onclick="app.switchTab('relatorio')">
+                                    <div class="shortcut-icon" style="background: var(--color-relatorios);">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                                    </div>
+                                    <span>Novo Relatório</span>
+                                </div>
+                                <div class="shortcut-card" onclick="app.switchTab('analytics')">
+                                    <div class="shortcut-icon" style="background: var(--color-analytics);">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20V14"></path></svg>
+                                    </div>
+                                    <span>Ver Analytics</span>
+                                </div>
+                                <div class="shortcut-card" onclick="app.switchTab('roteiro')">
+                                    <div class="shortcut-icon" style="background: var(--color-rotas);">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    </div>
+                                    <span>Rotas do Dia</span>
+                                </div>
+                                <div class="shortcut-card" onclick="app.switchTab('cartas')">
+                                    <div class="shortcut-icon" style="background: var(--color-cartas);">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path></svg>
+                                    </div>
+                                    <span>Cartas Loja</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <span class="label">Status Global</span>
-                            <strong class="value pulse">Online</strong>
+                    </section>
+
+                    <aside class="side-col">
+                        <div class="activity-panel">
+                            <div class="section-title">Últimas Ações</div>
+                            <div class="activity-list">
+                                <div class="activity-item">
+                                    <div class="activity-marker" style="background: var(--color-relatorios);"></div>
+                                    <div class="activity-info">
+                                        <span class="title">Relatório Consolidado</span>
+                                        <span class="time">há 5 minutos • Deluc</span>
+                                    </div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-marker" style="background: var(--color-analytics);"></div>
+                                    <div class="activity-info">
+                                        <span class="title">Atualização de Malha</span>
+                                        <span class="time">há 12 minutos • Geo</span>
+                                    </div>
+                                </div>
+                                <div class="activity-item">
+                                    <div class="activity-marker" style="background: var(--color-cartas);"></div>
+                                    <div class="activity-info">
+                                        <span class="title">Carta Emitida #429</span>
+                                        <span class="time">há 1 hora • Operação</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </aside>
                 </div>
             </div>
 
@@ -172,11 +225,11 @@
                 </svg>
                 <span>Relatórios</span>
             </button>
-            <button class="nav-tab-mobile" data-target="cartas">
+            <button class="nav-tab-mobile" data-target="roteiro">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path>
                 </svg>
-                <span>Cartas</span>
+                <span>Rotas</span>
             </button>
             <button class="nav-tab-mobile" data-target="analytics">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
