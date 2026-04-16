@@ -17,7 +17,8 @@ const state = {
     processedData: [],
     colMap: {},
     taskCols: [],
-    agents: []
+    agents: [],
+    projectType: "compartilhado" // "compartilhado" ou "exclusivo"
 };
 
 // =============================== ELEMENTOS DOM ===============================
@@ -145,6 +146,10 @@ function detectHeaderRow(rows) {
 
 // =============================== MAPEAMENTO DE COLUNAS ===============================
 function buildColumnMap(headers) {
+    if (state.projectType === "exclusivo") {
+        return buildColumnMapExclusivo(headers);
+    }
+
     const h = headers.map(normalizeLoose);
     const find = (patterns) => h.findIndex((col) => patterns.some((p) => p.test(col)));
 
@@ -175,6 +180,46 @@ function buildColumnMap(headers) {
         municipio: find([/MUNICIPIO/, /MUNICÍPIO/, /CIDADE/]),
         estado: find([/ESTADO/]),
         rede: find([/REDE/]),
+        days: days
+    };
+}
+
+function buildColumnMapExclusivo(headers) {
+    const h = headers.map(normalizeLoose);
+    const find = (patterns) => h.findIndex((col) => patterns.some((p) => p.test(col)));
+
+    // Mapeamento baseado no pedido do usuário e na imagem:
+    // promotor = agente
+    // endereço = logradouro
+    // cliente = form
+    
+    const days = {};
+    const clienteIndex = find([/CLIENTE/]);
+    
+    // Dias: No projeto exclusivo eles podem vir como S, T, Q, Q, S, S ou SEG, TER...
+    const segIdx = h.findIndex((col, i) => i > clienteIndex && (col === "S" || col === "SEG"));
+    if (segIdx !== -1) {
+        days.SEG = segIdx;
+        days.TER = segIdx + 1;
+        days.QUA = segIdx + 2;
+        days.QUI = segIdx + 3;
+        days.SEX = segIdx + 4;
+        days.SAB = segIdx + 5;
+    } else {
+        DAY_ORDER.forEach((day) => {
+            days[day] = h.findIndex((col) => col === day || col === day[0]);
+        });
+    }
+
+    return {
+        agente: find([/PROMOTOR/, /AGENTE/]),
+        local: find([/LOCAL/, /LOJA/]),
+        form: find([/CLIENTE/]), // Agora mapeado conforme solicitado
+        logradouro: find([/ENDERECO/, /LOGRADOURO/, /RUA/, /ENDEREÇO/]),
+        bairro: find([/BAIRRO/]),
+        municipio: find([/MUNICIPIO/, /CIDADE/]),
+        estado: find([/UF/, /ESTADO/]),
+        rede: find([/CLIENTE/]), // Usamos o cliente como rede também se for o caso
         days: days
     };
 }
@@ -251,7 +296,28 @@ function groupData(rows) {
             };
         }
 
-        if (state.taskCols.length > 0) {
+        // Se for exclusivo e não tiver tarefas fixas, criamos uma tarefa genérica
+        if (state.projectType === "exclusivo" && state.taskCols.length === 0) {
+            const days = extractDaysFromRow(r);
+            days.forEach((day) => {
+                if (Object.prototype.hasOwnProperty.call(map[key].allDays, day)) {
+                    map[key].allDays[day] = true;
+                }
+            });
+
+            const taskName = "Atendimento Geral";
+            const existingTask = map[key].tasks.find((task) => task.name === taskName);
+            if (existingTask) {
+                days.forEach((d) => {
+                    if (!existingTask.days.includes(d)) existingTask.days.push(d);
+                });
+            } else {
+                map[key].tasks.push({
+                    name: taskName,
+                    days: days
+                });
+            }
+        } else if (state.taskCols.length > 0) {
             const taskCol = state.taskCols[0];
             const taskValue = clean(r[taskCol.index]);
 
@@ -366,6 +432,7 @@ function generateSummaryTableHTML() {
                 <thead>
                     <tr>
                         <th>Loja</th>
+                        <th>Endereço</th>
                         <th>SEG</th>
                         <th>TER</th>
                         <th>QUA</th>
@@ -382,8 +449,11 @@ function generateSummaryTableHTML() {
 
         tableHtml += `
             <tr>
-                <td style="padding: 10px; border: 1px solid #ddd; text-align: left; font-weight: 600; background: #f8fafc; color: #000000;">
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: left; font-weight: 600; background: #f8fafc; color: #000000; font-size: 11px;">
                     ${escapeHtml(store.name)}
+                </td>
+                <td style="padding: 10px; border: 1px solid #ddd; text-align: left; font-size: 10px; color: #475569; background: #ffffff;">
+                    ${escapeHtml(store.enderecoCompleto || "---")}
                 </td>
                 <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #0f172a; background: ${days.SEG ? "#fff3e0" : "white"};">${days.SEG ? "✅" : ""}</td>
                 <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold; color: #0f172a; background: ${days.TER ? "#fff3e0" : "white"};">${days.TER ? "✅" : ""}</td>
@@ -472,23 +542,23 @@ async function exportPDF() {
                     <div style="page-break-after: ${pageIdx < tablePages.length - 1 ? 'always' : 'auto'}; break-after: ${pageIdx < tablePages.length - 1 ? 'page' : 'auto'};">
                         <div style="margin-bottom: 15px;">
                             <h2 style="color: ${colors.primary}; font-size: 18px; margin: 0 0 10px 0; border-bottom: 2px solid ${colors.primary}; padding-bottom: 6px; display: inline-block;">
-                                📊 Tabela Resumida de Atendimento
+                                📊 Roteiro Agência Objetiva
                             </h2>
                             <div style="font-size: 10px; color: #555; margin: 8px 0;">
-                                <strong>Relatório:</strong> ${escapeHtml(title)}<br>
                                 <strong>Promotor(a):</strong> ${escapeHtml(agentName)}
                             </div>
                         </div>
                         <table style="width: 100%; border-collapse: collapse; font-size: 9px; page-break-inside: auto;">
                             <thead>
                                 <tr style="background: ${colors.headerBg};">
-                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: left; color: white; font-size: 9px;">Loja</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 9px;">SEG</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 9px;">TER</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 9px;">QUA</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 9px;">QUI</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 9px;">SEX</th>
-                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 9px;">SAB</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: left; color: white; font-size: 8px; width: 25%;">Loja</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: left; color: white; font-size: 8px; width: 40%;">Endereço</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">SEG</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">TER</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">QUA</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">QUI</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">SEX</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">SAB</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -501,13 +571,14 @@ async function exportPDF() {
 
                     tableHtml += `
                         <tr style="background: ${bgColor}; page-break-inside: avoid; break-inside: avoid;">
-                            <td style="padding: 5px 6px; border: 1px solid #ddd; font-weight: bold; color: #000000; font-size: 9px;">${escapeHtml(store.name)}</td>
-                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SEG ? colors.activeDayBg : "white"}; font-size: 9px;">${days.SEG ? "✅" : ""}</td>
-                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.TER ? colors.activeDayBg : "white"}; font-size: 9px;">${days.TER ? "✅" : ""}</td>
-                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.QUA ? colors.activeDayBg : "white"}; font-size: 9px;">${days.QUA ? "✅" : ""}</td>
-                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.QUI ? colors.activeDayBg : "white"}; font-size: 9px;">${days.QUI ? "✅" : ""}</td>
-                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SEX ? colors.activeDayBg : "white"}; font-size: 9px;">${days.SEX ? "✅" : ""}</td>
-                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SAB ? colors.activeDayBg : "white"}; font-size: 9px;">${days.SAB ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; font-weight: bold; color: #000000; font-size: 8px;">${escapeHtml(store.name)}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; color: #444; font-size: 7.5px;">${escapeHtml(store.enderecoCompleto || "---")}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SEG ? colors.activeDayBg : "white"}; font-size: 8px;">${days.SEG ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.TER ? colors.activeDayBg : "white"}; font-size: 8px;">${days.TER ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.QUA ? colors.activeDayBg : "white"}; font-size: 8px;">${days.QUA ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.QUI ? colors.activeDayBg : "white"}; font-size: 8px;">${days.QUI ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SEX ? colors.activeDayBg : "white"}; font-size: 8px;">${days.SEX ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SAB ? colors.activeDayBg : "white"}; font-size: 8px;">${days.SAB ? "✅" : ""}</td>
                         </tr>
                     `;
                 }
@@ -714,3 +785,21 @@ const btnDebug = document.getElementById("btn-debug");
 if (btnDebug) {
     btnDebug.addEventListener("click", showDebugModal);
 }
+
+// Inicializar Seletor de Projeto
+document.querySelectorAll('.project-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.project-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.projectType = btn.getAttribute('data-type');
+        
+        // Se já houver dados carregados, re-processar
+        if (state.data.length > 0) {
+            // Re-processar com as novas definições de coluna
+            // Pegamos o cabeçalho original que deve estar salvo ou re-detectado
+            // Como state.data não contém o cabeçalho, precisamos re-processar o arquivo ou salvar o cabeçalho
+            // Por simplicidade, vamos avisar que precisa re-importar se mudar o tipo
+            showToast("Tipo de projeto alterado. Importe a planilha novamente para aplicar a nova lógica.", "info");
+        }
+    });
+});
