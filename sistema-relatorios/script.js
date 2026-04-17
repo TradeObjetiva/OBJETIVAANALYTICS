@@ -684,3 +684,25 @@ function downloadFile(content, fileName, mimeType) {
   link.remove();
   URL.revokeObjectURL(url);
 }
+
+// --- Sync & Patterns ---
+const syncChannel = new BroadcastChannel('app_sync');
+syncChannel.onmessage = (event) => {
+  if (event.data.type === 'THEME_CHANGE') {
+    document.documentElement.setAttribute('data-theme', event.data.theme);
+  }
+};
+
+// Persistence for Mapping Rules
+window.saveCurrentRules = () => {
+  if (!state.files.length) return;
+  const activeFile = state.files[state.activeIndex];
+  const rules = activeFile.columns.map(c => ({
+    source: c.original,
+    target: c.target,
+    transform: c.transform
+  }));
+  localStorage.setItem('relatorios_last_rules', JSON.stringify(rules));
+  if (window.showToast) window.showToast('Regras de mapeamento salvas!', 'success');
+  else alert('Regras de mapeamento salvas!');
+};

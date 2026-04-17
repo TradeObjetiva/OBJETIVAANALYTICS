@@ -35,9 +35,15 @@
     --radius-md: 16px;
     --radius-lg: 24px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Skeleton Effect */
+    --skeleton-bg: rgba(255, 255, 255, 0.05);
+    --skeleton-highlight: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme="light"] {
+    --skeleton-bg: rgba(0, 0, 0, 0.05);
+    --skeleton-highlight: rgba(0, 0, 0, 0.08);
     --bg-main: #f1f5f9;
     --bg-card: #ffffff;
     --bg-nav: rgba(255, 255, 255, 0.85);
@@ -66,6 +72,8 @@ body {
     height: 100vh;
     overflow: hidden;
     transition: background 0.5s ease;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 .app-container {
@@ -81,6 +89,7 @@ body {
     justify-content: space-between;
     padding: 0 40px;
     height: 80px;
+    min-height: 80px;
     background: var(--bg-nav);
     backdrop-filter: var(--glass);
     -webkit-backdrop-filter: var(--glass);
@@ -88,6 +97,8 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
+    flex-shrink: 0;
+    gap: 16px;
 }
 
 .logo-area {
@@ -211,7 +222,9 @@ body {
     flex: 1;
     position: relative;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 40px;
+    min-height: 0;
     background-image: radial-gradient(circle at 0% 0%, rgba(79,70,229,0.05) 0%, transparent 40%),
                       radial-gradient(circle at 100% 100%, rgba(6,182,212,0.05) 0%, transparent 40%);
 }
@@ -223,22 +236,28 @@ body {
     transition: var(--transition);
     display: none;
     height: 100%;
+    min-height: 0;
 }
 
 .view-container.active {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
-iframe {
+/* Iframe modules fill the full container */
+.view-container > iframe {
     width: 100%;
-    height: 100%;
+    flex: 1;
     border: none;
     background: var(--bg-card);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
+    min-height: 0;
 }
 
 /* --- Dashboard Dashboard --- */
@@ -246,6 +265,7 @@ iframe {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 32px;
+    align-items: start;
 }
 
 .welcome-hero {
@@ -275,6 +295,20 @@ iframe {
     font-weight: 800;
     margin-bottom: 8px;
     letter-spacing: -1.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+#welcome-name {
+    color: var(--primary);
+    display: inline !important;
+    font-size: inherit;
+    font-weight: inherit;
+    vertical-align: baseline !important;
+    white-space: nowrap;
+    text-transform: capitalize;
 }
 
 .welcome-hero h2 span { color: var(--primary); }
@@ -418,12 +452,7 @@ iframe {
 
 @media (max-width: 1024px) {
     .dashboard-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 768px) {
-    .content-area { padding: 24px; }
-    .welcome-hero h2 { font-size: 28px; }
-    .metrics-strip { grid-template-columns: 1fr; }
+    .top-nav { padding: 0 24px; }
 }
 
 /* --- Animations & Utilities --- */
@@ -460,40 +489,93 @@ iframe {
     }
 }
 
+/* ============================================
+   RESPONSIVIDADE MOBILE — max-width: 768px
+   ============================================ */
 @media (max-width: 768px) {
+
+    /* Body: habilita scroll vertical no mobile */
     body {
-        overflow: auto; /* Enable scroll on mobile */
+        overflow: auto;
+        height: auto;
+        min-height: 100vh;
     }
 
+    .app-container {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    /* Top nav compacto */
     .top-nav {
-        padding: 0 20px;
+        padding: 0 16px;
         height: 60px;
+        min-height: 60px;
     }
 
-    .tabs {
-        display: none; /* Hide top tabs on mobile */
-    }
+    /* Esconde tabs superiores no mobile (usa bottom nav) */
+    .tabs { display: none; }
 
-    .logo-area h1 {
-        font-size: 18px;
-    }
+    /* Esconde perfil expandido, mantém só avatar */
+    .user-profile .user-info,
+    .user-profile .logout-btn { display: none; }
+    .user-profile { padding: 4px; background: transparent; border: none; }
 
+    .logo-area h1 { font-size: 16px; letter-spacing: -0.3px; }
+    .logo-icon { width: 36px; height: 36px; font-size: 18px; }
+
+    /* Install button menor */
+    .install-btn { padding: 8px 12px; font-size: 11px; }
+
+    /* Content area com padding e espaço para bottom nav */
     .content-area {
-        padding: 20px;
-        padding-bottom: 100px; /* Space for bottom nav */
+        padding: 16px;
+        padding-bottom: 90px;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
-    .welcome-banner h2 {
-        font-size: 28px;
+    /* View containers scroll mobile */
+    .view-container {
+        height: auto;
+    }
+    .view-container.active {
+        height: auto;
+        min-height: calc(100vh - 60px - 70px);
     }
 
-    .quick-actions-grid {
-        grid-template-columns: 1fr;
+    /* Iframes com altura fixa mas usável no mobile */
+    .view-container > iframe {
+        min-height: 85vh;
+        border-radius: 12px;
     }
 
-    .action-card {
-        padding: 24px;
-    }
+    /* Dashboard: coluna única */
+    .dashboard-grid { grid-template-columns: 1fr; gap: 16px; }
+
+    /* Hero menor */
+    .welcome-hero { padding: 24px; }
+    .welcome-hero h2 { font-size: 24px; letter-spacing: -0.5px; }
+    .welcome-hero p { font-size: 14px; margin-bottom: 24px; }
+
+    /* Métricas: 2 colunas no mobile */
+    .metrics-strip { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .metric-card { padding: 16px; }
+    .metric-card .value { font-size: 26px; }
+
+    /* Shortcuts: 2 colunas */
+    .shortcuts-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .shortcut-card { padding: 14px; }
+
+    /* Gestão de usuários */
+    .management-grid { grid-template-columns: 1fr !important; }
+
+    /* Login card ocupa mais da tela */
+    .login-card { padding: 32px 24px; margin: 16px; max-width: 100%; }
+
+    /* Tabela de dados scroll horizontal */
+    .mgmt-card { padding: 16px; overflow-x: auto; }
+    .data-table { min-width: 500px; }
 
     /* Bottom Navigation Bar */
     .bottom-nav {
@@ -504,37 +586,51 @@ iframe {
         right: 0;
         height: 70px;
         background: var(--bg-card);
-        backdrop-filter: blur(12px);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-top: 1px solid var(--border);
         justify-content: space-around;
         align-items: center;
-        z-index: 1000;
-        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 1100;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .nav-tab-mobile {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
         color: var(--text-muted);
-        text-decoration: none;
         font-size: 10px;
         font-weight: 600;
         background: none;
         border: none;
-        padding: 8px;
+        padding: 8px 12px;
+        border-radius: 10px;
         transition: var(--transition);
+        cursor: pointer;
+        flex: 1;
     }
 
     .nav-tab-mobile.active {
         color: var(--primary);
+        background: var(--primary-soft);
     }
 
     .nav-tab-mobile svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
     }
+}
+
+/* Extra small: <= 480px */
+@media (max-width: 480px) {
+    .metrics-strip { grid-template-columns: 1fr; }
+    .shortcuts-grid { grid-template-columns: 1fr 1fr; }
+    .content-area { padding: 12px; padding-bottom: 88px; }
+    .welcome-hero h2 { font-size: 20px; }
+    .welcome-hero { padding: 20px; }
+    .top-nav { padding: 0 12px; }
 }
 
 .bottom-nav {
@@ -690,6 +786,10 @@ iframe {
     grid-template-columns: 1fr 380px;
     gap: 24px;
     margin-top: 24px;
+}
+
+@media (max-width: 1200px) {
+    .management-grid { grid-template-columns: 1fr; }
 }
 
 .mgmt-card {

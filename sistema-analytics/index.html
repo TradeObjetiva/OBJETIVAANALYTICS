@@ -49,22 +49,22 @@
 
         <div id="dashboardContent" class="dashboard-content" style="display: none;">
             <!-- Summary Slots -->
-            <div class="stats-grid">
+            <div class="stats-grid" id="stats-grid">
                 <div class="stat-card">
                     <span class="label">🎯 Efetividade Global</span>
-                    <strong id="globalEffectiveness" class="value">0%</strong>
+                    <strong id="globalEffectiveness" class="value skeleton skeleton-title" style="width: 80px;"></strong>
                 </div>
                 <div class="stat-card">
                     <span class="label">📍 Lojas Visitadas</span>
-                    <strong id="monitoredStores" class="value">0</strong>
+                    <strong id="monitoredStores" class="value skeleton skeleton-title" style="width: 60px;"></strong>
                 </div>
                 <div class="stat-card critical">
                     <span class="label">🕒 Méd. Tempo em Loja</span>
-                    <strong id="avgDuration" class="value">00:00</strong>
+                    <strong id="avgDuration" class="value skeleton skeleton-title" style="width: 100px;"></strong>
                 </div>
                 <div class="stat-card">
                     <span class="label">📝 Total de Tarefas</span>
-                    <strong id="totalTasks" class="value">0</strong>
+                    <strong id="totalTasks" class="value skeleton skeleton-title" style="width: 70px;"></strong>
                 </div>
             </div>
 
@@ -126,23 +126,21 @@
                 </div>
             </div>
 
-            <div class="insights-grid">
+            <div class="insights-grid" id="insights-grid">
                 <section class="insight-panel">
-                    <div class="chart-header">
-                        <h3>💡 Insights de Produtividade</h3>
-                    </div>
+                    <div class="chart-header"><h3>💡 Insights de Produtividade</h3></div>
                     <div id="decisionList" class="decision-list">
-                        <!-- Items injected by JS -->
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width: 80%;"></div>
                     </div>
                 </section>
-                
                 <section class="insight-panel">
                     <div class="chart-header">
                         <h3>📂 Resumo por Rede</h3>
-                        <button class="export-btn-mini" onclick="exportNetworkSummary()">📊 Exportar</button>
                     </div>
                     <div id="networkSummary" class="data-list scrollable">
-                        <!-- Items injected by JS -->
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text" style="width: 90%;"></div>
                     </div>
                 </section>
             </div>

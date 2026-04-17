@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeScreen = document.getElementById('welcomeScreen');
     const dashboardContent = document.getElementById('dashboardContent');
 
+    const syncChannel = new BroadcastChannel('app_sync');
+
     let chartEvolution = null;
     let chartBrand = null;
     let map = null;
@@ -149,10 +151,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const avgSecs = stats.doneTasks > 0 ? stats.totalDuration / stats.doneTasks : 0;
         const avgFormatted = `${Math.floor(avgSecs / 60)}m ${Math.floor(avgSecs % 60)}s`;
 
-        document.getElementById('globalEffectiveness').textContent = `${effectiveness}%`;
-        document.getElementById('monitoredStores').textContent = stats.monitoredStores.size;
-        document.getElementById('avgDuration').textContent = avgFormatted;
-        document.getElementById('totalTasks').textContent = stats.totalTasks;
+        // Update UI and Remove Skeletons
+        const elementsToUpdate = {
+            'globalEffectiveness': `${effectiveness}%`,
+            'monitoredStores': stats.monitoredStores.size,
+            'avgDuration': avgFormatted,
+            'totalTasks': stats.totalTasks
+        };
+
+        for (const [id, value] of Object.entries(elementsToUpdate)) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value;
+                el.classList.remove('skeleton', 'skeleton-title');
+                el.style.width = 'auto';
+            }
+        }
+
+        // KPI Color Indicators
+        const effEl = document.getElementById('globalEffectiveness');
+        if (effEl) {
+            effEl.classList.remove('kpi-green', 'kpi-yellow', 'kpi-red');
+            if (effectiveness >= 70) effEl.classList.add('kpi-green');
+            else if (effectiveness >= 40) effEl.classList.add('kpi-yellow');
+            else effEl.classList.add('kpi-red');
+        }
 
         initMap(data);
         renderCharts(stats);
@@ -236,8 +259,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if(mapFilter) {
+            // Restore saved filter
+            const savedFilter = localStorage.getItem('analytics_mapFilter');
+            if (savedFilter) {
+                mapFilter.value = savedFilter;
+                setTimeout(() => mapFilter.dispatchEvent(new Event('change')), 100);
+            }
+
             mapFilter.onchange = (e) => {
                 const val = e.target.value;
+                localStorage.setItem('analytics_mapFilter', val);
                 markers.forEach(m => {
                     if (val === 'all') m.addTo(map);
                     else if (val === 'done' && m.options.isDone) m.addTo(map);
@@ -257,6 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortedPromoters = Object.values(stats.promoters)
             .sort((a, b) => (b.done / b.total) - (a.done / a.total));
 
+        // Dynamic height based on number of promoters
+        const promoterChartHeight = Math.max(300, sortedPromoters.length * 30);
+        document.getElementById('promoterChart').parentElement.style.height = promoterChartHeight + 'px';
+
         chartEvolution = new Chart(promoterCtx, {
             type: 'bar',
             plugins: [ChartDataLabels],
@@ -265,7 +300,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: '% Efetividade',
                     data: sortedPromoters.map(p => Math.round((p.done / p.total) * 100)),
-                    backgroundColor: '#6366f1',
+                    backgroundColor: sortedPromoters.map(p => {
+                        const pct = Math.round((p.done / p.total) * 100);
+                        if (pct >= 70) return '#10b981';
+                        if (pct >= 40) return '#f59e0b';
+                        return '#f43f5e';
+                    }),
                     borderRadius: 6
                 }]
             },
@@ -274,13 +314,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: false },
-                    datalabels: { color: '#fff', anchor: 'end', align: 'left', font: { weight: 'bold' }, formatter: (v) => v + '%' }
+                    datalabels: { color: '#fff', anchor: 'end', align: 'left', font: { weight: 'bold', size: 11 }, formatter: (v) => v + '%' }
                 },
-                scales: { x: { max: 110, grid: { display: false } } }
+                scales: { 
+                    x: { max: 110, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8' } },
+                    y: { ticks: { color: '#e2e8f0', font: { size: 11 } }, grid: { display: false } }
+                }
             }
         });
 
         const sortedClients = Object.values(stats.clients).sort((a,b) => (b.done/b.total) - (a.done/a.total));
+
+        // Dynamic height for brand chart too
+        const brandChartHeight = Math.max(300, sortedClients.length > 15 ? 400 : 300);
+        document.getElementById('brandChart').parentElement.style.height = brandChartHeight + 'px';
+
         chartBrand = new Chart(brandCtx, {
             type: 'bar',
             plugins: [ChartDataLabels],
@@ -289,16 +337,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: '% Execução',
                     data: sortedClients.map(c => Math.round((c.done / c.total) * 100)),
-                    backgroundColor: '#06b6d4',
+                    backgroundColor: sortedClients.map(c => {
+                        const pct = Math.round((c.done / c.total) * 100);
+                        if (pct >= 70) return '#06b6d4';
+                        if (pct >= 40) return '#f59e0b';
+                        return '#f43f5e';
+                    }),
                     borderRadius: 6
                 }]
             },
             options: { 
+                maintainAspectRatio: false,
                 plugins: { 
                     legend: { display: false },
-                    datalabels: { color: '#fff', anchor: 'end', align: 'top', font: { weight: 'bold' }, formatter: (v) => v + '%' }
+                    datalabels: { 
+                        color: '#fff', 
+                        anchor: 'end', 
+                        align: 'top', 
+                        font: { weight: 'bold', size: 10 }, 
+                        formatter: (v) => v + '%',
+                        display: function(context) {
+                            return context.dataIndex < 25; // Only show labels for first 25 bars
+                        }
+                    }
                 },
-                scales: { y: { max: 110 } }
+                scales: { 
+                    y: { max: 110, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8' } },
+                    x: { 
+                        ticks: { 
+                            maxRotation: 55, 
+                            minRotation: 45, 
+                            font: { size: 9 }, 
+                            color: '#94a3b8'
+                        }, 
+                        grid: { display: false } 
+                    }
+                }
             }
         });
     }
@@ -316,17 +390,24 @@ document.addEventListener('DOMContentLoaded', () => {
         criticals.forEach(s => {
             criticalList.innerHTML += `
                 <div class="rank-item">
-                    <span>${s.name}</span>
-                    <span class="score" style="color: #f43f5e;">ZERO EXECUÇÃO</span>
+                    <span class="store-name">${s.name}</span>
+                    <span class="badge badge-danger">ZERO EXECUÇÃO</span>
                 </div>`;
         });
 
-        if (criticals.length === 0) criticalList.innerHTML = '<div class="rank-item"><span>Todas as lojas foram visitadas</span></div>';
+        if (criticals.length === 0) {
+            criticalList.innerHTML = '<div class="rank-item"><span class="store-name" style="color: #34d399;">✅ Todas as lojas foram visitadas!</span></div>';
+        }
 
         Object.values(stats.promoters)
             .sort((a, b) => b.done - a.done)
-            .forEach(p => {
-                bestPromoters.innerHTML += `<div class="rank-item"><span>${p.name}</span><span class="score">${p.done} feitos</span></div>`;
+            .forEach((p, idx) => {
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+                bestPromoters.innerHTML += `
+                    <div class="rank-item">
+                        <span class="agent-name">${medal} ${p.name}</span>
+                        <span class="score">${p.done} feitos</span>
+                    </div>`;
             });
     }
 
@@ -355,4 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
             list.innerHTML += `<div class="activity-item"><div class="activity-info"><strong>${n.name}</strong><br><small>${n.done}/${n.total} tarefas • ${perc}%</small></div></div>`;
         });
     }
+
+    // Sync Theme via BroadcastChannel
+    syncChannel.onmessage = (event) => {
+        if (event.data.type === 'THEME_CHANGE') {
+            document.documentElement.setAttribute('data-theme', event.data.theme);
+        }
+    };
 });

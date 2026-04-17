@@ -1,9 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- State Management ---
     const state = {
-        activeTab: localStorage.getItem('activeTab') || 'home',
+        activeTab: (window.location.hash.replace('#', '').split('?')[0]) || 'home',
         theme: localStorage.getItem('theme') || 'dark'
     };
+
+    // Broadcast Channel for cross-tab/iframe sync
+    const syncChannel = new BroadcastChannel('app_sync');
 
     // --- DOM Elements ---
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -32,15 +35,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Listen for messages from iframes (for notifications)
         window.addEventListener('message', handleIframeMessage);
 
+        // Listen for BroadcastChannel messages
+        syncChannel.onmessage = (event) => {
+            if (event.data.type === 'THEME_CHANGE') {
+                applyTheme(event.data.theme, false);
+            }
+        };
+
+        // Deep Linking
+        window.addEventListener('hashchange', () => {
+            const target = window.location.hash.replace('#', '').split('?')[0];
+            if (target) switchTab(target, true);
+        });
+
         // Check Auth State
         checkAuth();
-
-        // Listen for Auth changes
-        if (window.supabase) {
-            window.supabase.auth.onAuthStateChange((event, session) => {
-                updateUIForAuth(session);
-            });
-        }
 
         // PWA Install Logic
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -83,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (save) {
             state.activeTab = targetId;
             localStorage.setItem('activeTab', targetId);
+            window.location.hash = targetId;
         }
 
         // Sync styles with iframes
@@ -96,11 +106,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = { switchTab };
 
     // 3. Theme Management
-    const applyTheme = (theme) => {
+    const applyTheme = (theme, broadcast = true) => {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
         state.theme = theme;
         syncIframeStyles();
+
+        if (broadcast) {
+            syncChannel.postMessage({ type: 'THEME_CHANGE', theme });
+        }
     };
 
     // 4. Iframe Context Sync
@@ -117,6 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         iframes.forEach(iframe => {
+            // Re-sync whenever an iframe finish loading to ensure styles are applied
+            if (!iframe.dataset.listenerAdded) {
+                iframe.addEventListener('load', () => syncIframeStyles());
+                iframe.dataset.listenerAdded = 'true';
+            }
+
             try {
                 const doc = iframe.contentDocument || iframe.contentWindow.document;
                 if (doc && doc.documentElement) {
@@ -139,16 +159,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleIframeMessage = (event) => {
         const data = event.data;
         if (data.type === 'ACTION_COMPLETED') {
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: data.message,
-                showConfirmButton: false,
-                timer: 3000
-            });
+            showToast(data.message, 'success');
         }
     };
+
+    // 6. Toast System
+    const showToast = (message, type = 'info') => {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">${message}</div>
+        `;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
+
+    window.app = { ...window.app, showToast };
 
     // --- Event Listeners ---
     tabBtns.forEach(btn => {
@@ -197,8 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (session) {
             loginOverlay.classList.add('hidden');
             const user = session.user;
-            const displayName = profile?.full_name || user.email.split('@')[0];
+            const rawName = profile?.full_name || user.email.split('@')[0];
+            // Use only the first name (first word)
+            const displayName = rawName.trim().split(/\s+/)[0];
+            const fullName = rawName.trim();
             const isMaster = profile?.role === 'admin' || profile?.role === 'master';
+
+            // Populate Skeletons after a small visual delay
+            setTimeout(() => populateDashboardData(displayName), 800);
 
             // Show/Hide restricted menu
             if (isMaster) {
@@ -207,10 +247,11 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 navUsers.classList.add('hidden');
             }
-
             // Update Home Welcome
             if (welcomeName) {
-                welcomeName.textContent = displayName;
+                welcomeName.classList.remove('skeleton', 'skeleton-text');
+                welcomeName.removeAttribute('style'); // Remove inline skeleton styles
+                welcomeName.textContent = displayName; // Only first name
             }
 
             // Update Profile View (My Profile)
@@ -219,9 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const profileAvatarBig = document.getElementById('profile-avatar-big');
             const myFullNameInput = document.getElementById('my-full-name');
 
-            if (profileNameDisplay) profileNameDisplay.textContent = displayName;
+            if (profileNameDisplay) profileNameDisplay.textContent = fullName; // Full name in profile
             if (profileEmailDisplay) profileEmailDisplay.textContent = user.email;
-            if (profileAvatarBig) profileAvatarBig.textContent = displayName[0].toUpperCase();
+            if (profileAvatarBig) {
+                profileAvatarBig.textContent = displayName[0].toUpperCase();
+                profileAvatarBig.classList.remove('skeleton');
+            }
             if (myFullNameInput && profile) myFullNameInput.value = profile.full_name || '';
 
             userProfile.innerHTML = `
@@ -231,8 +275,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${displayName} 
                         ${isMaster ? '<span style="font-size: 10px; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">Mestre</span>' : ''}
                     </div>
-                    <button class="logout-btn" id="logout-btn">Sair</button>
                 </div>
+                <button class="logout-btn" id="logout-btn">Sair</button>
             `;
             document.getElementById('logout-btn').addEventListener('click', handleLogout);
         } else {
@@ -242,24 +286,91 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const populateDashboardData = (name) => {
+        // Hiding skeletons and setting values
+        const effectiveness = document.getElementById('metric-effectiveness');
+        const critical = document.getElementById('metric-critical');
+        const stores = document.getElementById('metric-stores');
+        const activityList = document.getElementById('activity-list');
+
+        if (effectiveness) {
+            effectiveness.classList.remove('skeleton', 'skeleton-title');
+            effectiveness.innerHTML = '92% <span class="trend">↑ 4%</span>';
+        }
+        if (critical) {
+            critical.classList.remove('skeleton', 'skeleton-title');
+            critical.innerHTML = '8 <span class="trend" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">-2</span>';
+        }
+        if (stores) {
+            stores.classList.remove('skeleton', 'skeleton-title');
+            stores.innerHTML = '+ 450 Lojas';
+        }
+
+        if (activityList) {
+            activityList.innerHTML = `
+                <div class="activity-item">
+                    <div class="activity-marker" style="background: var(--color-relatorios);"></div>
+                    <div class="activity-info">
+                        <span class="title">Relatório Consolidado</span>
+                        <span class="time">há 5 minutos • Deluc</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-marker" style="background: var(--color-analytics);"></div>
+                    <div class="activity-info">
+                        <span class="title">Atualização de Malha</span>
+                        <span class="time">há 12 minutos • Geo</span>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
         loginError.textContent = 'Autenticando...';
 
-        const { error } = await window.supabase.auth.signInWithPassword({ email, password });
+        try {
+            const { error } = await window.supabase.auth.signInWithPassword({ email, password });
 
-        if (error) {
-            loginError.textContent = error.message;
-        } else {
-            loginError.textContent = '';
+            if (error) {
+                console.error('Login error:', error);
+                // Translate common Supabase error messages
+                if (error.message.includes('Invalid login credentials')) {
+                    loginError.textContent = 'E-mail ou senha incorretos.';
+                } else if (error.message.includes('Email not confirmed')) {
+                    loginError.textContent = 'E-mail não confirmado. Verifique sua caixa de entrada.';
+                } else {
+                    loginError.textContent = error.message;
+                }
+            } else {
+                loginError.textContent = '';
+                checkAuth(); // Update entire UI after successful login
+            }
+        } catch (err) {
+            console.error('Login exception:', err);
+            loginError.textContent = 'Erro de conexão. Verifique sua internet.';
         }
     };
 
     const handleLogout = async () => {
         await window.supabase.auth.signOut();
+        checkAuth(); // Update UI after logout
     };
+
+    // Listen for auth state changes globally (handles token refresh, external logout, etc.)
+    if (window.supabase) {
+        window.supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event);
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                checkAuth();
+            } else if (event === 'SIGNED_OUT') {
+                updateUIForAuth(null);
+            }
+        });
+    }
 
     // --- Users Management Functions ---
 
@@ -278,14 +389,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         usersListBody.innerHTML = data.map(u => `
             <tr>
-                <td><strong>${u.full_name || 'Sem nome'}</strong></td>
-                <td style="font-family: monospace; font-size: 11px;">${u.id}</td>
-                <td><span class="badge ${u.role}">${u.role}</span></td>
+                <td>
+                    <strong>${u.full_name || 'Sem nome'}</strong><br>
+                    <span style="font-size: 11px; color: var(--text-dim);">${u.email || '-'}</span>
+                </td>
+                <td style="font-family: monospace; font-size: 11px;">${u.id.substring(0,8)}...</td>
+                <td>
+                    <select class="custom-select small" onchange="updateUserRole('${u.id}', this.value)" style="padding: 4px; border-radius: 6px; background: var(--bg-accent); color: var(--text-main); border: 1px solid var(--border);">
+                        <option value="user" ${u.role === 'user' ? 'selected' : ''}>Colaborador</option>
+                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador</option>
+                        <option value="master" ${u.role === 'master' ? 'selected' : ''}>Mestre</option>
+                    </select>
+                </td>
                 <td>
                     <button class="action-btn small delete" onclick="deleteProfile('${u.id}')">Remover</button>
                 </td>
             </tr>
         `).join('');
+    };
+
+    window.updateUserRole = async (userId, newRole) => {
+        const { error } = await window.supabase
+            .from('profiles')
+            .update({ role: newRole })
+            .eq('id', userId);
+        
+        if (error) showToast(error.message, 'error');
+        else {
+            showToast('Nível de acesso atualizado!', 'success');
+            loadUsersList();
+        }
     };
 
     const handleCreateProfile = async (e) => {

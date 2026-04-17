@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0f1a">
     <title>ObjetivaAnalytics</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -228,22 +229,21 @@
                 <div class="dashboard-grid">
                     <section class="main-col">
                         <div class="welcome-hero">
-                            <h2>Bem-vindo, <span id="welcome-name">Objetiva Analytics</span></h2>
+                            <h2>Bem-vindo, <span id="welcome-name" class="skeleton skeleton-text" style="display: inline-block; width: 120px; height: 32px; vertical-align: middle; border-radius: 8px;"></span></h2>
                             <p>Sua operação de campo está rodando agora. Veja o resumo do dia.</p>
 
                             <div class="metrics-strip">
                                 <div class="metric-card">
                                     <span class="label">Efetividade Esperada</span>
-                                    <div class="value">+90% <span class="trend">↑ 4%</span></div>
+                                    <div class="value"><span id="metric-effectiveness" class="skeleton skeleton-title" style="width: 80px;"></span></div>
                                 </div>
                                 <div class="metric-card">
                                     <span class="label">Pontos Críticos</span>
-                                    <div class="value" style="color: #ef4444;">12 <span class="trend"
-                                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">-2</span></div>
+                                    <div class="value"><span id="metric-critical" class="skeleton skeleton-title" style="width: 50px;"></span></div>
                                 </div>
                                 <div class="metric-card">
                                     <span class="label">Lojas Monitoradas</span>
-                                    <div class="value">+ 400 Lojas</div>
+                                    <div class="value"><span id="metric-stores" class="skeleton skeleton-title" style="width: 120px;"></span></div>
                                 </div>
                             </div>
 
@@ -301,26 +301,27 @@
                     <aside class="side-col">
                         <div class="activity-panel">
                             <div class="section-title">Últimas Ações</div>
-                            <div class="activity-list">
+                            <div class="activity-list" id="activity-list">
+                                <!-- Skeletons -->
                                 <div class="activity-item">
-                                    <div class="activity-marker" style="background: var(--color-relatorios);"></div>
+                                    <div class="activity-marker skeleton" style="width: 8px; height: 8px;"></div>
                                     <div class="activity-info">
-                                        <span class="title">Relatório Consolidado</span>
-                                        <span class="time">há 5 minutos • Deluc</span>
+                                        <div class="skeleton skeleton-text" style="width: 120px; height: 12px; margin-bottom: 4px;"></div>
+                                        <div class="skeleton skeleton-text" style="width: 80px; height: 10px;"></div>
                                     </div>
                                 </div>
                                 <div class="activity-item">
-                                    <div class="activity-marker" style="background: var(--color-analytics);"></div>
+                                    <div class="activity-marker skeleton" style="width: 8px; height: 8px;"></div>
                                     <div class="activity-info">
-                                        <span class="title">Atualização de Malha</span>
-                                        <span class="time">há 12 minutos • Geo</span>
+                                        <div class="skeleton skeleton-text" style="width: 100px; height: 12px; margin-bottom: 4px;"></div>
+                                        <div class="skeleton skeleton-text" style="width: 60px; height: 10px;"></div>
                                     </div>
                                 </div>
                                 <div class="activity-item">
-                                    <div class="activity-marker" style="background: var(--color-cartas);"></div>
+                                    <div class="activity-marker skeleton" style="width: 8px; height: 8px;"></div>
                                     <div class="activity-info">
-                                        <span class="title">Carta Emitida #429</span>
-                                        <span class="time">há 1 hora • Operação</span>
+                                        <div class="skeleton skeleton-text" style="width: 110px; height: 12px; margin-bottom: 4px;"></div>
+                                        <div class="skeleton skeleton-text" style="width: 70px; height: 10px;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -399,6 +400,8 @@
             </div>
         </div>
     </div>
+
+    <div id="toast-container"></div>
 
     <script src="supabase-config.js"></script>
     <script src="script.js"></script>

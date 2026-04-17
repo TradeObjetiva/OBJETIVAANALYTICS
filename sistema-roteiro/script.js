@@ -18,7 +18,7 @@ const state = {
     colMap: {},
     taskCols: [],
     agents: [],
-    projectType: "compartilhado" // "compartilhado" ou "exclusivo"
+    projectType: localStorage.getItem("roteiro_projectType") || "compartilhado"
 };
 
 // =============================== ELEMENTOS DOM ===============================
@@ -270,6 +270,14 @@ function processExcelData(rows) {
     state.selectedPromoter = agents[0];
     elements.promoterSelect.value = agents[0];
 
+    // Deep Linking: Verificamos se há um agente na URL
+    const urlParams = new URLSearchParams(window.location.hash.split('?')[1]);
+    const agentParam = urlParams.get('agente');
+    if (agentParam && agents.includes(agentParam)) {
+        state.selectedPromoter = agentParam;
+        elements.promoterSelect.value = agentParam;
+    }
+
     setStatus(`✅ Planilha carregada! ${dataRows.length} registros, ${agents.length} agentes`, "success");
     showToast("Planilha carregada com sucesso!", "success");
 
@@ -379,40 +387,14 @@ function updatePreview() {
 
     state.processedData = groupData(rows);
 
+    // Update URL without reloading to support sharing deep links
+    const hashBase = window.location.hash.split('?')[0];
+    const newHash = `${hashBase}?agente=${encodeURIComponent(state.selectedPromoter)}`;
+    if (window.location.hash !== newHash) {
+        history.replaceState(null, null, newHash);
+    }
+
     let html = "";
-
-    /* --- SUSPENSO TEMPORARIAMENTE: Mostrar apenas a Tabela Resumida ---
-    state.processedData.forEach((store) => {
-        html += `
-            <div class="store-card">
-                <div class="store-name">🏪 ${escapeHtml(store.name)}</div>
-                ${store.enderecoCompleto ? `<div class="store-address">📍 ${escapeHtml(store.enderecoCompleto)}</div>` : ""}
-                ${store.rede ? `<div class="store-info">🏢 Rede: ${escapeHtml(store.rede)}</div>` : ""}
-                <div class="store-tasks">
-                    ${store.tasks
-                .map(
-                    (task) => `
-                        <div class="task-item">
-                            <div class="task-name">📋 ${escapeHtml(task.name)}</div>
-                            <div class="days-container">
-                                ${DAY_ORDER.map(
-                        (day) => `
-                                    <span class="day-badge ${task.days.includes(day) ? "active" : "inactive"}">
-                                        ${DAY_NAMES[day]}
-                                    </span>
-                                `
-                    ).join("")}
-                            </div>
-                        </div>
-                    `
-                )
-                .join("")}
-                </div>
-            </div>
-        `;
-    });
-    */
-
     html += generateSummaryTableHTML();
     elements.previewContent.innerHTML = html;
 }
@@ -788,18 +770,36 @@ if (btnDebug) {
 
 // Inicializar Seletor de Projeto
 document.querySelectorAll('.project-btn').forEach(btn => {
+    // Definir estado inicial dos botões baseado no localStorage
+    if (btn.getAttribute('data-type') === state.projectType) {
+        btn.classList.add('active');
+    } else {
+        btn.classList.remove('active');
+    }
+
     btn.addEventListener('click', () => {
         document.querySelectorAll('.project-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.projectType = btn.getAttribute('data-type');
+        localStorage.setItem("roteiro_projectType", state.projectType);
         
-        // Se já houver dados carregados, re-processar
         if (state.data.length > 0) {
-            // Re-processar com as novas definições de coluna
-            // Pegamos o cabeçalho original que deve estar salvo ou re-detectado
-            // Como state.data não contém o cabeçalho, precisamos re-processar o arquivo ou salvar o cabeçalho
-            // Por simplicidade, vamos avisar que precisa re-importar se mudar o tipo
-            showToast("Tipo de projeto alterado. Importe a planilha novamente para aplicar a nova lógica.", "info");
+            // Re-mapear colunas se o tipo mudar
+            try {
+                state.colMap = buildColumnMap(state.headers);
+                updatePreview();
+                showToast(`Modo ${state.projectType} aplicado`, "info");
+            } catch (e) {
+                console.error(e);
+            }
         }
     });
 });
+
+// Sync Theme via BroadcastChannel
+const syncChannel = new BroadcastChannel('app_sync');
+syncChannel.onmessage = (event) => {
+    if (event.data.type === 'THEME_CHANGE') {
+        document.documentElement.setAttribute('data-theme', event.data.theme);
+    }
+};

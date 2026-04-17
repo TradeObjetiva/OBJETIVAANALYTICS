@@ -106,6 +106,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        const dropText = document.getElementById("excelFileName") || excelFile.closest('.drop-area')?.querySelector('.drop-text');
+        if (dropText) dropText.innerHTML = `<span style="color: var(--success); font-weight: bold;">✓ Planilha Carregada:</span><br>${file.name}`;
+
         if (progressContainer) progressContainer.style.display = "none";
         if (progressBar) progressBar.style.width = "0%";
 
@@ -113,20 +116,35 @@ document.addEventListener("DOMContentLoaded", () => {
             await carregarExcel(file);
             const numLojas = state.grouped.length;
             const statusBox = document.getElementById("statusBox");
-            if (statusBox) statusBox.textContent = `${numLojas} lojas identificadas.`;
+            if (statusBox) {
+                let currentText = statusBox.textContent || "";
+                let baseMsg = `${numLojas} lojas identificadas.`;
+                if (currentText.includes("Modelo PDF")) {
+                     statusBox.textContent = baseMsg + " | Modelo PDF OK";
+                } else {
+                     statusBox.textContent = baseMsg;
+                }
+            }
         } catch (error) {
             console.error(error);
             alert("Erro ao ler a planilha.");
         }
     });
-
     templatePdf?.addEventListener("change", async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        const dropText = document.getElementById("pdfFileName") || templatePdf.closest('.drop-area')?.querySelector('.drop-text');
+        if (dropText) dropText.innerHTML = `<span style="color: var(--success); font-weight: bold;">✓ Modelo PDF Carregado:</span><br>${file.name}`;
+
         try {
             state.templateBytes = await file.arrayBuffer();
-            alert("PDF modelo carregado com sucesso.");
+            const statusBox = document.getElementById("statusBox");
+            if (statusBox && statusBox.textContent.includes("lojas identificadas")) {
+                statusBox.textContent += " | Modelo PDF OK";
+            } else if (statusBox) {
+                statusBox.textContent = "Modelo PDF carregado.";
+            }
         } catch (error) {
             console.error(error);
             alert("Erro ao carregar o PDF modelo.");
