@@ -45,6 +45,8 @@
     <!-- SweetAlert2 for Global Notifications -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SheetJS for Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -229,21 +231,31 @@
                 <div class="dashboard-grid">
                     <section class="main-col">
                         <div class="welcome-hero">
-                            <h2>Bem-vindo, <span id="welcome-name" class="skeleton skeleton-text" style="display: inline-block; width: 120px; height: 32px; vertical-align: middle; border-radius: 8px;"></span></h2>
+                            <h2 style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">Bem-vindo, <span id="welcome-name" class="skeleton skeleton-text" style="display: inline-block; width: 120px; height: 32px; vertical-align: middle; border-radius: 8px; word-break: break-word;"></span></h2>
                             <p>Sua operação de campo está rodando agora. Veja o resumo do dia.</p>
+                            
+                            <!-- Botão de Upload (Apenas para Master/Admin - Oculto por padrão) -->
+                            <div id="admin-upload-area" style="display: none; margin-bottom: 24px; background: rgba(79, 70, 229, 0.1); padding: 16px; border-radius: 12px; border: 1px dashed var(--primary);">
+                                <h4 style="margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    Atualizar Base de Dados (Excel)
+                                </h4>
+                                <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="font-size: 13px; color: var(--text-muted);">
+                                <button id="btn-process-excel" class="login-btn" style="padding: 8px 16px; font-size: 13px; width: auto; margin-left: 10px; display: none;">Processar e Salvar</button>
+                            </div>
 
                             <div class="metrics-strip">
                                 <div class="metric-card">
-                                    <span class="label">Efetividade Esperada</span>
-                                    <div class="value"><span id="metric-effectiveness" class="skeleton skeleton-title" style="width: 80px;"></span></div>
+                                    <span class="label">Clientes</span>
+                                    <div class="value"><span id="metric-clientes" class="skeleton skeleton-title" style="width: 80px;"></span></div>
                                 </div>
                                 <div class="metric-card">
-                                    <span class="label">Pontos Críticos</span>
-                                    <div class="value"><span id="metric-critical" class="skeleton skeleton-title" style="width: 50px;"></span></div>
+                                    <span class="label">Redes</span>
+                                    <div class="value"><span id="metric-redes" class="skeleton skeleton-title" style="width: 50px;"></span></div>
                                 </div>
                                 <div class="metric-card">
                                     <span class="label">Lojas Monitoradas</span>
-                                    <div class="value"><span id="metric-stores" class="skeleton skeleton-title" style="width: 120px;"></span></div>
+                                    <div class="value"><span id="metric-lojas" class="skeleton skeleton-title" style="width: 120px;"></span></div>
                                 </div>
                             </div>
 
