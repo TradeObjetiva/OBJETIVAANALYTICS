@@ -14,7 +14,7 @@ echo Enviando para o GitHub...
 git push origin main
 echo.
 echo ==========================================
-echo   SINCRONIZAÇÃO CONCLUÍDA!
+echo   SINCRONIZACAO CONCLUIDA!
 echo ==========================================
 echo.
 pause

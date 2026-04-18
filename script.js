@@ -297,6 +297,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const activityList = document.getElementById('activity-list');
 
         try {
+            // 1. Tentar puxar dados otimizados via RPC (MUITO MAIS RÁPIDO)
+            const { data: rpcData, error: rpcError } = await window.supabase.rpc('get_dashboard_metrics');
+
+            if (!rpcError && rpcData) {
+                // Se a função existir no Supabase, usa o resultado direto
+                if (clientesEl) {
+                    clientesEl.classList.remove('skeleton', 'skeleton-title');
+                    clientesEl.innerHTML = `${rpcData.clientes} <span class="trend" style="font-size:11px; white-space:nowrap;">Na Base</span>`;
+                }
+                if (redesEl) {
+                    redesEl.classList.remove('skeleton', 'skeleton-title');
+                    redesEl.innerHTML = `${rpcData.redes} <span class="trend" style="font-size:11px; white-space:nowrap;">Monitoradas</span>`;
+                }
+                if (lojasEl) {
+                    lojasEl.classList.remove('skeleton', 'skeleton-title');
+                    lojasEl.innerHTML = `${rpcData.lojas} <span class="trend" style="font-size:11px; white-space:nowrap;">Total</span>`;
+                }
+                // Preencher skeleton das atividades
+                if (activityList) {
+                    activityList.innerHTML = `
+                        <div class="activity-item">
+                            <div class="activity-marker" style="background: var(--color-relatorios);"></div>
+                            <div class="activity-info">
+                                <span class="title">Sistema Operacional</span>
+                                <span class="time">Métricas prontas (RPC) • Agora</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                return; // Encerra aqui se o RPC funcionou
+            }
+
+            // 2. Fallback: Se o RPC não existir, faz do jeito antigo (lento para bases grandes)
+            console.warn('RPC "get_dashboard_metrics" não encontrado. Usando busca completa...');
             let allData = [];
             let page = 0;
             const pageSize = 1000;
@@ -509,8 +543,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Criar um cliente temporário para não deslogar o Master atual
-            // Usamos a biblioteca original (supabaseLib) para criar o cliente
-            const tempClient = window.supabaseLib.createClient(window.SUPABASE_URL, window.SUPABASE_KEY, {
+            // Usamos a biblioteca original (supabase) para criar o cliente
+            const tempClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY, {
                 auth: { persistSession: false }
             });
 
@@ -640,13 +674,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btnProcessExcel.textContent = 'Limpando base e enviando...';
 
             try {
-                const { error: delError } = await window.supabase.from('tb_planilha').delete().neq('id', -1);
-                
-                if (delError && !delError.message.includes('does not exist')) {
-                    throw delError;
-                }
-
-                // Prepare Data de forma super tolerante a falhas
+                // Prepare Data de forma super tolerante a falhas (ANTES DE APAGAR O BANCO)
                 let registrosEncontrados = 0;
                 const rowsToInsert = parsedExcelData.map(row => {
                     let mappedRow = {};
@@ -692,6 +720,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (rowsToInsert.length === 0) {
                     throw new Error(`O arquivo foi lido, mas nenhuma coluna esperada foi localizada na primeira aba. Tenha certeza que os cabeçalhos existem na primeira linha.`);
+                }
+
+                // SOMENTE APAGA SE TIVERMOS DADOS VÁLIDOS PARA INSERIR
+                const { error: delError } = await window.supabase.from('tb_planilha').delete().neq('id', -1);
+                
+                if (delError && !delError.message.includes('does not exist')) {
+                    throw delError;
                 }
                 
                 const batchSize = 1000;
