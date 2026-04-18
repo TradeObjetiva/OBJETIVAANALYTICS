@@ -306,6 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const redesEl = document.getElementById('metric-redes');
         const lojasEl = document.getElementById('metric-lojas');
         const activityList = document.getElementById('activity-list');
+        const municipiosEl = document.getElementById('metric-municipios');
+        const horasEl = document.getElementById('metric-horas');
 
         try {
             // 1. Tentar puxar dados otimizados via RPC (MUITO MAIS RÁPIDO)
@@ -350,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
             while (hasMore) {
                 const { data, error } = await window.supabase
                     .from('tb_planilha')
-                    .select('local, form')
+                    .select('local, form, municipio, horas_por_visita, rede, seg, ter, qua, qui, sex, sab')
                     .range(page * pageSize, (page + 1) * pageSize - 1);
                 
                 if (error) throw error;
@@ -371,39 +373,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 const clientesSet = new Set();
                 const redesSet = new Set();
                 const lojasSet = new Set();
+                const municipiosSet = new Set();
+                let totalHoras = 0;
 
                 data.forEach(row => {
                     if (row.form) {
                         let formName = row.form.toUpperCase().replace(/PESQUISA/g, '').trim();
                         if (formName) clientesSet.add(formName);
                     }
+                    if (row.municipio) {
+                        municipiosSet.add(row.municipio.trim().toUpperCase());
+                    }
+                    
+                    // Cálculo da Carga Horária: Soma os valores de Seg a Sab
+                    const diasSemana = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
+                    diasSemana.forEach(dia => {
+                        if (row[dia]) {
+                            let val = parseFloat(String(row[dia]).replace(',', '.'));
+                            if (!isNaN(val)) totalHoras += val;
+                        }
+                    });
+                    
+                    // Captação de Rede diretamente da coluna 'rede' (vinda do CSV)
+                    if (row.rede) {
+                        let rede = row.rede.toUpperCase()
+                            .replace(/\b(SUPERMERCADOS?|ATACADISTA|ATACAREJO|S\.?A\.?|LTDA\.?|REDE|LOJAS?|VAREJO|GRUPO|S\/A)\b/g, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                        
+                        // Remove acentos para agrupar "ASSAI" e "ASSAÍ"
+                        rede = rede.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+                        
+                        if (rede) redesSet.add(rede);
+                    }
+
                     if (row.local) {
                         let lojaStr = row.local.trim().toUpperCase();
                         lojasSet.add(lojaStr); 
-                        
-                        // Melhorar a extração de redes padronizando traços e acentos
-                        let txt = row.local.replace(/[–—_]/g, '-').trim();
-                        let rede;
-                        
-                        if (txt.includes('-')) {
-                            // Se tem traço, a rede é tudo antes do traço
-                            rede = txt.split('-')[0].trim();
-                        } else {
-                            // Se não tem traço, extrai a primeira palavra (para cobrir "Carrefour Bairro" -> "Carrefour")
-                            // Obs: Caso eles mandem "Pão de Açucar" sem traço, vai isolar "Pão", mas previne falsos positivos para cada loja
-                            let words = txt.split(' ');
-                            if(words.length > 2 && (words[0].toUpperCase() === 'PÃO' || words[0].toUpperCase() === 'PAO')) {
-                                rede = words.slice(0, 3).join(' '); // Proteção hardcoded comum
-                            } else {
-                                rede = words[0]; 
-                            }
-                        }
-                        
-                        // Remove acentos para agrupar "ASSAI" e "ASSAÍ" como a mesma rede
-                        if (rede) {
-                            rede = rede.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-                            redesSet.add(rede);
-                        }
                     }
                 });
 
@@ -418,6 +424,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (lojasEl) {
                     lojasEl.classList.remove('skeleton', 'skeleton-title');
                     lojasEl.innerHTML = `${lojasSet.size} <span class="trend" style="font-size:11px; white-space:nowrap;">Total</span>`;
+                }
+                if (municipiosEl) {
+                    municipiosEl.classList.remove('skeleton', 'skeleton-title');
+                    municipiosEl.innerHTML = `${municipiosSet.size} <span class="trend" style="font-size:11px; white-space:nowrap;">Cidades</span>`;
+                }
+                if (horasEl) {
+                    horasEl.classList.remove('skeleton', 'skeleton-title');
+                    // Mostrar com 1 casa decimal se necessário (ex: 1483,5)
+                    const horasFormatadas = totalHoras.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+                    horasEl.innerHTML = `${horasFormatadas} <span class="trend" style="font-size:11px; white-space:nowrap;">Horas</span>`;
                 }
             } else {
                 if (clientesEl) { clientesEl.classList.remove('skeleton'); clientesEl.innerHTML = '0'; }
@@ -695,18 +711,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         'PROJETO': 'projeto',
                         'CPF': 'cpf',
                         'AGENTE': 'agente',
+                        'RAZÃO SOCIAL': 'razao_social', 'RAZAO SOCIAL': 'razao_social',
                         'LOCAL': 'local',
+                        'REDE': 'rede',
+                        'CEP': 'cep',
+                        'LOGRADOURO': 'logradouro',
+                        'BAIRRO': 'bairro',
                         'MUNICÍPIO': 'municipio', 'MUNICIPIO': 'municipio',
                         'ESTADO': 'estado',
                         'FORM': 'form',
-                        'HORAS POR VISITA': 'horas_por_visita', 'HORAS_POR_VISITA': 'horas_por_visita',
+                        'VALOR': 'valor',
+                        'VALOR SEMANAL': 'valor_semanal',
+                        'HORAS POR VISITA': 'horas_por_visita',
+                        'DOM': 'dom',
                         'SEG': 'seg',
                         'TER': 'ter',
                         'QUA': 'qua',
                         'QUI': 'qui',
                         'SEX': 'sex',
                         'SAB': 'sab',
-                        'FREQ. SEMANAL': 'freq_semanal', 'FREQ SEMANAL': 'freq_semanal', 'FREQ_SEMANAL': 'freq_semanal',
+                        'FREQ. SEMANAL': 'freq_semanal', 'FREQ SEMANAL': 'freq_semanal',
                         'LOCAL_ID': 'local_id',
                         'FORM_ID': 'form_id',
                         'AGENT_ID': 'agent_id'
@@ -774,11 +798,19 @@ CREATE TABLE tb_planilha (
   projeto TEXT,
   cpf TEXT,
   agente TEXT,
+  razao_social TEXT,
   local TEXT,
+  rede TEXT,
+  cep TEXT,
+  logradouro TEXT,
+  bairro TEXT,
   municipio TEXT,
   estado TEXT,
   form TEXT,
+  valor TEXT,
+  valor_semanal TEXT,
   horas_por_visita TEXT,
+  dom TEXT,
   seg TEXT,
   ter TEXT,
   qua TEXT,
