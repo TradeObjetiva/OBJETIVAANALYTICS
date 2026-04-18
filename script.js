@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Criar um cliente temporário para não deslogar o Master atual
             // Usamos a biblioteca original (supabase) para criar o cliente
-            const tempClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY, {
+            const tempClient = window.supabaseLib.createClient(window.SUPABASE_URL, window.SUPABASE_KEY, {
                 auth: { persistSession: false }
             });
 
