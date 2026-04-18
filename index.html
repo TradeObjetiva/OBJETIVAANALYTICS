@@ -57,7 +57,7 @@
         <header class="top-nav">
             <div class="logo-area">
                 <div class="logo-icon">O</div>
-                <h1>Objetiva<span> Analytics</span></h1>
+                <h1>Objetiva <span>Analytics</span></h1>
             </div>
 
             <nav class="tabs" id="tabs">
@@ -120,6 +120,21 @@
             </nav>
 
             <div class="nav-actions">
+                <!-- Dropdown de Importação (Apenas para Admin) -->
+                <div id="admin-upload-area" style="display: none; position: relative;">
+                    <button id="import-btn" class="action-btn" title="Importações" onclick="const drop = document.getElementById('import-dropdown'); drop.style.display = drop.style.display === 'none' ? 'block' : 'none'; event.stopPropagation();">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    </button>
+                    <div id="import-dropdown" style="display: none; position: absolute; top: calc(100% + 15px); right: 0; background: var(--bg-card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999;" onclick="event.stopPropagation()">
+                        <h4 style="margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; color: var(--text-main); margin-top: 0;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Atualizar Base (Excel)
+                        </h4>
+                        <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="font-size: 13px; color: var(--text-muted); width: 100%; margin-bottom: 10px; box-sizing: border-box;">
+                        <button id="btn-process-excel" class="login-btn" style="padding: 8px 16px; font-size: 13px; width: 100%; display: none;">Processar e Salvar</button>
+                    </div>
+                </div>
+
                 <button id="theme-toggle" class="action-btn">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="5"></circle>
@@ -234,15 +249,7 @@
                             <h2 style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">Bem-vindo, <span id="welcome-name" class="skeleton skeleton-text" style="display: inline-block; width: 120px; height: 32px; vertical-align: middle; border-radius: 8px; word-break: break-word;"></span></h2>
                             <p>Sua operação de campo está rodando agora. Veja o resumo do dia.</p>
                             
-                            <!-- Botão de Upload (Apenas para Master/Admin - Oculto por padrão) -->
-                            <div id="admin-upload-area" style="display: none; margin-bottom: 24px; background: rgba(79, 70, 229, 0.1); padding: 16px; border-radius: 12px; border: 1px dashed var(--primary);">
-                                <h4 style="margin-bottom: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                    Atualizar Base de Dados (Excel)
-                                </h4>
-                                <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" style="font-size: 13px; color: var(--text-muted);">
-                                <button id="btn-process-excel" class="login-btn" style="padding: 8px 16px; font-size: 13px; width: auto; margin-left: 10px; display: none;">Processar e Salvar</button>
-                            </div>
+                            <!-- Área de importação movida para o cabeçalho (top-nav) -->
 
                             <div class="metrics-strip">
                                 <div class="metric-card">
@@ -392,7 +399,7 @@
         <div class="login-card">
             <div class="login-header">
                 <div class="logo-icon">O</div>
-                <h2>Objetiva<span>Analytics</span></h2>
+                <h2>Objetiva <span>Analytics</span></h2>
                 <p>Faça login para acessar o sistema</p>
             </div>
             <form id="login-form">

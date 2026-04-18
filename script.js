@@ -201,6 +201,17 @@ document.addEventListener('DOMContentLoaded', () => {
         iframe.onload = syncIframeStyles;
     });
 
+    // Fechar dropdown de importação ao clicar fora
+    document.addEventListener('click', (e) => {
+        const importDropdown = document.getElementById('import-dropdown');
+        const importBtn = document.getElementById('import-btn');
+        if (importDropdown && importDropdown.style.display === 'block') {
+            if (!importDropdown.contains(e.target) && (!importBtn || !importBtn.contains(e.target))) {
+                importDropdown.style.display = 'none';
+            }
+        }
+    });
+
     // --- Auth Functions ---
 
     const checkAuth = async () => {
