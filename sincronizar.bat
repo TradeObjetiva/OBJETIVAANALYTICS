@@ -10,6 +10,9 @@ echo Criando ponto de restauração...
 set commit_msg="Sincronização automatica: %date% %time%"
 git commit -m %commit_msg%
 echo.
+echo Baixando atualizacoes do GitHub...
+git pull --rebase origin main
+echo.
 echo Enviando para o GitHub...
 git push origin main
 echo.
