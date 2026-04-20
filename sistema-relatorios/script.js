@@ -359,15 +359,25 @@ downloadExcelBtn.addEventListener('click', async () => {
               val = new Date(Number(matchDate[3]), Number(matchDate[2]) - 1, Number(matchDate[1]));
               numFmt = 'dd/mm/yyyy'; 
             } else {
-              // Tenta converter "R$ 26,50" ou "1.200,50" ou "-10" para número apropriado
+              // Tenta converter "R$ 26,50" ou "1.200,50" ou "-10" ou "9.29" para número apropriado
               const isCurrency = /^R\$\s*/i.test(val.trim());
               let cleanedNum = val.trim().replace(/^R\$\s*/i, '');
               
-              // Verifica se a string limpa parece um número válido (ex: 1.200,50 ou 10,50 ou -10)
+              // Verifica se a string limpa parece um número válido
               if (/^-?\d{1,3}(\.\d{3})*([,]\d+)?$/.test(cleanedNum) || /^-?\d+([,.]\d+)?$/.test(cleanedNum)) {
-                if (!colName.toUpperCase().includes('ID') && !colName.toUpperCase().includes('SKU') && !colName.toUpperCase().includes('CEP') && !colName.toUpperCase().includes('CPF') && !colName.toUpperCase().includes('CNPJ') && !colName.toUpperCase().includes('TELEFONE') && !colName.toUpperCase().includes('CELULAR')) {
-                  // Remover pontos de milhar e trocar virgula decimal por ponto
-                  cleanedNum = cleanedNum.replace(/\./g, '').replace(',', '.');
+                if (!colName.toUpperCase().includes('ID') && !colName.toUpperCase().includes('SKU') && !colName.toUpperCase().includes('CEP') && !colName.toUpperCase().includes('CPF') && !colName.toUpperCase().includes('CNPJ') && !colName.toUpperCase().includes('TELEFONE') && !colName.toUpperCase().includes('CELULAR') && !colName.toUpperCase().includes('CODIGO') && !colName.toUpperCase().includes('CÓDIGO')) {
+                  
+                  // Se tiver vírgula, tratamos como padrão BR (ponto é milhar, vírgula é decimal)
+                  if (cleanedNum.includes(',')) {
+                    cleanedNum = cleanedNum.replace(/\./g, '').replace(',', '.');
+                  } else {
+                    // Sem vírgula, tratamos como padrão US onde o ponto é decimal (ou inteiro)
+                    // Se houver mais de um ponto (ex: 1.200.000), é garantido que seja milhar
+                    if ((cleanedNum.match(/\./g) || []).length > 1) {
+                      cleanedNum = cleanedNum.replace(/\./g, '');
+                    }
+                  }
+                  
                   const parsedNum = parseFloat(cleanedNum);
                   
                   if (!isNaN(parsedNum)) {
@@ -375,6 +385,12 @@ downloadExcelBtn.addEventListener('click', async () => {
                       if (isCurrency) {
                         // Aplica formato de moeda para o Excel reconhecer e o usuário poder alterar
                         numFmt = '"R$" #,##0.00;[Red]\-"R$" #,##0.00';
+                      } else {
+                        // Aplicar um formato numérico padrão evita que o número pareça texto 
+                        // Apenas se ele tiver casas decimais originalmente
+                        if (cleanedNum.includes('.')) {
+                          numFmt = '#,##0.00';
+                        }
                       }
                   }
                 }
