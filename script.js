@@ -328,17 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     lojasEl.innerHTML = `${rpcData.lojas} <span class="trend" style="font-size:11px; white-space:nowrap;">Total</span>`;
                 }
                 // Preencher skeleton das atividades
-                if (activityList) {
-                    activityList.innerHTML = `
-                        <div class="activity-item">
-                            <div class="activity-marker" style="background: var(--color-relatorios);"></div>
-                            <div class="activity-info">
-                                <span class="title">Sistema Operacional</span>
-                                <span class="time">Métricas prontas (RPC) • Agora</span>
-                            </div>
-                        </div>
-                    `;
-                }
+                // O activityList agora é preenchido pelo Feed Ao Vivo
                 return; // Encerra aqui se o RPC funcionou
             }
 
@@ -447,17 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (lojasEl) { lojasEl.classList.remove('skeleton'); lojasEl.innerHTML = '-'; }
         }
 
-        if (activityList) {
-            activityList.innerHTML = `
-                <div class="activity-item">
-                    <div class="activity-marker" style="background: var(--color-relatorios);"></div>
-                    <div class="activity-info">
-                        <span class="title">Sistema Operacional</span>
-                        <span class="time">Métricas prontas • Agora</span>
-                    </div>
-                </div>
-            `;
-        }
+        // O activityList agora é preenchido pelo Feed Ao Vivo
     };
 
     const handleLogin = async (e) => {
@@ -504,6 +484,134 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateUIForAuth(null);
             }
         });
+
+        // Configuração do Feed de Check-ins (webhook) na tela principal
+        setupLiveFeed();
+    }
+
+    function setupLiveFeed() {
+        const activityList = document.getElementById('activity-list');
+        const liveStatusText = document.querySelector('.live-status-text');
+        if (!activityList) return;
+
+        let hasActivities = false;
+
+        window.addDashboardCheckin = function(checkinData, prepend = false) {
+            if (!hasActivities) {
+                activityList.innerHTML = '';
+                hasActivities = true;
+            }
+
+            let agentName = "Agente";
+            let agentPhoto = "";
+            let clientIdInfo = checkinData.clientId ? `<div style="color:var(--text-main); font-size:13px; margin-top:4px;">🏪 Loja: <strong>${checkinData.clientId}</strong></div>` : '';
+            
+            if (checkinData.activityId && checkinData.activityId.includes(';')) {
+                const parts = checkinData.activityId.split(';').filter(p => p.trim() !== '');
+                agentName = parts[0] || "Agente";
+                agentPhoto = parts.length > 1 ? parts[parts.length - 1] : "";
+            } else {
+                agentName = checkinData.agentName || "Agente";
+                agentPhoto = checkinData.photoUrl || "";
+            }
+
+            const dateStr = checkinData.historyId || new Date().toISOString();
+            const dateObj = new Date(dateStr.replace(' ', 'T')); 
+            const timeFormatted = isNaN(dateObj.getTime()) ? "Agora" : `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+
+            const avatarHtml = agentPhoto 
+                ? `<div style="width:100%; height:160px; border-radius:10px 10px 0 0; overflow:hidden; border-bottom:2px solid #3b82f6;">
+                     <img src="${agentPhoto}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=3b82f6&color=fff'">
+                   </div>` 
+                : `<div style="width:100%; height:160px; border-radius:10px 10px 0 0; overflow:hidden; border-bottom:2px solid #3b82f6; background:#3b82f6; display:flex; align-items:center; justify-content:center; color:#fff; font-size:40px; font-weight:bold;">
+                     ${agentName[0]}
+                   </div>`;
+
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.style.animation = 'slideInFromLeft 0.4s ease forwards';
+            item.style.padding = '0'; // Remove o padding padrão para a foto encostar nas bordas
+            item.style.flexDirection = 'column';
+            item.style.alignItems = 'stretch';
+            item.style.gap = '0';
+            item.style.overflow = 'hidden';
+            item.style.backgroundColor = 'var(--bg-card)';
+            item.style.border = '1px solid var(--border)';
+            item.style.borderRadius = '10px';
+            item.style.marginBottom = '16px';
+            
+            item.innerHTML = `
+                ${avatarHtml}
+                <div class="activity-info" style="padding: 14px; line-height:1.4;">
+                    <span class="title" style="white-space: normal; display:block; font-size:14px;"><strong>${agentName}</strong></span>
+                    ${clientIdInfo}
+                    <div class="time" style="color: #10b981; font-weight: 600; font-size: 11px; margin-top:8px;">✅ Check-in realizado às ${timeFormatted}</div>
+                </div>
+            `;
+
+            if (prepend) {
+                activityList.insertBefore(item, activityList.firstChild);
+            } else {
+                activityList.appendChild(item);
+            }
+
+            if (activityList.children.length > 20) {
+                activityList.lastChild.remove();
+            }
+        };
+
+        // 1. Busca Iniciais do Dia
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        window.supabase
+            .from('checkins')
+            .select('*')
+            .gte('created_at', today.toISOString())
+            .order('created_at', { ascending: false }) // os mais recentes primeiro
+            .limit(20)
+            .then(({ data, error }) => {
+                if (!error && data && data.length > 0) {
+                    activityList.innerHTML = '';
+                    hasActivities = true;
+                    data.forEach(row => {
+                        window.addDashboardCheckin({
+                            historyId: row.created_at,
+                            activityId: row.activity_id,
+                            clientId: row.client_id
+                        }, false); // Usa append, assim eles ficam na ordem natural
+                    });
+                } else if (!hasActivities) {
+                    activityList.innerHTML = `
+                        <div class="activity-item">
+                            <div class="activity-info">
+                                <span class="title" style="color:var(--text-muted)">Aguardando Webhooks...</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+        // 2. Assinar novos Insets
+        window.supabase
+            .channel('public:checkins_main')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins' }, payload => {
+                window.addDashboardCheckin({
+                    historyId: payload.new.created_at, 
+                    activityId: payload.new.activity_id,
+                    clientId: payload.new.client_id
+                }, true); // Prepend para novos caírem no topo
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED' && liveStatusText) {
+                    liveStatusText.textContent = 'CONECTADO';
+                    liveStatusText.style.color = '#10b981';
+                } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                    if (liveStatusText) {
+                        liveStatusText.textContent = 'OFFLINE';
+                        liveStatusText.style.color = '#ef4444';
+                    }
+                }
+            });
     }
 
     // --- Users Management Functions ---

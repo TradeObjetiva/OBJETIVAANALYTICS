@@ -15,6 +15,9 @@
     <!-- jsPDF for Report Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-config.js"></script>
 </head>
 <body>
     <div class="analytics-container">
@@ -123,6 +126,20 @@
                         <button class="export-btn-mini" onclick="exportPromoterVolume()">📊 Exportar</button>
                     </div>
                     <div id="bestPromotersList" class="rank-list scrollable"></div>
+                </div>
+            </div>
+
+            <div class="live-feed-row">
+                <div class="live-feed-panel">
+                    <div class="chart-header">
+                        <h3><span class="live-indicator"></span> 📡 Feed Ao Vivo: Check-ins de Agentes</h3>
+                        <span class="live-status-text">Conectado</span>
+                    </div>
+                    <div id="liveCheckinFeed" class="live-feed-container scrollable">
+                        <div class="empty-feed-text" style="color: #94a3b8; font-size: 13px; text-align: center; padding: 20px;">
+                            Aguardando novos check-ins...
+                        </div>
+                    </div>
                 </div>
             </div>
 
