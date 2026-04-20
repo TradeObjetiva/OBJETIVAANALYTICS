@@ -1,6 +1,9 @@
 const EXPORT_MODEL = [
   { export: 'DATA', source: 'DATA E HORA INÍCIO EXECUÇÃO', transform: 'date' },
   { export: 'DATA', source: 'DATA E HORA INÍCIO DE EXECUÇÃO', transform: 'date' },
+  { export: 'DATA', source: 'DATA E HORA DE EXECUÇÃO', transform: 'date' },
+  { export: 'DATA', source: 'DATA E HORA DA EXECUÇÃO', transform: 'date' },
+  { export: 'DATA', source: 'DATA E HORA EXECUÇÃO', transform: 'date' },
   { export: 'PDV', source: 'PDV' },
   { export: 'PROMOTOR', source: 'PROMOTOR' },
   { export: 'ITENS', source: 'SKU' },
@@ -11,6 +14,9 @@ const EXPORT_MODEL = [
   { export: 'TEM SKU VENCENDO EM 60 DIAS?', source: 'TEM SKU VENCENDO EM 60 DIAS?' },
   { export: 'DATA DO DIA', source: 'DATA E HORA INÍCIO EXECUÇÃO', transform: 'date' },
   { export: 'DATA DO DIA', source: 'DATA E HORA INÍCIO DE EXECUÇÃO', transform: 'date' },
+  { export: 'DATA DO DIA', source: 'DATA E HORA DE EXECUÇÃO', transform: 'date' },
+  { export: 'DATA DO DIA', source: 'DATA E HORA DA EXECUÇÃO', transform: 'date' },
+  { export: 'DATA DO DIA', source: 'DATA E HORA EXECUÇÃO', transform: 'date' },
   { export: 'INFORME A VALIDADE', source: 'INFORME A VALIDADE' },
   { export: 'DIAS PARA O VENCIMENTO', source: 'DIAS PARA O VENCIMENTO' },
   { export: 'QUAL A QUANTIDADE EM UNIDADES?', source: 'QUAL A QUANTIDADE EM UNIDADES?' },
@@ -352,14 +358,26 @@ downloadExcelBtn.addEventListener('click', async () => {
             if (matchDate) {
               val = new Date(Number(matchDate[3]), Number(matchDate[2]) - 1, Number(matchDate[1]));
               numFmt = 'dd/mm/yyyy'; 
-            } else if (/^-?\d+([,.]\d+)?$/.test(val.trim())) {
-              // Conversão de Números genéricos (Qtd, Estoque, etc)
-              if (!colName.toUpperCase().includes('ID') && !colName.toUpperCase().includes('SKU') && !colName.toUpperCase().includes('CEP')) {
-                  const cleanedNum = val.trim().replace(',', '.');
+            } else {
+              // Tenta converter "R$ 26,50" ou "1.200,50" ou "-10" para número apropriado
+              const isCurrency = /^R\$\s*/i.test(val.trim());
+              let cleanedNum = val.trim().replace(/^R\$\s*/i, '');
+              
+              // Verifica se a string limpa parece um número válido (ex: 1.200,50 ou 10,50 ou -10)
+              if (/^-?\d{1,3}(\.\d{3})*([,]\d+)?$/.test(cleanedNum) || /^-?\d+([,.]\d+)?$/.test(cleanedNum)) {
+                if (!colName.toUpperCase().includes('ID') && !colName.toUpperCase().includes('SKU') && !colName.toUpperCase().includes('CEP') && !colName.toUpperCase().includes('CPF') && !colName.toUpperCase().includes('CNPJ') && !colName.toUpperCase().includes('TELEFONE') && !colName.toUpperCase().includes('CELULAR')) {
+                  // Remover pontos de milhar e trocar virgula decimal por ponto
+                  cleanedNum = cleanedNum.replace(/\./g, '').replace(',', '.');
                   const parsedNum = parseFloat(cleanedNum);
+                  
                   if (!isNaN(parsedNum)) {
                       val = parsedNum;
+                      if (isCurrency) {
+                        // Aplica formato de moeda para o Excel reconhecer e o usuário poder alterar
+                        numFmt = '"R$" #,##0.00;[Red]\-"R$" #,##0.00';
+                      }
                   }
+                }
               }
             }
           }
