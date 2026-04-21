@@ -814,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const excelInput = document.getElementById('excel-upload');
     const btnProcessExcel = document.getElementById('btn-process-excel');
     let parsedExcelData = [];
-    const excelWorker = new Worker('excel-worker.js');
+    const excelWorker = new Worker('/excel-worker.js');
 
     excelWorker.onmessage = function(e) {
         const { type, data, message } = e.data;

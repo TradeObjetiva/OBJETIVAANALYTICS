@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Assiduidade - Objetiva Analytics</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../../style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -211,19 +211,41 @@
         .collaborator-role { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .summary-col {
-            background: rgba(0, 0, 0, 0.2); font-weight: 800; text-align: center;
-            width: 40px; color: var(--primary); position: sticky; right: 0;
-            z-index: 10; border-left: 1px solid var(--border);
+            background: #121216 !important; 
+            font-weight: 800; 
+            text-align: center;
+            width: 44px; min-width: 44px;
+            color: var(--primary); 
+            position: sticky; 
+            z-index: 25; 
+            border-left: 1px solid rgba(255,255,255,0.1) !important;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.3);
         }
         .summary-col:nth-last-child(1) { right: 0; }
-        .summary-col:nth-last-child(2) { right: 40px; }
-        .summary-col:nth-last-child(3) { right: 80px; }
-        .summary-col:nth-last-child(4) { right: 120px; }
-        thead th.summary-col { z-index: 41; }
+        .summary-col:nth-last-child(2) { right: 44px; }
+        .summary-col:nth-last-child(3) { right: 88px; }
+        .summary-col:nth-last-child(4) { right: 132px; }
+        thead th.summary-col { z-index: 46; background: #1c1c24 !important; }
 
-        .day-header { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-        .day-header span:first-child { font-size: 13px; font-weight: 800; color: var(--text-main); }
-        .day-header span:last-child { font-size: 8px; color: var(--text-dim); }
+        .day-header { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; }
+        .day-header span:first-child { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .day-header span:last-child { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+        .day-cell { text-align: center; width: 52px; min-width: 52px; cursor: pointer !important; transition: var(--transition); border-right: 1px solid rgba(255,255,255,0.03) !important; }
+        .day-cell.weekend { background: rgba(0, 0, 0, 0.25) !important; }
+        .day-cell.weekend .day-header span:first-child { color: var(--text-muted); }
+        .day-cell:hover { background: rgba(99, 102, 241, 0.15) !important; }
+        
+        .sticky-col { 
+            position: sticky; left: 0; 
+            background: #121216 !important; 
+            z-index: 25; 
+            border-right: 3px solid var(--primary) !important;
+            width: 220px; min-width: 220px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.3);
+        }
+        
+        th.sticky-col { z-index: 45; }
 
         .legend-container {
             margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px;
@@ -361,13 +383,20 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../supabase-config.js"></script>
+    <script src="../../js/supabase-config.js"></script>
     <script>
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const dayShort = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
         
         let currentDate = new Date();
+        // Ajusta para o início do ciclo atual (dia 21)
+        if (currentDate.getDate() < 21) {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+        }
+        currentDate.setDate(21);
+        
         let selectedCell = null;
         let staffList = [];
 
@@ -379,13 +408,12 @@
         const observationsList = document.getElementById('observations-list');
 
         async function init() {
-            // Fallback para o caso do iframe não ter o supabase no window global
             if (!window.supabase && window.parent.supabase) {
                 window.supabase = window.parent.supabase;
             }
 
             if (!window.supabase) {
-                tableBody.innerHTML = `<tr><td colspan="40" style="text-align:center; padding:20px; color:red;">Erro: Supabase não inicializado. Verifique a conexão.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="40" style="text-align:center; padding:20px; color:red;">Erro: Supabase não inicializado.</td></tr>`;
                 return;
             }
 
@@ -397,7 +425,6 @@
                 setupEventListeners();
             } catch (err) {
                 console.error('Erro na inicialização:', err);
-                tableBody.innerHTML = `<tr><td colspan="40" style="text-align:center; padding:20px; color:red;">Erro ao carregar dados: ${err.message}</td></tr>`;
             }
         }
 
@@ -407,16 +434,8 @@
                 .select('nome, projeto')
                 .order('nome', { ascending: true });
             
-            if (error) {
-                console.error('Erro ao buscar tb_colaboradores:', error);
-                throw new Error(`Falha ao ler colaboradores: ${error.message}`);
-            }
-
+            if (error) throw new Error(`Falha ao ler colaboradores: ${error.message}`);
             staffList = data.map(item => ({ name: item.nome, role: item.projeto || 'PROMOTOR' }));
-            
-            if (staffList.length === 0) {
-                console.warn('Nenhum colaborador encontrado em tb_colaboradores.');
-            }
         }
 
         function getLocalDateString(date) {
@@ -428,141 +447,72 @@
 
         async function processExistingCheckins() {
             const todayStr = getLocalDateString(new Date());
-            
-            // Corrige o fuso horário para buscar a partir da meia-noite local corretamente
             const startOfDay = new Date();
             startOfDay.setHours(0, 0, 0, 0);
             
-            const { data: checkins, error } = await window.supabase
+            const { data: checkins } = await window.supabase
                 .from('checkins')
                 .select('activity_id, created_at')
                 .gte('created_at', startOfDay.toISOString());
 
-            if (error || !checkins) return;
-
-            // Busca TODAS as assiduidades de hoje de uma única vez (Ganho enorme de performance)
             const { data: existingAttendance } = await window.supabase
                 .from('tb_assiduidade')
                 .select('collaborator_name, status, is_manual, observation')
                 .eq('date', todayStr);
 
             const attendanceMap = new Map();
-            if (existingAttendance) {
-                existingAttendance.forEach(a => attendanceMap.set(a.collaborator_name, a));
-            }
+            existingAttendance?.forEach(a => attendanceMap.set(a.collaborator_name, a));
 
-            const unknownNames = new Set();
-            const staffNamesSet = new Set(staffList.map(s => s.name));
             const newRecordsToUpsert = [];
-
-            for (const checkin of checkins) {
-                let name = "";
-                // Extrai o nome de forma robusta
-                if (checkin.activity_id && checkin.activity_id.includes(';')) {
-                    name = checkin.activity_id.split(';')[0].trim().toUpperCase();
-                } else if (checkin.activity_id) {
-                    name = checkin.activity_id.trim().toUpperCase();
+            checkins?.forEach(checkin => {
+                const name = checkin.activity_id?.split(';')[0].trim().toUpperCase();
+                if (name && !attendanceMap.has(name)) {
+                    newRecordsToUpsert.push({ collaborator_name: name, date: todayStr, status: 'P', is_manual: false });
+                    attendanceMap.set(name, { status: 'P' });
                 }
-                
-                if (name && name !== "" && name !== "AGENTE") {
-                    const existing = attendanceMap.get(name);
+            });
 
-                    // Só vai atualizar se a pessoa ainda não tiver o P (ou for automático)
-                    if (!existing || (!existing.is_manual && existing.status !== 'P')) {
-                        // Evita inserir duplicado na lista de upsert da mesma execução
-                        if (!newRecordsToUpsert.some(r => r.collaborator_name === name)) {
-                            newRecordsToUpsert.push({
-                                collaborator_name: name,
-                                date: todayStr,
-                                status: 'P',
-                                checkin_time: new Date(checkin.created_at).toLocaleTimeString('pt-BR'),
-                                is_manual: false,
-                                observation: existing ? existing.observation : null
-                            });
-                            // Atualiza o mapa localmente para não processar nos próximos checkins do loop
-                            attendanceMap.set(name, { status: 'P', is_manual: false });
-                        }
-                    }
-
-                    if (!staffNamesSet.has(name)) {
-                        unknownNames.add(name);
-                    }
-                }
-            }
-
-            // Realiza apenas 1 UPSERT (Batch) com todos os colaboradores atualizados
             if (newRecordsToUpsert.length > 0) {
-                await window.supabase
-                    .from('tb_assiduidade')
-                    .upsert(newRecordsToUpsert, { onConflict: 'collaborator_name, date' });
-            }
-
-            if (unknownNames.size > 0) {
-                const namesArray = Array.from(unknownNames);
-                const alert = document.getElementById('missing-staff-alert');
-                const listSpan = document.getElementById('missing-names-list');
-                listSpan.textContent = namesArray.join(', ');
-                alert.style.display = 'flex';
-
-                document.getElementById('btn-add-missing').onclick = async () => {
-                    const newStaff = namesArray.map(name => ({ nome: name, projeto: 'EXTRA (DETECTADO)' }));
-                    const { error } = await window.supabase.from('tb_colaboradores').upsert(newStaff, { onConflict: 'nome' });
-                    
-                    if (error) {
-                        Swal.fire('Erro!', 'Não foi possível salvar os novos colaboradores.', 'error');
-                    } else {
-                        await syncStaff();
-                        alert.style.display = 'none';
-                        await renderGrid();
-                        Swal.fire('Sucesso!', 'Novos colaboradores adicionados à base fixa.', 'success');
-                    }
-                };
+                await window.supabase.from('tb_assiduidade').upsert(newRecordsToUpsert);
             }
         }
 
         async function renderGrid() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            monthDisplay.textContent = `${monthNames[month]} ${year}`;
+            const start = new Date(currentDate);
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + 1);
+            end.setDate(20);
+
+            monthDisplay.textContent = `${start.getDate()} ${monthNames[start.getMonth()].slice(0,3)} - ${end.getDate()} ${monthNames[end.getMonth()].slice(0,3)}`;
 
             while (headerRow.cells.length > 6) headerRow.deleteCell(2);
 
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            for (let d = 1; d <= daysInMonth; d++) {
-                const date = new Date(year, month, d);
-                const dayName = dayShort[date.getDay()];
-                const th = document.createElement('th');
-                th.className = 'day-cell' + (date.getDay() === 0 || date.getDay() === 6 ? ' weekend' : '');
-                th.innerHTML = `<div class="day-header"><span>${d.toString().padStart(2, '0')}</span><span>${dayName}</span></div>`;
-                headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 4]);
+            const days = [];
+            let temp = new Date(start);
+            while (temp <= end) {
+                days.push(new Date(temp));
+                temp.setDate(temp.getDate() + 1);
             }
 
-            const firstDay = `${year}-${(month+1).toString().padStart(2, '0')}-01`;
-            const lastDay = `${year}-${(month+1).toString().padStart(2, '0')}-${daysInMonth}`;
-            
-            const { data: records, error } = await window.supabase
+            days.forEach(d => {
+                const th = document.createElement('th');
+                th.className = 'day-cell' + (d.getDay() === 0 || d.getDay() === 6 ? ' weekend' : '');
+                th.innerHTML = `<div class="day-header"><span>${d.getDate().toString().padStart(2, '0')}</span><span>${dayShort[d.getDay()]}</span></div>`;
+                headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 4]);
+            });
+
+            const { data: records } = await window.supabase
                 .from('tb_assiduidade')
                 .select('*')
-                .gte('date', firstDay)
-                .lte('date', lastDay);
+                .gte('date', start.toISOString().split('T')[0])
+                .lte('date', end.toISOString().split('T')[0]);
 
             const attendanceMap = {};
-            if (!error && records) {
-                records.forEach(r => {
-                    let dateKey = r.date;
-                    if (typeof r.date === 'string' && r.date.includes('T')) dateKey = r.date.split('T')[0];
-                    attendanceMap[`${r.collaborator_name}_${dateKey}`] = r.status;
-                });
-            }
+            records?.forEach(r => attendanceMap[`${r.collaborator_name}_${r.date}`] = r.status);
 
             tableBody.innerHTML = '';
             staffList.forEach(person => {
                 const tr = document.createElement('tr');
-                
-                const tdName = document.createElement('td');
-                tdName.className = 'sticky-col';
-                tdName.innerHTML = `<div class="collaborator-name" title="${person.name}">${person.name}</div>`;
-                tr.appendChild(tdName);
 
                 const tdRole = document.createElement('td');
                 tdRole.className = 'sticky-role';
@@ -707,10 +657,15 @@
                         <div style="text-align: left; max-height: 400px; overflow-y: auto;">
                             <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid var(--border);">
                                 <h4 style="margin-bottom: 10px; font-size: 14px;">➕ Cadastrar Novo</h4>
-                                <div style="display: flex; gap: 10px;">
+                                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                                     <input id="new-staff-name" class="swal2-input" style="margin:0; flex: 2; height: 38px; font-size: 13px;" placeholder="Nome Completo">
                                     <input id="new-staff-role" class="swal2-input" style="margin:0; flex: 1; height: 38px; font-size: 13px;" placeholder="Cargo/Proj">
                                     <button onclick="addStaffManual()" style="background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
+                                </div>
+                                <div style="display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); pt: 15px; padding-top: 15px;">
+                                    <button onclick="downloadTeamTemplate()" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; flex: 1;">📥 Baixar Modelo</button>
+                                    <button onclick="document.getElementById('team-file-input').click()" style="background: var(--bg-accent); color: white; border: 1px solid var(--primary); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; flex: 1;">📤 Importar Planilha</button>
+                                    <input type="file" id="team-file-input" style="display: none;" accept=".xlsx, .xls, .csv" onchange="importTeamFile(this)">
                                 </div>
                             </div>
                             <div id="staff-manage-list">Carregando lista...</div>
@@ -792,6 +747,61 @@
                 await renderGrid();
                 await renderObservations();
                 btn.innerHTML = oldHtml;
+            };
+
+            window.downloadTeamTemplate = () => {
+                const data = [
+                    ["NOME", "PROJETO"],
+                    ["NOME DO COLABORADOR 1", "PROMOTOR"],
+                    ["NOME DO COLABORADOR 2", "EXTRA"]
+                ];
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Equipe");
+                XLSX.writeFile(wb, "modelo_equipe_objetiva.xlsx");
+            };
+
+            window.importTeamFile = async (input) => {
+                const file = input.files[0];
+                if (!file) return;
+
+                Swal.fire({
+                    title: 'Processando...',
+                    text: 'Lendo sua planilha de equipe',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                        const formattedStaff = jsonData.map(row => ({
+                            nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
+                            projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase()
+                        })).filter(s => s.nome !== "");
+
+                        if (formattedStaff.length === 0) {
+                            throw new Error("Nenhum dado válido encontrado. Use as colunas NOME e PROJETO.");
+                        }
+
+                        const { error } = await window.supabase.from('tb_colaboradores').upsert(formattedStaff, { onConflict: 'nome' });
+                        if (error) throw error;
+
+                        Swal.fire('Sucesso!', `${formattedStaff.length} colaboradores importados/atualizados.`, 'success');
+                        loadStaffManageList();
+                        syncStaff().then(() => renderGrid());
+                    } catch (err) {
+                        Swal.fire('Erro!', err.message, 'error');
+                    } finally {
+                        input.value = '';
+                    }
+                };
+                reader.readAsArrayBuffer(file);
             };
 
             document.querySelectorAll('.status-option').forEach(opt => {

@@ -1,53 +1,66 @@
-# OBJETIVA ANALYTICS
+# 📊 Objetiva Analytics
 
-**Descrição:**
-Plataforma de analytics para visualização e análise de dados de desempenho.
+Plataforma unificada para gestão de marketing operacional, trade marketing e análise de dados em tempo real.
 
 ---
 
-## 🛠️ Instalação e Execução
+## 🏗️ Arquitetura do Projeto
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/TradeObjetiva/OBJETIVAANALYTICS.git
-   ```
+O projeto utiliza uma arquitetura modular moderna baseada em **Vite**, integrando múltiplos sub-sistemas através de iframes e comunicação via **BroadcastChannel**.
 
-2. Acesse o diretório:
-   ```bash
-   cd OBJETIVAANALYTICS
-   ```
+### Estrutura de Pastas
+- `/src`: Código-fonte principal da aplicação.
+  - `/js`: Lógica de negócios e integração com Supabase.
+  - `/css`: Design system e estilos globais.
+- `/public`: Ativos estáticos e sub-sistemas legados.
+  - `/subsystems`: Micro-aplicações independentes integradas via iframe.
+  - `/assets`: Recursos de imagem e arquivos globais.
+- `/docs`: Documentação técnica e histórico.
 
-3. Instale as dependências:
+---
+
+## 🚀 Tecnologias Utilizadas
+
+- **Frontend Core**: Vanilla JavaScript (ES6+), HTML5, CSS3.
+- **Backend-as-a-Service**: [Supabase](https://supabase.com/) (Auth, Database, Realtime).
+- **Tooling**: Vite (Bundler & Dev Server).
+- **Bibliotecas**:
+  - Chart.js (Visualização de Dados).
+  - SweetAlert2 (UI/UX de notificações).
+  - SheetJS (Processamento de Excel).
+
+---
+
+## ⚙️ Configuração do Ambiente
+
+1. **Dependências**:
    ```bash
    npm install
    ```
 
-4. Inicie a aplicação:
+2. **Variáveis de Ambiente**:
+   - Copie o arquivo `.env.example` para `.env`.
+   - Preencha as chaves do seu projeto Supabase.
+
+3. **Execução**:
    ```bash
-   npm start
+   # Ambiente de Desenvolvimento
+   npm run dev
+
+   # Build de Produção
+   npm run build
    ```
 
 ---
 
-## 📊 Exemplos de Uso
+## 🤝 Contribuição e Padrões
 
-Explique aqui os casos de uso da plataforma e dê exemplos práticos para ajudar os usuários a utilizarem o projeto.
-
----
-
-## 🤝 Como Contribuir
-
-1. Faça um fork do projeto.
-2. Crie uma nova branch (```git checkout -b minha-branch```).
-3. Realize as alterações desejadas e faça commit.
-4. Abra um pull request.
+- Utilize **Conventional Commits** para o histórico do Git.
+- Mantenha a modularização ao adicionar novas funcionalidades no `src/js/modules/`.
+- Evite estilos inline; utilize as variáveis do design system em `style.css`.
 
 ---
 
 ## 📜 Licença
 
-Este projeto ainda não possui licença definida. Após definir uma licença, atualize esta seção.
-
----
-
-> *Mantenha seu README atualizado para atrair contribuições e facilitar o uso.*
+Propriedade da **Agência Objetiva Marketing**. Todos os direitos reservados.
