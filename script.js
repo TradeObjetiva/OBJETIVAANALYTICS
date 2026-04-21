@@ -810,10 +810,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMyProfileForm.addEventListener('submit', handleUpdateMyProfile);
     }
 
-    // --- Excel Upload Handling ---
+    // --- Excel Upload Handling with Web Worker ---
     const excelInput = document.getElementById('excel-upload');
     const btnProcessExcel = document.getElementById('btn-process-excel');
     let parsedExcelData = [];
+    const excelWorker = new Worker('excel-worker.js');
+
+    excelWorker.onmessage = function(e) {
+        const { type, data, message } = e.data;
+        if (type === 'SUCCESS') {
+            parsedExcelData = data;
+            btnProcessExcel.style.display = 'inline-block';
+            btnProcessExcel.textContent = `Salvar ${parsedExcelData.length} registros`;
+            btnProcessExcel.disabled = false;
+        } else {
+            Swal.fire('Erro!', message, 'error');
+            btnProcessExcel.disabled = false;
+        }
+    };
 
     if (excelInput) {
         excelInput.addEventListener('change', (e) => {
@@ -823,25 +837,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // Usando SheetJS para ler arquivos do Excel verdadeiros (.xlsx)
+            btnProcessExcel.style.display = 'inline-block';
+            btnProcessExcel.textContent = 'Lendo arquivo...';
+            btnProcessExcel.disabled = true;
+
             const reader = new FileReader();
             reader.onload = function(event) {
-                try {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = window.XLSX.read(data, {type: 'array'});
-                    
-                    // Pegar a primeira aba da planilha
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // Converter para JSON as linhas, onde a primeira linha é o cabeçalho
-                    parsedExcelData = window.XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-                    
-                    btnProcessExcel.style.display = 'inline-block';
-                    btnProcessExcel.textContent = `Salvar ${parsedExcelData.length} registros`;
-                } catch (error) {
-                    Swal.fire('Erro no Arquivo', 'Não foi possível ler este arquivo excel. Ele está corrompido ou em um formato desconhecido.', 'error');
-                }
+                excelWorker.postMessage({ type: 'PARSE_EXCEL', data: new Uint8Array(event.target.result) });
             };
             reader.readAsArrayBuffer(file);
         });
@@ -852,154 +854,47 @@ document.addEventListener('DOMContentLoaded', () => {
             if (parsedExcelData.length === 0) return;
             
             btnProcessExcel.disabled = true;
-            btnProcessExcel.textContent = 'Limpando base e enviando...';
+            btnProcessExcel.textContent = 'Enviando para o banco...';
 
             try {
-                // Prepare Data de forma super tolerante a falhas (ANTES DE APAGAR O BANCO)
-                let registrosEncontrados = 0;
-                const rowsToInsert = parsedExcelData.map(row => {
-                    let mappedRow = {};
-                    const colMap = {
-                        'LÍDER': 'lider', 'LIDER': 'lider',
-                        'REGIÃO': 'regiao', 'REGIAO': 'regiao',
-                        'PROJETO': 'projeto',
-                        'CPF': 'cpf',
-                        'AGENTE': 'agente',
-                        'RAZÃO SOCIAL': 'razao_social', 'RAZAO SOCIAL': 'razao_social',
-                        'LOCAL': 'local',
-                        'REDE': 'rede',
-                        'CEP': 'cep',
-                        'LOGRADOURO': 'logradouro',
-                        'BAIRRO': 'bairro',
-                        'MUNICÍPIO': 'municipio', 'MUNICIPIO': 'municipio',
-                        'ESTADO': 'estado',
-                        'FORM': 'form',
-                        'VALOR': 'valor',
-                        'VALOR SEMANAL': 'valor_semanal',
-                        'HORAS POR VISITA': 'horas_por_visita',
-                        'DOM': 'dom',
-                        'SEG': 'seg',
-                        'TER': 'ter',
-                        'QUA': 'qua',
-                        'QUI': 'qui',
-                        'SEX': 'sex',
-                        'SAB': 'sab',
-                        'FREQ. SEMANAL': 'freq_semanal', 'FREQ SEMANAL': 'freq_semanal',
-                        'LOCAL_ID': 'local_id',
-                        'FORM_ID': 'form_id',
-                        'AGENT_ID': 'agent_id'
-                    };
-                    
-                    for (let key in row) {
-                        if (typeof key === 'string') {
-                            const limpaKey = key.trim().toUpperCase();
-                            if (colMap[limpaKey]) {
-                                mappedRow[colMap[limpaKey]] = String(row[key]).trim();
-                            }
-                        }
-                    }
-                    return mappedRow;
-                }).filter(r => {
-                    if (Object.keys(r).length > 0) {
-                        registrosEncontrados++;
-                        return true;
-                    }
-                    return false;
-                });
-
-                if (rowsToInsert.length === 0) {
-                    throw new Error(`O arquivo foi lido, mas nenhuma coluna esperada foi localizada na primeira aba. Tenha certeza que os cabeçalhos existem na primeira linha.`);
-                }
-
-                // SOMENTE APAGA SE TIVERMOS DADOS VÁLIDOS PARA INSERIR
+                // 1. Limpa a base atual
                 const { error: delError } = await window.supabase.from('tb_planilha').delete().neq('id', -1);
+                if (delError && !delError.message.includes('does not exist')) throw delError;
                 
-                if (delError && !delError.message.includes('does not exist')) {
-                    throw delError;
-                }
-                
+                // 2. Insere os novos dados em lotes
                 const batchSize = 1000;
-                for (let i = 0; i < rowsToInsert.length; i += batchSize) {
-                    const batch = rowsToInsert.slice(i, i + batchSize);
+                for (let i = 0; i < parsedExcelData.length; i += batchSize) {
+                    const batch = parsedExcelData.slice(i, i + batchSize);
                     const { error } = await window.supabase.from('tb_planilha').insert(batch);
-                    if (error) {
-                        if(error.message.includes("relation") && error.message.includes("does not exist")){
-                            throw new Error('A tabela "tb_planilha" não foi criada no banco de dados ainda.');
-                        } else if (error.message.toLowerCase().includes("column")) {
-                             throw new Error('Algumas colunas estão faltando na tabela tb_planilha.');
-                        } else if (error.message.toLowerCase().includes("row-level security")) {
-                             throw new Error('As permissões RLS (Row Level Security) estão bloqueando. Vá no Supabase e desative o RLS para a tabela "tb_planilha".');
-                        }
-                        throw error;
-                    }
+                    if (error) throw error;
                 }
 
-                Swal.fire('Pronto!', `Nova planilha salva! ${registrosEncontrados} registros validos foram processados.`, 'success');
+                // 3. ATUALIZAÇÃO AUTOMÁTICA DE COLABORADORES (Melhoria B)
+                const uniqueStaff = {};
+                parsedExcelData.forEach(row => {
+                    if (row.agente) {
+                        const name = row.agente.trim().toUpperCase();
+                        if (!uniqueStaff[name]) {
+                            uniqueStaff[name] = { nome: name, projeto: row.projeto || 'PROMOTOR' };
+                        }
+                    }
+                });
+                
+                const staffArray = Object.values(uniqueStaff);
+                if (staffArray.length > 0) {
+                    await window.supabase.from('tb_colaboradores').upsert(staffArray, { onConflict: 'nome' });
+                }
+
+                Swal.fire('Sucesso!', `Base atualizada com ${parsedExcelData.length} registros e lista de colaboradores sincronizada.`, 'success');
                 excelInput.value = '';
                 btnProcessExcel.style.display = 'none';
                 populateDashboardData(); 
 
             } catch (err) {
                 console.error(err);
-                if (err.message.includes('não foi criada') || err.message.includes('faltando')) {
-                    Swal.fire({
-                        title: 'Atenção (Admin)',
-                        html: `A tabela está faltando ou precisa de colunas.<br>No Painel Supabase > SQL Editor, apague a tabela antiga (se houver) e rode isso:<br><br><pre style="text-align:left; font-size:11px; background:#eee; color:#333; padding:10px; border-radius:5px; max-height: 15e0px; overflow-y: auto;">DROP TABLE IF EXISTS tb_planilha;
-CREATE TABLE tb_planilha (
-  id SERIAL PRIMARY KEY,
-  lider TEXT,
-  regiao TEXT,
-  projeto TEXT,
-  cpf TEXT,
-  agente TEXT,
-  razao_social TEXT,
-  local TEXT,
-  rede TEXT,
-  cep TEXT,
-  logradouro TEXT,
-  bairro TEXT,
-  municipio TEXT,
-  estado TEXT,
-  form TEXT,
-  valor TEXT,
-  valor_semanal TEXT,
-  horas_por_visita TEXT,
-  dom TEXT,
-  seg TEXT,
-  ter TEXT,
-  qua TEXT,
-  qui TEXT,
-  sex TEXT,
-  sab TEXT,
-  freq_semanal TEXT,
-  local_id TEXT,
-  form_id TEXT,
-  agent_id TEXT
-);</pre>`,
-                        icon: 'warning',
-                        confirmButtonText: 'Entendi'
-                    });
-                } else if (err.message.includes('RLS')) {
-                    Swal.fire({
-                        title: 'Bloqueio de Segurança!',
-                        html: `O Supabase está bloqueando o envio por causa do RLS.<br><br>Vá no Painel Supabase > <b>SQL Editor</b> e rode este código para liberar acesso:<br><br><pre style="text-align:left; font-size:11px; background:#eee; color:#333; padding:10px; border-radius:5px;">ALTER TABLE tb_planilha DISABLE ROW LEVEL SECURITY;</pre>`,
-                        icon: 'error',
-                        confirmButtonText: 'Feito!'
-                    });
-                } else if (err.message.includes('row-level security') || (err.details && err.details.includes('row-level security'))) {
-                    // Catch direct supabase errors if they slipped out
-                    Swal.fire({
-                        title: 'Bloqueio de Segurança!',
-                        html: `O Supabase está bloqueando o envio por causa do RLS.<br><br>Vá no Painel Supabase > <b>SQL Editor</b> e rode este código para liberar acesso:<br><br><pre style="text-align:left; font-size:11px; background:#eee; color:#333; padding:10px; border-radius:5px;">ALTER TABLE tb_planilha DISABLE ROW LEVEL SECURITY;</pre>`,
-                        icon: 'error',
-                        confirmButtonText: 'Feito!'
-                    });
-                } else {
-                    Swal.fire('Erro!', err.message, 'error');
-                }
+                Swal.fire('Erro!', err.message, 'error');
             } finally {
                 btnProcessExcel.disabled = false;
-                btnProcessExcel.textContent = 'Processar e Salvar';
             }
         });
     }
