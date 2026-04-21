@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Assiduidade - Objetiva Analytics</title>
+    <link rel="stylesheet" href="../style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0a0a0c;
+            --bg-card: #121216;
+            --bg-accent: #1c1c24;
+            --primary: #6366f1;
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --text-dim: #71717a;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg-main);
+            padding: 24px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            overflow-y: auto;
+            height: auto;
+            min-height: 100vh;
+        }
+
+        .assiduidade-container {
+            max-width: 100%;
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 28px;
+            gap: 20px;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .month-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            transition: var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .month-btn:hover { background: var(--bg-accent); color: var(--text-main); }
+
+        .current-month {
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 140px;
+            text-align: center;
+            text-transform: capitalize;
+            color: var(--text-main);
+        }
+
+        .sync-btn {
+            background: var(--primary);
+            color: white; border: none;
+            padding: 0 18px; height: 42px;
+            border-radius: 12px; cursor: pointer;
+            font-weight: 600; font-size: 13px;
+            display: flex; align-items: center; gap: 10px;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .sync-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+        .table-wrapper {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: auto;
+            max-height: calc(100vh - 220px);
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+
+        th {
+            background: var(--bg-accent);
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            white-space: nowrap;
+            position: sticky; top: 0; z-index: 30;
+        }
+
+        td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            white-space: nowrap; height: 46px;
+            transition: var(--transition);
+        }
+
+        .sticky-col {
+            position: sticky; left: 0;
+            background: var(--bg-card) !important;
+            z-index: 20;
+            border-right: 2px solid var(--border) !important;
+            width: 200px; min-width: 200px; max-width: 200px;
+        }
+
+        .sticky-role {
+            position: sticky; left: 200px;
+            background: var(--bg-card) !important;
+            z-index: 20;
+            border-right: 2px solid var(--border) !important;
+            width: 130px; min-width: 130px; max-width: 130px;
+        }
+
+        thead th.sticky-col, thead th.sticky-role { z-index: 40; background: var(--bg-accent) !important; }
+
+        .day-cell { text-align: center; width: 42px; min-width: 42px; cursor: pointer !important; }
+        .day-cell.weekend { background: rgba(0, 0, 0, 0.15) !important; }
+        .day-cell:hover { background: rgba(255, 255, 255, 0.05) !important; }
+
+        .status-badge {
+            min-width: 26px;
+            width: fit-content;
+            height: 26px;
+            padding: 0 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            font-weight: 800;
+            font-size: 10px; /* Reduzi levemente para caber melhor */
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            line-height: 1;
+        }
+
+        /* Ajuste específico para siglas longas */
+        .status-badge:empty { display: none; }
+        .status-SAPP { font-size: 8px; letter-spacing: -0.02em; }
+        .status-ATT { font-size: 9px; }
+
+        .status-P { background: #10b981; color: #fff; }
+        .status-FT { background: #ef4444; color: #fff; }
+        .status-ATT { background: #3b82f6; color: #fff; }
+        .status-FG { background: #f59e0b; color: #fff; }
+        .status-FA { background: #8b5cf6; color: #fff; }
+        .status-FE { background: #64748b; color: #fff; }
+        .status-FR { background: #06b6d4; color: #fff; }
+        .status-SAPP { background: #4b5563; color: #fff; }
+
+        .collaborator-name { font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .collaborator-role { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .summary-col {
+            background: rgba(0, 0, 0, 0.2); font-weight: 800; text-align: center;
+            width: 40px; color: var(--primary); position: sticky; right: 0;
+            z-index: 10; border-left: 1px solid var(--border);
+        }
+        .summary-col:nth-last-child(1) { right: 0; }
+        .summary-col:nth-last-child(2) { right: 40px; }
+        .summary-col:nth-last-child(3) { right: 80px; }
+        .summary-col:nth-last-child(4) { right: 120px; }
+        thead th.summary-col { z-index: 41; }
+
+        .day-header { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .day-header span:first-child { font-size: 13px; font-weight: 800; color: var(--text-main); }
+        .day-header span:last-child { font-size: 8px; color: var(--text-dim); }
+
+        .legend-container {
+            margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px;
+            padding: 20px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border);
+        }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+        .status-selector {
+            position: absolute; background: #1a1a20; border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: none; z-index: 9999; padding: 8px;
+            grid-template-columns: repeat(2, 1fr); gap: 6px; backdrop-filter: blur(10px);
+        }
+        .status-option {
+            padding: 8px 14px; border-radius: 10px; cursor: pointer;
+            font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px;
+            color: var(--text-main); transition: var(--transition);
+        }
+        .status-option:hover { background: rgba(255, 255, 255, 0.08); }
+        
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary);
+            border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="assiduidade-container">
+        <div id="missing-staff-alert" style="display: none; background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 14px 20px; border-radius: 14px; margin-bottom: 24px; font-size: 14px; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #d97706;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Nomes detectados no check-in fora da lista: <strong id="missing-names-list" style="color: #d97706;">...</strong></span>
+            </div>
+            <button id="btn-add-missing" style="background: #d97706; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; transition: var(--transition);">INSERIR NA LISTA</button>
+        </div>
+
+        <div class="header-actions">
+            <div class="header-title">
+                <h1>Controle de Assiduidade</h1>
+                <p>Monitoramento em tempo real e gestão administrativa.</p>
+            </div>
+            
+            <div class="controls-group">
+                <div class="month-selector">
+                    <button class="month-btn" id="prev-month">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <div class="current-month" id="month-display">...</div>
+                    <button class="month-btn" id="next-month">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+
+                <button class="sync-btn" id="btn-import-staff">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
+                    Sincronizar Staff
+                </button>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="assiduidade-table">
+                <thead>
+                    <tr id="header-row">
+                        <th class="sticky-col">Colaborador</th>
+                        <th class="sticky-role">Função</th>
+                        <!-- Days will be injected here -->
+                        <th class="summary-col" title="Presença">P</th>
+                        <th class="summary-col" title="Falta">F</th>
+                        <th class="summary-col" title="Atestado">A</th>
+                        <th class="summary-col" title="Abonada">FA</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-body">
+                    <tr>
+                        <td colspan="40" style="text-align: center; padding: 60px; color: var(--text-dim);">
+                            <div class="loader" style="margin: 0 auto 16px;"></div>
+                            <span style="font-weight: 500;">Carregando registros de assiduidade...</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="legend-container">
+            <div class="legend-item"><span class="status-badge status-P">P</span> Presença</div>
+            <div class="legend-item"><span class="status-badge status-FT">FT</span> Falta</div>
+            <div class="legend-item"><span class="status-badge status-ATT">ATT</span> Atestado Médico</div>
+            <div class="legend-item"><span class="status-badge status-FR">FR</span> Férias</div>
+            <div class="legend-item"><span class="status-badge status-SAPP">SAPP</span> Sem App</div>
+            <div class="legend-item"><span class="status-badge status-FE">FE</span> Feriado</div>
+            <div class="legend-item"><span class="status-badge status-FA">FA</span> Falta Abonada</div>
+            <div class="legend-item"><span class="status-badge status-FG">FG</span> Folga</div>
+        </div>
+
+        <div id="obs-section" style="margin-top: 32px; padding-bottom: 50px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--primary);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Resumo de Observações e Afastamentos
+                </h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span style="font-size: 12px; color: var(--text-muted);">Filtrar Período:</span>
+                    <input type="date" id="obs-filter-start" class="swal2-input" style="margin: 0; padding: 5px 10px; height: 32px; font-size: 12px; width: 140px; border-radius: 8px; background: var(--bg-accent); color: #fff; border: 1px solid var(--border);">
+                    <span style="color: var(--text-dim);">até</span>
+                    <input type="date" id="obs-filter-end" class="swal2-input" style="margin: 0; padding: 5px 10px; height: 32px; font-size: 12px; width: 140px; border-radius: 8px; background: var(--bg-accent); color: #fff; border: 1px solid var(--border);">
+                    <button id="btn-filter-obs" style="background: var(--bg-accent); border: 1px solid var(--border); color: white; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s;">Filtrar</button>
+                </div>
+            </div>
+            <div id="observations-list" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
+                    Nenhuma observação ou afastamento registrado para este período.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-selector" class="status-selector">
+        <div class="status-option" data-status="P"><span class="status-badge status-P">P</span> Presença</div>
+        <div class="status-option" data-status="FT"><span class="status-badge status-FT">FT</span> Falta</div>
+        <div class="status-option" data-status="ATT"><span class="status-badge status-ATT">ATT</span> Atestado</div>
+        <div class="status-option" data-status="FR"><span class="status-badge status-FR">FR</span> Férias</div>
+        <div class="status-option" data-status="FG"><span class="status-badge status-FG">FG</span> Folga</div>
+        <div class="status-option" data-status="FA"><span class="status-badge status-FA">FA</span> Abonada</div>
+        <div class="status-option" data-status="FE"><span class="status-badge status-FE">FE</span> Feriado</div>
+        <div class="status-option" data-status="SAPP"><span class="status-badge status-SAPP">SAPP</span> Sem App</div>
+        <div class="status-option" data-status=""><span class="status-badge" style="background:#444">-</span> Limpar</div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../supabase-config.js"></script>
+    <script>
+        const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const dayShort = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+        
+        let currentDate = new Date();
+        let selectedCell = null;
+        let staffList = [];
+
+        const tableBody = document.getElementById('attendance-body');
+        const headerRow = document.getElementById('header-row');
+        const monthDisplay = document.getElementById('month-display');
+        const statusSelector = document.getElementById('status-selector');
+        const obsSection = document.getElementById('obs-section');
+        const observationsList = document.getElementById('observations-list');
+
+        async function init() {
+            // Fallback para o caso do iframe não ter o supabase no window global
+            if (!window.supabase && window.parent.supabase) {
+                window.supabase = window.parent.supabase;
+            }
+
+            if (!window.supabase) {
+                tableBody.innerHTML = `<tr><td colspan="40" style="text-align:center; padding:20px; color:red;">Erro: Supabase não inicializado. Verifique a conexão.</td></tr>`;
+                return;
+            }
+
+            try {
+                await syncStaff();
+                await processExistingCheckins(); 
+                await renderGrid();
+                await renderObservations();
+                setupEventListeners();
+            } catch (err) {
+                console.error('Erro na inicialização:', err);
+                tableBody.innerHTML = `<tr><td colspan="40" style="text-align:center; padding:20px; color:red;">Erro ao carregar dados: ${err.message}</td></tr>`;
+            }
+        }
+
+        async function syncStaff() {
+            const { data, error } = await window.supabase
+                .from('tb_planilha')
+                .select('agente, projeto')
+                .not('agente', 'is', null);
+            
+            if (error) {
+                console.error('Erro ao buscar tb_planilha:', error);
+                throw new Error(`Falha ao ler colaboradores: ${error.message}`);
+            }
+
+            const unique = {};
+            data.forEach(item => {
+                const name = item.agente.trim().toUpperCase();
+                if (!unique[name]) {
+                    unique[name] = item.projeto || 'PROMOTOR';
+                }
+            });
+
+            staffList = Object.entries(unique).map(([name, role]) => ({ name, role }));
+            staffList.sort((a, b) => a.name.localeCompare(b.name));
+            
+            if (staffList.length === 0) {
+                console.warn('Nenhum colaborador encontrado em tb_planilha.');
+            }
+        }
+
+        function getLocalDateString(date) {
+            const y = date.getFullYear();
+            const m = (date.getMonth() + 1).toString().padStart(2, '0');
+            const d = date.getDate().toString().padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        async function processExistingCheckins() {
+            const todayStr = getLocalDateString(new Date());
+            const startOfDay = `${todayStr}T00:00:00Z`; 
+            
+            const { data: checkins, error } = await window.supabase
+                .from('checkins')
+                .select('activity_id, created_at')
+                .gte('created_at', startOfDay);
+
+            if (error || !checkins) return;
+
+            const unknownNames = new Set();
+            const staffNamesSet = new Set(staffList.map(s => s.name));
+
+            for (const checkin of checkins) {
+                let name = "";
+                if (checkin.activity_id && checkin.activity_id.includes(';')) {
+                    name = checkin.activity_id.split(';')[0].trim().toUpperCase();
+                }
+                
+                if (name && name !== "" && name !== "AGENTE") {
+                    const { data: existing } = await window.supabase
+                        .from('tb_assiduidade')
+                        .select('status, is_manual, observation')
+                        .eq('collaborator_name', name)
+                        .eq('date', todayStr)
+                        .maybeSingle();
+
+                    if (!existing || (!existing.is_manual && existing.status !== 'P')) {
+                        const upsertData = {
+                            collaborator_name: name,
+                            date: todayStr,
+                            status: 'P',
+                            checkin_time: new Date(checkin.created_at).toLocaleTimeString('pt-BR'),
+                            is_manual: false
+                        };
+                        // Preservar observação se já existir
+                        if (existing && existing.observation) {
+                            upsertData.observation = existing.observation;
+                        }
+                        
+                        await window.supabase
+                            .from('tb_assiduidade')
+                            .upsert([upsertData], { onConflict: 'collaborator_name, date' });
+                    }
+
+                    if (!staffNamesSet.has(name)) {
+                        unknownNames.add(name);
+                    }
+                }
+            }
+
+            if (unknownNames.size > 0) {
+                const namesArray = Array.from(unknownNames);
+                const alert = document.getElementById('missing-staff-alert');
+                const listSpan = document.getElementById('missing-names-list');
+                listSpan.textContent = namesArray.join(', ');
+                alert.style.display = 'flex';
+
+                document.getElementById('btn-add-missing').onclick = async () => {
+                    namesArray.forEach(name => {
+                        if (!staffList.some(s => s.name === name)) {
+                            staffList.push({ name, role: 'EXTRA (DETECTADO)' });
+                        }
+                    });
+                    staffList.sort((a, b) => a.name.localeCompare(b.name));
+                    alert.style.display = 'none';
+                    await renderGrid();
+                };
+            }
+        }
+
+        async function renderGrid() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            monthDisplay.textContent = `${monthNames[month]} ${year}`;
+
+            while (headerRow.cells.length > 6) headerRow.deleteCell(2);
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, month, d);
+                const dayName = dayShort[date.getDay()];
+                const th = document.createElement('th');
+                th.className = 'day-cell' + (date.getDay() === 0 || date.getDay() === 6 ? ' weekend' : '');
+                th.innerHTML = `<div class="day-header"><span>${d.toString().padStart(2, '0')}</span><span>${dayName}</span></div>`;
+                headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 4]);
+            }
+
+            const firstDay = `${year}-${(month+1).toString().padStart(2, '0')}-01`;
+            const lastDay = `${year}-${(month+1).toString().padStart(2, '0')}-${daysInMonth}`;
+            
+            const { data: records, error } = await window.supabase
+                .from('tb_assiduidade')
+                .select('*')
+                .gte('date', firstDay)
+                .lte('date', lastDay);
+
+            const attendanceMap = {};
+            if (!error && records) {
+                records.forEach(r => {
+                    let dateKey = r.date;
+                    if (typeof r.date === 'string' && r.date.includes('T')) dateKey = r.date.split('T')[0];
+                    attendanceMap[`${r.collaborator_name}_${dateKey}`] = r.status;
+                });
+            }
+
+            tableBody.innerHTML = '';
+            staffList.forEach(person => {
+                const tr = document.createElement('tr');
+                
+                const tdName = document.createElement('td');
+                tdName.className = 'sticky-col';
+                tdName.innerHTML = `<div class="collaborator-name" title="${person.name}">${person.name}</div>`;
+                tr.appendChild(tdName);
+
+                const tdRole = document.createElement('td');
+                tdRole.className = 'sticky-role';
+                tdRole.innerHTML = `<div class="collaborator-role" title="${person.role}">${person.role}</div>`;
+                tr.appendChild(tdRole);
+
+                let countP = 0, countF = 0, countA = 0, countFA = 0;
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = `${year}-${(month+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+                    const status = attendanceMap[`${person.name}_${dateStr}`] || '';
+                    
+                    if (status === 'P') countP++;
+                    else if (status === 'FT') countF++;
+                    else if (status === 'ATT') countA++;
+                    else if (status === 'FA') countFA++;
+
+                    const dateObj = new Date(year, month, d);
+                    const td = document.createElement('td');
+                    td.className = 'day-cell' + (dateObj.getDay() === 0 || dateObj.getDay() === 6 ? ' weekend' : '');
+                    td.dataset.date = dateStr;
+                    td.dataset.collaborator = person.name;
+                    
+                    // IMPORTANTE: Definir o onclick ANTES de anexar e nunca usar innerHTML no TR depois disso
+                    td.onclick = (e) => openStatusSelector(e, td);
+                    
+                    if (status) td.innerHTML = `<span class="status-badge status-${status}">${status}</span>`;
+                    tr.appendChild(td);
+                }
+
+                // Colunas de Resumo como Elementos (para não quebrar os listeners do TR)
+                [countP, countF, countA, countFA].forEach(count => {
+                    const tdSum = document.createElement('td');
+                    tdSum.className = 'summary-col';
+                    tdSum.textContent = count;
+                    tr.appendChild(tdSum);
+                });
+
+                tableBody.appendChild(tr);
+            });
+            console.log('Grade de assiduidade renderizada com sucesso.');
+        }
+
+        function openStatusSelector(e, cell) {
+            e.stopPropagation();
+            selectedCell = cell;
+            statusSelector.style.display = 'grid';
+            statusSelector.style.left = `${Math.min(e.pageX, window.innerWidth - 180)}px`;
+            statusSelector.style.top = `${Math.min(e.pageY, window.innerHeight - 200)}px`;
+        }
+
+
+
+        async function renderObservations() {
+            const startInput = document.getElementById('obs-filter-start');
+            const endInput = document.getElementById('obs-filter-end');
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = `${year}-${(month+1).toString().padStart(2, '0')}-01`;
+            const lastDay = `${year}-${(month+1).toString().padStart(2, '0')}-${new Date(year, month+1, 0).getDate()}`;
+
+            if (!startInput.value) startInput.value = firstDay;
+            if (!endInput.value) endInput.value = lastDay;
+
+            const { data, error } = await window.supabase
+                .from('tb_assiduidade')
+                .select('*')
+                .gte('date', startInput.value)
+                .lte('date', endInput.value)
+                .not('status', 'eq', 'P')
+                .not('status', 'is', null);
+
+            if (error || !data || data.length === 0) {
+                observationsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
+                        Nenhuma observação ou afastamento registrado para este período.
+                    </div>
+                `;
+                return;
+            }
+
+            observationsList.innerHTML = '';
+            data.sort((a, b) => a.collaborator_name.localeCompare(b.collaborator_name) || a.date.localeCompare(b.date));
+
+            const groups = [];
+            data.forEach(rec => {
+                const last = groups[groups.length - 1];
+                const dateObj = new Date(rec.date + 'T12:00:00');
+                const dateFmt = dateObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+
+                if (last && last.collaborator_name === rec.collaborator_name && last.status === rec.status && last.observation === rec.observation) {
+                    last.endDate = dateFmt;
+                    last.count++;
+                } else {
+                    groups.push({
+                        collaborator_name: rec.collaborator_name,
+                        status: rec.status,
+                        observation: rec.observation || 'Sem observação',
+                        startDate: dateFmt,
+                        endDate: dateFmt,
+                        count: 1
+                    });
+                }
+            });
+
+            groups.forEach(row => {
+                const div = document.createElement('div');
+                div.style.background = 'var(--bg-accent)';
+                div.style.padding = '16px';
+                div.style.borderRadius = '12px';
+                div.style.border = '1px solid var(--border)';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                
+                const period = row.count > 1 ? `${row.startDate} a ${row.endDate}` : row.startDate;
+                
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:16px;">
+                        <span class="status-badge status-${row.status}">${row.status}</span>
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <strong style="color:var(--text-main); font-size:14px;">${row.collaborator_name}</strong>
+                            <span style="font-size:11px; color:var(--text-dim); font-weight:600; text-transform:uppercase;">${period} • ${row.status}</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right; max-width: 40%;">
+                        <p style="color:var(--text-muted); font-size:13px; font-style:italic; line-height:1.4;">"${row.observation}"</p>
+                    </div>
+                `;
+                observationsList.appendChild(div);
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderGrid(); renderObservations(); };
+            document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderGrid(); renderObservations(); };
+            document.getElementById('btn-filter-obs').onclick = () => renderObservations();
+            document.getElementById('btn-import-staff').onclick = async () => {
+                const btn = document.getElementById('btn-import-staff');
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = '<div class="loader"></div> Sincronizando...';
+                await syncStaff();
+                await renderGrid();
+                await renderObservations();
+                btn.innerHTML = oldHtml;
+            };
+
+            document.querySelectorAll('.status-option').forEach(opt => {
+                opt.onclick = async () => {
+                    const status = opt.dataset.status;
+                    statusSelector.style.display = 'none';
+                    if (selectedCell) {
+                        const collaborator = selectedCell.dataset.collaborator;
+                        const date = selectedCell.dataset.date;
+                        
+                        let observation = null;
+                        let days = 1;
+
+                        if (status && status !== 'P') {
+                            const { value: formValues } = await Swal.fire({
+                                title: `Detalhes: ${status}`,
+                                html: `
+                                    <div style="text-align: left; font-size: 14px;">
+                                        <label style="display:block; margin-bottom: 5px; color: #a1a1aa;">Observação:</label>
+                                        <input id="swal-obs" class="swal2-input" style="margin: 0 0 15px 0; width: 100%; border-radius:12px; background: #1a1a20; color: #fff; border: 1px solid #333;" placeholder="Ex: Gripe, Viagem, etc.">
+                                        <label style="display:block; margin-bottom: 5px; color: #a1a1aa;">Duração (dias):</label>
+                                        <input id="swal-days" type="number" value="1" min="1" class="swal2-input" style="margin: 0; width: 100%; border-radius:12px; background: #1a1a20; color: #fff; border: 1px solid #333;">
+                                    </div>
+                                `,
+                                focusConfirm: false,
+                                showCancelButton: true,
+                                confirmButtonText: 'Salvar',
+                                cancelButtonText: 'Cancelar',
+                                background: '#121216',
+                                color: '#fff',
+                                preConfirm: () => {
+                                    return {
+                                        obs: document.getElementById('swal-obs').value,
+                                        days: parseInt(document.getElementById('swal-days').value) || 1
+                                    }
+                                }
+                            });
+
+                            if (!formValues) return;
+                            observation = formValues.obs;
+                            days = formValues.days;
+                        }
+
+                        const baseDate = new Date(date + 'T12:00:00');
+                        for (let i = 0; i < days; i++) {
+                            const currentD = new Date(baseDate);
+                            currentD.setDate(baseDate.getDate() + i);
+                            const currentStr = getLocalDateString(currentD);
+                            await saveStatus(collaborator, currentStr, status, observation);
+                        }
+                        
+                        await renderGrid();
+                        await renderObservations();
+                    }
+                };
+            });
+            
+            document.addEventListener('click', () => statusSelector.style.display = 'none');
+        }
+
+        async function saveStatus(collaborator, date, status, observation = null) {
+            try {
+                if (!status) {
+                    await window.supabase.from('tb_assiduidade').delete().eq('collaborator_name', collaborator).eq('date', date);
+                } else {
+                    await window.supabase.from('tb_assiduidade').upsert([{ 
+                        collaborator_name: collaborator, 
+                        date: date, 
+                        status: status, 
+                        is_manual: true,
+                        observation: observation
+                    }], { onConflict: 'collaborator_name, date' });
+                }
+            } catch (err) { console.error('Erro ao salvar:', err); }
+        }
+
+        init();
+    </script>
+</body>
+</html>

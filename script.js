@@ -2,7 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- State Management ---
     const state = {
         activeTab: (window.location.hash.replace('#', '').split('?')[0]) || 'home',
-        theme: localStorage.getItem('theme') || 'dark'
+        theme: localStorage.getItem('theme') || 'dark',
+        homeChart: null,
+        lastRefresh: null
     };
 
     // Broadcast Channel for cross-tab/iframe sync
@@ -201,6 +203,36 @@ document.addEventListener('DOMContentLoaded', () => {
         iframe.onload = syncIframeStyles;
     });
 
+    // Refresh Dashboard Button
+    const refreshBtn = document.getElementById('btn-refresh-dashboard');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            const btn = refreshBtn;
+            const icon = btn.querySelector('svg');
+            if (icon) icon.style.transform = 'rotate(360deg)';
+            
+            // Re-run population
+            checkAuth(); 
+            
+            setTimeout(() => {
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }, 600);
+        });
+    }
+
+    // Search Check-ins
+    const checkinSearch = document.getElementById('checkin-search');
+    if (checkinSearch) {
+        checkinSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.checkin-row');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? 'grid' : 'none';
+            });
+        });
+    }
+
     // Fechar dropdown de importação ao clicar fora
     document.addEventListener('click', (e) => {
         const importDropdown = document.getElementById('import-dropdown');
@@ -253,13 +285,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Show/Hide restricted menu
             const adminUploadArea = document.getElementById('admin-upload-area');
+            const adminQuickActions = document.getElementById('admin-quick-actions');
             if (isMaster) {
                 navUsers.classList.remove('hidden');
                 if(adminUploadArea) adminUploadArea.style.display = 'block';
+                if(adminQuickActions) adminQuickActions.style.display = 'flex';
                 loadUsersList();
             } else {
                 navUsers.classList.add('hidden');
                 if(adminUploadArea) adminUploadArea.style.display = 'none';
+                if(adminQuickActions) adminQuickActions.style.display = 'none';
             }
             // Update Home Welcome
             if (welcomeName) {
@@ -310,135 +345,111 @@ document.addEventListener('DOMContentLoaded', () => {
         const horasEl = document.getElementById('metric-horas');
 
         try {
+            // Update Sync Time
+            const syncEl = document.getElementById('last-sync-time');
+            if (syncEl) syncEl.textContent = `Sincronizado às ${new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
             // 1. Tentar puxar dados otimizados via RPC (MUITO MAIS RÁPIDO)
             const { data: rpcData, error: rpcError } = await window.supabase.rpc('get_dashboard_metrics');
 
+            let metrics = null;
+
             if (!rpcError && rpcData) {
-                // Se a função existir no Supabase, usa o resultado direto
-                if (clientesEl) {
-                    clientesEl.classList.remove('skeleton', 'skeleton-title');
-                    clientesEl.innerHTML = `${rpcData.clientes} <span class="trend" style="font-size:11px; white-space:nowrap;">Na Base</span>`;
-                }
-                if (redesEl) {
-                    redesEl.classList.remove('skeleton', 'skeleton-title');
-                    redesEl.innerHTML = `${rpcData.redes} <span class="trend" style="font-size:11px; white-space:nowrap;">Monitoradas</span>`;
-                }
-                if (lojasEl) {
-                    lojasEl.classList.remove('skeleton', 'skeleton-title');
-                    lojasEl.innerHTML = `${rpcData.lojas} <span class="trend" style="font-size:11px; white-space:nowrap;">Total</span>`;
-                }
-                // Preencher skeleton das atividades
-                // O activityList agora é preenchido pelo Feed Ao Vivo
-                return; // Encerra aqui se o RPC funcionou
-            }
+                metrics = {
+                    clientes: rpcData.clientes || 0,
+                    redes: rpcData.redes || 0,
+                    lojas: rpcData.lojas || 0,
+                    municipios: rpcData.municipios || 0,
+                    horas: rpcData.horas || 0
+                };
+            } else {
+                // 2. Fallback: Se o RPC não existir, faz do jeito antigo
+                console.warn('RPC "get_dashboard_metrics" não encontrado ou erro. Usando busca completa...');
+                let allData = [];
+                let page = 0;
+                const pageSize = 1000;
+                let hasMore = true;
 
-            // 2. Fallback: Se o RPC não existir, faz do jeito antigo (lento para bases grandes)
-            console.warn('RPC "get_dashboard_metrics" não encontrado. Usando busca completa...');
-            let allData = [];
-            let page = 0;
-            const pageSize = 1000;
-            let hasMore = true;
-
-            while (hasMore) {
-                const { data, error } = await window.supabase
-                    .from('tb_planilha')
-                    .select('local, form, municipio, horas_por_visita, rede, seg, ter, qua, qui, sex, sab')
-                    .range(page * pageSize, (page + 1) * pageSize - 1);
-                
-                if (error) throw error;
-                
-                if (data && data.length > 0) {
-                    allData = allData.concat(data);
+                while (hasMore) {
+                    const { data, error } = await window.supabase
+                        .from('tb_planilha')
+                        .select('local, form, municipio, horas_por_visita, rede, seg, ter, qua, qui, sex, sab')
+                        .range(page * pageSize, (page + 1) * pageSize - 1);
+                    
+                    if (error) throw error;
+                    if (data && data.length > 0) allData = allData.concat(data);
+                    if (!data || data.length < pageSize) hasMore = false;
+                    page++;
                 }
                 
-                if (!data || data.length < pageSize) {
-                    hasMore = false;
-                }
-                page++;
-            }
-            
-            const data = allData;
-
-            if (data && data.length > 0) {
                 const clientesSet = new Set();
                 const redesSet = new Set();
                 const lojasSet = new Set();
                 const municipiosSet = new Set();
                 let totalHoras = 0;
 
-                data.forEach(row => {
+                allData.forEach(row => {
                     if (row.form) {
                         let formName = row.form.toUpperCase().replace(/PESQUISA/g, '').trim();
                         if (formName) clientesSet.add(formName);
                     }
-                    if (row.municipio) {
-                        municipiosSet.add(row.municipio.trim().toUpperCase());
-                    }
+                    if (row.municipio) municipiosSet.add(row.municipio.trim().toUpperCase());
                     
-                    // Cálculo da Carga Horária: Soma os valores de Seg a Sab
-                    const diasSemana = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
-                    diasSemana.forEach(dia => {
+                    ['seg', 'ter', 'qua', 'qui', 'sex', 'sab'].forEach(dia => {
                         if (row[dia]) {
                             let val = parseFloat(String(row[dia]).replace(',', '.'));
                             if (!isNaN(val)) totalHoras += val;
                         }
                     });
                     
-                    // Captação de Rede diretamente da coluna 'rede' (vinda do CSV)
                     if (row.rede) {
-                        let rede = row.rede.toUpperCase()
-                            .replace(/\b(SUPERMERCADOS?|ATACADISTA|ATACAREJO|S\.?A\.?|LTDA\.?|REDE|LOJAS?|VAREJO|GRUPO|S\/A)\b/g, '')
-                            .replace(/\s+/g, ' ')
-                            .trim();
-                        
-                        // Remove acentos para agrupar "ASSAI" e "ASSAÍ"
-                        rede = rede.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
-                        
+                        let rede = row.rede.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
                         if (rede) redesSet.add(rede);
                     }
-
-                    if (row.local) {
-                        let lojaStr = row.local.trim().toUpperCase();
-                        lojasSet.add(lojaStr); 
-                    }
+                    if (row.local) lojasSet.add(row.local.trim().toUpperCase());
                 });
 
-                if (clientesEl) {
-                    clientesEl.classList.remove('skeleton', 'skeleton-title');
-                    clientesEl.innerHTML = `${clientesSet.size} <span class="trend" style="font-size:11px; white-space:nowrap;">Na Base</span>`;
-                }
-                if (redesEl) {
-                    redesEl.classList.remove('skeleton', 'skeleton-title');
-                    redesEl.innerHTML = `${redesSet.size} <span class="trend" style="font-size:11px; white-space:nowrap;">Monitoradas</span>`;
-                }
-                if (lojasEl) {
-                    lojasEl.classList.remove('skeleton', 'skeleton-title');
-                    lojasEl.innerHTML = `${lojasSet.size} <span class="trend" style="font-size:11px; white-space:nowrap;">Total</span>`;
-                }
-                if (municipiosEl) {
-                    municipiosEl.classList.remove('skeleton', 'skeleton-title');
-                    municipiosEl.innerHTML = `${municipiosSet.size} <span class="trend" style="font-size:11px; white-space:nowrap;">Cidades</span>`;
-                }
-                if (horasEl) {
-                    horasEl.classList.remove('skeleton', 'skeleton-title');
-                    // Mostrar com 1 casa decimal se necessário (ex: 1483,5)
-                    const horasFormatadas = totalHoras.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
-                    horasEl.innerHTML = `${horasFormatadas} <span class="trend" style="font-size:11px; white-space:nowrap;">Horas</span>`;
-                }
-            } else {
-                if (clientesEl) { clientesEl.classList.remove('skeleton'); clientesEl.innerHTML = '0'; }
-                if (redesEl) { redesEl.classList.remove('skeleton'); redesEl.innerHTML = '0'; }
-                if (lojasEl) { lojasEl.classList.remove('skeleton'); lojasEl.innerHTML = '0'; }
+                metrics = {
+                    clientes: clientesSet.size,
+                    redes: redesSet.size,
+                    lojas: lojasSet.size,
+                    municipios: municipiosSet.size,
+                    horas: totalHoras
+                };
             }
+
+            // Update UI
+            if (clientesEl) {
+                clientesEl.classList.remove('skeleton', 'skeleton-title');
+                clientesEl.innerHTML = `${metrics.clientes} <span class="trend" style="font-size:11px;">Ativos</span>`;
+            }
+            if (redesEl) {
+                redesEl.classList.remove('skeleton', 'skeleton-title');
+                redesEl.innerHTML = `${metrics.redes} <span class="trend" style="font-size:11px;">Canais</span>`;
+            }
+            if (lojasEl) {
+                lojasEl.classList.remove('skeleton', 'skeleton-title');
+                lojasEl.innerHTML = `${metrics.lojas} <span class="trend" style="font-size:11px;">PDVs</span>`;
+            }
+            if (municipiosEl) {
+                municipiosEl.classList.remove('skeleton', 'skeleton-title');
+                municipiosEl.innerHTML = `${metrics.municipios} <span class="trend" style="font-size:11px;">Cidades</span>`;
+            }
+            if (horasEl) {
+                horasEl.classList.remove('skeleton', 'skeleton-title');
+                const horasFormatadas = metrics.horas.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+                horasEl.innerHTML = `${horasFormatadas} <span class="trend" style="font-size:11px;">Mensais</span>`;
+            }
+
+
         } catch (err) {
             console.warn('Erro ao ler tb_planilha:', err.message);
-            if (clientesEl) { clientesEl.classList.remove('skeleton'); clientesEl.innerHTML = '-'; }
-            if (redesEl) { redesEl.classList.remove('skeleton'); redesEl.innerHTML = '-'; }
-            if (lojasEl) { lojasEl.classList.remove('skeleton'); lojasEl.innerHTML = '-'; }
+            [clientesEl, redesEl, lojasEl, municipiosEl, horasEl].forEach(el => {
+                if(el) { el.classList.remove('skeleton'); el.innerHTML = '-'; }
+            });
         }
-
-        // O activityList agora é preenchido pelo Feed Ao Vivo
     };
+
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -504,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let agentName = "Agente";
             let agentPhoto = "";
-            let clientIdInfo = checkinData.clientId ? `<div style="color:var(--text-main); font-size:13px; margin-top:4px;">🏪 Loja: <strong>${checkinData.clientId}</strong></div>` : '';
             
             if (checkinData.activityId && checkinData.activityId.includes(';')) {
                 const parts = checkinData.activityId.split(';').filter(p => p.trim() !== '');
@@ -515,37 +525,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 agentPhoto = checkinData.photoUrl || "";
             }
 
+            const avatarHtml = agentPhoto 
+                ? `<img src="${agentPhoto}" class="avatar-mini" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=3b82f6&color=fff'">` 
+                : `<div class="avatar-mini">${agentName[0]}</div>`;
+
             const dateStr = checkinData.historyId || new Date().toISOString();
             const dateObj = new Date(dateStr.replace(' ', 'T')); 
-            const timeFormatted = isNaN(dateObj.getTime()) ? "Agora" : `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
-
-            const avatarHtml = agentPhoto 
-                ? `<div style="width:100%; height:160px; border-radius:10px 10px 0 0; overflow:hidden; border-bottom:2px solid #3b82f6;">
-                     <img src="${agentPhoto}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=3b82f6&color=fff'">
-                   </div>` 
-                : `<div style="width:100%; height:160px; border-radius:10px 10px 0 0; overflow:hidden; border-bottom:2px solid #3b82f6; background:#3b82f6; display:flex; align-items:center; justify-content:center; color:#fff; font-size:40px; font-weight:bold;">
-                     ${agentName[0]}
-                   </div>`;
+            const timeFormatted = isNaN(dateObj.getTime()) ? "--:--" : `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+            const dateFormatted = isNaN(dateObj.getTime()) ? "--/--/----" : `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth()+1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 
             const item = document.createElement('div');
-            item.className = 'activity-item';
-            item.style.animation = 'slideInFromLeft 0.4s ease forwards';
-            item.style.padding = '0'; // Remove o padding padrão para a foto encostar nas bordas
-            item.style.flexDirection = 'column';
-            item.style.alignItems = 'stretch';
-            item.style.gap = '0';
-            item.style.overflow = 'hidden';
-            item.style.backgroundColor = 'var(--bg-card)';
-            item.style.border = '1px solid var(--border)';
-            item.style.borderRadius = '10px';
-            item.style.marginBottom = '16px';
+            item.className = 'checkin-row';
             
             item.innerHTML = `
-                ${avatarHtml}
-                <div class="activity-info" style="padding: 14px; line-height:1.4;">
-                    <span class="title" style="white-space: normal; display:block; font-size:14px;"><strong>${agentName}</strong></span>
-                    ${clientIdInfo}
-                    <div class="time" style="color: #10b981; font-weight: 600; font-size: 11px; margin-top:8px;">✅ Check-in realizado às ${timeFormatted}</div>
+                <div class="col-promotor">
+                    ${avatarHtml}
+                    <div class="name">${agentName}</div>
+                </div>
+                <div class="col-pdv">${checkinData.clientId || 'Visita Técnica'}</div>
+                <div class="col-data">${dateFormatted}</div>
+                <div class="col-hora">${timeFormatted}</div>
+                <div class="col-foto">
+                    ${agentPhoto ? `<img src="${agentPhoto}" class="checkin-photo-thumb" onclick="window.open('${agentPhoto}', '_blank')">` : '<span style="color:var(--text-dim); font-size:11px;">Sem Foto</span>'}
+                </div>
+                <div class="col-actions">
+                    <div class="action-icon-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
                 </div>
             `;
 
@@ -555,10 +561,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 activityList.appendChild(item);
             }
 
-            if (activityList.children.length > 20) {
+            // Update Count
+            const countEl = document.getElementById('checkins-count');
+            if (countEl) countEl.textContent = `Total: ${activityList.children.length} check-ins`;
+
+            if (activityList.children.length > 50) {
                 activityList.lastChild.remove();
             }
+
+            // Real-time Attendance Logic
+            markPresenceAuto(agentName);
         };
+
+        async function markPresenceAuto(agentName) {
+            if (!agentName || agentName === "Agente") return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            try {
+                // Check if already marked today
+                const { data, error: fetchError } = await window.supabase
+                    .from('tb_assiduidade')
+                    .select('id')
+                    .eq('collaborator_name', agentName)
+                    .eq('date', today)
+                    .maybeSingle();
+
+                if (!fetchError && !data) {
+                    // Not marked yet, insert 'P' (Presença)
+                    await window.supabase
+                        .from('tb_assiduidade')
+                        .insert([{
+                            collaborator_name: agentName,
+                            date: today,
+                            status: 'P',
+                            checkin_time: new Date().toLocaleTimeString('pt-BR'),
+                            is_manual: false
+                        }]);
+                    
+                    console.log(`Assiduidade: ${agentName} marcado como PRESENTE automaticamente.`);
+                }
+            } catch (err) {
+                console.error('Erro ao marcar assiduidade automática:', err);
+            }
+        }
 
         // 1. Busca Iniciais do Dia
         const today = new Date();
