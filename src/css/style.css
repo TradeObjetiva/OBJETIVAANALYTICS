@@ -987,10 +987,16 @@ body {
     /* Esconde tabs superiores no mobile (usa bottom nav) */
     .tabs { display: none; }
 
-    /* Esconde perfil expandido, mantém só avatar */
+    /* Esconde perfil expandido no mobile para não encavalar */
     .user-profile .user-info,
     .user-profile .logout-btn { display: none; }
-    .user-profile { padding: 4px; background: transparent; border: none; }
+    .user-profile { 
+        padding: 0; 
+        background: transparent; 
+        border: none;
+        justify-content: flex-end;
+    }
+    .user-profile .avatar { width: 34px; height: 34px; font-size: 12px; }
 
     .logo-area h1 { font-size: 16px; letter-spacing: -0.3px; }
     .logo-icon { width: 36px; height: 36px; font-size: 18px; }
@@ -1060,27 +1066,35 @@ body {
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border-top: 1px solid var(--border);
-        justify-content: space-around;
+        justify-content: flex-start; /* Alinhamento para scroll */
         align-items: center;
         z-index: 1100;
-        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding: 0 10px;
+        overflow-x: auto; /* Habilita scroll horizontal */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        gap: 5px;
     }
+
+    .bottom-nav::-webkit-scrollbar { display: none; }
 
     .nav-tab-mobile {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 3px;
+        justify-content: center;
+        gap: 4px;
         color: var(--text-muted);
         font-size: 10px;
         font-weight: 600;
         background: none;
         border: none;
         padding: 8px 12px;
-        border-radius: 10px;
+        border-radius: 12px;
         transition: var(--transition);
         cursor: pointer;
-        flex: 1;
+        min-width: 80px; /* Largura mínima para o scroll */
+        flex-shrink: 0;
     }
 
     .nav-tab-mobile.active {

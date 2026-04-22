@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const createProfileForm = document.getElementById('create-profile-form');
     const welcomeName = document.getElementById('welcome-name');
     const updateMyProfileForm = document.getElementById('update-my-profile-form');
+    const pwaBanner = document.getElementById('pwa-install-banner');
     let deferredPrompt;
 
     // --- Core Functions ---
@@ -59,21 +60,22 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            if (installBtn) installBtn.style.display = 'block';
+            if (pwaBanner) pwaBanner.style.display = 'flex';
         });
 
-        if (installBtn) {
-            installBtn.addEventListener('click', async () => {
+        const installBtns = document.querySelectorAll('#installApp');
+        installBtns.forEach(btn => {
+            btn.addEventListener('click', async () => {
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const { outcome } = await deferredPrompt.userChoice;
                     if (outcome === 'accepted') {
-                        installBtn.style.display = 'none';
+                        if (pwaBanner) pwaBanner.style.display = 'none';
                     }
                     deferredPrompt = null;
                 }
             });
-        }
+        });
     };
 
     // 2. Tab Switching
@@ -293,7 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const adminUploadArea = document.getElementById('admin-upload-area');
             const adminQuickActions = document.getElementById('admin-quick-actions');
             if (isMaster) {
-                navUsers.classList.remove('hidden');
+                if (navUsers) navUsers.classList.remove('hidden');
+                const mobileNavUsers = document.getElementById('mobile-nav-users');
+                if (mobileNavUsers) mobileNavUsers.classList.remove('hidden');
                 if(adminUploadArea) adminUploadArea.style.display = 'block';
                 if(adminQuickActions) adminQuickActions.style.display = 'flex';
                 loadUsersList();
