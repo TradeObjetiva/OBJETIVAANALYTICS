@@ -511,8 +511,19 @@
             records?.forEach(r => attendanceMap[`${r.collaborator_name}_${r.date}`] = r.status);
 
             tableBody.innerHTML = '';
+            
+            if (staffList.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="40" style="text-align: center; padding: 60px; color: var(--text-dim);">Nenhum colaborador cadastrado na base fixa.</td></tr>`;
+                return;
+            }
+
             staffList.forEach(person => {
                 const tr = document.createElement('tr');
+
+                const tdName = document.createElement('td');
+                tdName.className = 'sticky-col';
+                tdName.innerHTML = `<div class="collaborator-name" title="${person.name}">${person.name}</div>`;
+                tr.appendChild(tdName);
 
                 const tdRole = document.createElement('td');
                 tdRole.className = 'sticky-role';
@@ -520,8 +531,9 @@
                 tr.appendChild(tdRole);
 
                 let countP = 0, countF = 0, countA = 0, countFA = 0;
-                for (let d = 1; d <= daysInMonth; d++) {
-                    const dateStr = `${year}-${(month+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+                
+                days.forEach(dayObj => {
+                    const dateStr = getLocalDateString(dayObj);
                     const status = attendanceMap[`${person.name}_${dateStr}`] || '';
                     
                     if (status === 'P') countP++;
@@ -529,20 +541,16 @@
                     else if (status === 'ATT') countA++;
                     else if (status === 'FA') countFA++;
 
-                    const dateObj = new Date(year, month, d);
                     const td = document.createElement('td');
-                    td.className = 'day-cell' + (dateObj.getDay() === 0 || dateObj.getDay() === 6 ? ' weekend' : '');
+                    td.className = 'day-cell' + (dayObj.getDay() === 0 || dayObj.getDay() === 6 ? ' weekend' : '');
                     td.dataset.date = dateStr;
                     td.dataset.collaborator = person.name;
-                    
-                    // IMPORTANTE: Definir o onclick ANTES de anexar e nunca usar innerHTML no TR depois disso
                     td.onclick = (e) => openStatusSelector(e, td);
                     
                     if (status) td.innerHTML = `<span class="status-badge status-${status}">${status}</span>`;
                     tr.appendChild(td);
-                }
+                });
 
-                // Colunas de Resumo como Elementos (para não quebrar os listeners do TR)
                 [countP, countF, countA, countFA].forEach(count => {
                     const tdSum = document.createElement('td');
                     tdSum.className = 'summary-col';

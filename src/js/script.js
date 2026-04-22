@@ -97,6 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.hash = targetId;
         }
 
+        // Auto-load data based on tab
+        if (targetId === 'colaboradores-base') loadStaffBaseList();
+        if (targetId === 'users') loadUsersList();
+
         // Sync styles with iframes
         syncIframeStyles();
 
@@ -896,6 +900,109 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 btnProcessExcel.disabled = false;
             }
+        });
+    }
+
+    // --- Staff Base (Colaboradores) Management ---
+    
+    const loadStaffBaseList = async () => {
+        const listBody = document.getElementById('staff-base-list');
+        if (!listBody || !window.supabase) return;
+
+        listBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Carregando colaboradores...</td></tr>';
+
+        const { data, error } = await window.supabase
+            .from('tb_colaboradores')
+            .select('*')
+            .order('nome', { ascending: true });
+
+        if (error) {
+            showToast('Erro ao carregar colaboradores: ' + error.message, 'error');
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            listBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum colaborador na base. Use o botão "Novo" ou importe um Excel.</td></tr>';
+            return;
+        }
+
+        listBody.innerHTML = data.map(s => `
+            <tr>
+                <td><strong>${s.nome}</strong></td>
+                <td><span class="badge" style="background:var(--bg-accent); color:var(--text-muted); font-size:11px;">${s.projeto || 'PROMOTOR'}</span></td>
+                <td style="color:var(--text-dim); font-size:12px;">${new Date(s.created_at).toLocaleDateString()}</td>
+                <td style="text-align: right;">
+                    <button class="action-btn small delete" onclick="deleteBaseStaff('${s.nome}')">Excluir</button>
+                </td>
+            </tr>
+        `).join('');
+    };
+
+    window.openAddStaffModal = async () => {
+        const { value: formValues } = await Swal.fire({
+            title: 'Novo Colaborador',
+            html:
+                '<input id="swal-name" class="swal2-input" placeholder="Nome Completo">' +
+                '<input id="swal-project" class="swal2-input" placeholder="Projeto / Cargo (Ex: PROMOTOR)">',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Cadastrar',
+            cancelButtonText: 'Cancelar',
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)',
+            preConfirm: () => {
+                return {
+                    nome: document.getElementById('swal-name').value.toUpperCase().trim(),
+                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'PROMOTOR'
+                }
+            }
+        });
+
+        if (formValues && formValues.nome) {
+            const { error } = await window.supabase.from('tb_colaboradores').upsert(formValues, { onConflict: 'nome' });
+            if (error) showToast(error.message, 'error');
+            else {
+                showToast('Colaborador cadastrado!', 'success');
+                loadStaffBaseList();
+                // Notificar iframe de assiduidade se estiver aberto
+                syncChannel.postMessage({ type: 'STAFF_UPDATED' });
+            }
+        }
+    };
+
+    window.deleteBaseStaff = async (nome) => {
+        const result = await Swal.fire({
+            title: 'Excluir Colaborador?',
+            text: `Deseja remover ${nome} da base fixa? Isso não apaga check-ins passados.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Sim, excluir',
+            cancelButtonText: 'Não',
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)'
+        });
+
+        if (result.isConfirmed) {
+            const { error } = await window.supabase.from('tb_colaboradores').delete().eq('nome', nome);
+            if (error) showToast(error.message, 'error');
+            else {
+                showToast('Colaborador removido!', 'success');
+                loadStaffBaseList();
+                syncChannel.postMessage({ type: 'STAFF_UPDATED' });
+            }
+        }
+    };
+
+    // Filtro de busca na base
+    const staffSearch = document.getElementById('staff-search');
+    if (staffSearch) {
+        staffSearch.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#staff-base-list tr');
+            rows.forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(term) ? 'table-row' : 'none';
+            });
         });
     }
 
