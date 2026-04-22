@@ -1,14 +1,11 @@
-const CACHE_NAME = 'objetiva-analytics-v' + Date.now();
+const CACHE_NAME = 'objetiva-analytics-v1.0.1';
 const ASSETS = [
     './',
     './index.html',
-    './style.css',
-    './script.js',
+    './src/css/style.css',
+    './src/js/script.js',
     './manifest.json',
-    './sistema-relatorios/index.html',
-    './sistema-cartas/index.html',
-    './sistema-analytics/index.html',
-    './sistema-roteiro/index.html'
+    './public/subsystems/sistema-assiduidade/index.html'
 ];
 
 // Instalação: Cacheia os arquivos essenciais

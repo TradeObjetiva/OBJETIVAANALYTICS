@@ -10,13 +10,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ObjetivaAnalytics">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3261/3261301.png">
-    <link rel="manifest" href="public/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/style.css">
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('public/sw.js')
+                navigator.serviceWorker.register('sw.js')
                     .then(reg => {
                         console.log('SW Registered');
                         // Se houver uma nova versão, recarregar automaticamente
