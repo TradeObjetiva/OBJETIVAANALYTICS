@@ -987,23 +987,31 @@ body {
 
     /* Top nav compacto */
     .top-nav {
-        padding: 0 12px;
-        height: auto;
+        padding: 0 16px;
+        height: 60px;
         min-height: 60px;
-        padding-top: max(10px, env(safe-area-inset-top));
-        padding-bottom: 10px;
-        flex-wrap: nowrap; /* Não quebra para não empurrar conteúdo */
-        gap: 8px;
+        padding-top: max(5px, env(safe-area-inset-top));
+        padding-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
     }
+
+    /* Esconde as abas de desktop no mobile (usamos a barra inferior) */
+    .tabs { display: none !important; }
 
     /* Esconde perfil expandido no mobile para não encavalar */
     .user-profile .user-info,
-    .user-profile .logout-btn { display: none; }
+    .user-profile .logout-btn { display: none !important; }
+    
     .user-profile { 
         padding: 0; 
         background: transparent; 
         border: none;
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
     }
     .user-profile .avatar { width: 32px; height: 32px; font-size: 11px; }
 
