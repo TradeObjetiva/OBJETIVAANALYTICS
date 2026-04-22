@@ -4,7 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
         activeTab: (window.location.hash.replace('#', '').split('?')[0]) || 'home',
         theme: localStorage.getItem('theme') || 'dark',
         homeChart: null,
-        lastRefresh: null
+        lastRefresh: null,
+        checkinsPage: 0,
+        checkinsPerPage: 100
     };
 
     // Broadcast Channel for cross-tab/iframe sync
@@ -610,27 +612,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 1. Busca Iniciais do Dia
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        window.supabase
-            .from('checkins')
-            .select('*')
-            .gte('created_at', today.toISOString())
-            .order('created_at', { ascending: false }) // os mais recentes primeiro
-            .limit(20)
-            .then(({ data, error }) => {
-                if (!error && data && data.length > 0) {
-                    activityList.innerHTML = '';
+        // 1. Busca Iniciais do Dia (Com Suporte a Paginação)
+        const loadCheckins = async (page = 0) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const from = page * state.checkinsPerPage;
+            const to = from + state.checkinsPerPage - 1;
+
+            const { data, error, count } = await window.supabase
+                .from('checkins')
+                .select('*', { count: 'exact' })
+                .gte('created_at', today.toISOString())
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
+            if (!error && data) {
+                if (page === 0) activityList.innerHTML = '';
+                
+                if (data.length > 0) {
                     hasActivities = true;
+                    // Se for página 0, limpamos e re-populamos. Se for página > 0, podemos adicionar ao final ou substituir.
+                    if (page === 0) activityList.innerHTML = '';
+                    
                     data.forEach(row => {
                         window.addDashboardCheckin({
                             historyId: row.created_at,
                             activityId: row.activity_id,
                             clientId: row.client_id
-                        }, false); // Usa append, assim eles ficam na ordem natural
+                        }, false);
                     });
-                } else if (!hasActivities) {
+
+                    // Atualizar contador de total
+                    const countEl = document.getElementById('checkins-count');
+                    if (countEl) countEl.textContent = `Total: ${count || data.length} check-ins hoje`;
+                    
+                    updatePaginationUI(count || 0, page);
+                } else if (page === 0 && !hasActivities) {
                     activityList.innerHTML = `
                         <div class="activity-item">
                             <div class="activity-info">
@@ -639,7 +657,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
                 }
-            });
+            }
+        };
+
+        const updatePaginationUI = (total, currentPage) => {
+            const controls = document.querySelector('.pagination-controls');
+            if (!controls) return;
+
+            const totalPages = Math.ceil(total / state.checkinsPerPage);
+            let html = `<span style="margin-right: 8px;">Página</span>`;
+            
+            for (let i = 0; i < Math.min(totalPages, 5); i++) {
+                html += `<div class="page-num ${i === currentPage ? 'active' : ''}" onclick="changeFeedPage(${i})">${i + 1}</div>`;
+            }
+            
+            if (totalPages > 5) html += `<div class="page-num">...</div>`;
+            controls.innerHTML = html;
+        };
+
+        window.changeFeedPage = (page) => {
+            state.checkinsPage = page;
+            loadCheckins(page);
+        };
+
+        loadCheckins(0);
 
         // 2. Assinar novos Insets
         window.supabase
