@@ -328,13 +328,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (myFullNameInput && profile) myFullNameInput.value = profile.full_name || '';
 
             userProfile.innerHTML = `
-                <div class="avatar">${displayName[0].toUpperCase()}</div>
                 <div class="user-info">
                     <div class="user-name">
                         ${displayName} 
                         ${isMaster ? '<span style="font-size: 10px; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">Mestre</span>' : ''}
                     </div>
                 </div>
+                <div class="avatar">${displayName[0].toUpperCase()}</div>
                 <button class="logout-btn" id="logout-btn">Sair</button>
             `;
             document.getElementById('logout-btn').addEventListener('click', handleLogout);

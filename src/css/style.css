@@ -1030,15 +1030,39 @@ body {
 
     .action-btn { width: 34px; height: 34px; flex-shrink: 0; }
     
-    .user-profile { 
-        padding: 0; 
-        background: transparent; 
-        border: none;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
+    /* Esconde ABSOLUTAMENTE tudo que não for o avatar no mobile */
+    .user-profile .user-info, 
+    .user-profile .user-name, 
+    .user-profile .badge, 
+    .user-profile .logout-btn { 
+        display: none !important; 
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
-    .user-profile .avatar { width: 32px; height: 32px; font-size: 11px; border: 1.5px solid var(--primary-soft); }
+    
+    .user-profile { 
+        padding: 0 !important; 
+        background: transparent !important; 
+        border: none !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        width: 32px !important;
+        max-width: 32px !important;
+        overflow: hidden !important;
+    }
+
+    .user-profile .avatar { 
+        width: 32px !important; 
+        height: 32px !important; 
+        font-size: 11px !important; 
+        border: 1.5px solid var(--primary-soft) !important;
+        margin: 0 !important;
+    }
 
     /* Install button menor */
     .install-btn { padding: 8px 12px; font-size: 11px; }
