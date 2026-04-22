@@ -1,3 +1,4 @@
+/// <reference src="https://deno.land/x/types/index.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1"
 
@@ -32,13 +33,12 @@ serve(async (req) => {
     }
 
     // Conecta no Supabase usando a Chave de Serviço (Service Role Key) para passar pelo RLS
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const supabaseClient = createClient(supabaseUrl, supabaseKey)
 
     // Insere os dados na tabela 'checkins'
-    const { data: insertedData, error } = await supabaseClient
+    const { data: insertedData, error: insertError } = await supabaseClient
       .from('checkins')
       .insert([
         {
@@ -50,9 +50,9 @@ serve(async (req) => {
       ])
       .select()
 
-    if (error) {
-      console.error("Error inserting checkin:", error)
-      throw error
+    if (insertError) {
+      console.error("Error inserting checkin:", insertError)
+      throw new Error(insertError.message || "Erro desconhecido ao inserir check-in")
     }
 
     console.log("Successfully inserted checkin:", insertedData)
@@ -61,12 +61,14 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-  } catch (error) {
-    console.error("Webhook processing error:", error.message)
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("Webhook processing error:", message)
+    return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
   }
 })
+
 
