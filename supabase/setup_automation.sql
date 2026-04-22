@@ -1,10 +1,18 @@
--- 1. Criar a tabela de Colaboradores (Base Fixa)
+-- 1. Criar a tabela de Colaboradores (Base Fixa) com Escala de Trabalho
 CREATE TABLE IF NOT EXISTS tb_colaboradores (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nome TEXT UNIQUE NOT NULL,
   cargo TEXT,
   projeto TEXT,
   foto_url TEXT,
+  -- Escala de Trabalho (true = trabalha, false = folga)
+  seg BOOLEAN DEFAULT TRUE,
+  ter BOOLEAN DEFAULT TRUE,
+  qua BOOLEAN DEFAULT TRUE,
+  qui BOOLEAN DEFAULT TRUE,
+  sex BOOLEAN DEFAULT TRUE,
+  sab BOOLEAN DEFAULT TRUE,
+  dom BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -68,3 +76,23 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN NULL;
 END $$;
+
+-- 6. Configurar RLS (Row Level Security) para tb_colaboradores
+ALTER TABLE tb_colaboradores ENABLE ROW LEVEL SECURITY;
+
+-- Permitir leitura para todos os usuários autenticados
+DROP POLICY IF EXISTS "Permitir leitura para autenticados" ON tb_colaboradores;
+CREATE POLICY "Permitir leitura para autenticados" 
+ON tb_colaboradores FOR SELECT 
+TO authenticated 
+USING (true);
+
+-- Permitir inserção/atualização para todos os usuários autenticados
+-- Nota: Em produção, você pode querer restringir isso apenas para admins, 
+-- mas conforme a arquitetura atual do sistema, os usuários autenticados gerenciam a base.
+DROP POLICY IF EXISTS "Permitir tudo para autenticados" ON tb_colaboradores;
+CREATE POLICY "Permitir tudo para autenticados" 
+ON tb_colaboradores FOR ALL 
+TO authenticated 
+USING (true)
+WITH CHECK (true);

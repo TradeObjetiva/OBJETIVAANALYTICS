@@ -8,6 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-accent: #f1f5f9;
+            --primary: #4f46e5;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --text-dim: #64748b;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
             --bg-main: #0a0a0c;
             --bg-card: #121216;
             --bg-accent: #1c1c24;
@@ -16,7 +28,6 @@
             --text-main: #ffffff;
             --text-muted: #a1a1aa;
             --text-dim: #71717a;
-            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -56,9 +67,7 @@
             font-weight: 800;
             letter-spacing: -0.02em;
             margin-bottom: 6px;
-            background: linear-gradient(to right, #fff, #a1a1aa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-main);
         }
 
         .header-title p {
@@ -80,7 +89,7 @@
             padding: 4px;
             border-radius: 12px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
         .month-btn {
@@ -126,11 +135,11 @@
             overflow: auto;
             max-height: calc(100vh - 220px);
             position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
         }
 
         .table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
-        .table-wrapper::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 10px; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
 
@@ -211,41 +220,39 @@
         .collaborator-role { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .summary-col {
-            background: #121216 !important; 
+            background: var(--bg-card) !important; 
             font-weight: 800; 
             text-align: center;
             width: 44px; min-width: 44px;
             color: var(--primary); 
             position: sticky; 
             z-index: 25; 
-            border-left: 1px solid rgba(255,255,255,0.1) !important;
-            box-shadow: -4px 0 10px rgba(0,0,0,0.3);
+            border-left: 1px solid var(--border) !important;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.05);
         }
         .summary-col:nth-last-child(1) { right: 0; }
         .summary-col:nth-last-child(2) { right: 44px; }
         .summary-col:nth-last-child(3) { right: 88px; }
         .summary-col:nth-last-child(4) { right: 132px; }
-        thead th.summary-col { z-index: 46; background: #1c1c24 !important; }
+        thead th.summary-col { z-index: 46; background: var(--bg-accent) !important; }
 
         .day-header { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; }
-        .day-header span:first-child { font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .day-header span:first-child { font-size: 14px; font-weight: 800; color: var(--text-main); }
         .day-header span:last-child { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
         .day-cell { text-align: center; width: 52px; min-width: 52px; cursor: pointer !important; transition: var(--transition); border-right: 1px solid rgba(255,255,255,0.03) !important; }
-        .day-cell.weekend { background: rgba(0, 0, 0, 0.25) !important; }
-        .day-cell.weekend .day-header span:first-child { color: var(--text-muted); }
         .day-cell:hover { background: rgba(99, 102, 241, 0.15) !important; }
         
         .sticky-col { 
             position: sticky; left: 0; 
-            background: #121216 !important; 
+            background: var(--bg-card) !important; 
             z-index: 25; 
             border-right: 3px solid var(--primary) !important;
             width: 220px; min-width: 220px;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.3);
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
         }
         
-        th.sticky-col { z-index: 45; }
+        th.sticky-col { z-index: 45; background: var(--bg-accent) !important; }
 
         .legend-container {
             margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px;
@@ -254,23 +261,116 @@
         .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
         .status-selector {
-            position: absolute; background: #1a1a20; border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            position: absolute; background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);
             display: none; z-index: 9999; padding: 8px;
-            grid-template-columns: repeat(2, 1fr); gap: 6px; backdrop-filter: blur(10px);
+            grid-template-columns: repeat(2, 1fr); gap: 6px;
         }
         .status-option {
             padding: 8px 14px; border-radius: 10px; cursor: pointer;
             font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px;
             color: var(--text-main); transition: var(--transition);
         }
-        .status-option:hover { background: rgba(255, 255, 255, 0.08); }
+        .status-option:hover { background: var(--bg-accent); }
         
         .loader {
             border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary);
             border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Estilo para dias que o colaborador NÃO trabalha */
+        .day-cell.not-working {
+            background: var(--bg-accent) !important;
+            opacity: 0.6;
+            cursor: not-allowed !important;
+        }
+
+        th.day-cell { cursor: pointer !important; transition: var(--transition); }
+        th.day-cell:hover { background: var(--bg-accent) !important; color: #fff !important; }
+
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+
+            .header-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+
+            .header-title h1 { font-size: 20px; }
+            .header-title p { font-size: 12px; }
+
+            .controls-group {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .month-selector { 
+                width: 100%; 
+                justify-content: space-between; 
+            }
+
+            .sync-btn {
+                flex: 1;
+                justify-content: center;
+                height: 38px;
+                font-size: 12px;
+                padding: 0 12px;
+            }
+
+            /* Grid Adjustments */
+            .table-wrapper {
+                max-height: calc(100vh - 280px);
+            }
+
+            .sticky-col {
+                width: 130px !important;
+                min-width: 130px !important;
+            }
+
+            .sticky-role, .summary-col {
+                display: none !important;
+            }
+
+            /* Observations Section */
+            #obs-section > div:first-child {
+                flex-direction: column;
+                align-items: flex-start !important;
+                gap: 16px;
+            }
+
+            #obs-section h3 { font-size: 16px; }
+
+            #obs-section > div:first-child > div {
+                flex-direction: column;
+                align-items: stretch !important;
+                width: 100%;
+            }
+
+            #obs-section .date-input, #obs-staff-search {
+                width: 100% !important;
+            }
+
+            .legend-container {
+                padding: 12px;
+                gap: 10px;
+            }
+            .legend-item { font-size: 11px; }
+        }
+
+        @media (max-width: 480px) {
+            .sticky-col {
+                width: 100px !important;
+                min-width: 100px !important;
+            }
+            .day-cell { width: 42px; min-width: 42px; }
+            .day-header span:first-child { font-size: 12px; }
+            .day-header span:last-child { font-size: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -316,7 +416,12 @@
             <table id="assiduidade-table">
                 <thead>
                     <tr id="header-row">
-                        <th class="sticky-col">Colaborador</th>
+                        <th class="sticky-col" onclick="toggleGridSearch()" style="cursor: pointer; position: relative;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                Colaborador
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="grid-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                        </th>
                         <th class="sticky-role">Função</th>
                         <!-- Days will be injected here -->
                         <th class="summary-col" title="Presença">P</th>
@@ -339,26 +444,35 @@
         <div class="legend-container">
             <div class="legend-item"><span class="status-badge status-P">P</span> Presença</div>
             <div class="legend-item"><span class="status-badge status-FT">FT</span> Falta</div>
-            <div class="legend-item"><span class="status-badge status-ATT">ATT</span> Atestado Médico</div>
+            <div class="legend-item"><span class="status-badge status-ATT">ATT</span> Atestado</div>
             <div class="legend-item"><span class="status-badge status-FR">FR</span> Férias</div>
-            <div class="legend-item"><span class="status-badge status-SAPP">SAPP</span> Sem App</div>
-            <div class="legend-item"><span class="status-badge status-FE">FE</span> Feriado</div>
-            <div class="legend-item"><span class="status-badge status-FA">FA</span> Falta Abonada</div>
             <div class="legend-item"><span class="status-badge status-FG">FG</span> Folga</div>
+            <div class="legend-item"><span class="status-badge status-FA">FA</span> Abonada</div>
+            <div class="legend-item"><span class="status-badge status-FE">FE</span> Feriado</div>
+            <div class="legend-item"><span class="status-badge status-SAPP">SAPP</span> Sem App</div>
         </div>
 
         <div id="obs-section" style="margin-top: 32px; padding-bottom: 50px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div class="obs-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--primary);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     Resumo de Observações e Afastamentos
                 </h3>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span style="font-size: 12px; color: var(--text-muted);">Filtrar Período:</span>
-                    <input type="date" id="obs-filter-start" class="swal2-input" style="margin: 0; padding: 5px 10px; height: 32px; font-size: 12px; width: 140px; border-radius: 8px; background: var(--bg-accent); color: #fff; border: 1px solid var(--border);">
-                    <span style="color: var(--text-dim);">até</span>
-                    <input type="date" id="obs-filter-end" class="swal2-input" style="margin: 0; padding: 5px 10px; height: 32px; font-size: 12px; width: 140px; border-radius: 8px; background: var(--bg-accent); color: #fff; border: 1px solid var(--border);">
-                    <button id="btn-filter-obs" style="background: var(--bg-accent); border: 1px solid var(--border); color: white; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; transition: 0.2s;">Filtrar</button>
+                <div class="obs-filters" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <div class="filter-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Buscar:</span>
+                        <input type="text" id="obs-staff-search" placeholder="Nome do colaborador..." style="padding: 5px 10px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 160px; font-size: 12px;" oninput="renderObservations()">
+                        
+                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
+                        <input type="date" id="obs-filter-start" class="date-input" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+                        <span style="font-size: 12px; color: var(--text-dim);">até</span>
+                        <input type="date" id="obs-filter-end" class="date-input" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+                        <button onclick="renderObservations()" style="background: var(--primary); color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; cursor: pointer;">Filtrar</button>
+                    </div>
+                    <button onclick="exportObservations()" style="background: #10b981; color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                        Exportar Excel
+                    </button>
                 </div>
             </div>
             <div id="observations-list" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
@@ -396,9 +510,35 @@
             currentDate.setMonth(currentDate.getMonth() - 1);
         }
         currentDate.setDate(21);
+
+        // Sincronização de Tema com o Pai
+        function syncTheme() {
+            try {
+                const theme = window.parent.document.documentElement.getAttribute('data-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { console.warn('Não foi possível sincronizar o tema:', e); }
+        }
+        syncTheme();
+        // Observer para mudanças de tema no pai
+        try {
+            const observer = new MutationObserver(() => syncTheme());
+            observer.observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        } catch (e) {}
+
+        function getSwalTheme() {
+            const theme = document.documentElement.getAttribute('data-theme');
+            return {
+                background: theme === 'dark' ? '#121216' : '#fff',
+                color: theme === 'dark' ? '#fff' : '#000',
+                inputBg: theme === 'dark' ? '#1a1a20' : '#fff',
+                inputBorder: theme === 'dark' ? '#333' : '#ddd'
+            };
+        }
         
         let selectedCell = null;
         let staffList = [];
+        let gridSearchQuery = '';
+        let initialDatesSet = false;
 
         const tableBody = document.getElementById('attendance-body');
         const headerRow = document.getElementById('header-row');
@@ -418,6 +558,15 @@
             }
 
             try {
+                // Sincronização em tempo real entre abas/iframes
+                const syncChannel = new BroadcastChannel('app_sync');
+                syncChannel.onmessage = (event) => {
+                    if (event.data.type === 'STAFF_UPDATED') {
+                        console.log('🔄 Sincronizando base de colaboradores...');
+                        syncStaff().then(() => renderGrid());
+                    }
+                };
+
                 await syncStaff();
                 await processExistingCheckins(); 
                 await renderGrid();
@@ -431,11 +580,17 @@
         async function syncStaff() {
             const { data, error } = await window.supabase
                 .from('tb_colaboradores')
-                .select('nome, projeto')
+                .select('nome, projeto, seg, ter, qua, qui, sex, sab, dom')
                 .order('nome', { ascending: true });
             
             if (error) throw new Error(`Falha ao ler colaboradores: ${error.message}`);
-            staffList = data.map(item => ({ name: item.nome, role: item.projeto || 'PROMOTOR' }));
+            staffList = data.map(item => ({ 
+                name: item.nome, 
+                role: item.projeto || 'PROMOTOR',
+                schedule: {
+                    0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
+                }
+            }));
         }
 
         function getLocalDateString(date) {
@@ -495,9 +650,11 @@
             }
 
             days.forEach(d => {
+                const dateStr = getLocalDateString(d);
                 const th = document.createElement('th');
-                th.className = 'day-cell' + (d.getDay() === 0 || d.getDay() === 6 ? ' weekend' : '');
+                th.className = 'day-cell';
                 th.innerHTML = `<div class="day-header"><span>${d.getDate().toString().padStart(2, '0')}</span><span>${dayShort[d.getDay()]}</span></div>`;
+                th.onclick = () => setHolidayForAll(dateStr);
                 headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 4]);
             });
 
@@ -510,14 +667,25 @@
             const attendanceMap = {};
             records?.forEach(r => attendanceMap[`${r.collaborator_name}_${r.date}`] = r.status);
 
+            // Sincroniza filtros do resumo
+            if (!initialDatesSet) {
+                document.getElementById('obs-filter-start').value = start.toISOString().split('T')[0];
+                document.getElementById('obs-filter-end').value = end.toISOString().split('T')[0];
+                initialDatesSet = true;
+            }
+
             tableBody.innerHTML = '';
             
-            if (staffList.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="40" style="text-align: center; padding: 60px; color: var(--text-dim);">Nenhum colaborador cadastrado na base fixa.</td></tr>`;
+            const filteredStaff = gridSearchQuery 
+                ? staffList.filter(s => s.name.toLowerCase().includes(gridSearchQuery.toLowerCase()))
+                : staffList;
+
+            if (filteredStaff.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="40" style="text-align: center; padding: 60px; color: var(--text-dim);">Nenhum colaborador encontrado para "${gridSearchQuery}".</td></tr>`;
                 return;
             }
 
-            staffList.forEach(person => {
+            filteredStaff.forEach(person => {
                 const tr = document.createElement('tr');
 
                 const tdName = document.createElement('td');
@@ -541,8 +709,11 @@
                     else if (status === 'ATT') countA++;
                     else if (status === 'FA') countFA++;
 
+                    const isWorkingDay = person.schedule[dayObj.getDay()];
                     const td = document.createElement('td');
-                    td.className = 'day-cell' + (dayObj.getDay() === 0 || dayObj.getDay() === 6 ? ' weekend' : '');
+                    td.className = 'day-cell';
+                    if (!isWorkingDay) td.classList.add('not-working');
+                    
                     td.dataset.date = dateStr;
                     td.dataset.collaborator = person.name;
                     td.onclick = (e) => openStatusSelector(e, td);
@@ -563,6 +734,41 @@
             console.log('Grade de assiduidade renderizada com sucesso.');
         }
 
+        async function setHolidayForAll(dateStr) {
+            const dateFmt = dateStr.split('-').reverse().join('/');
+            const { isConfirmed } = await Swal.fire({
+                title: 'Marcar Feriado?',
+                text: `Deseja marcar o dia ${dateFmt} como FERIADO para todos os colaboradores?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, Marcar Feriado',
+                cancelButtonText: 'Cancelar',
+                background: '#121216',
+                color: '#fff'
+            });
+
+            if (isConfirmed) {
+                Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                const records = staffList.map(p => ({
+                    collaborator_name: p.name,
+                    date: dateStr,
+                    status: 'FE',
+                    is_manual: true,
+                    observation: 'Feriado Geral'
+                }));
+
+                const { error } = await window.supabase.from('tb_assiduidade').upsert(records);
+                
+                if (error) Swal.fire('Erro', error.message, 'error');
+                else {
+                    Swal.close();
+                    await renderGrid();
+                    await renderObservations();
+                }
+            }
+        }
+
         function openStatusSelector(e, cell) {
             e.stopPropagation();
             selectedCell = cell;
@@ -573,9 +779,23 @@
 
 
 
+        const statusMap = {
+            'P': 'Presença',
+            'FT': 'Falta',
+            'ATT': 'Atestado',
+            'FR': 'Férias',
+            'FG': 'Folga',
+            'FA': 'Abonada',
+            'FE': 'Feriado',
+            'SAPP': 'Sem App'
+        };
+
+        let currentObsGroups = [];
+
         async function renderObservations() {
             const startInput = document.getElementById('obs-filter-start');
             const endInput = document.getElementById('obs-filter-end');
+            const staffSearchInput = document.getElementById('obs-staff-search');
             
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
@@ -585,15 +805,23 @@
             if (!startInput.value) startInput.value = firstDay;
             if (!endInput.value) endInput.value = lastDay;
 
-            const { data, error } = await window.supabase
+            let query = window.supabase
                 .from('tb_assiduidade')
                 .select('*')
                 .gte('date', startInput.value)
                 .lte('date', endInput.value)
                 .not('status', 'eq', 'P')
-                .not('status', 'is', null);
+                .not('status', 'is', null)
+                .not('observation', 'eq', 'Feriado Geral');
+
+            if (staffSearchInput && staffSearchInput.value) {
+                query = query.ilike('collaborator_name', `%${staffSearchInput.value}%`);
+            }
+
+            const { data, error } = await query;
 
             if (error || !data || data.length === 0) {
+                currentObsGroups = [];
                 observationsList.innerHTML = `
                     <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
                         Nenhuma observação ou afastamento registrado para este período.
@@ -614,10 +842,13 @@
                 if (last && last.collaborator_name === rec.collaborator_name && last.status === rec.status && last.observation === rec.observation) {
                     last.endDate = dateFmt;
                     last.count++;
+                    last.ids.push(rec.id);
                 } else {
                     groups.push({
+                        ids: [rec.id],
                         collaborator_name: rec.collaborator_name,
                         status: rec.status,
+                        statusName: statusMap[rec.status] || rec.status,
                         observation: rec.observation || 'Sem observação',
                         startDate: dateFmt,
                         endDate: dateFmt,
@@ -626,53 +857,218 @@
                 }
             });
 
+            currentObsGroups = groups;
+
             groups.forEach(row => {
+                const rangeStr = row.count > 1 ? `${row.startDate} - ${row.endDate}` : row.startDate;
+                const statusName = row.statusName;
                 const div = document.createElement('div');
-                div.style.background = 'var(--bg-accent)';
+                div.className = 'observation-card';
+                div.style.background = 'var(--bg-card)';
                 div.style.padding = '16px';
                 div.style.borderRadius = '12px';
                 div.style.border = '1px solid var(--border)';
                 div.style.display = 'flex';
                 div.style.justifyContent = 'space-between';
                 div.style.alignItems = 'center';
-                
-                const period = row.count > 1 ? `${row.startDate} a ${row.endDate}` : row.startDate;
-                
+                div.style.gap = '20px';
+
                 div.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:16px;">
-                        <span class="status-badge status-${row.status}">${row.status}</span>
-                        <div style="display:flex; flex-direction:column; gap:2px;">
-                            <strong style="color:var(--text-main); font-size:14px;">${row.collaborator_name}</strong>
-                            <span style="font-size:11px; color:var(--text-dim); font-weight:600; text-transform:uppercase;">${period} • ${row.status}</span>
+                    <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                        <span class="status-badge status-${row.status}" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-weight: 800;">${row.status}</span>
+                        <div>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 14px; margin-bottom: 2px;">${row.collaborator_name}</div>
+                            <div style="font-size: 11px; color: var(--text-dim); font-weight: 600;">${rangeStr} • ${statusName} • ${row.count} dia(s)</div>
                         </div>
                     </div>
-                    <div style="text-align:right; max-width: 40%;">
-                        <p style="color:var(--text-muted); font-size:13px; font-style:italic; line-height:1.4;">"${row.observation}"</p>
+                    <div style="flex: 2; text-align: right; font-style: italic; color: var(--text-muted); font-size: 13px;">
+                        "${row.observation}"
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="editObservation('${row.ids.join(',')}', '${row.status}', '${row.observation.replace(/'/g, "\\'")}')" class="action-icon-btn" title="Editar" style="background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px; cursor: pointer; color: var(--text-main);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        </button>
+                        <button onclick="deleteObservation('${row.ids.join(',')}', '${row.collaborator_name}')" class="action-icon-btn" title="Excluir" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 4px; cursor: pointer; color: #ef4444;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     </div>
                 `;
                 observationsList.appendChild(div);
             });
+            console.log('Resumo de observações renderizado.');
+        }
+
+        async function editObservation(idsStr, currentStatus, currentObs) {
+            const ids = idsStr.split(',');
+            const theme = getSwalTheme();
+            const { value: formValues } = await Swal.fire({
+                title: 'Editar Observação',
+                html: `
+                    <div style="text-align: left; font-size: 14px;">
+                        <label style="color: var(--text-muted); display: block; margin-bottom: 5px;">Status:</label>
+                        <select id="swal-edit-status" class="swal2-input" style="margin-bottom: 15px; width: 100%; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                            <option value="FT" ${currentStatus === 'FT' ? 'selected' : ''}>Falta</option>
+                            <option value="ATT" ${currentStatus === 'ATT' ? 'selected' : ''}>Atestado</option>
+                            <option value="FR" ${currentStatus === 'FR' ? 'selected' : ''}>Férias</option>
+                            <option value="FA" ${currentStatus === 'FA' ? 'selected' : ''}>Abonada</option>
+                            <option value="FG" ${currentStatus === 'FG' ? 'selected' : ''}>Folga</option>
+                            <option value="SAPP" ${currentStatus === 'SAPP' ? 'selected' : ''}>Sem App</option>
+                            <option value="FE" ${currentStatus === 'FE' ? 'selected' : ''}>Feriado</option>
+                            <option value="P" ${currentStatus === 'P' ? 'selected' : ''}>Presença</option>
+                        </select>
+                        <label style="color: var(--text-muted); display: block; margin-bottom: 5px;">Observação:</label>
+                        <input id="swal-edit-obs" class="swal2-input" value="${currentObs}" style="width: 100%; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Salvar Alterações',
+                cancelButtonText: 'Cancelar',
+                background: theme.background,
+                color: theme.color,
+                preConfirm: () => {
+                    return {
+                        status: document.getElementById('swal-edit-status').value,
+                        observation: document.getElementById('swal-edit-obs').value
+                    }
+                }
+            });
+
+            if (formValues) {
+                Swal.fire({ title: 'Salvando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const { error } = await window.supabase
+                    .from('tb_assiduidade')
+                    .update(formValues)
+                    .in('id', ids);
+
+                if (error) Swal.fire('Erro', error.message, 'error');
+                else {
+                    Swal.fire('Sucesso!', 'Observação atualizada.', 'success');
+                    await renderGrid();
+                    await renderObservations();
+                }
+            }
+        }
+
+        async function deleteObservation(idsStr, name) {
+            const ids = idsStr.split(',');
+            const theme = getSwalTheme();
+            const { isConfirmed } = await Swal.fire({
+                title: 'Excluir Registro?',
+                text: `Deseja remover este registro de afastamento/observação para ${name}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, excluir',
+                cancelButtonText: 'Não',
+                background: theme.background,
+                color: theme.color,
+                confirmButtonColor: '#ef4444'
+            });
+
+            if (isConfirmed) {
+                const { error } = await window.supabase
+                    .from('tb_assiduidade')
+                    .delete()
+                    .in('id', ids);
+
+                if (error) Swal.fire('Erro', error.message, 'error');
+                else {
+                    await renderGrid();
+                    await renderObservations();
+                }
+            }
+        }
+
+        function exportObservations() {
+            try {
+                if (currentObsGroups.length === 0) {
+                    Swal.fire('Aviso', 'Não há dados para exportar no período selecionado.', 'info');
+                    return;
+                }
+
+                const data = currentObsGroups.map(row => ({
+                    'Colaborador': row.collaborator_name,
+                    'Período': row.count > 1 ? `${row.startDate} - ${row.endDate}` : row.startDate,
+                    'Status': row.statusName,
+                    'Duração': `${row.count} dia(s)`,
+                    'Observação': row.observation
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Observações");
+                
+                const start = document.getElementById('obs-filter-start').value;
+                const end = document.getElementById('obs-filter-end').value;
+                XLSX.writeFile(wb, `resumo_observacoes_${start}_a_${end}.xlsx`);
+            } catch (err) {
+                console.error('Erro ao exportar:', err);
+                Swal.fire('Erro', 'Falha ao gerar arquivo Excel.', 'error');
+            }
+        }
+
+        async function toggleGridSearch() {
+            const theme = getSwalTheme();
+            const { value: query } = await Swal.fire({
+                title: 'Filtrar por Colaborador',
+                input: 'text',
+                inputLabel: 'Digite o nome ou parte dele:',
+                inputValue: gridSearchQuery,
+                showCancelButton: true,
+                inputPlaceholder: 'Ex: JOÃO SILVA',
+                background: theme.background,
+                color: theme.color,
+                confirmButtonText: 'Filtrar',
+                cancelButtonText: 'Limpar Filtro',
+                cancelButtonColor: '#444'
+            });
+
+            if (query !== undefined) {
+                gridSearchQuery = query || '';
+                const icon = document.getElementById('grid-search-icon');
+                if (gridSearchQuery) icon.style.color = '#4F46E5';
+                else icon.style.color = 'currentColor';
+                renderGrid();
+            }
+        }
+
+        async function handleMonthChange(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            initialDatesSet = false; // Permite atualizar datas do resumo
+            await renderGrid();
+            await renderObservations();
         }
 
         function setupEventListeners() {
-            document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderGrid(); renderObservations(); };
-            document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderGrid(); renderObservations(); };
-            document.getElementById('btn-filter-obs').onclick = () => renderObservations();
+            document.getElementById('prev-month').onclick = () => handleMonthChange(-1);
+            document.getElementById('next-month').onclick = () => handleMonthChange(1);
+            
+            document.getElementById('btn-import-staff').onclick = async () => {
+                const btn = document.getElementById('btn-import-staff');
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = '<div class="loader"></div> Sincronizando...';
+                await syncStaff();
+                await renderGrid();
+                await renderObservations();
+                btn.innerHTML = oldHtml;
+            };
+
             document.getElementById('btn-manage-staff').onclick = async () => {
-                const { value: action } = await Swal.fire({
+                const theme = getSwalTheme();
+                await Swal.fire({
                     title: 'Gerenciar Equipe',
                     html: `
                         <div style="text-align: left; max-height: 400px; overflow-y: auto;">
-                            <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid var(--border);">
+                            <div style="margin-bottom: 20px; padding: 15px; background: rgba(128,128,128,0.05); border-radius: 12px; border: 1px solid var(--border);">
                                 <h4 style="margin-bottom: 10px; font-size: 14px;">➕ Cadastrar Novo</h4>
                                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                                    <input id="new-staff-name" class="swal2-input" style="margin:0; flex: 2; height: 38px; font-size: 13px;" placeholder="Nome Completo">
-                                    <input id="new-staff-role" class="swal2-input" style="margin:0; flex: 1; height: 38px; font-size: 13px;" placeholder="Cargo/Proj">
+                                    <input id="new-staff-name" class="swal2-input" style="margin:0; flex: 2; height: 38px; font-size: 13px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Nome Completo">
+                                    <input id="new-staff-role" class="swal2-input" style="margin:0; flex: 1; height: 38px; font-size: 13px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Cargo/Proj">
                                     <button onclick="addStaffManual()" style="background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
                                 </div>
-                                <div style="display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); pt: 15px; padding-top: 15px;">
-                                    <button onclick="downloadTeamTemplate()" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; flex: 1;">📥 Baixar Modelo</button>
-                                    <button onclick="document.getElementById('team-file-input').click()" style="background: var(--bg-accent); color: white; border: 1px solid var(--primary); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; flex: 1;">📤 Importar Planilha</button>
+                                <div style="display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
+                                    <button onclick="downloadTeamTemplate()" style="background: var(--bg-accent); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; flex: 1;">📥 Baixar Modelo</button>
+                                    <button onclick="document.getElementById('team-file-input').click()" style="background: var(--primary); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; flex: 1;">📤 Importar Planilha</button>
                                     <input type="file" id="team-file-input" style="display: none;" accept=".xlsx, .xls, .csv" onchange="importTeamFile(this)">
                                 </div>
                             </div>
@@ -682,11 +1078,9 @@
                     width: '600px',
                     showConfirmButton: false,
                     showCloseButton: true,
-                    background: '#121216',
-                    color: '#fff',
-                    didOpen: () => {
-                        loadStaffManageList();
-                    }
+                    background: theme.background,
+                    color: theme.color,
+                    didOpen: () => { loadStaffManageList(); }
                 });
             };
 
@@ -694,7 +1088,6 @@
                 const nome = document.getElementById('new-staff-name').value.trim().toUpperCase();
                 const projeto = document.getElementById('new-staff-role').value.trim().toUpperCase();
                 if (!nome) return;
-
                 const { error } = await window.supabase.from('tb_colaboradores').upsert({ nome, projeto }, { onConflict: 'nome' });
                 if (error) Swal.fire('Erro!', error.message, 'error');
                 else {
@@ -707,12 +1100,7 @@
             window.loadStaffManageList = async () => {
                 const container = document.getElementById('staff-manage-list');
                 const { data, error } = await window.supabase.from('tb_colaboradores').select('*').order('nome', { ascending: true });
-                
-                if (error) {
-                    container.innerHTML = 'Erro ao carregar.';
-                    return;
-                }
-
+                if (error) { container.innerHTML = 'Erro ao carregar.'; return; }
                 container.innerHTML = `
                     <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
                         <thead>
@@ -741,28 +1129,11 @@
                 if (!confirm(`Deseja remover ${nome} da equipe?`)) return;
                 const { error } = await window.supabase.from('tb_colaboradores').delete().eq('nome', nome);
                 if (error) Swal.fire('Erro!', error.message, 'error');
-                else {
-                    loadStaffManageList();
-                    syncStaff().then(() => renderGrid());
-                }
-            };
-
-            document.getElementById('btn-import-staff').onclick = async () => {
-                const btn = document.getElementById('btn-import-staff');
-                const oldHtml = btn.innerHTML;
-                btn.innerHTML = '<div class="loader"></div> Sincronizando...';
-                await syncStaff();
-                await renderGrid();
-                await renderObservations();
-                btn.innerHTML = oldHtml;
+                else { loadStaffManageList(); syncStaff().then(() => renderGrid()); }
             };
 
             window.downloadTeamTemplate = () => {
-                const data = [
-                    ["NOME", "PROJETO"],
-                    ["NOME DO COLABORADOR 1", "PROMOTOR"],
-                    ["NOME DO COLABORADOR 2", "EXTRA"]
-                ];
+                const data = [["NOME", "PROJETO"], ["NOME DO COLABORADOR 1", "PROMOTOR"], ["NOME DO COLABORADOR 2", "EXTRA"]];
                 const ws = XLSX.utils.aoa_to_sheet(data);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Equipe");
@@ -772,14 +1143,7 @@
             window.importTeamFile = async (input) => {
                 const file = input.files[0];
                 if (!file) return;
-
-                Swal.fire({
-                    title: 'Processando...',
-                    text: 'Lendo sua planilha de equipe',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
-
+                Swal.fire({ title: 'Processando...', text: 'Lendo sua planilha de equipe', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     try {
@@ -787,27 +1151,17 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
                         const formattedStaff = jsonData.map(row => ({
                             nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
                             projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase()
                         })).filter(s => s.nome !== "");
-
-                        if (formattedStaff.length === 0) {
-                            throw new Error("Nenhum dado válido encontrado. Use as colunas NOME e PROJETO.");
-                        }
-
+                        if (formattedStaff.length === 0) throw new Error("Nenhum dado válido encontrado. Use as colunas NOME e PROJETO.");
                         const { error } = await window.supabase.from('tb_colaboradores').upsert(formattedStaff, { onConflict: 'nome' });
                         if (error) throw error;
-
-                        Swal.fire('Sucesso!', `${formattedStaff.length} colaboradores importados/atualizados.`, 'success');
-                        loadStaffManageList();
-                        syncStaff().then(() => renderGrid());
-                    } catch (err) {
-                        Swal.fire('Erro!', err.message, 'error');
-                    } finally {
-                        input.value = '';
-                    }
+                        Swal.fire('Sucesso!', `${formattedStaff.length} colaboradores importados.`, 'success');
+                        loadStaffManageList(); syncStaff().then(() => renderGrid());
+                    } catch (err) { Swal.fire('Erro!', err.message, 'error'); }
+                    finally { input.value = ''; }
                 };
                 reader.readAsArrayBuffer(file);
             };
@@ -824,22 +1178,23 @@
                         let days = 1;
 
                         if (status && status !== 'P') {
+                            const theme = getSwalTheme();
                             const { value: formValues } = await Swal.fire({
                                 title: `Detalhes: ${status}`,
                                 html: `
                                     <div style="text-align: left; font-size: 14px;">
-                                        <label style="display:block; margin-bottom: 5px; color: #a1a1aa;">Observação:</label>
-                                        <input id="swal-obs" class="swal2-input" style="margin: 0 0 15px 0; width: 100%; border-radius:12px; background: #1a1a20; color: #fff; border: 1px solid #333;" placeholder="Ex: Gripe, Viagem, etc.">
-                                        <label style="display:block; margin-bottom: 5px; color: #a1a1aa;">Duração (dias):</label>
-                                        <input id="swal-days" type="number" value="1" min="1" class="swal2-input" style="margin: 0; width: 100%; border-radius:12px; background: #1a1a20; color: #fff; border: 1px solid #333;">
+                                        <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Observação:</label>
+                                        <input id="swal-obs" class="swal2-input" style="margin: 0 0 15px 0; width: 100%; border-radius:12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Ex: Gripe, Viagem, etc.">
+                                        <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Duração (dias):</label>
+                                        <input id="swal-days" type="number" value="1" min="1" class="swal2-input" style="margin: 0; width: 100%; border-radius:12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
                                     </div>
                                 `,
                                 focusConfirm: false,
                                 showCancelButton: true,
                                 confirmButtonText: 'Salvar',
                                 cancelButtonText: 'Cancelar',
-                                background: '#121216',
-                                color: '#fff',
+                                background: theme.background,
+                                color: theme.color,
                                 preConfirm: () => {
                                     return {
                                         obs: document.getElementById('swal-obs').value,

@@ -967,24 +967,59 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        listBody.innerHTML = data.map(s => `
-            <tr>
-                <td><strong>${s.nome}</strong></td>
-                <td><span class="badge" style="background:var(--bg-accent); color:var(--text-muted); font-size:11px;">${s.projeto || 'PROMOTOR'}</span></td>
-                <td style="color:var(--text-dim); font-size:12px;">${new Date(s.created_at).toLocaleDateString()}</td>
-                <td style="text-align: right;">
-                    <button class="action-btn small delete" onclick="deleteBaseStaff('${s.nome}')">Excluir</button>
-                </td>
-            </tr>
-        `).join('');
+        listBody.innerHTML = data.map(s => {
+            const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
+            const scaleHtml = days.map(d => {
+                const isActive = s[d];
+                return `<span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 18px; font-size: 9px; font-weight: 700; border-radius: 4px; margin-right: 4px; 
+                    background: ${isActive ? 'var(--primary)' : 'rgba(255,255,255,0.03)'}; 
+                    color: ${isActive ? 'white' : 'var(--text-dim)'}; 
+                    border: 1px solid ${isActive ? 'var(--primary)' : 'var(--border)'}; 
+                    box-shadow: ${isActive ? '0 2px 4px rgba(79, 70, 229, 0.2)' : 'none'};">
+                    ${d.toUpperCase()}
+                </span>`;
+            }).join('');
+
+            return `
+                <tr style="height: 70px;">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--text-accent)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);">
+                                ${s.nome[0]}
+                            </div>
+                            <strong style="font-size: 14px; letter-spacing: -0.2px;">${s.nome}</strong>
+                        </div>
+                    </td>
+                    <td><span class="badge" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-muted); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.projeto || 'PROMOTOR DE MERCHANDISING'}</span></td>
+                    <td><div style="display: flex; align-items: center;">${scaleHtml}</div></td>
+                    <td style="color: var(--text-dim); font-size: 12px; font-weight: 500;">${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td style="text-align: right;">
+                        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                            <button class="action-icon-btn" onclick="openEditStaffModal('${s.nome}')" title="Editar" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); width: 36px; height: 36px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button class="action-icon-btn" onclick="deleteBaseStaff('${s.nome}')" title="Excluir" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); color: #ef4444; width: 36px; height: 36px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
     };
 
     window.openAddStaffModal = async () => {
         const { value: formValues } = await Swal.fire({
             title: 'Novo Colaborador',
             html:
-                '<input id="swal-name" class="swal2-input" placeholder="Nome Completo">' +
-                '<input id="swal-project" class="swal2-input" placeholder="Projeto / Cargo (Ex: PROMOTOR)">',
+                '<div style="text-align: left; font-size: 14px;">' +
+                '<label style="color: var(--text-muted);">Nome Completo:</label>' +
+                '<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" placeholder="Ex: JOÃO SILVA">' +
+                '<label style="color: var(--text-muted);">Função / Projeto:</label>' +
+                '<input id="swal-project" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px;" placeholder="Ex: PROMOTOR">' +
+                '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
+                generateWeekCheckboxes() +
+                '</div>',
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonText: 'Cadastrar',
@@ -992,9 +1027,18 @@ document.addEventListener('DOMContentLoaded', () => {
             background: 'var(--bg-card)',
             color: 'var(--text-main)',
             preConfirm: () => {
+                const nome = document.getElementById('swal-name').value.toUpperCase().trim();
+                if (!nome) { Swal.showValidationMessage('O nome é obrigatório'); return false; }
                 return {
-                    nome: document.getElementById('swal-name').value.toUpperCase().trim(),
-                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'PROMOTOR'
+                    nome: nome,
+                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'PROMOTOR',
+                    seg: document.getElementById('check-seg').checked,
+                    ter: document.getElementById('check-ter').checked,
+                    qua: document.getElementById('check-qua').checked,
+                    qui: document.getElementById('check-qui').checked,
+                    sex: document.getElementById('check-sex').checked,
+                    sab: document.getElementById('check-sab').checked,
+                    dom: document.getElementById('check-dom').checked
                 }
             }
         });
@@ -1003,13 +1047,93 @@ document.addEventListener('DOMContentLoaded', () => {
             const { error } = await window.supabase.from('tb_colaboradores').upsert(formValues, { onConflict: 'nome' });
             if (error) showToast(error.message, 'error');
             else {
-                showToast('Colaborador cadastrado!', 'success');
+                showToast('Colaborador salvo com sucesso!', 'success');
                 loadStaffBaseList();
-                // Notificar iframe de assiduidade se estiver aberto
                 syncChannel.postMessage({ type: 'STAFF_UPDATED' });
             }
         }
     };
+
+    window.openEditStaffModal = async (currentNome) => {
+        const { data, error } = await window.supabase
+            .from('tb_colaboradores')
+            .select('*')
+            .eq('nome', currentNome)
+            .single();
+        
+        if (error) { showToast('Erro ao carregar dados.', 'error'); return; }
+
+        const { value: formValues } = await Swal.fire({
+            title: 'Editar Colaborador',
+            html:
+                '<div style="text-align: left; font-size: 14px;">' +
+                '<label style="color: var(--text-muted);">Nome Completo:</label>' +
+                `<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" value="${data.nome}">` +
+                '<label style="color: var(--text-muted);">Função / Projeto:</label>' +
+                `<input id="swal-project" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px;" value="${data.projeto || ''}">` +
+                '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
+                generateWeekCheckboxes(data) +
+                '</div>',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Atualizar',
+            cancelButtonText: 'Cancelar',
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)',
+            preConfirm: () => {
+                const nome = document.getElementById('swal-name').value.toUpperCase().trim();
+                if (!nome) { Swal.showValidationMessage('O nome é obrigatório'); return false; }
+                return {
+                    nome: nome,
+                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'PROMOTOR',
+                    seg: document.getElementById('check-seg').checked,
+                    ter: document.getElementById('check-ter').checked,
+                    qua: document.getElementById('check-qua').checked,
+                    qui: document.getElementById('check-qui').checked,
+                    sex: document.getElementById('check-sex').checked,
+                    sab: document.getElementById('check-sab').checked,
+                    dom: document.getElementById('check-dom').checked
+                }
+            }
+        });
+
+        if (formValues) {
+            const { error: updateError } = await window.supabase
+                .from('tb_colaboradores')
+                .update(formValues)
+                .eq('nome', currentNome);
+
+            if (updateError) showToast(updateError.message, 'error');
+            else {
+                showToast('Alterações salvas!', 'success');
+                loadStaffBaseList();
+                syncChannel.postMessage({ type: 'STAFF_UPDATED' });
+            }
+        }
+    };
+
+    function generateWeekCheckboxes(data = null) {
+        const days = [
+            { id: 'seg', label: 'Seg' },
+            { id: 'ter', label: 'Ter' },
+            { id: 'qua', label: 'Qua' },
+            { id: 'qui', label: 'Qui' },
+            { id: 'sex', label: 'Sex' },
+            { id: 'sab', label: 'Sáb' },
+            { id: 'dom', label: 'Dom' }
+        ];
+
+        return `
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                ${days.map(d => `
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
+                        <input type="checkbox" id="check-${d.id}" ${(!data && d.id !== 'dom') || (data && data[d.id]) ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--primary);">
+                        ${d.label}
+                    </label>
+                `).join('')}
+            </div>
+        `;
+    }
 
     window.deleteBaseStaff = async (nome) => {
         const result = await Swal.fire({
@@ -1033,6 +1157,71 @@ document.addEventListener('DOMContentLoaded', () => {
                 syncChannel.postMessage({ type: 'STAFF_UPDATED' });
             }
         }
+    };
+
+    // --- Importação de Base Fixa via Planilha ---
+    window.downloadStaffBaseTemplate = () => {
+        const data = [
+            ["NOME", "PROJETO"],
+            ["JOAO SILVA", "PROMOTOR"],
+            ["MARIA SOUZA", "PROMOTOR"]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Base Fixa");
+        XLSX.writeFile(wb, "modelo_base_fixa_objetiva.xlsx");
+    };
+
+    window.importStaffBaseFile = async (input) => {
+        const file = input.files[0];
+        if (!file) return;
+
+        Swal.fire({
+            title: 'Processando...',
+            text: 'Lendo sua planilha de colaboradores',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                if (jsonData.length === 0) {
+                    throw new Error("A planilha está vazia ou no formato incorreto.");
+                }
+
+                const staffToUpsert = jsonData.map(row => ({
+                    nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
+                    projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase()
+                })).filter(s => s.nome !== "");
+
+                if (staffToUpsert.length === 0) {
+                    throw new Error("Nenhum colaborador válido encontrado. Verifique se as colunas NOME e PROJETO existem.");
+                }
+
+                const { error } = await window.supabase
+                    .from('tb_colaboradores')
+                    .upsert(staffToUpsert, { onConflict: 'nome' });
+
+                if (error) throw error;
+
+                Swal.fire('Sucesso!', `${staffToUpsert.length} colaboradores foram sincronizados na base fixa.`, 'success');
+                loadStaffBaseList();
+                syncChannel.postMessage({ type: 'STAFF_UPDATED' });
+            } catch (err) {
+                console.error('Erro na importação:', err);
+                Swal.fire('Erro!', err.message, 'error');
+            } finally {
+                input.value = '';
+            }
+        };
+        reader.readAsArrayBuffer(file);
     };
 
     // Filtro de busca na base
