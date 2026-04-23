@@ -580,12 +580,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Real-time Attendance Logic
-            markPresenceAuto(agentName);
+            markPresenceAuto(agentName, checkinData.taskId);
         };
 
-        async function markPresenceAuto(agentName) {
+        async function markPresenceAuto(agentName, taskId) {
             if (!agentName || agentName === "Agente") return;
             
+            // Filtro Crítico: Apenas 'CHECK IN' conta como presença
+            if (taskId !== 'CHECK IN') return;
+
             const today = new Date().toISOString().split('T')[0];
             
             try {
@@ -626,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { data, error, count } = await window.supabase
                 .from('checkins')
-                .select('*', { count: 'exact' })
+                .select('created_at, activity_id, client_id, task_id', { count: 'exact' })
                 .gte('created_at', today.toISOString())
                 .order('created_at', { ascending: false })
                 .range(from, to);
@@ -643,7 +646,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.addDashboardCheckin({
                             historyId: row.created_at,
                             activityId: row.activity_id,
-                            clientId: row.client_id
+                            clientId: row.client_id,
+                            taskId: row.task_id
                         }, false);
                     });
 
@@ -656,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     activityList.innerHTML = `
                         <div class="activity-item">
                             <div class="activity-info">
-                                <span class="title" style="color:var(--text-muted)">Aguardando Webhooks...</span>
+                                <span class="title" style="color:var(--text-muted)">Aguardando Check-in</span>
                             </div>
                         </div>
                     `;
@@ -693,7 +697,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.addDashboardCheckin({
                     historyId: payload.new.created_at, 
                     activityId: payload.new.activity_id,
-                    clientId: payload.new.client_id
+                    clientId: payload.new.client_id,
+                    taskId: payload.new.task_id
                 }, true); // Prepend para novos caírem no topo
             })
             .subscribe((status) => {

@@ -607,7 +607,7 @@
             
             const { data: checkins } = await window.supabase
                 .from('checkins')
-                .select('activity_id, created_at')
+                .select('activity_id, created_at, task_id')
                 .gte('created_at', startOfDay.toISOString());
 
             const { data: existingAttendance } = await window.supabase
@@ -620,6 +620,9 @@
 
             const newRecordsToUpsert = [];
             checkins?.forEach(checkin => {
+                // Filtro Crítico: Apenas 'CHECK IN' marca presença
+                if (checkin.task_id !== 'CHECK IN') return;
+
                 const name = checkin.activity_id?.split(';')[0].trim().toUpperCase();
                 if (name && !attendanceMap.has(name)) {
                     newRecordsToUpsert.push({ collaborator_name: name, date: todayStr, status: 'P', is_manual: false });
@@ -750,13 +753,17 @@
             if (isConfirmed) {
                 Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 
-                const records = staffList.map(p => ({
-                    collaborator_name: p.name,
-                    date: dateStr,
-                    status: 'FE',
-                    is_manual: true,
-                    observation: 'Feriado Geral'
-                }));
+                const dayOfWeek = new Date(dateStr + 'T12:00:00').getDay();
+                
+                const records = staffList
+                    .filter(p => p.schedule && p.schedule[dayOfWeek]) // Apenas quem trabalha no dia
+                    .map(p => ({
+                        collaborator_name: p.name,
+                        date: dateStr,
+                        status: 'FE',
+                        is_manual: true,
+                        observation: 'Feriado Geral'
+                    }));
 
                 const { error } = await window.supabase.from('tb_assiduidade').upsert(records);
                 

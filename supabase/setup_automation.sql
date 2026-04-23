@@ -30,6 +30,11 @@ DECLARE
     v_nome_agente TEXT;
     v_hoje DATE := CURRENT_DATE;
 BEGIN
+    -- Filtro Crítico: Apenas 'CHECK IN' conta como presença automática
+    IF NEW.task_id IS DISTINCT FROM 'CHECK IN' THEN
+        RETURN NEW;
+    END IF;
+
     -- Extrair o nome do activity_id (formato: "NOME;FOTO")
     IF NEW.activity_id LIKE '%;%' THEN
         v_nome_agente := SPLIT_PART(NEW.activity_id, ';', 1);
