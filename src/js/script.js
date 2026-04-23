@@ -28,6 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeName = document.getElementById('welcome-name');
     const updateMyProfileForm = document.getElementById('update-my-profile-form');
     const pwaBanner = document.getElementById('pwa-install-banner');
+    
+    // Mobile Sidebar Elements
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    const sidebarOverlay = document.getElementById('mobile-sidebar-overlay');
+    const logoTrigger = document.getElementById('mobile-logo-trigger');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    
     let deferredPrompt;
 
     // --- Core Functions ---
@@ -110,6 +117,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Close mobile sidebar if open
+        closeSidebar();
+    };
+
+    // Mobile Sidebar Logic
+    const openSidebar = () => {
+        if (mobileSidebar && sidebarOverlay) {
+            mobileSidebar.classList.add('open');
+            sidebarOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+    };
+
+    const closeSidebar = () => {
+        if (mobileSidebar && sidebarOverlay) {
+            mobileSidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('open');
+            document.body.style.overflow = ''; // Restore scroll
+        }
     };
 
     // Expose for Global Access (used by shortcut cards)
@@ -206,6 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggle.addEventListener('click', () => {
         applyTheme(state.theme === 'dark' ? 'light' : 'dark');
     });
+
+    // Mobile Sidebar Triggers
+    if (logoTrigger) logoTrigger.addEventListener('click', openSidebar);
+    if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+    if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
     document.querySelectorAll('iframe').forEach(iframe => {
         iframe.onload = syncIframeStyles;
@@ -341,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             loginOverlay.classList.remove('hidden');
             userProfile.innerHTML = '';
-            if (welcomeName) welcomeName.textContent = 'Objetiva Analytics';
+            if (welcomeName) welcomeName.textContent = 'FP Analytics';
         }
     };
 
