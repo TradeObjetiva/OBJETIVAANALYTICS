@@ -620,11 +620,15 @@
                         if (newCheckin && newCheckin.task_id === 'CHECK IN' && document.hidden) {
                             try {
                                 if (window.Notification && Notification.permission === 'granted') {
-                                    const name = newCheckin.activity_id?.split(';')[0]?.trim() || 'Colaborador';
-                                    const place = newCheckin.place_name || 'Loja não identificada';
+                                    const parts = newCheckin.activity_id?.split(';').filter(p => p.trim() !== '') || [];
+                                    const name = parts[0] || 'Colaborador';
+                                    const photo = parts.length > 1 ? parts[parts.length - 1] : 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png';
+                                    const place = newCheckin.client_id || newCheckin.place_name || 'Loja não identificada';
+                                    
                                     const notification = new Notification('Novo Check-in!', {
                                         body: `${name} deu check-in em ${place}`,
-                                        icon: 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png'
+                                        icon: photo,
+                                        badge: 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png'
                                     });
                                     notification.onclick = () => { window.focus(); };
                                 }
@@ -831,12 +835,14 @@
         }
 
         function updateSummaryCards(staff, attendanceMap, days) {
-            let totalP = 0, totalFT = 0, totalATT = 0, totalEntries = 0;
+            let totalP = 0, totalFT = 0, totalATT = 0, totalFE = 0, totalEntries = 0;
 
             staff.forEach(person => {
                 days.forEach(dayObj => {
                     const dateStr = getLocalDateString(dayObj);
                     const isWorkingDay = person.schedule[dayObj.getDay()];
+                    
+                    // Só conta na taxa se for dia de trabalho daquele colaborador
                     if (!isWorkingDay) return;
 
                     // Ignora dias após desativação
@@ -851,10 +857,12 @@
                     if (status === 'P') totalP++;
                     else if (status === 'FT') totalFT++;
                     else if (status === 'ATT') totalATT++;
+                    else if (status === 'FE') totalFE++;
                 });
             });
 
-            const rate = totalEntries > 0 ? ((totalP / totalEntries) * 100).toFixed(1) : 0;
+            // Presença e Feriado contam como positivos versus o total de dias úteis passados
+            const rate = totalEntries > 0 ? (((totalP + totalFE) / totalEntries) * 100).toFixed(1) : 0;
 
             const kpiStaff = document.getElementById('kpi-staff-count');
             const kpiRate = document.getElementById('kpi-presence-rate');
