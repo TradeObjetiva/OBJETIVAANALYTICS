@@ -613,29 +613,7 @@
                     }
                 } catch(e) { console.warn('Notificações não suportadas neste ambiente.'); }
 
-                // Inscrição Realtime no Supabase para Notificações (quando em 2º plano)
-                window.supabase.channel('checkins_realtime')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins' }, payload => {
-                        const newCheckin = payload.new;
-                        if (newCheckin && newCheckin.task_id === 'CHECK IN' && document.hidden) {
-                            try {
-                                if (window.Notification && Notification.permission === 'granted') {
-                                    const parts = newCheckin.activity_id?.split(';').filter(p => p.trim() !== '') || [];
-                                    const name = parts[0] || 'Colaborador';
-                                    const photo = parts.length > 1 ? parts[parts.length - 1] : 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png';
-                                    const place = newCheckin.client_id || newCheckin.place_name || 'Loja não identificada';
-                                    
-                                    const notification = new Notification('Novo Check-in!', {
-                                        body: `${name} deu check-in em ${place}`,
-                                        icon: photo,
-                                        badge: 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png'
-                                    });
-                                    notification.onclick = () => { window.focus(); };
-                                }
-                            } catch(e) {}
-                        }
-                    })
-                    .subscribe();
+                // Notificações agora são gerenciadas pelo Dashboard principal para evitar duplicidade.
 
                 await syncStaff();
                 await processExistingCheckins(); 
