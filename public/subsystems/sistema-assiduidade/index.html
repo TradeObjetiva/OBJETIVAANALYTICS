@@ -597,17 +597,27 @@
         }
 
         async function syncStaff() {
-            const { data, error } = await window.supabase
+            let { data, error } = await window.supabase
                 .from('tb_colaboradores')
                 .select('nome, projeto, seg, ter, qua, qui, sex, sab, dom, ativo, data_desativacao')
                 .order('nome', { ascending: true });
             
+            if (error && error.message && error.message.includes('Could not find')) {
+                console.warn('Colunas ativo/data_desativacao não encontradas. Usando fallback...');
+                const fallback = await window.supabase
+                    .from('tb_colaboradores')
+                    .select('nome, projeto, seg, ter, qua, qui, sex, sab, dom')
+                    .order('nome', { ascending: true });
+                data = fallback.data;
+                error = fallback.error;
+            }
+
             if (error) throw new Error(`Falha ao ler colaboradores: ${error.message}`);
             staffList = data.map(item => ({ 
                 name: item.nome, 
                 role: item.projeto || 'PROMOTOR',
                 ativo: item.ativo !== false,
-                data_desativacao: item.data_desativacao,
+                data_desativacao: item.data_desativacao || null,
                 schedule: {
                     0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
                 }
@@ -1129,7 +1139,14 @@
 
             window.loadStaffManageList = async () => {
                 const container = document.getElementById('staff-manage-list');
-                const { data, error } = await window.supabase.from('tb_colaboradores').select('nome, projeto, ativo, data_desativacao').order('nome', { ascending: true });
+                let { data, error } = await window.supabase.from('tb_colaboradores').select('nome, projeto, ativo, data_desativacao').order('nome', { ascending: true });
+                
+                if (error && error.message && error.message.includes('Could not find')) {
+                    const fallback = await window.supabase.from('tb_colaboradores').select('*').order('nome', { ascending: true });
+                    data = fallback.data;
+                    error = fallback.error;
+                }
+
                 if (error) { container.innerHTML = 'Erro ao carregar.'; return; }
                 container.innerHTML = `
                     <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
