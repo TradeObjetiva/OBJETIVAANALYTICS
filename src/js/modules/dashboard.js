@@ -4,11 +4,13 @@ import { supabase } from './config.js';
 export const dashboard = {
     state: {
         checkinsPage: 0,
-        checkinsPerPage: 15, // Reduzido para melhor performance mobile
+        checkinsPerPage: 10,
         hasActivities: false,
         totalCheckins: 0,
         searchQuery: '',
-        searchTimeout: null
+        searchTimeout: null,
+        realtimeSubscription: null,
+        processedCheckins: new Set() // Para evitar duplicados
     },
 
     async populateMetrics() {
@@ -109,6 +111,11 @@ export const dashboard = {
      * Inicializa o Feed e a Escuta Realtime
      */
     setupLiveFeed() {
+        // Evitar múltiplas inscrições
+        if (this.state.realtimeSubscription) {
+            this.state.realtimeSubscription.unsubscribe();
+        }
+
         this.loadCheckins(0);
 
         // Pedir permissão para notificações
@@ -117,11 +124,22 @@ export const dashboard = {
         }
 
         // Realtime Subscription
-        supabase
+        this.state.realtimeSubscription = supabase
             .channel('dashboard-feed')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins' }, payload => {
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins' }, async payload => {
                 const newCheckin = payload.new;
                 
+                // Evitar processar o mesmo ID mais de uma vez (Realtime às vezes repete eventos)
+                const checkinId = newCheckin.id || `${newCheckin.created_at}-${newCheckin.activity_id}`;
+                if (this.state.processedCheckins.has(checkinId)) return;
+                this.state.processedCheckins.add(checkinId);
+                
+                // Limpar cache antigo para não crescer infinitamente
+                if (this.state.processedCheckins.size > 100) {
+                    const firstItem = this.state.processedCheckins.values().next().value;
+                    this.state.processedCheckins.delete(firstItem);
+                }
+
                 this.addCheckinToUI({
                     historyId: newCheckin.created_at, 
                     activityId: newCheckin.activity_id,
@@ -132,20 +150,19 @@ export const dashboard = {
                 this.state.totalCheckins++;
                 this.updateCountUI();
 
-                // Notificação se estiver em segundo plano
-                if (document.hidden && newCheckin.task_id === 'CHECK IN') {
+                // Notificação se estiver em segundo plano ou for um check-in importante
+                if (newCheckin.task_id === 'CHECK IN') {
                     const parts = newCheckin.activity_id?.split(';').filter(p => p.trim() !== '') || [];
                     const name = parts[0] || 'Colaborador';
                     const photo = parts.length > 1 ? parts[parts.length - 1] : 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png';
                     const place = newCheckin.client_id || 'Loja não identificada';
 
                     if (window.Notification && Notification.permission === 'granted') {
-                        const n = new Notification('Novo Check-in!', {
-                            body: `${name} deu check-in em ${place}`,
+                        new Notification('Novo Check-in!', {
+                            body: `${name} está em ${place}`,
                             icon: photo,
                             badge: 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png'
-                        });
-                        n.onclick = () => { window.focus(); };
+                        }).onclick = () => { window.focus(); };
                     }
                 }
             })
@@ -226,9 +243,6 @@ export const dashboard = {
             <div class="col-pdv text-sm">${checkinData.clientId || 'Visita Técnica'}</div>
             <div class="col-data text-xs">${dateFormatted}</div>
             <div class="col-hora text-xs font-bold">${timeFormatted}</div>
-            <div class="col-foto">
-                ${agentPhoto ? `<img src="${agentPhoto}" class="checkin-photo-thumb" onclick="window.open('${agentPhoto}', '_blank')">` : '<span class="text-xs text-dim">Sem Foto</span>'}
-            </div>
             <div class="col-actions justify-end">
                 <div class="action-icon-btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>

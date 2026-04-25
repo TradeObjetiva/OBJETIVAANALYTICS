@@ -126,3 +126,5 @@ export const ui = {
         });
     }
 };
+// Expor para o escopo global para compatibilidade com handlers inline (onclick)
+window.ui = ui;

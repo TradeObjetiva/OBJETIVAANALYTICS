@@ -188,5 +188,53 @@ window.app = {
     showToast: (m, t) => ui.showToast(m, t)
 };
 window.openAddStaffModal = () => staff.openAddModal();
-window.downloadStaffBaseTemplate = () => {}; // Implement if needed
-window.importStaffBaseFile = (input) => {}; // Implement if needed
+window.downloadStaffBaseTemplate = () => {
+    const data = [{ nome: 'NOME COMPLETO', projeto: 'PROMOTOR', seg: true, ter: true, qua: true, qui: true, sex: true, sab: true, dom: false }];
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Modelo");
+    XLSX.writeFile(wb, "modelo_base_colaboradores.xlsx");
+};
+
+window.importStaffBaseFile = (input) => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.SheetNames[0];
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+            
+            const staffArray = rows.map(r => ({
+                nome: String(r.nome || r.NOME || '').toUpperCase().trim(),
+                projeto: String(r.projeto || r.PROJETO || 'PROMOTOR').toUpperCase().trim(),
+                seg: !!(r.seg || r.SEG),
+                ter: !!(r.ter || r.TER),
+                qua: !!(r.qua || r.QUA),
+                qui: !!(r.qui || r.QUI),
+                sex: !!(r.sex || r.SEX),
+                sab: !!(r.sab || r.SAB),
+                dom: !!(r.dom || r.DOM)
+            })).filter(r => r.nome);
+
+            if (staffArray.length > 0) {
+                await api.upsertStaff(staffArray);
+                ui.showToast(`${staffArray.length} colaboradores importados!`, 'success');
+                staff.loadList();
+            }
+        } catch (err) {
+            ui.showToast('Erro ao importar: ' + err.message, 'error');
+        }
+        input.value = '';
+    };
+    reader.readAsArrayBuffer(file);
+};
+// Expor módulos para o escopo global (necessário para handlers onclick no HTML)
+window.ui = ui;
+window.auth = auth;
+window.dashboard = dashboard;
+window.staff = staff;
+window.users = users;
+window.excel = excel;
