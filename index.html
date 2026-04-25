@@ -166,9 +166,9 @@
         <main class="content-area">
             <!-- Users Management View -->
             <div id="users" class="view-container">
-                <div class="view-header mb-8">
-                    <h1 class="text-2xl font-extrabold">🌍 Gestão de Usuários</h1>
-                    <p class="text-muted">Gerencie quem tem acesso ao sistema e quais são seus níveis de permissão.</p>
+                <div class="view-header" style="margin-bottom: 30px;">
+                    <h1 style="font-size: 32px; font-weight: 800;">🌍 Gestão de Usuários</h1>
+                    <p style="color: var(--text-muted);">Gerencie quem tem acesso ao sistema e quais são seus níveis de permissão.</p>
                 </div>
 
                 <div class="management-grid">
@@ -227,9 +227,9 @@
 
             <!-- Profile Management View -->
             <div id="profile" class="view-container">
-                <div class="view-header mb-8">
-                    <h1 class="text-2xl font-extrabold">👤 Meu Perfil</h1>
-                    <p class="text-muted">Mantenha suas informações pessoais atualizadas.</p>
+                <div class="view-header" style="margin-bottom: 30px;">
+                    <h1 style="font-size: 32px; font-weight: 800;">👤 Meu Perfil</h1>
+                    <p style="color: var(--text-muted);">Mantenha suas informações pessoais atualizadas.</p>
                 </div>
 
                 <div class="management-grid" style="grid-template-columns: 1fr 2fr;">
@@ -255,30 +255,30 @@
             </div>
 
             <!-- New Product Dashboard Home -->
-            <div class="view-container" id="home">
+            <div class="view-container active" id="home">
                 <!-- PWA Install Banner (Mobile Only) -->
                 <div id="pwa-install-banner" class="mgmt-card" style="display: none; background: linear-gradient(135deg, var(--primary), var(--color-analytics)); color: white; margin-bottom: 24px; border: none; align-items: center; justify-content: space-between; gap: 15px;">
                     <div>
                         <h4 style="margin: 0; font-size: 16px;">📱 Adicionar à Tela de Início</h4>
                         <p style="margin: 5px 0 0; font-size: 12px; opacity: 0.9;">Instale o app para acesso rápido e offline.</p>
                     </div>
-                    <button id="installApp" class="login-btn w-auto m-0 bg-white text-primary px-4 py-2 text-sm">Instalar</button>
+                    <button id="installApp" class="login-btn" style="width: auto; margin: 0; background: white; color: var(--primary); padding: 8px 16px; font-size: 13px;">Instalar</button>
                 </div>
 
                 <div class="dashboard-grid">
                     <section class="main-col">
                         <div class="welcome-hero">
-                            <div class="flex-between items-center mb-6">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
                                 <div>
-                                    <h2 class="flex items-center flex-wrap gap-2 text-xl font-extrabold">Bem-vindo, <span id="welcome-name" class="skeleton skeleton-text w-120 h-8"></span></h2>
-                                    <p class="m-0 text-muted">Sua operação de campo está rodando agora. Veja o resumo do dia.</p>
+                                    <h2 style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">Bem-vindo, <span id="welcome-name" class="skeleton skeleton-text" style="display: inline-block; width: 120px; height: 32px; vertical-align: middle; border-radius: 8px; word-break: break-word;"></span></h2>
+                                    <p style="margin-bottom: 0;">Sua operação de campo está rodando agora. Veja o resumo do dia.</p>
                                 </div>
-                                <div class="text-right">
+                                <div style="text-align: right;">
                                     <button id="btn-refresh-dashboard" class="refresh-btn">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                                         Atualizar
                                     </button>
-                                    <div id="last-sync-time" class="text-xs text-dim mt-1">Sincronizado agora</div>
+                                    <div id="last-sync-time" style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Sincronizado agora</div>
                                 </div>
                             </div>
                             
@@ -287,7 +287,7 @@
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
                                     Importar Base
                                 </button>
-                                <button class="quick-action-btn" onclick="ui.switchTab('users')">
+                                <button class="quick-action-btn" onclick="app.switchTab('users')">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
                                     Novo Usuário
                                 </button>
@@ -315,9 +315,9 @@
                                     <div class="value"><span id="metric-horas" class="skeleton skeleton-title" style="width: 80px;"></span></div>
                                 </div>
                             </div>
-                        </div>
 
-                    <div class="section-title mt-8 mb-4">
+
+                            <div class="section-title" style="margin-top: 32px; margin-bottom: 20px;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
                                 Check-ins Executados em Tempo Real
                             </div>
@@ -344,16 +344,20 @@
                                 </div>
 
                                 <div id="activity-list" class="checkins-list">
-                                    <div class="p-10 text-center text-dim">
-                                        <div class="loader m-auto mb-4"></div>
+                                    <div style="padding: 40px; text-align: center; color: var(--text-dim);">
+                                        <div class="loader" style="margin: 0 auto 16px;"></div>
                                         Sincronizando feed operacional...
                                     </div>
                                 </div>
 
                                 <div class="checkins-footer">
                                     <div id="checkins-count">Total: 0 check-ins</div>
-                                    <div class="pagination-controls" id="checkins-pagination">
-                                        <!-- Dynamic Pagination -->
+                                    <div class="pagination-controls">
+                                        <span style="margin-right: 8px;">Página</span>
+                                        <div class="page-num active">1</div>
+                                        <div class="page-num">2</div>
+                                        <div class="page-num">3</div>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 8px; cursor: pointer;"><path d="M9 18l6-6-6-6"></path></svg>
                                     </div>
                                 </div>
                             </div>
@@ -590,6 +594,7 @@
 
     <div id="toast-container"></div>
 
+    <script type="module" src="public/js/supabase-config.js"></script>
     <script type="module" src="src/js/script.js?v=1.0.4"></script>
 </body>
 
