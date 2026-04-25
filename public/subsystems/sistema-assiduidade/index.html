@@ -1165,23 +1165,20 @@
                                 const isAtivo = s.ativo !== false;
                                 const statusHtml = isAtivo 
                                     ? '<span style="color: #10b981; font-weight: 600;">Ativo</span>' 
-                                    : \`<span style="color: #ef4444; font-weight: 600;" title="Desativado em \${s.data_desativacao}">Inativo</span>\`;
+                                    : '<span style="color: #ef4444; font-weight: 600;" title="Desativado em ' + (s.data_desativacao || '') + '">Inativo</span>';
                                 
                                 const actionHtml = isAtivo 
-                                    ? \`<button onclick="deactivateStaff('\${s.nome}')" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Desativar</button>\` 
-                                    : \`<button onclick="reactivateStaff('\${s.nome}')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Reativar</button>\`;
+                                    ? '<button onclick="deactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Desativar</button>' 
+                                    : '<button onclick="reactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Reativar</button>';
 
-                                return \`
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); \${!isAtivo ? 'opacity: 0.6;' : ''}">
-                                    <td style="padding: 8px;">\${s.nome}</td>
-                                    <td style="padding: 8px; color: var(--text-muted);">\${s.projeto || '-'}</td>
-                                    <td style="padding: 8px; text-align: center;">\${statusHtml}</td>
-                                    <td style="padding: 8px; text-align: right; white-space: nowrap;">
-                                        \${actionHtml}
-                                        <button onclick="deleteStaffManual('\${s.nome}')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>
-                                    </td>
-                                </tr>
-                                \`;
+                                return '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);' + (!isAtivo ? ' opacity: 0.6;' : '') + '">'
+                                    + '<td style="padding: 8px;">' + s.nome + '</td>'
+                                    + '<td style="padding: 8px; color: var(--text-muted);">' + (s.projeto || '-') + '</td>'
+                                    + '<td style="padding: 8px; text-align: center;">' + statusHtml + '</td>'
+                                    + '<td style="padding: 8px; text-align: right; white-space: nowrap;">'
+                                    + actionHtml
+                                    + '<button onclick="deleteStaffManual(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>'
+                                    + '</td></tr>';
                             }).join('')}
                         </tbody>
                     </table>
@@ -1192,7 +1189,7 @@
                 const today = new Date().toISOString().split('T')[0];
                 const { value: date } = await Swal.fire({
                     title: 'Desativar Colaborador',
-                    text: \`Data de desativação para \${nome}:\`,
+                    text: 'Data de desativação para ' + nome + ':',
                     input: 'date',
                     inputValue: today,
                     showCancelButton: true,
@@ -1208,14 +1205,14 @@
             };
 
             window.reactivateStaff = async (nome) => {
-                if (!confirm(\`Deseja reativar \${nome}?\`)) return;
+                if (!confirm('Deseja reativar ' + nome + '?')) return;
                 const { error } = await window.supabase.from('tb_colaboradores').update({ ativo: true, data_desativacao: null }).eq('nome', nome);
                 if (error) Swal.fire('Erro!', error.message, 'error');
                 else { loadStaffManageList(); syncStaff().then(() => renderGrid()); }
             };
 
             window.deleteStaffManual = async (nome) => {
-                if (!confirm(\`Deseja excluir definitivamente \${nome} da equipe?\`)) return;
+                if (!confirm('Deseja excluir definitivamente ' + nome + ' da equipe?')) return;
                 const { error } = await window.supabase.from('tb_colaboradores').delete().eq('nome', nome);
                 if (error) Swal.fire('Erro!', error.message, 'error');
                 else { loadStaffManageList(); syncStaff().then(() => renderGrid()); }

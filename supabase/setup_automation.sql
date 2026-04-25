@@ -99,12 +99,25 @@ TO authenticated
 USING (true);
 
 -- Permitir inserção/atualização para todos os usuários autenticados
--- Nota: Em produção, você pode querer restringir isso apenas para admins, 
--- mas conforme a arquitetura atual do sistema, os usuários autenticados gerenciam a base.
 DROP POLICY IF EXISTS "Permitir tudo para autenticados" ON tb_colaboradores;
 CREATE POLICY "Permitir tudo para autenticados" 
 ON tb_colaboradores FOR ALL 
 TO authenticated 
+USING (true)
+WITH CHECK (true);
+
+-- Permitir leitura para anon (papel usado pelo sistema frontend)
+DROP POLICY IF EXISTS "Permitir leitura para anon" ON tb_colaboradores;
+CREATE POLICY "Permitir leitura para anon" 
+ON tb_colaboradores FOR SELECT 
+TO anon 
+USING (true);
+
+-- Permitir operações completas para anon (gerenciar equipe via frontend)
+DROP POLICY IF EXISTS "Permitir tudo para anon" ON tb_colaboradores;
+CREATE POLICY "Permitir tudo para anon" 
+ON tb_colaboradores FOR ALL 
+TO anon 
 USING (true)
 WITH CHECK (true);
 
