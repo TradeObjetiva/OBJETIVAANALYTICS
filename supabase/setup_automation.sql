@@ -52,7 +52,13 @@ BEGIN
     -- Tenta inserir na tb_assiduidade. Se já existir (P, FT, etc), mantém o que está lá,
     -- mas se não houver registro, insere como 'P' (Presença).
     INSERT INTO tb_assiduidade (collaborator_name, date, status, checkin_time, is_manual)
-    VALUES (v_nome_agente, v_hoje, 'P', TO_CHAR(NEW.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI:SS'), false)
+    VALUES (
+        v_nome_agente, 
+        v_hoje, 
+        'P', 
+        (NEW.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::TIME, 
+        false
+    )
     ON CONFLICT (collaborator_name, date) 
     DO UPDATE SET 
         checkin_time = EXCLUDED.checkin_time
