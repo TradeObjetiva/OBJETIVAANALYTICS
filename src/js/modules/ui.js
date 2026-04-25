@@ -50,7 +50,7 @@ export const ui = {
         
         const contentArea = document.querySelector('.content-area');
         if (contentArea) {
-            contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+            contentArea.scrollTo({ top: 0, behavior: 'auto' });
         }
         
         this.closeSidebar();
