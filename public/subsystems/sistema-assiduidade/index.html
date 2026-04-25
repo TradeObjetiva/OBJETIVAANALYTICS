@@ -400,10 +400,55 @@
                     </button>
                 </div>
 
+                <button class="sync-btn" id="btn-export-grid" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                    Exportar Grade
+                </button>
+
                 <button class="sync-btn" id="btn-manage-staff" style="background: var(--bg-accent); border: 1px solid var(--border);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
                     Gerenciar Equipe
                 </button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Equipe Ativa</div>
+                    <div id="kpi-staff-count" style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">--</div>
+                </div>
+            </div>
+            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Taxa de Presença</div>
+                    <div id="kpi-presence-rate" style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">--%</div>
+                </div>
+            </div>
+            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total de Faltas</div>
+                    <div id="kpi-absence-count" style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">--</div>
+                </div>
+            </div>
+            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                </div>
+                <div>
+                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Atestados</div>
+                    <div id="kpi-certificate-count" style="font-size: 22px; font-weight: 800; color: #f59e0b; line-height: 1.2;">--</div>
+                </div>
             </div>
         </div>
 
@@ -779,7 +824,50 @@
 
                 tableBody.appendChild(tr);
             });
+
+            // Atualiza os cards de resumo
+            updateSummaryCards(filteredStaff, attendanceMap, days);
             console.log('Grade de assiduidade renderizada com sucesso.');
+        }
+
+        function updateSummaryCards(staff, attendanceMap, days) {
+            let totalP = 0, totalFT = 0, totalATT = 0, totalEntries = 0;
+
+            staff.forEach(person => {
+                days.forEach(dayObj => {
+                    const dateStr = getLocalDateString(dayObj);
+                    const isWorkingDay = person.schedule[dayObj.getDay()];
+                    if (!isWorkingDay) return;
+
+                    // Ignora dias após desativação
+                    if (!person.ativo && person.data_desativacao && dateStr > person.data_desativacao) return;
+
+                    // Só conta dias que já passaram (até hoje)
+                    const today = getLocalDateString(new Date());
+                    if (dateStr > today) return;
+
+                    totalEntries++;
+                    const status = attendanceMap[person.name + '_' + dateStr] || '';
+                    if (status === 'P') totalP++;
+                    else if (status === 'FT') totalFT++;
+                    else if (status === 'ATT') totalATT++;
+                });
+            });
+
+            const rate = totalEntries > 0 ? ((totalP / totalEntries) * 100).toFixed(1) : 0;
+
+            const kpiStaff = document.getElementById('kpi-staff-count');
+            const kpiRate = document.getElementById('kpi-presence-rate');
+            const kpiAbsence = document.getElementById('kpi-absence-count');
+            const kpiCert = document.getElementById('kpi-certificate-count');
+
+            if (kpiStaff) kpiStaff.textContent = staff.length;
+            if (kpiRate) {
+                kpiRate.textContent = rate + '%';
+                kpiRate.style.color = rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444';
+            }
+            if (kpiAbsence) kpiAbsence.textContent = totalFT;
+            if (kpiCert) kpiCert.textContent = totalATT;
         }
 
         async function setHolidayForAll(dateStr) {
@@ -1095,6 +1183,9 @@
             document.getElementById('prev-month').onclick = () => handleMonthChange(-1);
             document.getElementById('next-month').onclick = () => handleMonthChange(1);
             
+            // Botão Exportar Grade Completa
+            document.getElementById('btn-export-grid').onclick = () => exportFullGrid();
+
             document.getElementById('btn-manage-staff').onclick = async () => {
                 const theme = getSwalTheme();
                 await Swal.fire({
@@ -1325,6 +1416,75 @@
                     }], { onConflict: 'collaborator_name, date' });
                 }
             } catch (err) { console.error('Erro ao salvar:', err); }
+        }
+
+        function exportFullGrid() {
+            try {
+                if (staffList.length === 0) {
+                    Swal.fire('Aviso', 'Nenhum colaborador carregado para exportar.', 'info');
+                    return;
+                }
+
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                const start = new Date(year, month, 21);
+                const end = new Date(year, month + 1, 20);
+
+                const days = [];
+                let temp = new Date(start);
+                while (temp <= end) {
+                    days.push(new Date(temp));
+                    temp.setDate(temp.getDate() + 1);
+                }
+
+                // Build header row
+                const header = ['Colaborador', 'Função'];
+                days.forEach(d => {
+                    header.push(d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0'));
+                });
+                header.push('Presenças', 'Faltas', 'Atestados', 'Abonadas');
+
+                // Collect data from the rendered table
+                const rows = document.querySelectorAll('#attendance-body tr');
+                const exportData = [header];
+
+                rows.forEach(tr => {
+                    const cells = tr.querySelectorAll('td');
+                    if (cells.length < 4) return;
+
+                    const row = [];
+                    // Name
+                    const nameEl = cells[0].querySelector('.collaborator-name');
+                    row.push(nameEl ? nameEl.textContent.trim() : cells[0].textContent.trim());
+                    // Role
+                    const roleEl = cells[1].querySelector('.collaborator-role');
+                    row.push(roleEl ? roleEl.textContent.trim() : cells[1].textContent.trim());
+
+                    // Day cells (skip first 2 cols and last 4 summary cols)
+                    for (let i = 2; i < cells.length - 4; i++) {
+                        const badge = cells[i].querySelector('.status-badge');
+                        row.push(badge ? badge.textContent.trim() : '');
+                    }
+
+                    // Summary cols (last 4)
+                    for (let i = cells.length - 4; i < cells.length; i++) {
+                        row.push(cells[i].textContent.trim());
+                    }
+
+                    exportData.push(row);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                const sheetName = monthNames[month] + '_' + year;
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                XLSX.writeFile(wb, 'assiduidade_' + sheetName.toLowerCase() + '.xlsx');
+
+                Swal.fire({title: 'Exportado!', text: 'Grade completa salva com sucesso.', icon: 'success', timer: 2000, showConfirmButton: false, background: getSwalTheme().background, color: getSwalTheme().color});
+            } catch (err) {
+                console.error('Erro ao exportar grade:', err);
+                Swal.fire('Erro', 'Falha ao gerar o arquivo Excel.', 'error');
+            }
         }
 
         init();

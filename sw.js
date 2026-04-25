@@ -1,4 +1,4 @@
-const CACHE_NAME = 'objetiva-analytics-v1.0.1';
+const CACHE_NAME = 'objetiva-analytics-v1.1.0';
 const ASSETS = [
     './',
     './index.html',
@@ -25,7 +25,7 @@ self.addEventListener('activate', (event) => {
             return Promise.all(
                 cacheNames.map((cache) => {
                     if (cache !== CACHE_NAME) {
-                        console.log('SW: Limpando Cache Antigo');
+                        console.log('SW: Limpando Cache Antigo:', cache);
                         return caches.delete(cache);
                     }
                 })
@@ -35,15 +35,32 @@ self.addEventListener('activate', (event) => {
 });
 
 // Estratégia Network First: Tenta internet, se falhar, usa cache
+// IMPORTANTE: Só cacheia GETs de assets estáticos, ignora POSTs e chamadas ao Supabase
 self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+
+    // Não intercepta: métodos não-GET, chamadas ao Supabase, CDNs dinâmicas
+    if (
+        event.request.method !== 'GET' ||
+        url.hostname.includes('supabase') ||
+        url.hostname.includes('googleapis.com') ||
+        url.pathname.startsWith('/rest/') ||
+        url.pathname.startsWith('/auth/') ||
+        url.pathname.startsWith('/realtime/')
+    ) {
+        return; // Deixa o browser fazer o fetch normalmente
+    }
+
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // Se a rede estiver ok, atualiza o cache e retorna
-                const resClone = response.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, resClone);
-                });
+                // Só cacheia respostas válidas (status 200)
+                if (response.ok) {
+                    const resClone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, resClone);
+                    });
+                }
                 return response;
             })
             .catch(() => caches.match(event.request)) // Se falhar (offline), usa o que tem salvo
