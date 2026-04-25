@@ -1,0 +1,2 @@
+[functions.webhook-checkin]
+verify_jwt = false
