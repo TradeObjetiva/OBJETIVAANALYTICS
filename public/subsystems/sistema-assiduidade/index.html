@@ -400,11 +400,6 @@
                     </button>
                 </div>
 
-                <button class="sync-btn" id="btn-import-staff" title="Sincroniza com a planilha atual">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
-                    Sincronizar
-                </button>
-
                 <button class="sync-btn" id="btn-manage-staff" style="background: var(--bg-accent); border: 1px solid var(--border);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
                     Gerenciar Equipe
@@ -567,6 +562,30 @@
                     }
                 };
 
+                if (Notification.permission === 'default') {
+                    Notification.requestPermission();
+                }
+
+                // Inscrição Realtime no Supabase para Notificações (quando em 2º plano)
+                window.supabase.channel('checkins_realtime')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins' }, payload => {
+                        const newCheckin = payload.new;
+                        if (newCheckin && newCheckin.task_id === 'CHECK IN' && document.hidden) {
+                            if (Notification.permission === 'granted') {
+                                const name = newCheckin.activity_id?.split(';')[0]?.trim() || 'Colaborador';
+                                const place = newCheckin.place_name || 'Loja não identificada';
+                                const notification = new Notification('Novo Check-in!', {
+                                    body: `${name} deu check-in em ${place}`,
+                                    icon: 'https://cdn-icons-png.flaticon.com/512/10435/10435137.png'
+                                });
+                                notification.onclick = () => {
+                                    window.focus();
+                                };
+                            }
+                        }
+                    })
+                    .subscribe();
+
                 await syncStaff();
                 await processExistingCheckins(); 
                 await renderGrid();
@@ -580,13 +599,15 @@
         async function syncStaff() {
             const { data, error } = await window.supabase
                 .from('tb_colaboradores')
-                .select('nome, projeto, seg, ter, qua, qui, sex, sab, dom')
+                .select('nome, projeto, seg, ter, qua, qui, sex, sab, dom, ativo, data_desativacao')
                 .order('nome', { ascending: true });
             
             if (error) throw new Error(`Falha ao ler colaboradores: ${error.message}`);
             staffList = data.map(item => ({ 
                 name: item.nome, 
                 role: item.projeto || 'PROMOTOR',
+                ativo: item.ativo !== false,
+                data_desativacao: item.data_desativacao,
                 schedule: {
                     0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
                 }
@@ -679,9 +700,15 @@
 
             tableBody.innerHTML = '';
             
-            const filteredStaff = gridSearchQuery 
-                ? staffList.filter(s => s.name.toLowerCase().includes(gridSearchQuery.toLowerCase()))
-                : staffList;
+            const startDateStr = start.toISOString().split('T')[0];
+            const filteredStaff = staffList.filter(s => {
+                if (gridSearchQuery && !s.name.toLowerCase().includes(gridSearchQuery.toLowerCase())) return false;
+                
+                if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
+                    return false;
+                }
+                return true;
+            });
 
             if (filteredStaff.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="40" style="text-align: center; padding: 60px; color: var(--text-dim);">Nenhum colaborador encontrado para "${gridSearchQuery}".</td></tr>`;
@@ -715,7 +742,13 @@
                     const isWorkingDay = person.schedule[dayObj.getDay()];
                     const td = document.createElement('td');
                     td.className = 'day-cell';
-                    if (!isWorkingDay) td.classList.add('not-working');
+                    
+                    let isDeactivatedDay = false;
+                    if (!person.ativo && person.data_desativacao && dateStr > person.data_desativacao) {
+                        isDeactivatedDay = true;
+                    }
+                    
+                    if (!isWorkingDay || isDeactivatedDay) td.classList.add('not-working');
                     
                     td.dataset.date = dateStr;
                     td.dataset.collaborator = person.name;
@@ -1050,16 +1083,6 @@
             document.getElementById('prev-month').onclick = () => handleMonthChange(-1);
             document.getElementById('next-month').onclick = () => handleMonthChange(1);
             
-            document.getElementById('btn-import-staff').onclick = async () => {
-                const btn = document.getElementById('btn-import-staff');
-                const oldHtml = btn.innerHTML;
-                btn.innerHTML = '<div class="loader"></div> Sincronizando...';
-                await syncStaff();
-                await renderGrid();
-                await renderObservations();
-                btn.innerHTML = oldHtml;
-            };
-
             document.getElementById('btn-manage-staff').onclick = async () => {
                 const theme = getSwalTheme();
                 await Swal.fire({
@@ -1106,7 +1129,7 @@
 
             window.loadStaffManageList = async () => {
                 const container = document.getElementById('staff-manage-list');
-                const { data, error } = await window.supabase.from('tb_colaboradores').select('*').order('nome', { ascending: true });
+                const { data, error } = await window.supabase.from('tb_colaboradores').select('nome, projeto, ativo, data_desativacao').order('nome', { ascending: true });
                 if (error) { container.innerHTML = 'Erro ao carregar.'; return; }
                 container.innerHTML = `
                     <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
@@ -1114,26 +1137,66 @@
                             <tr style="border-bottom: 1px solid var(--border); color: var(--text-dim);">
                                 <th style="text-align: left; padding: 8px;">Colaborador</th>
                                 <th style="text-align: left; padding: 8px;">Projeto</th>
-                                <th style="text-align: right; padding: 8px;">Ação</th>
+                                <th style="text-align: center; padding: 8px;">Status</th>
+                                <th style="text-align: right; padding: 8px;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${data.map(s => `
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <td style="padding: 8px;">${s.nome}</td>
-                                    <td style="padding: 8px; color: var(--text-muted);">${s.projeto || '-'}</td>
-                                    <td style="padding: 8px; text-align: right;">
-                                        <button onclick="deleteStaffManual('${s.nome}')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>
+                            ${data.map(s => {
+                                const isAtivo = s.ativo !== false;
+                                const statusHtml = isAtivo 
+                                    ? '<span style="color: #10b981; font-weight: 600;">Ativo</span>' 
+                                    : \`<span style="color: #ef4444; font-weight: 600;" title="Desativado em \${s.data_desativacao}">Inativo</span>\`;
+                                
+                                const actionHtml = isAtivo 
+                                    ? \`<button onclick="deactivateStaff('\${s.nome}')" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Desativar</button>\` 
+                                    : \`<button onclick="reactivateStaff('\${s.nome}')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Reativar</button>\`;
+
+                                return \`
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); \${!isAtivo ? 'opacity: 0.6;' : ''}">
+                                    <td style="padding: 8px;">\${s.nome}</td>
+                                    <td style="padding: 8px; color: var(--text-muted);">\${s.projeto || '-'}</td>
+                                    <td style="padding: 8px; text-align: center;">\${statusHtml}</td>
+                                    <td style="padding: 8px; text-align: right; white-space: nowrap;">
+                                        \${actionHtml}
+                                        <button onclick="deleteStaffManual('\${s.nome}')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>
                                     </td>
                                 </tr>
-                            `).join('')}
+                                \`;
+                            }).join('')}
                         </tbody>
                     </table>
                 `;
             };
 
+            window.deactivateStaff = async (nome) => {
+                const today = new Date().toISOString().split('T')[0];
+                const { value: date } = await Swal.fire({
+                    title: 'Desativar Colaborador',
+                    text: \`Data de desativação para \${nome}:\`,
+                    input: 'date',
+                    inputValue: today,
+                    showCancelButton: true,
+                    background: getSwalTheme().background,
+                    color: getSwalTheme().color
+                });
+
+                if (date) {
+                    const { error } = await window.supabase.from('tb_colaboradores').update({ ativo: false, data_desativacao: date }).eq('nome', nome);
+                    if (error) Swal.fire('Erro!', error.message, 'error');
+                    else { loadStaffManageList(); syncStaff().then(() => renderGrid()); }
+                }
+            };
+
+            window.reactivateStaff = async (nome) => {
+                if (!confirm(\`Deseja reativar \${nome}?\`)) return;
+                const { error } = await window.supabase.from('tb_colaboradores').update({ ativo: true, data_desativacao: null }).eq('nome', nome);
+                if (error) Swal.fire('Erro!', error.message, 'error');
+                else { loadStaffManageList(); syncStaff().then(() => renderGrid()); }
+            };
+
             window.deleteStaffManual = async (nome) => {
-                if (!confirm(`Deseja remover ${nome} da equipe?`)) return;
+                if (!confirm(\`Deseja excluir definitivamente \${nome} da equipe?\`)) return;
                 const { error } = await window.supabase.from('tb_colaboradores').delete().eq('nome', nome);
                 if (error) Swal.fire('Erro!', error.message, 'error');
                 else { loadStaffManageList(); syncStaff().then(() => renderGrid()); }

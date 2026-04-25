@@ -107,3 +107,7 @@ ON tb_colaboradores FOR ALL
 TO authenticated 
 USING (true)
 WITH CHECK (true);
+
+-- 7. Adicionar suporte a colaboradores inativos (Soft Delete)
+ALTER TABLE tb_colaboradores ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT TRUE;
+ALTER TABLE tb_colaboradores ADD COLUMN IF NOT EXISTS data_desativacao DATE;
