@@ -124,3 +124,39 @@ WITH CHECK (true);
 -- 7. Adicionar suporte a colaboradores inativos (Soft Delete)
 ALTER TABLE tb_colaboradores ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT TRUE;
 ALTER TABLE tb_colaboradores ADD COLUMN IF NOT EXISTS data_desativacao DATE;
+
+-- 8. Função RPC para carregar métricas do Dashboard (Performance)
+CREATE OR REPLACE FUNCTION get_dashboard_metrics()
+RETURNS json AS $$
+DECLARE
+    v_clientes int;
+    v_redes int;
+    v_lojas int;
+    v_municipios int;
+    v_horas numeric;
+BEGIN
+    SELECT 
+        COUNT(DISTINCT TRIM(REPLACE(UPPER(form), 'PESQUISA', ''))) as clientes,
+        COUNT(DISTINCT TRIM(UPPER(rede))) as redes,
+        COUNT(DISTINCT TRIM(UPPER(local))) as lojas,
+        COUNT(DISTINCT TRIM(UPPER(municipio))) as municipios,
+        SUM(
+            COALESCE(NULLIF(REPLACE(seg, ',', '.'), '')::numeric, 0) +
+            COALESCE(NULLIF(REPLACE(ter, ',', '.'), '')::numeric, 0) +
+            COALESCE(NULLIF(REPLACE(qua, ',', '.'), '')::numeric, 0) +
+            COALESCE(NULLIF(REPLACE(qui, ',', '.'), '')::numeric, 0) +
+            COALESCE(NULLIF(REPLACE(sex, ',', '.'), '')::numeric, 0) +
+            COALESCE(NULLIF(REPLACE(sab, ',', '.'), '')::numeric, 0)
+        ) as horas
+    INTO v_clientes, v_redes, v_lojas, v_municipios, v_horas
+    FROM tb_planilha;
+
+    RETURN json_build_object(
+        'clientes', v_clientes,
+        'redes', v_redes,
+        'lojas', v_lojas,
+        'municipios', v_municipios,
+        'horas', v_horas
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
