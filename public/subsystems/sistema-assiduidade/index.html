@@ -215,6 +215,7 @@
         .status-FE { background: #64748b; color: #fff; }
         .status-FR { background: #06b6d4; color: #fff; }
         .status-SAPP { background: #4b5563; color: #fff; }
+        .status-ATH { background: #8b5cf6; color: #fff; } /* Violeta para Atestado de Horas */
 
         .collaborator-name { font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .collaborator-role { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -371,6 +372,41 @@
             .day-header span:first-child { font-size: 12px; }
             .day-header span:last-child { font-size: 8px; }
         }
+
+        /* --- SWEETALERT CUSTOM STYLES --- */
+        .swal2-popup { border-radius: 20px !important; }
+        .swal2-radio {
+            display: flex !important;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 15px !important;
+            background: rgba(128,128,128,0.1) !important;
+            border-radius: 14px;
+            margin: 1em 2em !important;
+        }
+        .swal2-radio label {
+            font-size: 14px !important;
+            color: var(--text-main) !important;
+            font-weight: 500;
+            display: flex !important;
+            align-items: center;
+            gap: 12px;
+            margin: 0 !important;
+            padding: 8px 12px !important;
+            width: 100%;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        .swal2-radio label:hover { background: rgba(128,128,128,0.1); }
+        .swal2-radio input { margin: 0 !important; width: 18px; height: 18px; cursor: pointer; }
+        
+        .swal2-input, .swal2-select, .swal2-textarea {
+            border-radius: 12px !important;
+            border: 1px solid var(--border) !important;
+            background: rgba(128,128,128,0.05) !important;
+            color: var(--text-main) !important;
+        }
     </style>
 </head>
 <body>
@@ -408,6 +444,34 @@
                 <button class="sync-btn" id="btn-manage-staff" style="background: var(--bg-accent); border: 1px solid var(--border);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
                     Gerenciar Equipe
+                </button>
+
+                <button class="sync-btn" id="btn-manage-legends" style="background: var(--bg-accent); border: 1px solid var(--border);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></svg>
+                    Gerenciar Legendas
+                </button>
+            </div>
+        </div>
+
+        <!-- Ferramenta de Conciliação de Excel -->
+        <div id="excel-reconcile-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.05)); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 48px; height: 48px; border-radius: 12px; background: #10b981; display: flex; align-items: center; justify-content: center; color: white;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Conciliador de Folha de Ponto</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Substitua "sem registro" pelas justificativas do sistema automaticamente.</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <input type="file" id="reconcile-file-input" style="display: none;" accept=".xlsx, .xls">
+                <button class="sync-btn" onclick="document.getElementById('reconcile-file-input').click()" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
+                    Selecionar Planilha
+                </button>
+                <button class="sync-btn" id="btn-start-reconcile" style="background: #10b981; display: none;">
+                    Iniciar Conciliação
                 </button>
             </div>
         </div>
@@ -481,15 +545,8 @@
             </table>
         </div>
 
-        <div class="legend-container">
-            <div class="legend-item"><span class="status-badge status-P">P</span> Presença</div>
-            <div class="legend-item"><span class="status-badge status-FT">FT</span> Falta</div>
-            <div class="legend-item"><span class="status-badge status-ATT">ATT</span> Atestado</div>
-            <div class="legend-item"><span class="status-badge status-FR">FR</span> Férias</div>
-            <div class="legend-item"><span class="status-badge status-FG">FG</span> Folga</div>
-            <div class="legend-item"><span class="status-badge status-FA">FA</span> Abonada</div>
-            <div class="legend-item"><span class="status-badge status-FE">FE</span> Feriado</div>
-            <div class="legend-item"><span class="status-badge status-SAPP">SAPP</span> Sem App</div>
+        <div class="legend-container" id="main-legend-container">
+            <!-- Legendas serão injetadas dinamicamente -->
         </div>
 
         <div id="obs-section" style="margin-top: 32px; padding-bottom: 50px;">
@@ -524,20 +581,13 @@
     </div>
 
     <div id="status-selector" class="status-selector">
-        <div class="status-option" data-status="P"><span class="status-badge status-P">P</span> Presença</div>
-        <div class="status-option" data-status="FT"><span class="status-badge status-FT">FT</span> Falta</div>
-        <div class="status-option" data-status="ATT"><span class="status-badge status-ATT">ATT</span> Atestado</div>
-        <div class="status-option" data-status="FR"><span class="status-badge status-FR">FR</span> Férias</div>
-        <div class="status-option" data-status="FG"><span class="status-badge status-FG">FG</span> Folga</div>
-        <div class="status-option" data-status="FA"><span class="status-badge status-FA">FA</span> Abonada</div>
-        <div class="status-option" data-status="FE"><span class="status-badge status-FE">FE</span> Feriado</div>
-        <div class="status-option" data-status="SAPP"><span class="status-badge status-SAPP">SAPP</span> Sem App</div>
-        <div class="status-option" data-status=""><span class="status-badge" style="background:#444">-</span> Limpar</div>
+        <!-- Opções de status serão injetadas dinamicamente -->
     </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../../js/supabase-config.js"></script>
     <script>
@@ -569,14 +619,25 @@
             const theme = document.documentElement.getAttribute('data-theme');
             return {
                 background: theme === 'dark' ? '#121216' : '#fff',
-                color: theme === 'dark' ? '#fff' : '#000',
-                inputBg: theme === 'dark' ? '#1a1a20' : '#fff',
-                inputBorder: theme === 'dark' ? '#333' : '#ddd'
+                color: theme === 'dark' ? '#fff' : '#0f172a',
+                inputBg: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#fff',
+                inputBorder: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'
             };
         }
         
         let selectedCell = null;
         let staffList = [];
+        let legendasList = [
+            { codigo: 'P', nome: 'Presença', cor: '#10b981' },
+            { codigo: 'FT', nome: 'Falta', cor: '#ef4444' },
+            { codigo: 'ATT', nome: 'Atestado', cor: '#3b82f6' },
+            { codigo: 'ATH', nome: 'Atestado de Horas', cor: '#8b5cf6' },
+            { codigo: 'FR', nome: 'Férias', cor: '#06b6d4' },
+            { codigo: 'FG', nome: 'Folga', cor: '#f59e0b' },
+            { codigo: 'FA', nome: 'Abonada', cor: '#8b5cf6' },
+            { codigo: 'FE', nome: 'Feriado', cor: '#64748b' },
+            { codigo: 'SAPP', nome: 'Sem App', cor: '#4b5563' }
+        ];
         let gridSearchQuery = '';
         let initialDatesSet = false;
 
@@ -616,10 +677,12 @@
                 // Notificações agora são gerenciadas pelo Dashboard principal para evitar duplicidade.
 
                 await syncStaff();
+                await syncLegendas();
                 await processExistingCheckins(); 
                 await renderGrid();
                 await renderObservations();
                 setupEventListeners();
+                renderLegendasUI();
             } catch (err) {
                 console.error('Erro na inicialização:', err);
             }
@@ -651,6 +714,56 @@
                     0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
                 }
             }));
+        }
+
+        async function syncLegendas() {
+            try {
+                let { data, error } = await window.supabase
+                    .from('tb_legendas')
+                    .select('codigo, nome, cor')
+                    .order('codigo', { ascending: true });
+                
+                if (!error && data && data.length > 0) {
+                    legendasList = data;
+                } else if (error && error.code === '42P01') {
+                    console.warn('Tabela tb_legendas não existe. Usando padrões.');
+                }
+            } catch (e) { console.warn('Erro ao sincronizar legendas:', e); }
+        }
+
+        function renderLegendasUI() {
+            const container = document.getElementById('main-legend-container');
+            const selector = document.getElementById('status-selector');
+            
+            if (container) {
+                container.innerHTML = legendasList.map(l => `
+                    <div class="legend-item"><span class="status-badge status-${l.codigo}" style="background: ${l.cor}">${l.codigo}</span> ${l.nome}</div>
+                `).join('');
+            }
+
+            if (selector) {
+                selector.innerHTML = legendasList.map(l => `
+                    <div class="status-option" data-status="${l.codigo}"><span class="status-badge status-${l.codigo}" style="background: ${l.cor}">${l.codigo}</span> ${l.nome}</div>
+                `).join('') + `
+                    <div class="status-option" data-status=""><span class="status-badge" style="background:#444">-</span> Limpar</div>
+                `;
+                
+                // Reatribui eventos para as novas opções
+                selector.querySelectorAll('.status-option').forEach(opt => {
+                    opt.onclick = () => handleStatusSelection(opt.dataset.status);
+                });
+            }
+
+            // Atualiza o CSS dinamicamente para cores customizadas
+            let styleTag = document.getElementById('dynamic-legend-styles');
+            if (!styleTag) {
+                styleTag = document.createElement('style');
+                styleTag.id = 'dynamic-legend-styles';
+                document.head.appendChild(styleTag);
+            }
+            styleTag.innerHTML = legendasList.map(l => `
+                .status-${l.codigo} { background: ${l.cor} !important; color: #fff !important; }
+            `).join('');
         }
 
         function getLocalDateString(date) {
@@ -905,16 +1018,12 @@
 
 
 
-        const statusMap = {
-            'P': 'Presença',
-            'FT': 'Falta',
-            'ATT': 'Atestado',
-            'FR': 'Férias',
-            'FG': 'Folga',
-            'FA': 'Abonada',
-            'FE': 'Feriado',
-            'SAPP': 'Sem App'
-        };
+        function getStatusName(codigo) {
+            const legend = legendasList.find(l => l.codigo === codigo);
+            return legend ? legend.nome : codigo;
+        }
+
+        const statusMap = {}; // Será preenchido dinamicamente se necessário, mas getStatusName é preferível
 
         let currentObsGroups = [];
 
@@ -974,7 +1083,7 @@
                         ids: [rec.id],
                         collaborator_name: rec.collaborator_name,
                         status: rec.status,
-                        statusName: statusMap[rec.status] || rec.status,
+                        statusName: getStatusName(rec.status),
                         observation: rec.observation || 'Sem observação',
                         startDate: dateFmt,
                         endDate: dateFmt,
@@ -1033,14 +1142,7 @@
                     <div style="text-align: left; font-size: 14px;">
                         <label style="color: var(--text-muted); display: block; margin-bottom: 5px;">Status:</label>
                         <select id="swal-edit-status" class="swal2-input" style="margin-bottom: 15px; width: 100%; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
-                            <option value="FT" ${currentStatus === 'FT' ? 'selected' : ''}>Falta</option>
-                            <option value="ATT" ${currentStatus === 'ATT' ? 'selected' : ''}>Atestado</option>
-                            <option value="FR" ${currentStatus === 'FR' ? 'selected' : ''}>Férias</option>
-                            <option value="FA" ${currentStatus === 'FA' ? 'selected' : ''}>Abonada</option>
-                            <option value="FG" ${currentStatus === 'FG' ? 'selected' : ''}>Folga</option>
-                            <option value="SAPP" ${currentStatus === 'SAPP' ? 'selected' : ''}>Sem App</option>
-                            <option value="FE" ${currentStatus === 'FE' ? 'selected' : ''}>Feriado</option>
-                            <option value="P" ${currentStatus === 'P' ? 'selected' : ''}>Presença</option>
+                            ${legendasList.map(l => `<option value="${l.codigo}" ${currentStatus === l.codigo ? 'selected' : ''}>${l.nome}</option>`).join('')}
                         </select>
                         <label style="color: var(--text-muted); display: block; margin-bottom: 5px;">Observação:</label>
                         <input id="swal-edit-obs" class="swal2-input" value="${currentObs}" style="width: 100%; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
@@ -1171,6 +1273,146 @@
             
             // Botão Exportar Grade Completa
             document.getElementById('btn-export-grid').onclick = () => exportFullGrid();
+
+            // Lógica do Conciliador de Excel
+            const reconcileInput = document.getElementById('reconcile-file-input');
+            const startReconcileBtn = document.getElementById('btn-start-reconcile');
+            
+            reconcileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    startReconcileBtn.style.display = 'flex';
+                    startReconcileBtn.textContent = `Conciliar ${e.target.files[0].name}`;
+                } else {
+                    startReconcileBtn.style.display = 'none';
+                }
+            });
+
+            startReconcileBtn.onclick = async () => {
+                const file = reconcileInput.files[0];
+                if (!file) return;
+
+                Swal.fire({
+                    title: 'Iniciando Conciliação',
+                    text: 'Processando abas e preservando estilos...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = new ExcelJS.Workbook();
+                    await workbook.xlsx.load(arrayBuffer);
+                    
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    const startDate = getLocalDateString(new Date(year, month, 21));
+                    const endDate = getLocalDateString(new Date(year, month + 1, 20));
+
+                    const { data: allAttendance, error } = await window.supabase
+                        .from('tb_assiduidade')
+                        .select('*')
+                        .gte('date', startDate)
+                        .lte('date', endDate);
+
+                    if (error) throw error;
+
+                    let updatedSheetsCount = 0;
+                    let updatedRowsCount = 0;
+
+                    workbook.eachSheet((worksheet, sheetId) => {
+                        const collaboratorName = worksheet.name.trim().toUpperCase();
+                        const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorName);
+                        
+                        if (personAttendance.length > 0) {
+                            updatedSheetsCount++;
+                            
+                            let dateCol = -1;
+                            let obsCol = -1;
+                            let headerRowIndex = -1;
+
+                            // Localizar cabeçalhos nas primeiras 20 linhas
+                            for (let r = 1; r <= 20; r++) {
+                                const row = worksheet.getRow(r);
+                                row.eachCell((cell, colNumber) => {
+                                    if (cell.value) {
+                                        const val = String(cell.value).toUpperCase().trim();
+                                        if (val === 'DATA') dateCol = colNumber;
+                                        if (val === 'OBSERVAÇÕES' || val === 'OBSERVAÇAO' || val === 'OBS') {
+                                            obsCol = colNumber;
+                                            headerRowIndex = r;
+                                        }
+                                    }
+                                });
+                                if (dateCol !== -1 && obsCol !== -1) break;
+                            }
+
+                            if (dateCol !== -1 && obsCol !== -1) {
+                                // Percorrer linhas de dados
+                                worksheet.eachRow((row, rowNumber) => {
+                                    if (rowNumber <= headerRowIndex) return;
+
+                                    const dateCell = row.getCell(dateCol);
+                                    let cellDate = null;
+
+                                    if (dateCell.value instanceof Date) {
+                                        cellDate = dateCell.value;
+                                    } else if (typeof dateCell.value === 'string' && dateCell.value.includes('/')) {
+                                        const parts = dateCell.value.split('/');
+                                        if (parts.length === 3) {
+                                            cellDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                                        }
+                                    } else if (dateCell.value && typeof dateCell.value === 'object' && dateCell.value.result instanceof Date) {
+                                        cellDate = dateCell.value.result;
+                                    }
+
+                                    if (cellDate && !isNaN(cellDate.getTime())) {
+                                        const targetDateStr = getLocalDateString(cellDate);
+                                        const record = personAttendance.find(a => a.date === targetDateStr);
+                                        
+                                        if (record && record.status !== 'P') {
+                                            const obsCell = row.getCell(obsCol);
+                                            let statusText = record.status;
+                                            if (record.observation) statusText += ` - ${record.observation}`;
+                                            
+                                            obsCell.value = statusText;
+                                            updatedRowsCount++;
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+
+                    if (updatedSheetsCount === 0) {
+                        throw new Error("Nenhum colaborador da planilha foi encontrado no sistema. Verifique se o nome da ABA é idêntico ao nome no sistema.");
+                    }
+
+                    // Gerar o buffer e baixar
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `folha_reconciliada_${monthNames[month]}_${year}.xlsx`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Conciliação Concluída!',
+                        html: `Preservamos o layout original.<br><b>${updatedSheetsCount} abas</b> atualizadas.<br><b>${updatedRowsCount} observações</b> inseridas.`,
+                        background: getSwalTheme().background,
+                        color: getSwalTheme().color
+                    });
+
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire('Erro', err.message, 'error');
+                } finally {
+                    reconcileInput.value = '';
+                    startReconcileBtn.style.display = 'none';
+                }
+            };
 
             document.getElementById('btn-manage-staff').onclick = async () => {
                 const theme = getSwalTheme();
@@ -1329,21 +1571,151 @@
                 reader.readAsArrayBuffer(file);
             };
 
-            document.querySelectorAll('.status-option').forEach(opt => {
-                opt.onclick = async () => {
-                    const status = opt.dataset.status;
-                    statusSelector.style.display = 'none';
-                    if (selectedCell) {
-                        const collaborator = selectedCell.dataset.collaborator;
-                        const date = selectedCell.dataset.date;
-                        
-                        let observation = null;
-                        let days = 1;
+            // O evento de clique das opções de status agora é gerenciado por handleStatusSelection
+            
+            document.getElementById('btn-manage-legends').onclick = async () => {
+                const theme = getSwalTheme();
+                await Swal.fire({
+                    title: 'Gerenciar Legendas',
+                    html: `
+                        <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+                            <div style="margin-bottom: 20px; padding: 15px; background: rgba(128,128,128,0.05); border-radius: 12px; border: 1px solid var(--border);">
+                                <h4 style="margin-bottom: 10px; font-size: 14px;">➕ Nova Legenda</h4>
+                                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                    <input id="new-legend-code" class="swal2-input" style="margin:0; flex: 1; height: 38px; font-size: 13px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Sigla (ex: ATH)">
+                                    <input id="new-legend-name" class="swal2-input" style="margin:0; flex: 2; height: 38px; font-size: 13px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Nome da Legenda">
+                                    <input id="new-legend-color" type="color" value="#4f46e5" style="width: 40px; height: 38px; padding: 0; border: none; background: none; cursor: pointer;">
+                                    <button onclick="addLegendManual()" style="background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
+                                </div>
+                            </div>
+                            <div id="legends-manage-list">Carregando...</div>
+                        </div>
+                    `,
+                    width: '600px',
+                    showConfirmButton: false,
+                    showCloseButton: true,
+                    background: theme.background,
+                    color: theme.color,
+                    didOpen: () => { loadLegendsManageList(); }
+                });
+            };
 
-                        if (status && status !== 'P') {
-                            const theme = getSwalTheme();
+            window.addLegendManual = async () => {
+                const codigo = document.getElementById('new-legend-code').value.trim().toUpperCase();
+                const nome = document.getElementById('new-legend-name').value.trim();
+                const cor = document.getElementById('new-legend-color').value;
+                if (!codigo || !nome) return;
+                
+                const { error } = await window.supabase.from('tb_legendas').upsert({ codigo, nome, cor }, { onConflict: 'codigo' });
+                if (error) {
+                    if (error.code === '42P01') Swal.fire('Aviso', 'Tabela tb_legendas não encontrada no Supabase. As alterações serão apenas locais nesta sessão.', 'warning');
+                    else { Swal.fire('Erro!', error.message, 'error'); return; }
+                }
+                
+                legendasList = legendasList.filter(l => l.codigo !== codigo);
+                legendasList.push({ codigo, nome, cor });
+                loadLegendsManageList();
+                renderLegendasUI();
+                renderGrid();
+            };
+
+            window.loadLegendsManageList = () => {
+                const container = document.getElementById('legends-manage-list');
+                container.innerHTML = `
+                    <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border); color: var(--text-dim);">
+                                <th style="text-align: left; padding: 8px;">Sigla</th>
+                                <th style="text-align: left; padding: 8px;">Nome</th>
+                                <th style="text-align: center; padding: 8px;">Cor</th>
+                                <th style="text-align: right; padding: 8px;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${legendasList.map(l => `
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 8px; font-weight: 700;">${l.codigo}</td>
+                                    <td style="padding: 8px;">${l.nome}</td>
+                                    <td style="padding: 8px; text-align: center;"><div style="width: 20px; height: 20px; border-radius: 4px; background: ${l.cor}; margin: 0 auto;"></div></td>
+                                    <td style="padding: 8px; text-align: right;">
+                                        <button onclick="deleteLegend('${l.codigo}')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            };
+
+            window.deleteLegend = async (codigo) => {
+                if (['P', 'FT', 'ATT'].includes(codigo)) {
+                    Swal.fire('Aviso', 'Legendas básicas não podem ser excluídas.', 'info');
+                    return;
+                }
+                if (!confirm('Deseja excluir a legenda ' + codigo + '?')) return;
+                
+                const { error } = await window.supabase.from('tb_legendas').delete().eq('codigo', codigo);
+                if (error && error.code !== '42P01') Swal.fire('Erro!', error.message, 'error');
+                
+                legendasList = legendasList.filter(l => l.codigo !== codigo);
+                loadLegendsManageList();
+                renderLegendasUI();
+                renderGrid();
+            };
+
+            window.handleStatusSelection = async (status) => {
+                statusSelector.style.display = 'none';
+                if (selectedCell) {
+                    const collaborator = selectedCell.dataset.collaborator;
+                    const date = selectedCell.dataset.date;
+                    
+                    let observation = null;
+                    let days = 1;
+
+                    if (status && status !== 'P') {
+                        const theme = getSwalTheme();
+                        
+                        // Lógica Especial para Atestado de Horas (ATH)
+                        if (status === 'ATH') {
+                            const { value: type } = await Swal.fire({
+                                title: 'Atestado de Horas',
+                                text: 'Selecione o período ou insira as horas:',
+                                icon: 'question',
+                                input: 'radio',
+                                inputOptions: {
+                                    'matutino': 'Matutino',
+                                    'vespertino': 'Vespertino',
+                                    'horas': 'Inserir Horas Específicas'
+                                },
+                                inputValidator: (value) => {
+                                    if (!value) return 'Você precisa escolher uma opção!';
+                                },
+                                showCancelButton: true,
+                                confirmButtonText: 'Próximo',
+                                background: theme.background,
+                                color: theme.color
+                            });
+
+                            if (!type) return;
+
+                            if (type === 'horas') {
+                                const { value: hours } = await Swal.fire({
+                                    title: 'Inserir Horas',
+                                    input: 'text',
+                                    inputLabel: 'Ex: 2 horas, 08:00 às 10:00, etc.',
+                                    showCancelButton: true,
+                                    background: theme.background,
+                                    color: theme.color
+                                });
+                                if (!hours) return;
+                                observation = `Atestado de Horas - ${hours}`;
+                            } else {
+                                observation = `Atestado de Horas - ${type === 'matutino' ? 'Matutino' : 'Vespertino'}`;
+                            }
+                        } else {
+                            // Comportamento padrão para outras legendas
                             const { value: formValues } = await Swal.fire({
-                                title: `Detalhes: ${status}`,
+                                title: `Detalhes: ${getStatusName(status)}`,
                                 html: `
                                     <div style="text-align: left; font-size: 14px;">
                                         <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Observação:</label>
@@ -1370,20 +1742,20 @@
                             observation = formValues.obs;
                             days = formValues.days;
                         }
-
-                        const baseDate = new Date(date + 'T12:00:00');
-                        for (let i = 0; i < days; i++) {
-                            const currentD = new Date(baseDate);
-                            currentD.setDate(baseDate.getDate() + i);
-                            const currentStr = getLocalDateString(currentD);
-                            await saveStatus(collaborator, currentStr, status, observation);
-                        }
-                        
-                        await renderGrid();
-                        await renderObservations();
                     }
-                };
-            });
+
+                    const baseDate = new Date(date + 'T12:00:00');
+                    for (let i = 0; i < days; i++) {
+                        const currentD = new Date(baseDate);
+                        currentD.setDate(baseDate.getDate() + i);
+                        const currentStr = getLocalDateString(currentD);
+                        await saveStatus(collaborator, currentStr, status, observation);
+                    }
+                    
+                    await renderGrid();
+                    await renderObservations();
+                }
+            };
             
             document.addEventListener('click', () => statusSelector.style.display = 'none');
         }

@@ -961,7 +961,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (row.agente) {
                         const name = row.agente.trim().toUpperCase();
                         if (!uniqueStaff[name]) {
-                            uniqueStaff[name] = { nome: name, projeto: row.projeto || 'PROMOTOR' };
+                            uniqueStaff[name] = { 
+                                nome: name, 
+                                projeto: row.projeto || 'GERAL',
+                                cargo: row.funcao || row.cargo || 'PROMOTOR'
+                            };
                         }
                     }
                 });
@@ -1004,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!data || data.length === 0) {
-            listBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum colaborador na base. Use o botão "Novo" ou importe um Excel.</td></tr>';
+            listBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum colaborador na base. Use o botão "Novo" ou importe um Excel.</td></tr>';
             return;
         }
 
@@ -1031,7 +1035,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <strong style="font-size: 14px; letter-spacing: -0.2px;">${s.nome}</strong>
                         </div>
                     </td>
-                    <td><span class="badge" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-muted); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.projeto || 'PROMOTOR DE MERCHANDISING'}</span></td>
+                    <td><span class="badge" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-muted); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.cargo || 'PROMOTOR'}</span></td>
+                    <td><span class="badge" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--primary); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.projeto || 'GERAL'}</span></td>
                     <td><div style="display: flex; align-items: center;">${scaleHtml}</div></td>
                     <td style="color: var(--text-dim); font-size: 12px; font-weight: 500;">${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
                     <td style="text-align: right;">
@@ -1056,8 +1061,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 '<div style="text-align: left; font-size: 14px;">' +
                 '<label style="color: var(--text-muted);">Nome Completo:</label>' +
                 '<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" placeholder="Ex: JOÃO SILVA">' +
-                '<label style="color: var(--text-muted);">Função / Projeto:</label>' +
-                '<input id="swal-project" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px;" placeholder="Ex: PROMOTOR">' +
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
+                    '<div>' +
+                        '<label style="color: var(--text-muted);">Função:</label>' +
+                        '<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: PROMOTOR">' +
+                    '</div>' +
+                    '<div>' +
+                        '<label style="color: var(--text-muted);">Projeto:</label>' +
+                        '<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: GERAL">' +
+                    '</div>' +
+                '</div>' +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
                 generateWeekCheckboxes() +
                 '</div>',
@@ -1072,7 +1085,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!nome) { Swal.showValidationMessage('O nome é obrigatório'); return false; }
                 return {
                     nome: nome,
-                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'PROMOTOR',
+                    cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
+                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
                     seg: document.getElementById('check-seg').checked,
                     ter: document.getElementById('check-ter').checked,
                     qua: document.getElementById('check-qua').checked,
@@ -1110,8 +1124,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 '<div style="text-align: left; font-size: 14px;">' +
                 '<label style="color: var(--text-muted);">Nome Completo:</label>' +
                 `<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" value="${data.nome}">` +
-                '<label style="color: var(--text-muted);">Função / Projeto:</label>' +
-                `<input id="swal-project" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px;" value="${data.projeto || ''}">` +
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
+                    '<div>' +
+                        '<label style="color: var(--text-muted);">Função:</label>' +
+                        `<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.cargo || ''}">` +
+                    '</div>' +
+                    '<div>' +
+                        '<label style="color: var(--text-muted);">Projeto:</label>' +
+                        `<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.projeto || ''}">` +
+                    '</div>' +
+                '</div>' +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
                 generateWeekCheckboxes(data) +
                 '</div>',
@@ -1126,7 +1148,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!nome) { Swal.showValidationMessage('O nome é obrigatório'); return false; }
                 return {
                     nome: nome,
-                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'PROMOTOR',
+                    cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
+                    projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
                     seg: document.getElementById('check-seg').checked,
                     ter: document.getElementById('check-ter').checked,
                     qua: document.getElementById('check-qua').checked,
@@ -1203,14 +1226,57 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Importação de Base Fixa via Planilha ---
     window.downloadStaffBaseTemplate = () => {
         const data = [
-            ["NOME", "PROJETO"],
-            ["JOAO SILVA", "PROMOTOR"],
-            ["MARIA SOUZA", "PROMOTOR"]
+            ["NOME", "FUNCAO", "PROJETO"],
+            ["JOAO SILVA", "PROMOTOR", "GERAL"],
+            ["MARIA SOUZA", "PROMOTOR", "GERAL"]
         ];
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Base Fixa");
         XLSX.writeFile(wb, "modelo_base_fixa_objetiva.xlsx");
+    };
+
+    window.exportStaffBaseList = async () => {
+        try {
+            const { data, error } = await window.supabase
+                .from('tb_colaboradores')
+                .select('nome, cargo, projeto, seg, ter, qua, qui, sex, sab, dom')
+                .order('nome', { ascending: true });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                Swal.fire('Aviso', 'Não há colaboradores cadastrados para exportar.', 'info');
+                return;
+            }
+
+            // Mapear para um formato amigável para Excel
+            const exportData = data.map(s => ({
+                'NOME': s.nome,
+                'FUNCAO': s.cargo || '',
+                'PROJETO': s.projeto || '',
+                'SEG': s.seg ? 'SIM' : 'NÃO',
+                'TER': s.ter ? 'SIM' : 'NÃO',
+                'QUA': s.qua ? 'SIM' : 'NÃO',
+                'QUI': s.qui ? 'SIM' : 'NÃO',
+                'SEX': s.sex ? 'SIM' : 'NÃO',
+                'SAB': s.sab ? 'SIM' : 'NÃO',
+                'DOM': s.dom ? 'SIM' : 'NÃO'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
+            
+            // Gerar nome do arquivo com data
+            const date = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `lista_colaboradores_${date}.xlsx`);
+            
+            showToast('Lista exportada com sucesso!', 'success');
+        } catch (err) {
+            console.error('Erro ao exportar:', err);
+            Swal.fire('Erro!', 'Falha ao exportar lista: ' + err.message, 'error');
+        }
     };
 
     window.importStaffBaseFile = async (input) => {
@@ -1239,7 +1305,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const staffToUpsert = jsonData.map(row => ({
                     nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
-                    projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase()
+                    cargo: (row.FUNCAO || row.funcao || row.CARGO || row.cargo || "PROMOTOR").toString().trim().toUpperCase(),
+                    projeto: (row.PROJETO || row.projeto || "GERAL").toString().trim().toUpperCase()
                 })).filter(s => s.nome !== "");
 
                 if (staffToUpsert.length === 0) {
