@@ -167,20 +167,22 @@
         .sticky-col {
             position: sticky; left: 0;
             background: var(--bg-card) !important;
-            z-index: 20;
-            border-right: 2px solid var(--border) !important;
-            width: 200px; min-width: 200px; max-width: 200px;
+            z-index: 25;
+            border-right: 2px solid var(--primary) !important;
+            width: 220px; min-width: 220px; max-width: 220px;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
         }
 
         .sticky-role {
-            position: sticky; left: 200px;
+            position: sticky; left: 220px;
             background: var(--bg-card) !important;
-            z-index: 20;
-            border-right: 2px solid var(--border) !important;
-            width: 130px; min-width: 130px; max-width: 130px;
+            z-index: 25;
+            border-right: 1px solid var(--border) !important;
+            width: 150px; min-width: 150px; max-width: 150px;
         }
 
-        thead th.sticky-col, thead th.sticky-role { z-index: 40; background: var(--bg-accent) !important; }
+        thead th.sticky-col { z-index: 50 !important; top: 0; }
+        thead th.sticky-role { z-index: 50 !important; top: 0; }
 
         .day-cell { text-align: center; width: 42px; min-width: 42px; cursor: pointer !important; }
         .day-cell.weekend { background: rgba(0, 0, 0, 0.15) !important; }
@@ -244,16 +246,7 @@
         .day-cell { text-align: center; width: 52px; min-width: 52px; cursor: pointer !important; transition: var(--transition); border-right: 1px solid rgba(255,255,255,0.03) !important; }
         .day-cell:hover { background: rgba(99, 102, 241, 0.15) !important; }
         
-        .sticky-col { 
-            position: sticky; left: 0; 
-            background: var(--bg-card) !important; 
-            z-index: 25; 
-            border-right: 3px solid var(--primary) !important;
-            width: 220px; min-width: 220px;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
-        }
-        
-        th.sticky-col { z-index: 45; background: var(--bg-accent) !important; }
+        /* Removido definições duplicadas de sticky-col */
 
         .legend-container {
             margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px;
@@ -407,6 +400,16 @@
             background: rgba(128,128,128,0.05) !important;
             color: var(--text-main) !important;
         }
+
+        /* Estilo para garantir leitura dos selects em modo dark */
+        select option {
+            background-color: var(--bg-card) !important;
+            color: var(--text-main) !important;
+        }
+        
+        select:focus option {
+            background-color: var(--bg-card) !important;
+        }
     </style>
 </head>
 <body>
@@ -434,6 +437,12 @@
                     <button class="month-btn" id="next-month">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
+                </div>
+
+                <div class="month-selector" style="padding: 0 10px;">
+                    <select id="project-filter" onchange="renderGrid()" style="background: none; border: none; color: var(--text-main); font-weight: 700; font-size: 13px; outline: none; cursor: pointer; height: 38px; min-width: 120px;">
+                        <option value="ALL">TODOS PROJETOS</option>
+                    </select>
                 </div>
 
                 <button class="sync-btn" id="btn-export-grid" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
@@ -526,7 +535,7 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="grid-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             </div>
                         </th>
-                        <th class="sticky-role">Função</th>
+                        <th class="sticky-role">Projeto</th>
                         <!-- Days will be injected here -->
                         <th class="summary-col" title="Presença">P</th>
                         <th class="summary-col" title="Falta">F</th>
@@ -559,6 +568,11 @@
                     <div class="filter-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Buscar:</span>
                         <input type="text" id="obs-staff-search" placeholder="Nome do colaborador..." style="padding: 5px 10px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 160px; font-size: 12px;" oninput="renderObservations()">
+                        
+                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Projeto:</span>
+                        <select id="obs-project-filter" onchange="renderObservations()" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; min-width: 120px;">
+                            <option value="ALL">TODOS</option>
+                        </select>
                         
                         <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
                         <input type="date" id="obs-filter-start" class="date-input" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
@@ -641,6 +655,11 @@
         let gridSearchQuery = '';
         let initialDatesSet = false;
 
+        // Controle de Acesso
+        const userProfile = JSON.parse(localStorage.getItem('currentUserProfile') || '{}');
+        const isMaster = userProfile.role === 'admin' || userProfile.role === 'master';
+        const allowedProjects = userProfile.allowed_projects || [];
+
         const tableBody = document.getElementById('attendance-body');
         const headerRow = document.getElementById('header-row');
         const monthDisplay = document.getElementById('month-display');
@@ -698,22 +717,52 @@
                 console.warn('Colunas ativo/data_desativacao não encontradas. Usando fallback...');
                 const fallback = await window.supabase
                     .from('tb_colaboradores')
-                    .select('nome, projeto, seg, ter, qua, qui, sex, sab, dom')
+                    .select('nome, projeto, cargo, seg, ter, qua, qui, sex, sab, dom')
                     .order('nome', { ascending: true });
                 data = fallback.data;
                 error = fallback.error;
             }
 
-            if (error) throw new Error(`Falha ao ler colaboradores: ${error.message}`);
-            staffList = data.map(item => ({ 
-                name: item.nome, 
-                role: item.projeto || 'PROMOTOR',
-                ativo: item.ativo !== false,
-                data_desativacao: item.data_desativacao || null,
-                schedule: {
-                    0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
+            if (!error && data) {
+                let mappedStaff = data.map(item => ({ 
+                    name: item.nome, 
+                    role: item.cargo || 'PROMOTOR',
+                    project: item.projeto || 'GERAL',
+                    ativo: item.ativo !== false,
+                    data_desativacao: item.data_desativacao || null,
+                    schedule: {
+                        0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
+                    }
+                }));
+
+                // Apply Project Restriction
+                if (!isMaster && allowedProjects.length > 0) {
+                    mappedStaff = mappedStaff.filter(s => allowedProjects.includes(s.project));
                 }
-            }));
+                
+                staffList = mappedStaff;
+
+                // Populate Project Filters
+                const projects = [...new Set(staffList.map(s => s.project))].sort();
+                
+                // Top filter
+                const topFilter = document.getElementById('project-filter');
+                if (topFilter) {
+                    const currentVal = topFilter.value;
+                    topFilter.innerHTML = '<option value="ALL">TODOS PROJETOS</option>' + 
+                        projects.map(p => `<option value="${p}">${p}</option>`).join('');
+                    if (projects.includes(currentVal)) topFilter.value = currentVal;
+                }
+
+                // Obs filter
+                const obsFilter = document.getElementById('obs-project-filter');
+                if (obsFilter) {
+                    const currentVal = obsFilter.value;
+                    obsFilter.innerHTML = '<option value="ALL">TODOS</option>' + 
+                        projects.map(p => `<option value="${p}">${p}</option>`).join('');
+                    if (projects.includes(currentVal)) obsFilter.value = currentVal;
+                }
+            }
         }
 
         async function syncLegendas() {
@@ -853,9 +902,13 @@
             tableBody.innerHTML = '';
             
             const startDateStr = start.toISOString().split('T')[0];
+            const projectFilterValue = document.getElementById('project-filter')?.value || 'ALL';
+            
             const filteredStaff = staffList.filter(s => {
                 if (gridSearchQuery && !s.name.toLowerCase().includes(gridSearchQuery.toLowerCase())) return false;
                 
+                if (projectFilterValue !== 'ALL' && s.project !== projectFilterValue) return false;
+
                 if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
                     return false;
                 }
@@ -875,10 +928,10 @@
                 tdName.innerHTML = `<div class="collaborator-name" title="${person.name}">${person.name}</div>`;
                 tr.appendChild(tdName);
 
-                const tdRole = document.createElement('td');
-                tdRole.className = 'sticky-role';
-                tdRole.innerHTML = `<div class="collaborator-role" title="${person.role}">${person.role}</div>`;
-                tr.appendChild(tdRole);
+                const tdProject = document.createElement('td');
+                tdProject.className = 'sticky-role';
+                tdProject.innerHTML = `<div class="collaborator-role" title="${person.project}">${person.project}</div>`;
+                tr.appendChild(tdProject);
 
                 let countP = 0, countF = 0, countA = 0, countFA = 0;
                 
@@ -1049,8 +1102,15 @@
                 .not('status', 'is', null)
                 .not('observation', 'eq', 'Feriado Geral');
 
-            if (staffSearchInput && staffSearchInput.value) {
-                query = query.ilike('collaborator_name', `%${staffSearchInput.value}%`);
+            const obsProjectValue = document.getElementById('obs-project-filter')?.value || 'ALL';
+            if (obsProjectValue !== 'ALL') {
+                const namesInProject = staffList.filter(s => s.project === obsProjectValue).map(s => s.name);
+                if (namesInProject.length > 0) {
+                    query = query.in('collaborator_name', namesInProject);
+                } else {
+                    // Se não houver ninguém no projeto, forçar retorno vazio
+                    query = query.eq('collaborator_name', 'FORCE_EMPTY_RESULT_STRING_NON_EXISTENT');
+                }
             }
 
             const { data, error } = await query;
@@ -1119,6 +1179,7 @@
                     <div style="flex: 2; text-align: right; font-style: italic; color: var(--text-muted); font-size: 13px;">
                         "${row.observation}"
                     </div>
+                    ${(isMaster || !allowedProjects.length) ? `
                     <div style="display: flex; gap: 8px;">
                         <button onclick="editObservation('${row.ids.join(',')}', '${row.status}', '${row.observation.replace(/'/g, "\\'")}')" class="action-icon-btn" title="Editar" style="background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px; cursor: pointer; color: var(--text-main);">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -1127,6 +1188,7 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                     </div>
+                    ` : ''}
                 `;
                 observationsList.appendChild(div);
             });

@@ -257,6 +257,22 @@ body {
     border-color: var(--primary);
 }
 
+.action-btn.small {
+    width: auto;
+    height: auto;
+    min-height: 32px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.action-btn.delete:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
 .avatar {
     width: 40px;
     height: 40px;

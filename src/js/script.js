@@ -110,7 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Auto-load data based on tab
         if (targetId === 'colaboradores-base') loadStaffBaseList();
-        if (targetId === 'users') loadUsersList();
+        if (targetId === 'users') {
+            loadUsersList();
+            populateProjectCheckboxes();
+        }
 
         // Sync styles with iframes
         syncIframeStyles();
@@ -320,6 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const fullName = rawName.trim();
             const isMaster = profile?.role === 'admin' || profile?.role === 'master';
 
+            // Salva perfil no localStorage para os subsistemas (iframes)
+            localStorage.setItem('currentUserProfile', JSON.stringify(profile));
+
             // Populate Skeletons after a small visual delay
             setTimeout(() => populateDashboardData(displayName), 800);
 
@@ -327,16 +333,58 @@ document.addEventListener('DOMContentLoaded', () => {
             const adminUploadArea = document.getElementById('admin-upload-area');
             const adminQuickActions = document.getElementById('admin-quick-actions');
             if (isMaster) {
+                console.log("Master access granted");
                 if (navUsers) navUsers.classList.remove('hidden');
                 const mobileNavUsers = document.getElementById('mobile-nav-users');
                 if (mobileNavUsers) mobileNavUsers.classList.remove('hidden');
                 if(adminUploadArea) adminUploadArea.style.display = 'block';
                 if(adminQuickActions) adminQuickActions.style.display = 'flex';
                 loadUsersList();
+                
+                tabBtns.forEach(btn => btn.classList.remove('hidden'));
+                mobileBtns.forEach(btn => btn.classList.remove('hidden'));
             } else {
-                navUsers.classList.add('hidden');
+                console.log("Restricted access for:", displayName, "Allowed Tabs:", profile?.allowed_tabs);
+                if (navUsers) navUsers.classList.add('hidden');
+                const mobileNavUsers = document.getElementById('mobile-nav-users');
+                if (mobileNavUsers) mobileNavUsers.classList.add('hidden');
                 if(adminUploadArea) adminUploadArea.style.display = 'none';
                 if(adminQuickActions) adminQuickActions.style.display = 'none';
+                
+                const allowedTabs = profile?.allowed_tabs || [];
+                
+                const enforceVisibility = (btn) => {
+                    const target = btn.getAttribute('data-target');
+                    if (target === 'profile') {
+                        btn.classList.remove('hidden');
+                        return;
+                    }
+                    if (target === 'users') {
+                        btn.classList.add('hidden');
+                        return;
+                    }
+
+                    // Se houver restrições definidas
+                    if (allowedTabs.length > 0) {
+                        if (allowedTabs.includes(target)) {
+                            btn.classList.remove('hidden');
+                        } else {
+                            btn.classList.add('hidden');
+                        }
+                    } else {
+                        // Se não houver restrições no banco, mostra tudo (exceto usuários)
+                        btn.classList.remove('hidden');
+                    }
+                };
+
+                tabBtns.forEach(enforceVisibility);
+                mobileBtns.forEach(enforceVisibility);
+                
+                if (state.activeTab !== 'profile' && state.activeTab !== 'home' && allowedTabs.length > 0 && !allowedTabs.includes(state.activeTab)) {
+                    switchTab(allowedTabs[0] || 'profile');
+                } else if (state.activeTab === 'users') {
+                    switchTab('home');
+                }
             }
             // Update Home Welcome
             if (welcomeName) {
@@ -761,7 +809,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        usersListBody.innerHTML = data.map(u => `
+        usersListBody.innerHTML = data.map(u => {
+            const allowedProjs = u.allowed_projects || [];
+            const projsStr = allowedProjs.length > 0 ? allowedProjs.join(', ') : 'Todos';
+            
+            const allowedTabs = u.allowed_tabs || [];
+            const tabsStr = allowedTabs.length > 0 ? allowedTabs.join(', ') : 'Padrão';
+            
+            return `
             <tr>
                 <td>
                     <strong>${u.full_name || 'Sem nome'}</strong><br>
@@ -769,17 +824,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td style="font-family: monospace; font-size: 11px;">${u.id.substring(0,8)}...</td>
                 <td>
-                    <select class="custom-select small" onchange="updateUserRole('${u.id}', this.value)" style="padding: 4px; border-radius: 6px; background: var(--bg-accent); color: var(--text-main); border: 1px solid var(--border);">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;" title="Projetos: ${projsStr}">
+                        📌 ${u.role === 'user' ? projsStr : 'Acesso Total'}
+                    </div>
+                    <div style="font-size: 10px; color: var(--text-dim);" title="Módulos: ${tabsStr}">
+                        🧩 ${u.role === 'user' ? (allowedTabs.length ? allowedTabs.join('/') : 'Todas') : 'Todos'}
+                    </div>
+                    <select class="custom-select small" onchange="updateUserRole('${u.id}', this.value)" style="padding: 4px; border-radius: 6px; background: var(--bg-accent); color: var(--text-main); border: 1px solid var(--border); margin-top: 5px;">
                         <option value="user" ${u.role === 'user' ? 'selected' : ''}>Colaborador</option>
                         <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador</option>
                         <option value="master" ${u.role === 'master' ? 'selected' : ''}>Mestre</option>
                     </select>
                 </td>
                 <td>
-                    <button class="action-btn small delete" onclick="deleteProfile('${u.id}')">Remover</button>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="action-btn small" onclick="openEditPermissions('${u.id}')" style="background: var(--primary); border: none;">Editar Acesso</button>
+                        <button class="action-btn small delete" onclick="deleteProfile('${u.id}')">Remover</button>
+                    </div>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     };
 
     window.updateUserRole = async (userId, newRole) => {
@@ -804,6 +868,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('new-user-password').value;
         const full_name = document.getElementById('new-user-name').value;
         const role = document.getElementById('new-user-role').value;
+        
+        // Projetos selecionados
+        const allowedProjects = Array.from(document.querySelectorAll('#project-checkboxes input:checked')).map(cb => cb.value);
+        // Módulos selecionados
+        const allowedTabs = Array.from(document.querySelectorAll('#module-checkboxes input:checked')).map(cb => cb.value);
 
         submitBtn.disabled = true;
         submitBtn.textContent = 'Criando acesso...';
@@ -834,7 +903,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         id: userId,
                         full_name,
                         role,
-                        email: email
+                        email: email,
+                        allowed_projects: allowedProjects,
+                        allowed_tabs: allowedTabs
                     });
 
                 if (profileError) {
@@ -1346,3 +1417,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
     init();
 });
+
+    window.openEditPermissions = async (userId) => {
+        const { data: user, error: userError } = await window.supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+        if (userError) {
+            showToast('Erro ao buscar usuário', 'error');
+            return;
+        }
+
+        // Buscar todos os projetos disponíveis
+        const { data: staffData } = await window.supabase.from('tb_colaboradores').select('projeto');
+        const allProjects = [...new Set(staffData?.map(item => item.projeto || 'GERAL') || [])].sort();
+        
+        const modules = [
+            { id: 'home', label: 'Dashboard' },
+            { id: 'relatorio', label: 'Relatórios' },
+            { id: 'cartas', label: 'Cartas' },
+            { id: 'roteiro', label: 'Rotas' },
+            { id: 'analytics', label: 'Analytics' },
+            { id: 'assiduidade', label: 'Assiduidade' },
+            { id: 'colaboradores-base', label: 'Colaboradores' }
+        ];
+
+        const userProjs = user.allowed_projects || [];
+        const userTabs = user.allowed_tabs || [];
+
+        const projectsHtml = allProjects.map(p => `
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #fff; cursor: pointer; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;">
+                <input type="checkbox" class="edit-proj-cb" value="${p}" ${userProjs.includes(p) ? 'checked' : ''} style="accent-color: #6366f1; width: 16px; height: 16px;">
+                ${p}
+            </label>
+        `).join('');
+
+        const modulesHtml = modules.map(m => `
+            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #fff; cursor: pointer; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;">
+                <input type="checkbox" class="edit-tab-cb" value="${m.id}" ${userTabs.includes(m.id) ? 'checked' : ''} style="accent-color: #6366f1; width: 16px; height: 16px;">
+                ${m.label}
+            </label>
+        `).join('');
+
+        Swal.fire({
+            title: `<span style="color: #fff">Editar Acessos: ${user.full_name}</span>`,
+            html: `
+                <div style="text-align: left; max-height: 400px; overflow-y: auto; padding: 10px;">
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #6366f1; font-size: 14px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Projetos Permitidos</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            ${projectsHtml}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="color: #6366f1; font-size: 14px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Módulos do Sistema</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            ${modulesHtml}
+                        </div>
+                    </div>
+                </div>
+            `,
+            background: '#121216',
+            showCancelButton: true,
+            confirmButtonText: 'Salvar Alterações',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#3f3f46',
+            width: '600px',
+            preConfirm: () => {
+                const selectedProjs = Array.from(document.querySelectorAll('.edit-proj-cb:checked')).map(cb => cb.value);
+                const selectedTabs = Array.from(document.querySelectorAll('.edit-tab-cb:checked')).map(cb => cb.value);
+                return { selectedProjs, selectedTabs };
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const { selectedProjs, selectedTabs } = result.value;
+
+                const { error: updateError } = await window.supabase
+                    .from('profiles')
+                    .update({
+                        allowed_projects: selectedProjs,
+                        allowed_tabs: selectedTabs
+                    })
+                    .eq('id', userId);
+
+                if (updateError) showToast(updateError.message, 'error');
+                else {
+                    showToast('Acessos atualizados com sucesso!', 'success');
+                    loadUsersList();
+                }
+            }
+        });
+    };
+
+    const populateProjectCheckboxes = async () => {
+        const container = document.getElementById('project-checkboxes');
+        if (!container || !window.supabase) return;
+
+        const { data, error } = await window.supabase
+            .from('tb_colaboradores')
+            .select('projeto');
+
+        if (error) {
+            container.innerHTML = '<div style="color: #ef4444; font-size: 11px;">Erro ao carregar projetos</div>';
+            return;
+        }
+
+        const projects = [...new Set(data.map(item => item.projeto || 'GERAL'))].sort();
+        
+        container.innerHTML = projects.map(p => `
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" value="${p}" style="accent-color: var(--primary);">
+                ${p}
+            </label>
+        `).join('') || '<div style="font-size: 11px; color: var(--text-dim);">Nenhum projeto encontrado</div>';
+    };

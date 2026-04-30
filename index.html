@@ -13,6 +13,9 @@
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/style.css?v=1.0.4">
+    <style>
+        .hidden { display: none !important; }
+    </style>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -209,6 +212,7 @@
                                     <tr>
                                         <th>Nome</th>
                                         <th>ID / Cargo</th>
+                                        <th>Permissões</th>
                                         <th>Ações</th>
                                     </tr>
                                 </thead>
@@ -246,7 +250,46 @@
                                     <option value="master">Mestre</option>
                                 </select>
                             </div>
-                            <button type="submit" class="login-btn">Criar Conta e Perfil</button>
+                            <div class="input-group" id="allowed-projects-container" style="margin-top: 15px;">
+                                <label style="display: flex; justify-content: space-between;">
+                                    Projetos Permitidos
+                                    <span style="font-size: 10px; color: var(--text-dim);">Apenas para nível Colaborador</span>
+                                </label>
+                                <div id="project-checkboxes" style="max-height: 120px; overflow-y: auto; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    <!-- Populated by JS -->
+                                    <div style="font-size: 11px; color: var(--text-dim);">Carregando projetos...</div>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-top: 15px;">
+                                <label style="display: flex; justify-content: space-between;">
+                                    Módulos do Sistema
+                                    <span style="font-size: 10px; color: var(--text-dim);">Quais abas o usuário verá</span>
+                                </label>
+                                <div id="module-checkboxes" style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="home" checked style="accent-color: var(--primary);"> Dashboard
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="relatorio" checked style="accent-color: var(--primary);"> Relatórios
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="cartas" checked style="accent-color: var(--primary);"> Cartas
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="roteiro" checked style="accent-color: var(--primary);"> Rotas
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="analytics" checked style="accent-color: var(--primary);"> Analytics
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="assiduidade" checked style="accent-color: var(--primary);"> Assiduidade
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="colaboradores-base" checked style="accent-color: var(--primary);"> Colaboradores
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="submit" class="login-btn" style="margin-top: 20px;">Criar Conta e Perfil</button>
                         </form>
                     </div>
                 </div>
