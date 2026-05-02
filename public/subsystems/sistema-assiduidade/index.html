@@ -153,7 +153,7 @@
             border-bottom: 1px solid var(--border);
             border-right: 1px solid var(--border);
             white-space: nowrap;
-            position: sticky; top: 0; z-index: 30;
+            position: sticky; top: 0; z-index: 50;
         }
 
         td {
@@ -167,22 +167,31 @@
         .sticky-col {
             position: sticky; left: 0;
             background: var(--bg-card) !important;
-            z-index: 25;
-            border-right: 2px solid var(--primary) !important;
-            width: 220px; min-width: 220px; max-width: 220px;
+            z-index: 35;
+            border-right: 1px solid var(--border) !important;
+            width: 180px; min-width: 180px; max-width: 180px;
             box-shadow: 4px 0 10px rgba(0,0,0,0.05);
         }
 
-        .sticky-role {
-            position: sticky; left: 220px;
+        .sticky-equipe {
+            position: sticky; left: 180px;
             background: var(--bg-card) !important;
-            z-index: 25;
+            z-index: 35;
             border-right: 1px solid var(--border) !important;
-            width: 150px; min-width: 150px; max-width: 150px;
+            width: 140px; min-width: 140px; max-width: 140px;
         }
 
-        thead th.sticky-col { z-index: 50 !important; top: 0; }
-        thead th.sticky-role { z-index: 50 !important; top: 0; }
+        .sticky-role {
+            position: sticky; left: 320px;
+            background: var(--bg-card) !important;
+            z-index: 35;
+            border-right: 1px solid var(--border) !important;
+            width: 140px; min-width: 140px; max-width: 140px;
+        }
+
+        thead th.sticky-col { z-index: 65 !important; top: 0; background: var(--bg-accent) !important; }
+        thead th.sticky-equipe { z-index: 65 !important; top: 0; background: var(--bg-accent) !important; }
+        thead th.sticky-role { z-index: 65 !important; top: 0; background: var(--bg-accent) !important; }
 
         .day-cell { text-align: center; width: 42px; min-width: 42px; cursor: pointer !important; }
         .day-cell.weekend { background: rgba(0, 0, 0, 0.15) !important; }
@@ -445,6 +454,12 @@
                     </select>
                 </div>
 
+                <div class="month-selector" style="padding: 0 10px;">
+                    <select id="equipe-filter" onchange="renderGrid()" style="background: none; border: none; color: var(--text-main); font-weight: 700; font-size: 13px; outline: none; cursor: pointer; height: 38px; min-width: 120px;">
+                        <option value="ALL">TODAS EQUIPES</option>
+                    </select>
+                </div>
+
                 <button class="sync-btn" id="btn-export-grid" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                     Exportar Grade
@@ -531,10 +546,11 @@
                     <tr id="header-row">
                         <th class="sticky-col" onclick="toggleGridSearch()" style="cursor: pointer; position: relative;">
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                Colaborador
+                                 Colaborador
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="grid-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             </div>
                         </th>
+                        <th class="sticky-equipe">Equipe</th>
                         <th class="sticky-role">Projeto</th>
                         <!-- Days will be injected here -->
                         <th class="summary-col" title="Presença">P</th>
@@ -572,6 +588,11 @@
                         <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Projeto:</span>
                         <select id="obs-project-filter" onchange="renderObservations()" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; min-width: 120px;">
                             <option value="ALL">TODOS</option>
+                        </select>
+
+                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Equipe:</span>
+                        <select id="obs-equipe-filter" onchange="renderObservations()" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; min-width: 120px;">
+                            <option value="ALL">TODAS</option>
                         </select>
                         
                         <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
@@ -710,14 +731,14 @@
         async function syncStaff() {
             let { data, error } = await window.supabase
                 .from('tb_colaboradores')
-                .select('nome, projeto, seg, ter, qua, qui, sex, sab, dom, ativo, data_desativacao')
+                .select('nome, projeto, equipe, seg, ter, qua, qui, sex, sab, dom, ativo, data_desativacao')
                 .order('nome', { ascending: true });
             
             if (error && (error.code === '42703' || (error.message && error.message.includes('Could not find')))) {
                 console.warn('Colunas ativo/data_desativacao não encontradas. Usando fallback...');
                 const fallback = await window.supabase
                     .from('tb_colaboradores')
-                    .select('nome, projeto, cargo, seg, ter, qua, qui, sex, sab, dom')
+                    .select('nome, projeto, equipe, cargo, seg, ter, qua, qui, sex, sab, dom')
                     .order('nome', { ascending: true });
                 data = fallback.data;
                 error = fallback.error;
@@ -728,6 +749,7 @@
                     name: item.nome, 
                     role: item.cargo || 'PROMOTOR',
                     project: item.projeto || 'GERAL',
+                    equipe: item.equipe || 'GERAL',
                     ativo: item.ativo !== false,
                     data_desativacao: item.data_desativacao || null,
                     schedule: {
@@ -742,10 +764,11 @@
                 
                 staffList = mappedStaff;
 
-                // Populate Project Filters
+                // Populate Project & Equipe Filters
                 const projects = [...new Set(staffList.map(s => s.project))].sort();
+                const equipes = [...new Set(staffList.map(s => s.equipe))].sort();
                 
-                // Top filter
+                // Top filters
                 const topFilter = document.getElementById('project-filter');
                 if (topFilter) {
                     const currentVal = topFilter.value;
@@ -754,13 +777,29 @@
                     if (projects.includes(currentVal)) topFilter.value = currentVal;
                 }
 
-                // Obs filter
+                const equipeFilter = document.getElementById('equipe-filter');
+                if (equipeFilter) {
+                    const currentVal = equipeFilter.value;
+                    equipeFilter.innerHTML = '<option value="ALL">TODAS EQUIPES</option>' + 
+                        equipes.map(e => `<option value="${e}">${e}</option>`).join('');
+                    if (equipes.includes(currentVal)) equipeFilter.value = currentVal;
+                }
+
+                // Obs filters
                 const obsFilter = document.getElementById('obs-project-filter');
                 if (obsFilter) {
                     const currentVal = obsFilter.value;
                     obsFilter.innerHTML = '<option value="ALL">TODOS</option>' + 
                         projects.map(p => `<option value="${p}">${p}</option>`).join('');
                     if (projects.includes(currentVal)) obsFilter.value = currentVal;
+                }
+
+                const obsEquipeFilter = document.getElementById('obs-equipe-filter');
+                if (obsEquipeFilter) {
+                    const currentVal = obsEquipeFilter.value;
+                    obsEquipeFilter.innerHTML = '<option value="ALL">TODAS</option>' + 
+                        equipes.map(e => `<option value="${e}">${e}</option>`).join('');
+                    if (equipes.includes(currentVal)) obsEquipeFilter.value = currentVal;
                 }
             }
         }
@@ -865,7 +904,7 @@
 
             monthDisplay.textContent = `${start.getDate()} ${monthNames[start.getMonth()].slice(0,3)} - ${end.getDate()} ${monthNames[end.getMonth()].slice(0,3)}`;
 
-            while (headerRow.cells.length > 6) headerRow.deleteCell(2);
+            while (headerRow.cells.length > 7) headerRow.deleteCell(3);
 
             const days = [];
             let temp = new Date(start);
@@ -903,11 +942,13 @@
             
             const startDateStr = start.toISOString().split('T')[0];
             const projectFilterValue = document.getElementById('project-filter')?.value || 'ALL';
+            const equipeFilterValue = document.getElementById('equipe-filter')?.value || 'ALL';
             
             const filteredStaff = staffList.filter(s => {
                 if (gridSearchQuery && !s.name.toLowerCase().includes(gridSearchQuery.toLowerCase())) return false;
                 
                 if (projectFilterValue !== 'ALL' && s.project !== projectFilterValue) return false;
+                if (equipeFilterValue !== 'ALL' && s.equipe !== equipeFilterValue) return false;
 
                 if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
                     return false;
@@ -927,6 +968,11 @@
                 tdName.className = 'sticky-col';
                 tdName.innerHTML = `<div class="collaborator-name" title="${person.name}">${person.name}</div>`;
                 tr.appendChild(tdName);
+
+                const tdEquipe = document.createElement('td');
+                tdEquipe.className = 'sticky-equipe';
+                tdEquipe.innerHTML = `<div class="collaborator-role" title="${person.equipe}">${person.equipe}</div>`;
+                tr.appendChild(tdEquipe);
 
                 const tdProject = document.createElement('td');
                 tdProject.className = 'sticky-role';
@@ -1103,12 +1149,17 @@
                 .not('observation', 'eq', 'Feriado Geral');
 
             const obsProjectValue = document.getElementById('obs-project-filter')?.value || 'ALL';
-            if (obsProjectValue !== 'ALL') {
-                const namesInProject = staffList.filter(s => s.project === obsProjectValue).map(s => s.name);
-                if (namesInProject.length > 0) {
-                    query = query.in('collaborator_name', namesInProject);
+            const obsEquipeValue = document.getElementById('obs-equipe-filter')?.value || 'ALL';
+
+            if (obsProjectValue !== 'ALL' || obsEquipeValue !== 'ALL') {
+                let filteredNames = staffList;
+                if (obsProjectValue !== 'ALL') filteredNames = filteredNames.filter(s => s.project === obsProjectValue);
+                if (obsEquipeValue !== 'ALL') filteredNames = filteredNames.filter(s => s.equipe === obsEquipeValue);
+                
+                const names = filteredNames.map(s => s.name);
+                if (names.length > 0) {
+                    query = query.in('collaborator_name', names);
                 } else {
-                    // Se não houver ninguém no projeto, forçar retorno vazio
                     query = query.eq('collaborator_name', 'FORCE_EMPTY_RESULT_STRING_NON_EXISTENT');
                 }
             }

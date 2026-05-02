@@ -1066,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const listBody = document.getElementById('staff-base-list');
         if (!listBody || !window.supabase) return;
 
-        listBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--text-muted);">Carregando colaboradores...</td></tr>';
+        listBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">Carregando colaboradores...</td></tr>';
 
         const { data, error } = await window.supabase
             .from('tb_colaboradores')
@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!data || data.length === 0) {
-            listBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum colaborador na base. Use o botão "Novo" ou importe um Excel.</td></tr>';
+            listBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--text-muted);">Nenhum colaborador na base. Use o botão "Novo" ou importe um Excel.</td></tr>';
             return;
         }
 
@@ -1108,6 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td><span class="badge" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-muted); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.cargo || 'PROMOTOR'}</span></td>
                     <td><span class="badge" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--primary); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.projeto || 'GERAL'}</span></td>
+                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.equipe || 'N/A'}</span></td>
                     <td><div style="display: flex; align-items: center;">${scaleHtml}</div></td>
                     <td style="color: var(--text-dim); font-size: 12px; font-weight: 500;">${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
                     <td style="text-align: right;">
@@ -1142,6 +1143,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         '<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: GERAL">' +
                     '</div>' +
                 '</div>' +
+                '<label style="color: var(--text-muted);">Equipe:</label>' +
+                '<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" placeholder="Ex: EQUIPE ALPHA">' +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
                 generateWeekCheckboxes() +
                 '</div>',
@@ -1158,6 +1161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     nome: nome,
                     cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
                     projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
+                    equipe: document.getElementById('swal-equipe').value.toUpperCase().trim() || 'GERAL',
                     seg: document.getElementById('check-seg').checked,
                     ter: document.getElementById('check-ter').checked,
                     qua: document.getElementById('check-qua').checked,
@@ -1205,6 +1209,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         `<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.projeto || ''}">` +
                     '</div>' +
                 '</div>' +
+                '<label style="color: var(--text-muted);">Equipe:</label>' +
+                `<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" value="${data.equipe || ''}">` +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
                 generateWeekCheckboxes(data) +
                 '</div>',
@@ -1221,6 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     nome: nome,
                     cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
                     projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
+                    equipe: document.getElementById('swal-equipe').value.toUpperCase().trim() || 'GERAL',
                     seg: document.getElementById('check-seg').checked,
                     ter: document.getElementById('check-ter').checked,
                     qua: document.getElementById('check-qua').checked,
@@ -1297,9 +1304,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Importação de Base Fixa via Planilha ---
     window.downloadStaffBaseTemplate = () => {
         const data = [
-            ["NOME", "FUNCAO", "PROJETO"],
-            ["JOAO SILVA", "PROMOTOR", "GERAL"],
-            ["MARIA SOUZA", "PROMOTOR", "GERAL"]
+            ["NOME", "FUNCAO", "PROJETO", "EQUIPE"],
+            ["JOAO SILVA", "PROMOTOR", "GERAL", "EQUIPE A"],
+            ["MARIA SOUZA", "PROMOTOR", "GERAL", "EQUIPE B"]
         ];
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
@@ -1311,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const { data, error } = await window.supabase
                 .from('tb_colaboradores')
-                .select('nome, cargo, projeto, seg, ter, qua, qui, sex, sab, dom')
+                .select('nome, cargo, projeto, equipe, seg, ter, qua, qui, sex, sab, dom')
                 .order('nome', { ascending: true });
 
             if (error) throw error;
@@ -1326,6 +1333,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'NOME': s.nome,
                 'FUNCAO': s.cargo || '',
                 'PROJETO': s.projeto || '',
+                'EQUIPE': s.equipe || '',
                 'SEG': s.seg ? 'SIM' : 'NÃO',
                 'TER': s.ter ? 'SIM' : 'NÃO',
                 'QUA': s.qua ? 'SIM' : 'NÃO',
@@ -1377,7 +1385,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const staffToUpsert = jsonData.map(row => ({
                     nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
                     cargo: (row.FUNCAO || row.funcao || row.CARGO || row.cargo || "PROMOTOR").toString().trim().toUpperCase(),
-                    projeto: (row.PROJETO || row.projeto || "GERAL").toString().trim().toUpperCase()
+                    projeto: (row.PROJETO || row.projeto || "GERAL").toString().trim().toUpperCase(),
+                    equipe: (row.EQUIPE || row.equipe || "GERAL").toString().trim().toUpperCase()
                 })).filter(s => s.nome !== "");
 
                 if (staffToUpsert.length === 0) {
