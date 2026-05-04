@@ -49,7 +49,8 @@ serve(async (req: Request) => {
           history_id: historyId,
           task_id: taskId,
           activity_id: activityId,
-          client_id: clientId
+          client_id: clientId,
+          origin: 'WEBHOOK'
         }
       ])
       .select()

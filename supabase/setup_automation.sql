@@ -28,12 +28,23 @@ CREATE OR REPLACE FUNCTION fn_marcar_assiduidade_automatica()
 RETURNS TRIGGER AS $$
 DECLARE
     v_nome_agente TEXT;
-    v_hoje DATE := CURRENT_DATE;
+    v_data_registro DATE;
+    v_horario_registro TIME;
 BEGIN
     -- Filtro Crítico: Apenas 'CHECK IN' conta como presença automática
     IF NEW.task_id IS DISTINCT FROM 'CHECK IN' THEN
         RETURN NEW;
     END IF;
+
+    -- Tentar extrair a data e hora do history_id (formato esperado: "YYYY-MM-DD HH:MM:SS")
+    -- Caso falhe, usa o created_at
+    BEGIN
+        v_data_registro := (NEW.history_id)::DATE;
+        v_horario_registro := (NEW.history_id)::TIME;
+    EXCEPTION WHEN OTHERS THEN
+        v_data_registro := (NEW.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::DATE;
+        v_horario_registro := (NEW.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::TIME;
+    END;
 
     -- Extrair o nome do activity_id (formato: "NOME;FOTO")
     IF NEW.activity_id LIKE '%;%' THEN
@@ -49,14 +60,13 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    -- Tenta inserir na tb_assiduidade. Se já existir (P, FT, etc), mantém o que está lá,
-    -- mas se não houver registro, insere como 'P' (Presença).
+    -- Tenta inserir na tb_assiduidade com a DATA REAL do registro
     INSERT INTO tb_assiduidade (collaborator_name, date, status, checkin_time, is_manual)
     VALUES (
         v_nome_agente, 
-        v_hoje, 
+        v_data_registro, 
         'P', 
-        (NEW.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::TIME, 
+        v_horario_registro, 
         false
     )
     ON CONFLICT (collaborator_name, date) 
