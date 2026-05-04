@@ -12,8 +12,10 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/supabase-js": "^2.105.2",
     "chart.js": "^4.4.0",
+    "dotenv": "^17.4.2",
+    "mysql2": "^3.22.3",
     "sweetalert2": "^11.10.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   }

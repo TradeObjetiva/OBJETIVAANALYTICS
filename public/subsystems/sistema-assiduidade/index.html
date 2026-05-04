@@ -174,24 +174,18 @@
         }
 
         .sticky-equipe {
-            position: sticky; left: 180px;
             background: var(--bg-card) !important;
-            z-index: 35;
             border-right: 1px solid var(--border) !important;
             width: 140px; min-width: 140px; max-width: 140px;
         }
 
         .sticky-role {
-            position: sticky; left: 320px;
             background: var(--bg-card) !important;
-            z-index: 35;
             border-right: 1px solid var(--border) !important;
             width: 140px; min-width: 140px; max-width: 140px;
         }
 
-        thead th.sticky-col { z-index: 65 !important; top: 0; background: var(--bg-accent) !important; }
-        thead th.sticky-equipe { z-index: 65 !important; top: 0; background: var(--bg-accent) !important; }
-        thead th.sticky-role { z-index: 65 !important; top: 0; background: var(--bg-accent) !important; }
+        thead th.sticky-col { z-index: 70 !important; top: 0; left: 0; position: sticky; background: var(--bg-accent) !important; }
 
         .day-cell { text-align: center; width: 42px; min-width: 42px; cursor: pointer !important; }
         .day-cell.weekend { background: rgba(0, 0, 0, 0.15) !important; }
@@ -416,8 +410,65 @@
             color: var(--text-main) !important;
         }
         
-        select:focus option {
-            background-color: var(--bg-card) !important;
+        /* --- DRAG SELECTION STYLES --- */
+        .day-cell.cell-selecting {
+            background: rgba(79, 70, 229, 0.2) !important;
+            border: 2px solid var(--primary) !important;
+            z-index: 10;
+        }
+
+        /* --- MULTI-SELECT CUSTOM STYLES --- */
+        .multi-select-container {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            min-width: 160px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .multi-select-header {
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-main);
+            height: 38px;
+            gap: 8px;
+        }
+        .multi-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-top: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 4px;
+        }
+        .multi-select-option {
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            transition: var(--transition);
+        }
+        .multi-select-option:hover { background: var(--bg-accent); }
+        .multi-select-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+            cursor: pointer;
         }
     </style>
 </head>
@@ -448,17 +499,30 @@
                     </button>
                 </div>
 
-                <div class="month-selector" style="padding: 0 10px;">
-                    <select id="project-filter" onchange="renderGrid()" style="background: none; border: none; color: var(--text-main); font-weight: 700; font-size: 13px; outline: none; cursor: pointer; height: 38px; min-width: 120px;">
-                        <option value="ALL">TODOS PROJETOS</option>
-                    </select>
+                <div class="month-selector" style="padding: 0; border: none; background: none; box-shadow: none;">
+                    <div class="multi-select-container" id="project-multi-select">
+                        <div class="multi-select-header">
+                            <span class="selected-text">TODOS PROJETOS</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="multi-select-dropdown" id="project-dropdown"></div>
+                    </div>
                 </div>
 
-                <div class="month-selector" style="padding: 0 10px;">
-                    <select id="equipe-filter" onchange="renderGrid()" style="background: none; border: none; color: var(--text-main); font-weight: 700; font-size: 13px; outline: none; cursor: pointer; height: 38px; min-width: 120px;">
-                        <option value="ALL">TODAS EQUIPES</option>
-                    </select>
+                <div class="month-selector" style="padding: 0; border: none; background: none; box-shadow: none;">
+                    <div class="multi-select-container" id="equipe-multi-select">
+                        <div class="multi-select-header">
+                            <span class="selected-text">TODAS EQUIPES</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <div class="multi-select-dropdown" id="equipe-dropdown"></div>
+                    </div>
                 </div>
+
+                <button class="sync-btn" onclick="showCollectivePresenceModal()" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                    Presença Coletiva
+                </button>
 
                 <button class="sync-btn" id="btn-export-grid" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
@@ -544,7 +608,7 @@
             <table id="assiduidade-table">
                 <thead>
                     <tr id="header-row">
-                        <th class="sticky-col" onclick="toggleGridSearch()" style="cursor: pointer; position: relative;">
+                        <th class="sticky-col" onclick="toggleGridSearch()" style="cursor: pointer;">
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                  Colaborador
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="grid-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -586,14 +650,22 @@
                         <input type="text" id="obs-staff-search" placeholder="Nome do colaborador..." style="padding: 5px 10px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 160px; font-size: 12px;" oninput="renderObservations()">
                         
                         <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Projeto:</span>
-                        <select id="obs-project-filter" onchange="renderObservations()" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; min-width: 120px;">
-                            <option value="ALL">TODOS</option>
-                        </select>
+                        <div class="multi-select-container" id="obs-project-multi-select" style="min-width: 140px;">
+                            <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
+                                <span class="selected-text">TODOS</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="multi-select-dropdown" id="obs-project-dropdown"></div>
+                        </div>
 
                         <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Equipe:</span>
-                        <select id="obs-equipe-filter" onchange="renderObservations()" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); font-size: 12px; min-width: 120px;">
-                            <option value="ALL">TODAS</option>
-                        </select>
+                        <div class="multi-select-container" id="obs-equipe-multi-select" style="min-width: 140px;">
+                            <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
+                                <span class="selected-text">TODAS</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <div class="multi-select-dropdown" id="obs-equipe-dropdown"></div>
+                        </div>
                         
                         <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
                         <input type="date" id="obs-filter-start" class="date-input" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
@@ -636,6 +708,163 @@
         }
         currentDate.setDate(21);
 
+        // --- DRAG SELECTION LOGIC ---
+        let isDragging = false;
+        let isMenuOpening = false;
+        let selectionStartCell = null;
+        let selectedRange = []; // [{collaborator, date, cellElement}]
+
+        function startDragSelection(e, cell) {
+            if (e.button !== 0) return; // Apenas botão esquerdo
+            isDragging = true;
+            selectionStartCell = cell;
+            selectedRange = [];
+            clearDragSelection();
+            updateDragSelection(e, cell);
+        }
+
+        function updateDragSelection(e, cell) {
+            if (!isDragging || !selectionStartCell) return;
+            if (cell.dataset.collaborator !== selectionStartCell.dataset.collaborator) return;
+
+            clearDragSelection();
+            const row = cell.parentElement;
+            const cells = Array.from(row.querySelectorAll('.day-cell[data-date]'));
+            const startIdx = cells.indexOf(selectionStartCell);
+            const endIdx = cells.indexOf(cell);
+            
+            const [min, max] = [Math.min(startIdx, endIdx), Math.max(startIdx, endIdx)];
+            
+            for (let i = min; i <= max; i++) {
+                const targetCell = cells[i];
+                targetCell.classList.add('cell-selecting');
+                selectedRange.push({
+                    collaborator: targetCell.dataset.collaborator,
+                    date: targetCell.dataset.date,
+                    element: targetCell
+                });
+            }
+        }
+
+        function endDragSelection(e, cell) {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            if (selectedRange.length > 0) {
+                isMenuOpening = true;
+                selectedCell = selectionStartCell;
+                statusSelector.style.display = 'grid';
+                statusSelector.style.left = `${Math.min(e.pageX, window.innerWidth - 180)}px`;
+                statusSelector.style.top = `${Math.min(e.pageY, window.innerHeight - 200)}px`;
+                
+                // Reset flag after a short delay to allow the current click event to pass
+                setTimeout(() => { isMenuOpening = false; }, 100);
+            }
+        }
+
+        function clearDragSelection() {
+            document.querySelectorAll('.day-cell.cell-selecting').forEach(c => c.classList.remove('cell-selecting'));
+            if (!isDragging) selectedRange = [];
+        }
+
+        // Global mouseup to catch releases outside cells
+        document.addEventListener('mouseup', (e) => {
+            if (isDragging) {
+                isDragging = false;
+                // Se soltar fora de uma célula, mas houver seleção, abre o menu onde o mouse está
+                if (selectedRange.length > 1) {
+                    isMenuOpening = true;
+                    statusSelector.style.display = 'grid';
+                    statusSelector.style.left = `${Math.min(e.pageX, window.innerWidth - 180)}px`;
+                    statusSelector.style.top = `${Math.min(e.pageY, window.innerHeight - 200)}px`;
+                    setTimeout(() => { isMenuOpening = false; }, 100);
+                }
+            }
+        });
+
+        document.addEventListener('click', () => {
+            if (isMenuOpening) return;
+            statusSelector.style.display = 'none';
+        });
+
+        // --- MULTI-SELECT LOGIC ---
+        const activeFilters = {
+            projects: [],
+            equipes: [],
+            obsProjects: [],
+            obsEquipes: [],
+            names: []
+        };
+
+        function toggleMultiSelect(containerId) {
+            const dropdown = document.querySelector(`#${containerId} .multi-select-dropdown`);
+            const allDropdowns = document.querySelectorAll('.multi-select-dropdown');
+            allDropdowns.forEach(d => { if (d !== dropdown) d.style.display = 'none'; });
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function initMultiSelect(containerId, options, filterKey, onUpdate) {
+            const dropdown = document.querySelector(`#${containerId} .multi-select-dropdown`);
+            const header = document.querySelector(`#${containerId} .multi-select-header`);
+            
+            header.onclick = (e) => { e.stopPropagation(); toggleMultiSelect(containerId); };
+
+            let html = `<div class="multi-select-option" onclick="event.stopPropagation()">
+                <input type="checkbox" id="all-${containerId}" onchange="toggleAllOptions('${containerId}', '${filterKey}', this.checked, ${onUpdate.name})">
+                <label for="all-${containerId}" style="cursor:pointer; font-weight:800;">SELECIONAR TODOS</label>
+            </div>`;
+
+            options.forEach(opt => {
+                const isChecked = activeFilters[filterKey].includes(opt);
+                html += `<div class="multi-select-option" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="opt-check" value="${opt}" ${isChecked ? 'checked' : ''} onchange="updateFilter('${containerId}', '${filterKey}', '${opt}', this.checked, ${onUpdate.name})">
+                    <label style="cursor:pointer;">${opt}</label>
+                </div>`;
+            });
+
+            dropdown.innerHTML = html;
+            updateSelectedText(containerId, filterKey);
+        }
+
+        function toggleAllOptions(containerId, filterKey, checked, callback) {
+            const checks = document.querySelectorAll(`#${containerId} .opt-check`);
+            if (checked) {
+                activeFilters[filterKey] = Array.from(checks).map(c => c.value);
+                checks.forEach(c => c.checked = true);
+            } else {
+                activeFilters[filterKey] = [];
+                checks.forEach(c => c.checked = false);
+            }
+            updateSelectedText(containerId, filterKey);
+            if (callback) callback();
+        }
+
+        function updateFilter(containerId, filterKey, value, checked, callback) {
+            if (checked) {
+                if (!activeFilters[filterKey].includes(value)) activeFilters[filterKey].push(value);
+            } else {
+                activeFilters[filterKey] = activeFilters[filterKey].filter(v => v !== value);
+                document.getElementById(`all-${containerId}`).checked = false;
+            }
+            updateSelectedText(containerId, filterKey);
+            if (callback) callback();
+        }
+
+        function updateSelectedText(containerId, filterKey) {
+            const span = document.querySelector(`#${containerId} .selected-text`);
+            const count = activeFilters[filterKey].length;
+            const total = document.querySelectorAll(`#${containerId} .opt-check`).length;
+            
+            if (count === 0) span.textContent = 'SELECIONE...';
+            else if (count === total && total > 0) span.textContent = 'TODOS';
+            else if (count === 1) span.textContent = activeFilters[filterKey][0];
+            else span.textContent = `${count} SELECIONADOS`;
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.multi-select-dropdown').forEach(d => d.style.display = 'none');
+        });
+
         // Sincronização de Tema com o Pai
         function syncTheme() {
             try {
@@ -664,13 +893,13 @@
         let staffList = [];
         let legendasList = [
             { codigo: 'P', nome: 'Presença', cor: '#10b981' },
-            { codigo: 'FT', nome: 'Falta', cor: '#ef4444' },
             { codigo: 'ATT', nome: 'Atestado', cor: '#3b82f6' },
-            { codigo: 'ATH', nome: 'Atestado de Horas', cor: '#8b5cf6' },
-            { codigo: 'FR', nome: 'Férias', cor: '#06b6d4' },
-            { codigo: 'FG', nome: 'Folga', cor: '#f59e0b' },
             { codigo: 'FA', nome: 'Abonada', cor: '#8b5cf6' },
             { codigo: 'FE', nome: 'Feriado', cor: '#64748b' },
+            { codigo: 'FG', nome: 'Folga', cor: '#f59e0b' },
+            { codigo: 'FR', nome: 'Férias', cor: '#06b6d4' },
+            { codigo: 'FT', nome: 'Falta', cor: '#ef4444' },
+            { codigo: 'ATH', nome: 'Atestado de Horas', cor: '#8b5cf6' },
             { codigo: 'SAPP', nome: 'Sem App', cor: '#4b5563' }
         ];
         let gridSearchQuery = '';
@@ -768,39 +997,10 @@
                 const projects = [...new Set(staffList.map(s => s.project))].sort();
                 const equipes = [...new Set(staffList.map(s => s.equipe))].sort();
                 
-                // Top filters
-                const topFilter = document.getElementById('project-filter');
-                if (topFilter) {
-                    const currentVal = topFilter.value;
-                    topFilter.innerHTML = '<option value="ALL">TODOS PROJETOS</option>' + 
-                        projects.map(p => `<option value="${p}">${p}</option>`).join('');
-                    if (projects.includes(currentVal)) topFilter.value = currentVal;
-                }
-
-                const equipeFilter = document.getElementById('equipe-filter');
-                if (equipeFilter) {
-                    const currentVal = equipeFilter.value;
-                    equipeFilter.innerHTML = '<option value="ALL">TODAS EQUIPES</option>' + 
-                        equipes.map(e => `<option value="${e}">${e}</option>`).join('');
-                    if (equipes.includes(currentVal)) equipeFilter.value = currentVal;
-                }
-
-                // Obs filters
-                const obsFilter = document.getElementById('obs-project-filter');
-                if (obsFilter) {
-                    const currentVal = obsFilter.value;
-                    obsFilter.innerHTML = '<option value="ALL">TODOS</option>' + 
-                        projects.map(p => `<option value="${p}">${p}</option>`).join('');
-                    if (projects.includes(currentVal)) obsFilter.value = currentVal;
-                }
-
-                const obsEquipeFilter = document.getElementById('obs-equipe-filter');
-                if (obsEquipeFilter) {
-                    const currentVal = obsEquipeFilter.value;
-                    obsEquipeFilter.innerHTML = '<option value="ALL">TODAS</option>' + 
-                        equipes.map(e => `<option value="${e}">${e}</option>`).join('');
-                    if (equipes.includes(currentVal)) obsEquipeFilter.value = currentVal;
-                }
+                initMultiSelect('project-multi-select', projects, 'projects', renderGrid);
+                initMultiSelect('equipe-multi-select', equipes, 'equipes', renderGrid);
+                initMultiSelect('obs-project-multi-select', projects, 'obsProjects', renderObservations);
+                initMultiSelect('obs-equipe-multi-select', equipes, 'obsEquipes', renderObservations);
             }
         }
 
@@ -808,8 +1008,29 @@
             try {
                 let { data, error } = await window.supabase
                     .from('tb_legendas')
-                    .select('codigo, nome, cor')
-                    .order('codigo', { ascending: true });
+                    .select('codigo, nome, cor, ordem')
+                    .order('ordem', { ascending: true });
+                
+                if (error && (error.message?.includes('ordem') || error.code === '42703')) {
+                    console.warn('Coluna "ordem" não encontrada, usando ordenação alfabética com swap manual...');
+                    let fallback = await window.supabase
+                        .from('tb_legendas')
+                        .select('codigo, nome, cor')
+                        .order('codigo', { ascending: true });
+                    
+                    data = fallback.data;
+                    error = fallback.error;
+
+                    if (data) {
+                        const pIdx = data.findIndex(l => l.codigo === 'P');
+                        const athIdx = data.findIndex(l => l.codigo === 'ATH');
+                        if (pIdx !== -1 && athIdx !== -1) {
+                            const temp = data[pIdx];
+                            data[pIdx] = data[athIdx];
+                            data[athIdx] = temp;
+                        }
+                    }
+                }
                 
                 if (!error && data && data.length > 0) {
                     legendasList = data;
@@ -941,14 +1162,12 @@
             tableBody.innerHTML = '';
             
             const startDateStr = start.toISOString().split('T')[0];
-            const projectFilterValue = document.getElementById('project-filter')?.value || 'ALL';
-            const equipeFilterValue = document.getElementById('equipe-filter')?.value || 'ALL';
             
             const filteredStaff = staffList.filter(s => {
-                if (gridSearchQuery && !s.name.toLowerCase().includes(gridSearchQuery.toLowerCase())) return false;
+                if (activeFilters.names.length > 0 && !activeFilters.names.includes(s.name)) return false;
                 
-                if (projectFilterValue !== 'ALL' && s.project !== projectFilterValue) return false;
-                if (equipeFilterValue !== 'ALL' && s.equipe !== equipeFilterValue) return false;
+                if (activeFilters.projects.length > 0 && !activeFilters.projects.includes(s.project)) return false;
+                if (activeFilters.equipes.length > 0 && !activeFilters.equipes.includes(s.equipe)) return false;
 
                 if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
                     return false;
@@ -1003,7 +1222,17 @@
                     
                     td.dataset.date = dateStr;
                     td.dataset.collaborator = person.name;
-                    td.onclick = (e) => openStatusSelector(e, td);
+                    
+                    // Eventos de Arrastar
+                    td.onmousedown = (e) => startDragSelection(e, td);
+                    td.onmouseenter = (e) => updateDragSelection(e, td);
+                    td.onmouseup = (e) => endDragSelection(e, td);
+                    // Fallback para clique simples
+                    td.onclick = (e) => {
+                        if (selectedRange.length <= 1) {
+                            openStatusSelector(e, td);
+                        }
+                    };
                     
                     if (status) td.innerHTML = `<span class="status-badge status-${status}">${status}</span>`;
                     tr.appendChild(td);
@@ -1066,6 +1295,107 @@
             }
             if (kpiAbsence) kpiAbsence.textContent = totalFT;
             if (kpiCert) kpiCert.textContent = totalATT;
+        }
+
+        async function showCollectivePresenceModal() {
+            const theme = getSwalTheme();
+            const equipes = [...new Set(staffList.map(s => s.equipe))].sort();
+            const today = getLocalDateString(new Date());
+
+            const { value: formValues } = await Swal.fire({
+                title: 'Presença Coletiva',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <label style="display:block; margin-bottom: 8px; color: var(--text-dim); font-size: 13px; font-weight: 700;">SELECIONE AS EQUIPES:</label>
+                        <div id="equipe-checkbox-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; padding: 12px; background: ${theme.inputBg};">
+                            <div style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid ${theme.inputBorder};">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 800;">
+                                    <input type="checkbox" id="swal-check-all" style="width: 18px; height: 18px;" onchange="document.querySelectorAll('.swal-equipe-opt').forEach(c => c.checked = this.checked)">
+                                    SELECIONAR TODAS
+                                </label>
+                            </div>
+                            ${equipes.map((e, idx) => `
+                                <div style="margin-bottom: 8px;">
+                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                        <input type="checkbox" class="swal-equipe-opt" value="${e}" style="width: 16px; height: 16px;">
+                                        ${e}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <label style="display:block; margin-bottom: 8px; color: var(--text-dim); font-size: 13px; font-weight: 700;">DATA DA PRESENÇA:</label>
+                        <input id="swal-date" type="date" value="${today}" class="swal2-input" style="margin: 0; width: 100%; height: 45px; border-radius: 12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Aplicar Presença',
+                cancelButtonText: 'Cancelar',
+                background: theme.background,
+                color: theme.color,
+                preConfirm: () => {
+                    const selectedEquipes = Array.from(document.querySelectorAll('.swal-equipe-opt:checked')).map(cb => cb.value);
+                    if (selectedEquipes.length === 0) {
+                        Swal.showValidationMessage('Selecione pelo menos uma equipe');
+                        return false;
+                    }
+                    return {
+                        selectedEquipes: selectedEquipes,
+                        date: document.getElementById('swal-date').value
+                    }
+                }
+            });
+
+            if (formValues) {
+                Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                const { selectedEquipes, date } = formValues;
+                const members = staffList.filter(s => selectedEquipes.includes(s.equipe));
+                
+                // Verificar quem já tem algo marcado
+                const { data: existing } = await window.supabase
+                    .from('tb_assiduidade')
+                    .select('collaborator_name')
+                    .eq('date', date);
+                
+                const existingNames = new Set(existing?.map(e => e.collaborator_name.toUpperCase().trim()) || []);
+                
+                const records = members
+                    .filter(m => !existingNames.has(m.name.toUpperCase().trim()))
+                    .map(m => ({
+                        collaborator_name: m.name,
+                        date: date,
+                        status: 'P',
+                        is_manual: true,
+                        observation: `Presença Coletiva - Equipes: ${selectedEquipes.join(', ')}`
+                    }));
+
+                if (records.length === 0) {
+                    Swal.fire('Aviso', 'Todos os colaboradores das equipes selecionadas já possuem registros para esta data.', 'info');
+                    return;
+                }
+
+                // Enviar em lotes
+                const BATCH_SIZE = 100;
+                let hasError = false;
+                for (let i = 0; i < records.length; i += BATCH_SIZE) {
+                    const batch = records.slice(i, i + BATCH_SIZE);
+                    const { error } = await window.supabase.from('tb_assiduidade').insert(batch);
+                    if (error) { hasError = true; console.error(error); }
+                }
+
+                if (hasError) Swal.fire('Erro', 'Alguns registros não puderam ser salvos.', 'error');
+                else {
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Sucesso!', 
+                        text: `${records.length} presenças registradas para: ${selectedEquipes.join(', ')}.`, 
+                        timer: 3000, 
+                        showConfirmButton: false 
+                    });
+                    await renderGrid();
+                    await renderObservations();
+                }
+            }
         }
 
         async function setHolidayForAll(dateStr) {
@@ -1151,10 +1481,10 @@
             const obsProjectValue = document.getElementById('obs-project-filter')?.value || 'ALL';
             const obsEquipeValue = document.getElementById('obs-equipe-filter')?.value || 'ALL';
 
-            if (obsProjectValue !== 'ALL' || obsEquipeValue !== 'ALL') {
+            if (activeFilters.obsProjects.length > 0 || activeFilters.obsEquipes.length > 0) {
                 let filteredNames = staffList;
-                if (obsProjectValue !== 'ALL') filteredNames = filteredNames.filter(s => s.project === obsProjectValue);
-                if (obsEquipeValue !== 'ALL') filteredNames = filteredNames.filter(s => s.equipe === obsEquipeValue);
+                if (activeFilters.obsProjects.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsProjects.includes(s.project));
+                if (activeFilters.obsEquipes.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsEquipes.includes(s.equipe));
                 
                 const names = filteredNames.map(s => s.name);
                 if (names.length > 0) {
@@ -1350,24 +1680,39 @@
 
         async function toggleGridSearch() {
             const theme = getSwalTheme();
-            const { value: query } = await Swal.fire({
-                title: 'Filtrar por Colaborador',
-                input: 'text',
-                inputLabel: 'Digite o nome ou parte dele:',
-                inputValue: gridSearchQuery,
+            const names = staffList.map(s => s.name).sort();
+            
+            const { value: selectedNames } = await Swal.fire({
+                title: 'Filtrar Colaboradores',
+                html: `
+                    <div style="text-align: left; max-height: 300px; overflow-y: auto; padding: 10px; background: ${theme.inputBg}; border-radius: 12px;">
+                        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="swal-all-names" onchange="document.querySelectorAll('.swal-name-check').forEach(c => c.checked = this.checked)" style="width:18px; height:18px;">
+                            <label for="swal-all-names" style="font-weight: 800; cursor: pointer;">SELECIONAR TODOS</label>
+                        </div>
+                        ${names.map(name => `
+                            <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" class="swal-name-check" value="${name}" ${activeFilters.names.includes(name) ? 'checked' : ''} style="width:16px; height:16px;">
+                                <label style="cursor: pointer;">${name}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                `,
                 showCancelButton: true,
-                inputPlaceholder: 'Ex: JOÃO SILVA',
+                confirmButtonText: 'Aplicar Filtro',
+                cancelButtonText: 'Limpar',
                 background: theme.background,
                 color: theme.color,
-                confirmButtonText: 'Filtrar',
-                cancelButtonText: 'Limpar Filtro',
-                cancelButtonColor: '#444'
+                preConfirm: () => {
+                    const checks = document.querySelectorAll('.swal-name-check:checked');
+                    return Array.from(checks).map(c => c.value);
+                }
             });
 
-            if (query !== undefined) {
-                gridSearchQuery = query || '';
+            if (selectedNames !== undefined) {
+                activeFilters.names = selectedNames;
                 const icon = document.getElementById('grid-search-icon');
-                if (gridSearchQuery) icon.style.color = '#4F46E5';
+                if (activeFilters.names.length > 0) icon.style.color = '#4F46E5';
                 else icon.style.color = 'currentColor';
                 renderGrid();
             }
@@ -1858,13 +2203,24 @@
                     }
 
                     const baseDate = new Date(date + 'T12:00:00');
-                    for (let i = 0; i < days; i++) {
-                        const currentD = new Date(baseDate);
-                        currentD.setDate(baseDate.getDate() + i);
-                        const currentStr = getLocalDateString(currentD);
-                        await saveStatus(collaborator, currentStr, status, observation);
+                    
+                    // Se houver uma seleção por arraste, usa ela. Senão usa os dias do Swal.
+                    if (selectedRange.length > 1) {
+                        Swal.fire({ title: 'Salvando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        for (const item of selectedRange) {
+                            await saveStatus(item.collaborator, item.date, status, observation);
+                        }
+                        Swal.close();
+                    } else {
+                        for (let i = 0; i < days; i++) {
+                            const currentD = new Date(baseDate);
+                            currentD.setDate(baseDate.getDate() + i);
+                            const currentStr = getLocalDateString(currentD);
+                            await saveStatus(collaborator, currentStr, status, observation);
+                        }
                     }
                     
+                    clearDragSelection();
                     await renderGrid();
                     await renderObservations();
                 }
