@@ -1499,6 +1499,7 @@
         }
 
         function openStatusSelector(e, cell) {
+            if (cell.classList.contains('not-working')) return;
             e.stopPropagation();
             selectedCell = cell;
             statusSelector.style.display = 'grid';
