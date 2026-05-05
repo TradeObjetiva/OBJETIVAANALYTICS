@@ -958,21 +958,6 @@
         }
 
         async function syncStaff() {
-            let { data, error } = await window.supabase
-                .from('tb_colaboradores')
-                .select('nome, projeto, equipe, seg, ter, qua, qui, sex, sab, dom, ativo, data_desativacao')
-                .order('nome', { ascending: true });
-            
-            if (error && (error.code === '42703' || (error.message && error.message.includes('Could not find')))) {
-                console.warn('Colunas ativo/data_desativacao não encontradas. Usando fallback...');
-                const fallback = await window.supabase
-                    .from('tb_colaboradores')
-                    .select('nome, projeto, equipe, cargo, seg, ter, qua, qui, sex, sab, dom')
-                    .order('nome', { ascending: true });
-                data = fallback.data;
-                error = fallback.error;
-            }
-
             if (!error && data) {
                 let mappedStaff = data.map(item => ({ 
                     name: item.nome, 
@@ -980,6 +965,7 @@
                     project: item.projeto || 'GERAL',
                     equipe: item.equipe || 'GERAL',
                     ativo: item.ativo !== false,
+                    data_admissao: item.data_admissao || null,
                     data_desativacao: item.data_desativacao || null,
                     schedule: {
                         0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
@@ -1201,6 +1187,7 @@
             tableBody.innerHTML = '';
             
             const startDateStr = start.toISOString().split('T')[0];
+            const endDateStr = end.toISOString().split('T')[0];
             
             const filteredStaff = staffList.filter(s => {
                 if (activeFilters.names.length > 0 && !activeFilters.names.includes(s.name)) return false;
@@ -1208,8 +1195,15 @@
                 if (activeFilters.projects.length > 0 && !activeFilters.projects.includes(s.project)) return false;
                 if (activeFilters.equipes.length > 0 && !activeFilters.equipes.includes(s.equipe)) return false;
 
+                // Regra de Admissão: Não mostrar se foi admitido após o fim do período
+                if (s.data_admissao && s.data_admissao > endDateStr) return false;
+
+                // Regra de Desativação: 
+                // Se inativo e a desativação foi ANTES do início do período
                 if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
-                    return false;
+                    // Verificar se existe algum registro dele neste período
+                    const hasRecords = records.some(r => r.collaborator_name === s.name);
+                    if (!hasRecords) return false;
                 }
                 return true;
             });
@@ -1252,12 +1246,19 @@
                     const td = document.createElement('td');
                     td.className = 'day-cell';
                     
-                    let isDeactivatedDay = false;
+                    let isNotWorkingDay = !isWorkingDay;
+                    
+                    // Dias antes da admissão
+                    if (person.data_admissao && dateStr < person.data_admissao) {
+                        isNotWorkingDay = true;
+                    }
+
+                    // Dias após desativação
                     if (!person.ativo && person.data_desativacao && dateStr > person.data_desativacao) {
-                        isDeactivatedDay = true;
+                        isNotWorkingDay = true;
                     }
                     
-                    if (!isWorkingDay || isDeactivatedDay) td.classList.add('not-working');
+                    if (isNotWorkingDay) td.classList.add('not-working');
                     
                     td.dataset.date = dateStr;
                     td.dataset.collaborator = person.name;
@@ -1298,10 +1299,8 @@
             staff.forEach(person => {
                 days.forEach(dayObj => {
                     const dateStr = getLocalDateString(dayObj);
-                    const isWorkingDay = person.schedule[dayObj.getDay()];
-                    
-                    // Só conta na taxa se for dia de trabalho daquele colaborador
-                    if (!isWorkingDay) return;
+                    // Ignora dias antes da admissão
+                    if (person.data_admissao && dateStr < person.data_admissao) return;
 
                     // Ignora dias após desativação
                     if (!person.ativo && person.data_desativacao && dateStr > person.data_desativacao) return;
@@ -1926,10 +1925,13 @@
                     html: `
                         <div style="text-align: left; max-height: 400px; overflow-y: auto;">
                             <div style="margin-bottom: 20px; padding: 15px; background: rgba(128,128,128,0.05); border-radius: 12px; border: 1px solid var(--border);">
-                                <h4 style="margin-bottom: 10px; font-size: 14px;">➕ Cadastrar Novo</h4>
                                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                                     <input id="new-staff-name" class="swal2-input" style="margin:0; flex: 2; height: 38px; font-size: 13px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Nome Completo">
                                     <input id="new-staff-role" class="swal2-input" style="margin:0; flex: 1; height: 38px; font-size: 13px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Cargo/Proj">
+                                    <div style="display: flex; flex-direction: column; flex: 1;">
+                                        <label style="font-size: 9px; color: var(--text-dim); margin-left: 2px;">Admissão</label>
+                                        <input id="new-staff-admission" type="date" class="swal2-input" style="margin:0; height: 38px; font-size: 13px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                                    </div>
                                     <button onclick="addStaffManual()" style="background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 8px; cursor: pointer; font-weight: 700;">OK</button>
                                 </div>
                                 <div style="display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 15px;">
@@ -1953,8 +1955,9 @@
             window.addStaffManual = async () => {
                 const nome = document.getElementById('new-staff-name').value.trim().toUpperCase();
                 const projeto = document.getElementById('new-staff-role').value.trim().toUpperCase();
+                const data_admissao = document.getElementById('new-staff-admission').value || null;
                 if (!nome) return;
-                const { error } = await window.supabase.from('tb_colaboradores').upsert({ nome, projeto }, { onConflict: 'nome' });
+                const { error } = await window.supabase.from('tb_colaboradores').upsert({ nome, projeto, data_admissao }, { onConflict: 'nome' });
                 if (error) Swal.fire('Erro!', error.message, 'error');
                 else {
                     document.getElementById('new-staff-name').value = '';
@@ -1965,7 +1968,7 @@
 
             window.loadStaffManageList = async () => {
                 const container = document.getElementById('staff-manage-list');
-                let { data, error } = await window.supabase.from('tb_colaboradores').select('nome, projeto, ativo, data_desativacao').order('nome', { ascending: true });
+                let { data, error } = await window.supabase.from('tb_colaboradores').select('nome, projeto, ativo, data_desativacao, data_admissao').order('nome', { ascending: true });
                 
                 if (error && (error.code === '42703' || (error.message && error.message.includes('Could not find')))) {
                     const fallback = await window.supabase.from('tb_colaboradores').select('*').order('nome', { ascending: true });
@@ -1996,10 +1999,11 @@
                                     : '<button onclick="reactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Reativar</button>';
 
                                 return '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);' + (!isAtivo ? ' opacity: 0.6;' : '') + '">'
-                                    + '<td style="padding: 8px;">' + s.nome + '</td>'
+                                    + '<td style="padding: 8px;">' + s.nome + '<br><small style="color:var(--text-dim)">Adm: ' + (s.data_admissao || 'Não inf.') + '</small></td>'
                                     + '<td style="padding: 8px; color: var(--text-muted);">' + (s.projeto || '-') + '</td>'
                                     + '<td style="padding: 8px; text-align: center;">' + statusHtml + '</td>'
                                     + '<td style="padding: 8px; text-align: right; white-space: nowrap;">'
+                                    + '<button onclick="editStaffAdmission(\'' + s.nome.replace(/'/g, "\\'") + '\', \'' + (s.data_admissao || '') + '\')" style="background: rgba(79, 70, 229, 0.1); color: var(--primary); border: 1px solid rgba(79, 70, 229, 0.2); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Calendário</button>'
                                     + actionHtml
                                     + '<button onclick="deleteStaffManual(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>'
                                     + '</td></tr>';
@@ -2007,6 +2011,24 @@
                         </tbody>
                     </table>
                 `;
+            };
+
+            window.editStaffAdmission = async (nome, current) => {
+                const { value: date } = await Swal.fire({
+                    title: 'Data de Admissão',
+                    text: 'Atualizar admissão para ' + nome + ':',
+                    input: 'date',
+                    inputValue: current,
+                    showCancelButton: true,
+                    background: getSwalTheme().background,
+                    color: getSwalTheme().color
+                });
+
+                if (date !== undefined) {
+                    const { error } = await window.supabase.from('tb_colaboradores').update({ data_admissao: date || null }).eq('nome', nome);
+                    if (error) Swal.fire('Erro!', error.message, 'error');
+                    else { loadStaffManageList(); syncStaff().then(() => renderGrid()); }
+                }
             };
 
             window.deactivateStaff = async (nome) => {
@@ -2063,7 +2085,8 @@
                         const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                         const formattedStaff = jsonData.map(row => ({
                             nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
-                            projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase()
+                            projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase(),
+                            data_admissao: row.ADMISSAO || row.admissao || null
                         })).filter(s => s.nome !== "");
                         if (formattedStaff.length === 0) throw new Error("Nenhum dado válido encontrado. Use as colunas NOME e PROJETO.");
                         const { error } = await window.supabase.from('tb_colaboradores').upsert(formattedStaff, { onConflict: 'nome' });
