@@ -958,6 +958,21 @@
         }
 
         async function syncStaff() {
+            let { data, error } = await window.supabase
+                .from('tb_colaboradores')
+                .select('nome, projeto, equipe, cargo, seg, ter, qua, qui, sex, sab, dom, ativo, data_desativacao, data_admissao')
+                .order('nome', { ascending: true });
+            
+            if (error && (error.code === '42703' || (error.message && error.message.includes('Could not find')))) {
+                console.warn('Colunas novas não encontradas. Usando fallback...');
+                const fallback = await window.supabase
+                    .from('tb_colaboradores')
+                    .select('nome, projeto, equipe, cargo, seg, ter, qua, qui, sex, sab, dom')
+                    .order('nome', { ascending: true });
+                data = fallback.data;
+                error = fallback.error;
+            }
+
             if (!error && data) {
                 let mappedStaff = data.map(item => ({ 
                     name: item.nome, 
