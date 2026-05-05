@@ -1324,17 +1324,24 @@
                     const today = getLocalDateString(new Date());
                     if (dateStr > today) return;
 
-                    totalEntries++;
                     const status = attendanceMap[person.name + '_' + dateStr] || '';
-                    if (status === 'P') totalP++;
-                    else if (status === 'FT') totalFT++;
-                    else if (status === 'ATT') totalATT++;
-                    else if (status === 'FE') totalFE++;
+                    const isWorkingDay = person.schedule[dayObj.getDay()];
+
+                    // Cálculo da Taxa: Apenas dias de trabalho que não sejam feriado
+                    if (isWorkingDay && status !== 'FE') {
+                        totalEntries++;
+                        if (status === 'P') totalP++;
+                    }
+
+                    // Contadores de apoio
+                    if (status === 'FT') totalFT++;
+                    if (status === 'ATT') totalATT++;
+                    if (status === 'FE') totalFE++;
                 });
             });
 
-            // Presença e Feriado contam como positivos versus o total de dias úteis passados
-            const rate = totalEntries > 0 ? (((totalP + totalFE) / totalEntries) * 100).toFixed(1) : 0;
+            // A taxa agora é baseada estritamente em (Presenças / Dias de Trabalho Esperados)
+            const rate = totalEntries > 0 ? ((totalP / totalEntries) * 100).toFixed(1) : 0;
 
             const kpiStaff = document.getElementById('kpi-staff-count');
             const kpiRate = document.getElementById('kpi-presence-rate');
