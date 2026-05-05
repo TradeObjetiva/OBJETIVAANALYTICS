@@ -1085,7 +1085,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         listBody.innerHTML = data.map(s => {
             const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
-            const scaleHtml = days.map(d => {
             const scaleHtml = days.map(d => `<span style="font-size: 9px; margin-right: 3px; color: ${s[d] ? 'var(--primary)' : 'var(--text-dim)'}; font-weight: ${s[d] ? '800' : '400'}">${d[0].toUpperCase()}</span>`).join('');
             
             const isAtivo = s.ativo !== false;
