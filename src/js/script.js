@@ -1086,37 +1086,48 @@ document.addEventListener('DOMContentLoaded', () => {
         listBody.innerHTML = data.map(s => {
             const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
             const scaleHtml = days.map(d => {
-                const isActive = s[d];
-                return `<span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 18px; font-size: 9px; font-weight: 700; border-radius: 4px; margin-right: 4px; 
-                    background: ${isActive ? 'var(--primary)' : 'rgba(255,255,255,0.03)'}; 
-                    color: ${isActive ? 'white' : 'var(--text-dim)'}; 
-                    border: 1px solid ${isActive ? 'var(--primary)' : 'var(--border)'}; 
-                    box-shadow: ${isActive ? '0 2px 4px rgba(79, 70, 229, 0.2)' : 'none'};">
-                    ${d.toUpperCase()}
-                </span>`;
-            }).join('');
+            const scaleHtml = days.map(d => `<span style="font-size: 9px; margin-right: 3px; color: ${s[d] ? 'var(--primary)' : 'var(--text-dim)'}; font-weight: ${s[d] ? '800' : '400'}">${d[0].toUpperCase()}</span>`).join('');
+            
+            const isAtivo = s.ativo !== false;
+            const statusHtml = isAtivo 
+                ? '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 6px; font-size: 11px;">Ativo</span>'
+                : '<span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 8px; border-radius: 6px; font-size: 11px;">Inativo</span>';
+
+            const actionHtml = isAtivo
+                ? `<button class="action-icon-btn" onclick="deactivateStaffFromBase('${s.nome}')" title="Demissão" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); color: #ef4444; width: 36px; height: 36px;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="8" x2="18" y2="13"></line></svg>
+                   </button>`
+                : `<button class="action-icon-btn" onclick="reactivateStaffFromBase('${s.nome}')" title="Reativar" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1); color: #10b981; width: 36px; height: 36px;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                   </button>`;
 
             return `
-                <tr style="height: 70px;">
+                <tr style="height: 70px; ${!isAtivo ? 'opacity: 0.6;' : ''}">
                     <td>
                         <div style="display: flex; align-items: center; gap: 14px;">
-                            <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--text-accent)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);">
+                            <div style="width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, ${isAtivo ? 'var(--primary)' : '#444'}, ${isAtivo ? 'var(--text-accent)' : '#666'}); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
                                 ${s.nome[0]}
                             </div>
-                            <strong style="font-size: 14px; letter-spacing: -0.2px;">${s.nome}</strong>
+                            <div>
+                                <strong style="font-size: 14px; letter-spacing: -0.2px;">${s.nome}</strong>
+                                <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+                                    ${s.data_admissao ? 'Adm: ' + new Date(s.data_admissao).toLocaleDateString('pt-BR') : 'Sem data adm.'}
+                                    ${s.data_desativacao ? ' | Dem: ' + new Date(s.data_desativacao).toLocaleDateString('pt-BR') : ''}
+                                </div>
+                            </div>
                         </div>
                     </td>
                     <td><span class="badge" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--text-muted); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.cargo || 'PROMOTOR'}</span></td>
                     <td><span class="badge" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--primary); font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.projeto || 'GERAL'}</span></td>
-                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; font-size: 11px; padding: 6px 12px; border-radius: 8px; font-weight: 600;">${s.equipe || 'N/A'}</span></td>
                     <td><div style="display: flex; align-items: center;">${scaleHtml}</div></td>
-                    <td style="color: var(--text-dim); font-size: 12px; font-weight: 500;">${new Date(s.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td style="text-align: center;">${statusHtml}</td>
                     <td style="text-align: right;">
                         <div style="display: flex; justify-content: flex-end; gap: 8px;">
                             <button class="action-icon-btn" onclick="openEditStaffModal('${s.nome}')" title="Editar" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); width: 36px; height: 36px;">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
-                            <button class="action-icon-btn" onclick="deleteBaseStaff('${s.nome}')" title="Excluir" style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.1); color: #ef4444; width: 36px; height: 36px;">
+                            ${actionHtml}
+                            <button class="action-icon-btn" onclick="deleteBaseStaff('${s.nome}')" title="Excluir Permanente" style="background: rgba(0,0,0,0.1); border: 1px solid var(--border); width: 36px; height: 36px;">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                             </button>
                         </div>
@@ -1145,6 +1156,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 '</div>' +
                 '<label style="color: var(--text-muted);">Equipe:</label>' +
                 '<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" placeholder="Ex: EQUIPE ALPHA">' +
+                '<label style="color: var(--text-muted);">Data de Admissão:</label>' +
+                '<input id="swal-admission" type="date" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;">' +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
                 generateWeekCheckboxes() +
                 '</div>',
@@ -1162,6 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
                     projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
                     equipe: document.getElementById('swal-equipe').value.toUpperCase().trim() || 'GERAL',
+                    data_admissao: document.getElementById('swal-admission').value || null,
                     seg: document.getElementById('check-seg').checked,
                     ter: document.getElementById('check-ter').checked,
                     qua: document.getElementById('check-qua').checked,
@@ -1211,6 +1225,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 '</div>' +
                 '<label style="color: var(--text-muted);">Equipe:</label>' +
                 `<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" value="${data.equipe || ''}">` +
+                '<label style="color: var(--text-muted);">Data de Admissão:</label>' +
+                `<input id="swal-admission" type="date" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" value="${data.data_admissao || ''}">` +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
                 generateWeekCheckboxes(data) +
                 '</div>',
@@ -1228,6 +1244,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
                     projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
                     equipe: document.getElementById('swal-equipe').value.toUpperCase().trim() || 'GERAL',
+                    data_admissao: document.getElementById('swal-admission').value || null,
                     seg: document.getElementById('check-seg').checked,
                     ter: document.getElementById('check-ter').checked,
                     qua: document.getElementById('check-qua').checked,
@@ -1279,13 +1296,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.deleteBaseStaff = async (nome) => {
         const result = await Swal.fire({
-            title: 'Excluir Colaborador?',
-            text: `Deseja remover ${nome} da base fixa? Isso não apaga check-ins passados.`,
+            title: 'Excluir Permanente?',
+            text: `ATENÇÃO: Isso removerá ${nome} COMPLETAMENTE da base fixa. Para apenas desligar o colaborador, use a opção de Demissão.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Sim, excluir',
-            cancelButtonText: 'Não',
+            confirmButtonText: 'Sim, excluir permanentemente',
+            cancelButtonText: 'Cancelar',
             background: 'var(--bg-card)',
             color: 'var(--text-main)'
         });
@@ -1294,10 +1311,51 @@ document.addEventListener('DOMContentLoaded', () => {
             const { error } = await window.supabase.from('tb_colaboradores').delete().eq('nome', nome);
             if (error) showToast(error.message, 'error');
             else {
-                showToast('Colaborador removido!', 'success');
+                showToast('Colaborador removido permanentemente!', 'success');
                 loadStaffBaseList();
                 syncChannel.postMessage({ type: 'STAFF_UPDATED' });
             }
+        }
+    };
+
+    window.deactivateStaffFromBase = async (nome) => {
+        const today = new Date().toISOString().split('T')[0];
+        const { value: date } = await Swal.fire({
+            title: 'Confirmar Demissão',
+            text: 'Informe a data de demissão para ' + nome + ':',
+            input: 'date',
+            inputValue: today,
+            showCancelButton: true,
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)'
+        });
+
+        if (date) {
+            const { error } = await window.supabase
+                .from('tb_colaboradores')
+                .update({ ativo: false, data_desativacao: date })
+                .eq('nome', nome);
+            
+            if (error) showToast(error.message, 'error');
+            else {
+                showToast('Colaborador demitido!', 'success');
+                loadStaffBaseList();
+                syncChannel.postMessage({ type: 'STAFF_UPDATED' });
+            }
+        }
+    };
+
+    window.reactivateStaffFromBase = async (nome) => {
+        const { error } = await window.supabase
+            .from('tb_colaboradores')
+            .update({ ativo: true, data_desativacao: null })
+            .eq('nome', nome);
+        
+        if (error) showToast(error.message, 'error');
+        else {
+            showToast('Colaborador reativado!', 'success');
+            loadStaffBaseList();
+            syncChannel.postMessage({ type: 'STAFF_UPDATED' });
         }
     };
 
@@ -1386,7 +1444,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
                     cargo: (row.FUNCAO || row.funcao || row.CARGO || row.cargo || "PROMOTOR").toString().trim().toUpperCase(),
                     projeto: (row.PROJETO || row.projeto || "GERAL").toString().trim().toUpperCase(),
-                    equipe: (row.EQUIPE || row.equipe || "GERAL").toString().trim().toUpperCase()
+                    equipe: (row.EQUIPE || row.equipe || "GERAL").toString().trim().toUpperCase(),
+                    data_admissao: row.ADMISSAO || row.admissao || null
                 })).filter(s => s.nome !== "");
 
                 if (staffToUpsert.length === 0) {
