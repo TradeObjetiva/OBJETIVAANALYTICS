@@ -1413,7 +1413,15 @@
                 const existingNames = new Set(existing?.map(e => e.collaborator_name.toUpperCase().trim()) || []);
                 
                 const records = members
-                    .filter(m => !existingNames.has(m.name.toUpperCase().trim()))
+                    .filter(m => {
+                        // Não tem registro ainda
+                        if (existingNames.has(m.name.toUpperCase().trim())) return false;
+                        // Regra de Admissão: Não permitir se a data for antes da admissão
+                        if (m.data_admissao && date < m.data_admissao) return false;
+                        // Regra de Desativação: Não permitir se a data for após a demissão
+                        if (!m.ativo && m.data_desativacao && date > m.data_desativacao) return false;
+                        return true;
+                    })
                     .map(m => ({
                         collaborator_name: m.name,
                         date: date,
@@ -2316,6 +2324,19 @@
 
         async function saveStatus(collaborator, date, status, observation = null) {
             try {
+                // Validação de Datas (Admissão / Desativação)
+                const person = staffList.find(s => s.name === collaborator);
+                if (person) {
+                    if (person.data_admissao && date < person.data_admissao) {
+                        console.warn(`Bloqueio: ${collaborator} admitido em ${person.data_admissao}. Ignorando data ${date}.`);
+                        return;
+                    }
+                    if (!person.ativo && person.data_desativacao && date > person.data_desativacao) {
+                        console.warn(`Bloqueio: ${collaborator} demitido em ${person.data_desativacao}. Ignorando data ${date}.`);
+                        return;
+                    }
+                }
+
                 if (!status) {
                     await window.supabase.from('tb_assiduidade').delete().eq('collaborator_name', collaborator).eq('date', date);
                 } else {
