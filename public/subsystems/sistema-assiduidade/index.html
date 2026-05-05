@@ -2034,8 +2034,8 @@
             window.deactivateStaff = async (nome) => {
                 const today = new Date().toISOString().split('T')[0];
                 const { value: date } = await Swal.fire({
-                    title: 'Desativar Colaborador',
-                    text: 'Data de desativação para ' + nome + ':',
+                    title: 'Confirmar Demissão',
+                    text: 'Informe a data de demissão para ' + nome + ':',
                     input: 'date',
                     inputValue: today,
                     showCancelButton: true,
