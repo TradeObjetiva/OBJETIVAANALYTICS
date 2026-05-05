@@ -1083,22 +1083,44 @@
         }
 
         async function processExistingCheckins() {
-            const todayStr = getLocalDateString(new Date());
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+            // Usa as mesmas datas de start e end do grid para abranger todo o ciclo atual
+            const start = new Date(currentDate);
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + 1);
+            end.setDate(20);
+            end.setHours(23, 59, 59, 999);
+
+            const startDateStr = start.toISOString().split('T')[0];
+            const endDateStr = end.toISOString().split('T')[0];
             
-            const { data: checkins } = await window.supabase
-                .from('checkins')
-                .select('activity_id, created_at, task_id')
-                .gte('created_at', startOfDay.toISOString());
+            let checkins = [];
+            let fromC = 0, stepC = 999, hasMoreC = true;
+            while(hasMoreC) {
+                const { data } = await window.supabase
+                    .from('checkins')
+                    .select('activity_id, created_at, task_id')
+                    .gte('created_at', start.toISOString())
+                    .lte('created_at', end.toISOString())
+                    .range(fromC, fromC + stepC);
+                if (data && data.length > 0) { checkins = checkins.concat(data); fromC += stepC + 1; }
+                if (!data || data.length <= stepC) hasMoreC = false;
+            }
 
-            const { data: existingAttendance } = await window.supabase
-                .from('tb_assiduidade')
-                .select('collaborator_name, status, is_manual, observation')
-                .eq('date', todayStr);
+            let existingAttendance = [];
+            let fromE = 0, stepE = 999, hasMoreE = true;
+            while(hasMoreE) {
+                const { data } = await window.supabase
+                    .from('tb_assiduidade')
+                    .select('collaborator_name, status, is_manual, observation, date')
+                    .gte('date', startDateStr)
+                    .lte('date', endDateStr)
+                    .range(fromE, fromE + stepE);
+                if (data && data.length > 0) { existingAttendance = existingAttendance.concat(data); fromE += stepE + 1; }
+                if (!data || data.length <= stepE) hasMoreE = false;
+            }
 
-            const attendanceMap = new Map();
-            existingAttendance?.forEach(a => attendanceMap.set(a.collaborator_name, a));
+            const attendanceMap = new Set();
+            existingAttendance?.forEach(a => attendanceMap.add(`${a.collaborator_name}_${a.date}`));
 
             const newRecordsToUpsert = [];
             checkins?.forEach(checkin => {
@@ -1106,14 +1128,24 @@
                 if (checkin.task_id !== 'CHECK IN') return;
 
                 const name = checkin.activity_id?.split(';')[0].trim().toUpperCase();
-                if (name && !attendanceMap.has(name)) {
-                    newRecordsToUpsert.push({ collaborator_name: name, date: todayStr, status: 'P', is_manual: false });
-                    attendanceMap.set(name, { status: 'P' });
+                if (!name) return;
+
+                const checkinDate = new Date(checkin.created_at);
+                const dateStr = getLocalDateString(checkinDate);
+                const key = `${name}_${dateStr}`;
+
+                if (!attendanceMap.has(key)) {
+                    newRecordsToUpsert.push({ collaborator_name: name, date: dateStr, status: 'P', is_manual: false });
+                    attendanceMap.add(key); // Evita duplicados na mesma execução
                 }
             });
 
             if (newRecordsToUpsert.length > 0) {
-                await window.supabase.from('tb_assiduidade').upsert(newRecordsToUpsert);
+                const BATCH_SIZE = 100;
+                for (let i = 0; i < newRecordsToUpsert.length; i += BATCH_SIZE) {
+                    const batch = newRecordsToUpsert.slice(i, i + BATCH_SIZE);
+                    await window.supabase.from('tb_assiduidade').upsert(batch);
+                }
             }
         }
 
@@ -1143,11 +1175,18 @@
                 headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 4]);
             });
 
-            const { data: records } = await window.supabase
-                .from('tb_assiduidade')
-                .select('*')
-                .gte('date', start.toISOString().split('T')[0])
-                .lte('date', end.toISOString().split('T')[0]);
+            let records = [];
+            let fromR = 0, stepR = 999, hasMoreR = true;
+            while(hasMoreR) {
+                const { data } = await window.supabase
+                    .from('tb_assiduidade')
+                    .select('*')
+                    .gte('date', start.toISOString().split('T')[0])
+                    .lte('date', end.toISOString().split('T')[0])
+                    .range(fromR, fromR + stepR);
+                if (data && data.length > 0) { records = records.concat(data); fromR += stepR + 1; }
+                if (!data || data.length <= stepR) hasMoreR = false;
+            }
 
             const attendanceMap = {};
             records?.forEach(r => attendanceMap[`${r.collaborator_name}_${r.date}`] = r.status);
@@ -1469,32 +1508,40 @@
             if (!startInput.value) startInput.value = firstDay;
             if (!endInput.value) endInput.value = lastDay;
 
-            let query = window.supabase
-                .from('tb_assiduidade')
-                .select('*')
-                .gte('date', startInput.value)
-                .lte('date', endInput.value)
-                .not('status', 'eq', 'P')
-                .not('status', 'is', null)
-                .not('observation', 'eq', 'Feriado Geral');
+            let data = [];
+            let fromO = 0, stepO = 999, hasMoreO = true;
+            let queryError = null;
 
-            const obsProjectValue = document.getElementById('obs-project-filter')?.value || 'ALL';
-            const obsEquipeValue = document.getElementById('obs-equipe-filter')?.value || 'ALL';
+            while(hasMoreO) {
+                let query = window.supabase
+                    .from('tb_assiduidade')
+                    .select('*')
+                    .gte('date', startInput.value)
+                    .lte('date', endInput.value)
+                    .not('status', 'eq', 'P')
+                    .not('status', 'is', null)
+                    .not('observation', 'eq', 'Feriado Geral');
 
-            if (activeFilters.obsProjects.length > 0 || activeFilters.obsEquipes.length > 0) {
-                let filteredNames = staffList;
-                if (activeFilters.obsProjects.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsProjects.includes(s.project));
-                if (activeFilters.obsEquipes.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsEquipes.includes(s.equipe));
-                
-                const names = filteredNames.map(s => s.name);
-                if (names.length > 0) {
-                    query = query.in('collaborator_name', names);
-                } else {
-                    query = query.eq('collaborator_name', 'FORCE_EMPTY_RESULT_STRING_NON_EXISTENT');
+                if (activeFilters.obsProjects.length > 0 || activeFilters.obsEquipes.length > 0) {
+                    let filteredNames = staffList;
+                    if (activeFilters.obsProjects.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsProjects.includes(s.project));
+                    if (activeFilters.obsEquipes.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsEquipes.includes(s.equipe));
+                    
+                    const names = filteredNames.map(s => s.name);
+                    if (names.length > 0) {
+                        query = query.in('collaborator_name', names);
+                    } else {
+                        query = query.eq('collaborator_name', 'FORCE_EMPTY_RESULT_STRING_NON_EXISTENT');
+                    }
                 }
+
+                const { data: pageData, error } = await query.range(fromO, fromO + stepO);
+                if (error) { queryError = error; break; }
+                if (pageData && pageData.length > 0) { data = data.concat(pageData); fromO += stepO + 1; }
+                if (!pageData || pageData.length <= stepO) hasMoreO = false;
             }
 
-            const { data, error } = await query;
+            const error = queryError;
 
             if (error || !data || data.length === 0) {
                 currentObsGroups = [];

@@ -14,7 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="src/css/style.css?v=1.0.4">
     <style>
-        .hidden { display: none !important; }
+        .hidden {
+            display: none !important;
+        }
     </style>
     <script>
         if ('serviceWorker' in navigator) {
@@ -253,9 +255,11 @@
                             <div class="input-group" id="allowed-projects-container" style="margin-top: 15px;">
                                 <label style="display: flex; justify-content: space-between;">
                                     Projetos Permitidos
-                                    <span style="font-size: 10px; color: var(--text-dim);">Apenas para nível Colaborador</span>
+                                    <span style="font-size: 10px; color: var(--text-dim);">Apenas para nível
+                                        Colaborador</span>
                                 </label>
-                                <div id="project-checkboxes" style="max-height: 120px; overflow-y: auto; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <div id="project-checkboxes"
+                                    style="max-height: 120px; overflow-y: auto; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                     <!-- Populated by JS -->
                                     <div style="font-size: 11px; color: var(--text-dim);">Carregando projetos...</div>
                                 </div>
@@ -263,33 +267,50 @@
                             <div class="input-group" style="margin-top: 15px;">
                                 <label style="display: flex; justify-content: space-between;">
                                     Módulos do Sistema
-                                    <span style="font-size: 10px; color: var(--text-dim);">Quais abas o usuário verá</span>
+                                    <span style="font-size: 10px; color: var(--text-dim);">Quais abas o usuário
+                                        verá</span>
                                 </label>
-                                <div id="module-checkboxes" style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
-                                        <input type="checkbox" value="home" checked style="accent-color: var(--primary);"> Dashboard
+                                <div id="module-checkboxes"
+                                    style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    <label
+                                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="home" checked
+                                            style="accent-color: var(--primary);"> Dashboard
                                     </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
-                                        <input type="checkbox" value="relatorio" checked style="accent-color: var(--primary);"> Relatórios
+                                    <label
+                                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="relatorio" checked
+                                            style="accent-color: var(--primary);"> Relatórios
                                     </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
-                                        <input type="checkbox" value="cartas" checked style="accent-color: var(--primary);"> Cartas
+                                    <label
+                                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="cartas" checked
+                                            style="accent-color: var(--primary);"> Cartas
                                     </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
-                                        <input type="checkbox" value="roteiro" checked style="accent-color: var(--primary);"> Rotas
+                                    <label
+                                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="roteiro" checked
+                                            style="accent-color: var(--primary);"> Rotas
                                     </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
-                                        <input type="checkbox" value="analytics" checked style="accent-color: var(--primary);"> Analytics
+                                    <label
+                                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="analytics" checked
+                                            style="accent-color: var(--primary);"> Analytics
                                     </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
-                                        <input type="checkbox" value="assiduidade" checked style="accent-color: var(--primary);"> Assiduidade
+                                    <label
+                                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="assiduidade" checked
+                                            style="accent-color: var(--primary);"> Assiduidade
                                     </label>
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
-                                        <input type="checkbox" value="colaboradores-base" checked style="accent-color: var(--primary);"> Colaboradores
+                                    <label
+                                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
+                                        <input type="checkbox" value="colaboradores-base" checked
+                                            style="accent-color: var(--primary);"> Colaboradores
                                     </label>
                                 </div>
                             </div>
-                            <button type="submit" class="login-btn" style="margin-top: 20px;">Criar Conta e Perfil</button>
+                            <button type="submit" class="login-btn" style="margin-top: 20px;">Criar Conta e
+                                Perfil</button>
                         </form>
                     </div>
                 </div>
@@ -593,7 +614,9 @@
                                 style="background: var(--bg-accent); color: var(--text-main); border: 1px solid var(--border); width: auto; padding: 0 20px; height: 48px; font-size: 13px;">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2.5" style="margin-right: 8px;">
-                                    <path d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17"></path>
+                                    <path
+                                        d="M12 15V3m0 12l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.878a2 2 0 0 0 1.94-1.515L22 17">
+                                    </path>
                                 </svg>
                                 Exportar Lista
                             </button>
