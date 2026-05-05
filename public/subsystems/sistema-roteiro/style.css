@@ -1,14 +1,14 @@
 :root {
-  --primary: #4F46E5;
-  --primary-hover: #4338CA;
-  --secondary: #475569;
-  --bg-dark: #0f172a;
-  --card-dark: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent: #38bdf8;
+  --primary: var(--primary, #6366f1);
+  --primary-hover: var(--primary-hover, #4f46e5);
+  --secondary: var(--text-dim, #71717a);
+  --bg-dark: var(--bg-main, #0a0a0c);
+  --card-dark: var(--bg-card, #121216);
+  --text-main: var(--text-main, #ffffff);
+  --text-muted: var(--text-muted, #a1a1aa);
+  --accent: var(--text-accent, #818cf8);
   --glass: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border: var(--border, rgba(255, 255, 255, 0.08));
   --danger: #ef4444;
   --success: #10b981;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
