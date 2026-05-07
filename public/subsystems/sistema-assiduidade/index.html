@@ -1064,6 +1064,38 @@
             return `${y}-${m}-${d}`;
         }
 
+        function timeToSeconds(value) {
+            if (!value) return 0;
+            if (value instanceof Date) {
+                return value.getHours() * 3600 + value.getMinutes() * 60 + value.getSeconds();
+            }
+            if (typeof value === 'number') {
+                return Math.round(value * 86400);
+            }
+            if (typeof value === 'object' && value.result) return timeToSeconds(value.result);
+            
+            const str = String(value).trim();
+            const isNegative = str.startsWith('-');
+            const parts = str.replace('-', '').split(':');
+            if (parts.length < 2) return 0;
+            
+            let h = parseInt(parts[0]) || 0;
+            let m = parseInt(parts[1]) || 0;
+            let s = parseInt(parts[2]) || 0;
+            
+            const total = h * 3600 + m * 60 + s;
+            return isNegative ? -total : total;
+        }
+
+        function secondsToTime(totalSeconds) {
+            const isNegative = totalSeconds < 0;
+            const absSeconds = Math.abs(totalSeconds);
+            const h = Math.floor(absSeconds / 3600);
+            const m = Math.floor((absSeconds % 3600) / 60);
+            const s = absSeconds % 60;
+            return `${isNegative ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
         async function processExistingCheckins() {
             // Usa as mesmas datas de start e end do grid para abranger todo o ciclo atual
             const start = new Date(currentDate);
@@ -1809,7 +1841,7 @@
 
                 Swal.fire({
                     title: 'Iniciando Conciliação',
-                    text: 'Processando abas e preservando estilos...',
+                    text: 'Processando abas, assinaturas e cálculos...',
                     allowOutsideClick: false,
                     didOpen: () => Swal.showLoading()
                 });
@@ -1836,74 +1868,134 @@
                     let updatedRowsCount = 0;
 
                     workbook.eachSheet((worksheet, sheetId) => {
-                        const collaboratorName = worksheet.name.trim().toUpperCase();
-                        const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorName);
+                        const collaboratorNameInSheet = worksheet.name.trim().toUpperCase();
+                        const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorNameInSheet);
                         
-                        if (personAttendance.length > 0) {
-                            updatedSheetsCount++;
-                            
-                            let dateCol = -1;
-                            let obsCol = -1;
-                            let headerRowIndex = -1;
+                        // Pegar nome da empresa e colaborador das células (B1 e B3)
+                        const companyName = worksheet.getCell('B1').value || "O+ MARKETING E RECURSOS HUMANOS LTDA";
+                        const collaboratorFullName = worksheet.getCell('B3').value || worksheet.name;
 
-                            // Localizar cabeçalhos nas primeiras 20 linhas
-                            for (let r = 1; r <= 20; r++) {
-                                const row = worksheet.getRow(r);
-                                row.eachCell((cell, colNumber) => {
-                                    if (cell.value) {
-                                        const val = String(cell.value).toUpperCase().trim();
-                                        if (val === 'DATA') dateCol = colNumber;
-                                        if (val === 'OBSERVAÇÕES' || val === 'OBSERVAÇAO' || val === 'OBS') {
-                                            obsCol = colNumber;
-                                            headerRowIndex = r;
-                                        }
+                        updatedSheetsCount++;
+                        
+                        let dateCol = -1;
+                        let obsCol = -1;
+                        let headerRowIndex = -1;
+                        let execTotalCol = 8; // Coluna H
+                        let planTotalCol = 12; // Coluna L
+                        let diffCol = 13; // Coluna M
+
+                        // Localizar cabeçalhos nas primeiras 20 linhas
+                        for (let r = 1; r <= 20; r++) {
+                            const row = worksheet.getRow(r);
+                            row.eachCell((cell, colNumber) => {
+                                if (cell.value) {
+                                    const val = String(cell.value).toUpperCase().trim();
+                                    if (val === 'DATA') dateCol = colNumber;
+                                    if (val === 'OBSERVAÇÕES' || val === 'OBSERVAÇAO' || val === 'OBS') {
+                                        obsCol = colNumber;
+                                        headerRowIndex = r;
                                     }
-                                });
-                                if (dateCol !== -1 && obsCol !== -1) break;
-                            }
+                                }
+                            });
+                            if (dateCol !== -1 && obsCol !== -1) break;
+                        }
 
-                            if (dateCol !== -1 && obsCol !== -1) {
-                                // Percorrer linhas de dados
-                                worksheet.eachRow((row, rowNumber) => {
-                                    if (rowNumber <= headerRowIndex) return;
+                        if (dateCol !== -1 && obsCol !== -1) {
+                            // 1. Preencher justificativas do sistema
+                            worksheet.eachRow((row, rowNumber) => {
+                                if (rowNumber <= headerRowIndex) return;
 
-                                    const dateCell = row.getCell(dateCol);
-                                    let cellDate = null;
+                                const dateCell = row.getCell(dateCol);
+                                let cellDate = null;
 
-                                    if (dateCell.value instanceof Date) {
-                                        cellDate = dateCell.value;
-                                    } else if (typeof dateCell.value === 'string' && dateCell.value.includes('/')) {
-                                        const parts = dateCell.value.split('/');
-                                        if (parts.length === 3) {
-                                            cellDate = new Date(parts[2], parts[1] - 1, parts[0]);
-                                        }
-                                    } else if (dateCell.value && typeof dateCell.value === 'object' && dateCell.value.result instanceof Date) {
-                                        cellDate = dateCell.value.result;
+                                if (dateCell.value instanceof Date) {
+                                    cellDate = dateCell.value;
+                                } else if (typeof dateCell.value === 'string' && dateCell.value.includes('/')) {
+                                    const parts = dateCell.value.split('/');
+                                    if (parts.length === 3) {
+                                        cellDate = new Date(parts[2], parts[1] - 1, parts[0]);
                                     }
+                                } else if (dateCell.value && typeof dateCell.value === 'object' && dateCell.value.result instanceof Date) {
+                                    cellDate = dateCell.value.result;
+                                }
 
-                                    if (cellDate && !isNaN(cellDate.getTime())) {
-                                        const targetDateStr = getLocalDateString(cellDate);
-                                        const record = personAttendance.find(a => a.date === targetDateStr);
+                                if (cellDate && !isNaN(cellDate.getTime())) {
+                                    const targetDateStr = getLocalDateString(cellDate);
+                                    const record = personAttendance.find(a => a.date === targetDateStr);
+                                    
+                                    if (record && record.status !== 'P') {
+                                        const obsCell = row.getCell(obsCol);
+                                        let statusText = record.status;
+                                        if (record.observation) statusText += ` - ${record.observation}`;
                                         
-                                        if (record && record.status !== 'P') {
-                                            const obsCell = row.getCell(obsCol);
-                                            let statusText = record.status;
-                                            if (record.observation) statusText += ` - ${record.observation}`;
-                                            
-                                            obsCell.value = statusText;
-                                            updatedRowsCount++;
-                                        }
+                                        obsCell.value = statusText;
+                                        updatedRowsCount++;
                                     }
-                                });
+                                }
+                            });
+                        }
+
+                        // 2. Realizar Cálculos de Diferença no Total
+                        let totalRow = null;
+                        for (let r = worksheet.rowCount; r > 0; r--) {
+                            const row = worksheet.getRow(r);
+                            const firstCellVal = String(row.getCell(1).value || row.getCell(2).value || "").toUpperCase().trim();
+                            if (firstCellVal === 'TOTAL') {
+                                totalRow = row;
+                                break;
                             }
                         }
+
+                        if (totalRow) {
+                            let sumDiffSeconds = 0;
+                            // Somar os valores da coluna de Diferença Tempo (diffCol)
+                            for (let r = headerRowIndex + 1; r < totalRow.number; r++) {
+                                const row = worksheet.getRow(r);
+                                const diffVal = row.getCell(diffCol).value;
+                                sumDiffSeconds += timeToSeconds(diffVal);
+                            }
+                            
+                            const diffCell = totalRow.getCell(diffCol);
+                            diffCell.value = secondsToTime(sumDiffSeconds);
+                            diffCell.font = { bold: true };
+                            diffCell.alignment = { horizontal: 'center' };
+                        }
+
+                        // 3. Inserir Assinaturas
+                        const lastRow = totalRow ? totalRow.number : worksheet.rowCount;
+                        const sigRow = lastRow + 4;
+                        
+                        // Linhas de assinatura
+                        const sigLine1 = worksheet.getCell(`B${sigRow-1}`);
+                        const sigLine2 = worksheet.getCell(`I${sigRow-1}`);
+                        sigLine1.value = "_________________________________________________";
+                        sigLine2.value = "_________________________________________________";
+                        sigLine1.alignment = { horizontal: 'center' };
+                        sigLine2.alignment = { horizontal: 'center' };
+
+                        const collaboratorSigCell = worksheet.getCell(`B${sigRow}`);
+                        const companySigCell = worksheet.getCell(`I${sigRow}`);
+
+                        collaboratorSigCell.value = String(collaboratorFullName).toUpperCase();
+                        collaboratorSigCell.font = { bold: true, size: 10 };
+                        collaboratorSigCell.alignment = { horizontal: 'center' };
+
+                        companySigCell.value = String(companyName).toUpperCase();
+                        companySigCell.font = { bold: true, size: 10 };
+                        companySigCell.alignment = { horizontal: 'center' };
+                        
+                        try {
+                            worksheet.mergeCells(`B${sigRow}:G${sigRow}`);
+                            worksheet.mergeCells(`I${sigRow}:M${sigRow}`);
+                            worksheet.mergeCells(`B${sigRow-1}:G${sigRow-1}`);
+                            worksheet.mergeCells(`I${sigRow-1}:M${sigRow-1}`);
+                        } catch(e) {}
                     });
 
                     if (updatedSheetsCount === 0) {
                         throw new Error("Nenhum colaborador da planilha foi encontrado no sistema. Verifique se o nome da ABA é idêntico ao nome no sistema.");
                     }
 
-                    // Gerar o buffer e baixar
                     const buffer = await workbook.xlsx.writeBuffer();
                     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                     const url = window.URL.createObjectURL(blob);
@@ -1916,7 +2008,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Conciliação Concluída!',
-                        html: `Preservamos o layout original.<br><b>${updatedSheetsCount} abas</b> atualizadas.<br><b>${updatedRowsCount} observações</b> inseridas.`,
+                        html: `Assinaturas e cálculos aplicados.<br><b>${updatedSheetsCount} abas</b> processadas.<br><b>${updatedRowsCount} observações</b> inseridas.`,
                         background: getSwalTheme().background,
                         color: getSwalTheme().color
                     });
