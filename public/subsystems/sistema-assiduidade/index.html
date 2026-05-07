@@ -398,6 +398,131 @@
             z-index: 10;
         }
 
+        /* --- COLUMN ACTIONS --- */
+        th.day-cell { position: relative; }
+        th.day-cell.column-empty {
+            background: rgba(239, 68, 68, 0.05) !important;
+        }
+        th.day-cell.column-empty .day-header span:first-child {
+            color: #ef4444;
+            text-decoration: underline wavy #ef4444 1px;
+        }
+        th.day-cell.filter-active {
+            background: rgba(99, 102, 241, 0.15) !important;
+            border-bottom: 2px solid var(--primary) !important;
+        }
+        th.day-cell.filter-active .column-filter-btn {
+            opacity: 1;
+            background: var(--primary);
+            color: white;
+        }
+        .column-filter-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 60;
+        }
+        th.day-cell:hover .column-filter-btn { opacity: 1; }
+        .column-filter-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* --- COL FILTER DROPDOWN (IMAGE MATCH) --- */
+        .col-filter-dropdown {
+            position: absolute;
+            width: 280px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            border: 1px solid var(--border);
+            animation: slideDown 0.2s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .col-filter-header {
+            background: var(--primary);
+            color: white;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .col-filter-search-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.15);
+            border-radius: 4px;
+            padding: 0 10px;
+        }
+        .col-filter-search-container input {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 6px 0;
+            font-size: 13px;
+            width: 100%;
+            outline: none;
+        }
+        .col-filter-search-container input::placeholder { color: rgba(255,255,255,0.7); }
+        .col-filter-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            opacity: 0.8;
+            padding: 4px;
+        }
+        .col-filter-close:hover { opacity: 1; }
+        .col-filter-body {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 6px 0;
+            background: var(--bg-card);
+        }
+        .col-filter-option {
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text-main);
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--border);
+        }
+        .col-filter-option:hover { background: var(--bg-accent); }
+        .col-filter-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+        .col-filter-check-all {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: white;
+            margin: 0;
+        }
+
         /* --- MULTI-SELECT CUSTOM STYLES --- */
         .multi-select-container {
             position: relative;
@@ -508,6 +633,11 @@
                 <button class="sync-btn" id="btn-export-grid" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
                     Exportar Grade
+                </button>
+
+                <button class="sync-btn" id="btn-insert-holiday" onclick="setHolidayForAll()" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                    Inserir Feriado
                 </button>
 
                 <button class="sync-btn" id="btn-manage-staff" style="background: var(--bg-accent); border: 1px solid var(--border);">
@@ -678,6 +808,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../../js/supabase-config.js"></script>
+    <!-- Dropdown de Filtro por Coluna (Estilo Imagem) -->
+    <div id="col-filter-dropdown" class="col-filter-dropdown">
+        <div class="col-filter-header">
+            <input type="checkbox" id="col-filter-check-all" class="col-filter-check-all" title="Selecionar Todos">
+            <div class="col-filter-search-container">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right: 6px; opacity: 0.8;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="col-filter-search" placeholder="Pesquisar status...">
+            </div>
+            <button class="col-filter-close" onclick="document.getElementById('col-filter-dropdown').style.display='none'">&times;</button>
+        </div>
+        <div id="col-filter-body" class="col-filter-body">
+            <!-- Opções injetadas via JS -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const dayShort = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
@@ -774,7 +921,8 @@
             equipes: [],
             obsProjects: [],
             obsEquipes: [],
-            names: []
+            names: [],
+            columnFilters: {} // { "2026-05-01": ["P", "FT"], "2026-05-02": ["__BLANK__"] }
         };
 
         function toggleMultiSelect(containerId) {
@@ -1180,15 +1328,6 @@
                 temp.setDate(temp.getDate() + 1);
             }
 
-            days.forEach(d => {
-                const dateStr = getLocalDateString(d);
-                const th = document.createElement('th');
-                th.className = 'day-cell';
-                th.innerHTML = `<div class="day-header"><span>${d.getDate().toString().padStart(2, '0')}</span><span>${dayShort[d.getDay()]}</span></div>`;
-                th.onclick = () => setHolidayForAll(dateStr);
-                headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 4]);
-            });
-
             let records = [];
             let fromR = 0, stepR = 999, hasMoreR = true;
             while(hasMoreR) {
@@ -1223,6 +1362,18 @@
                 if (activeFilters.projects.length > 0 && !activeFilters.projects.includes(s.project)) return false;
                 if (activeFilters.equipes.length > 0 && !activeFilters.equipes.includes(s.equipe)) return false;
 
+                // --- FILTROS DE COLUNA (DINÂMICOS) ---
+                const activeColDates = Object.keys(activeFilters.columnFilters);
+                for (const date of activeColDates) {
+                    const targetStatuses = activeFilters.columnFilters[date];
+                    if (!targetStatuses || targetStatuses.length === 0) continue;
+                    
+                    const currentStatus = attendanceMap[`${s.name}_${date}`] || '';
+                    const compareStatus = currentStatus === '' ? '__BLANK__' : currentStatus;
+                    
+                    if (!targetStatuses.includes(compareStatus)) return false;
+                }
+
                 // Regra de Admissão: Não mostrar se foi admitido após o fim do período
                 if (s.data_admissao && s.data_admissao > endDateStr) return false;
 
@@ -1234,6 +1385,39 @@
                     if (!hasRecords) return false;
                 }
                 return true;
+            });
+
+            // AGORA renderizamos os cabeçalhos com os dados prontos
+            days.forEach(d => {
+                const dateStr = getLocalDateString(d);
+                const th = document.createElement('th');
+                th.className = 'day-cell';
+                
+                // Indica se a coluna tem filtro ativo
+                if (activeFilters.columnFilters[dateStr]) th.classList.add('filter-active');
+
+                // Verifica se a coluna está vazia (nenhum registro para este dia entre os colaboradores visíveis)
+                const isColumnEmpty = !filteredStaff.some(p => attendanceMap[`${p.name}_${dateStr}`]);
+                if (isColumnEmpty) th.classList.add('column-empty');
+
+                th.innerHTML = `
+                    <div class="day-header">
+                        <span>${d.getDate().toString().padStart(2, '0')}</span>
+                        <span>${dayShort[d.getDay()]}</span>
+                    </div>
+                    <div class="column-filter-btn" title="Filtrar Coluna">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                `;
+                
+                // Menu de ações da coluna (AGORA É FILTRO)
+                const filterBtn = th.querySelector('.column-filter-btn');
+                filterBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    showColumnFilter(dateStr, th);
+                };
+
+                headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 4]);
             });
 
             if (filteredStaff.length === 0) {
@@ -1479,44 +1663,183 @@
             }
         }
 
-        async function setHolidayForAll(dateStr) {
-            const dateFmt = dateStr.split('-').reverse().join('/');
-            const { isConfirmed } = await Swal.fire({
-                title: 'Marcar Feriado?',
-                text: `Deseja marcar o dia ${dateFmt} como FERIADO para todos os colaboradores?`,
-                icon: 'question',
+        async function setHolidayForAll() {
+            const theme = getSwalTheme();
+            
+            // Passo 1: Selecionar a Data e o Tipo de Feriado
+            const { value: formValues } = await Swal.fire({
+                title: 'Inserir Feriado para Todos',
+                html: `
+                    <div style="text-align: left; padding: 10px;">
+                        <label style="display:block; margin-bottom: 8px; color: var(--text-dim); font-size: 13px; font-weight: 700;">DATA DO FERIADO:</label>
+                        <input id="swal-h-date" type="date" value="${getLocalDateString(new Date())}" class="swal2-input" style="margin: 0 0 20px 0; width: 100%; height: 45px; border-radius: 12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                        
+                        <label style="display:block; margin-bottom: 8px; color: var(--text-dim); font-size: 13px; font-weight: 700;">TIPO DE FERIADO:</label>
+                        <select id="swal-h-type" class="swal2-input" style="margin: 0 0 20px 0; width: 100%; height: 45px; border-radius: 12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                            <option value="NACIONAL">Feriado Nacional</option>
+                            <option value="ESTADUAL">Feriado Estadual</option>
+                        </select>
+
+                        <div id="swal-state-group" style="display: none;">
+                            <label style="display:block; margin-bottom: 8px; color: var(--text-dim); font-size: 13px; font-weight: 700;">QUAL O ESTADO?</label>
+                            <select id="swal-h-state" class="swal2-input" style="margin: 0; width: 100%; height: 45px; border-radius: 12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                                <option value="AC">Acre</option><option value="AL">Alagoas</option><option value="AP">Amapá</option><option value="AM">Amazonas</option>
+                                <option value="BA">Bahia</option><option value="CE">Ceará</option><option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option>
+                                <option value="GO">Goiás</option><option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option>
+                                <option value="MG">Minas Gerais</option><option value="PA">Pará</option><option value="PB">Paraíba</option><option value="PR">Paraná</option>
+                                <option value="PE">Pernambuco</option><option value="PI">Piauí</option><option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option>
+                                <option value="RS">Rio Grande do Sul</option><option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="SC">Santa Catarina</option>
+                                <option value="SP">São Paulo</option><option value="SE">Sergipe</option><option value="TO">Tocantins</option>
+                            </select>
+                        </div>
+                    </div>
+                `,
+                didOpen: () => {
+                    const typeSelect = document.getElementById('swal-h-type');
+                    const stateGroup = document.getElementById('swal-state-group');
+                    typeSelect.addEventListener('change', () => {
+                        stateGroup.style.display = typeSelect.value === 'ESTADUAL' ? 'block' : 'none';
+                    });
+                },
                 showCancelButton: true,
-                confirmButtonText: 'Sim, Marcar Feriado',
+                confirmButtonText: 'Aplicar Feriado',
                 cancelButtonText: 'Cancelar',
-                background: '#121216',
-                color: '#fff'
+                background: theme.background,
+                color: theme.color,
+                preConfirm: () => {
+                    const date = document.getElementById('swal-h-date').value;
+                    const type = document.getElementById('swal-h-type').value;
+                    const state = document.getElementById('swal-h-state').value;
+                    if (!date) { Swal.showValidationMessage('Selecione a data'); return false; }
+                    return { date, type, state };
+                }
             });
 
-            if (isConfirmed) {
+            if (formValues) {
+                const { date, type, state } = formValues;
+                const obs = type === 'NACIONAL' ? 'Feriado Nacional' : `Feriado Estadual (${state})`;
+                
                 Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 
-                const dayOfWeek = new Date(dateStr + 'T12:00:00').getDay();
+                const dayOfWeek = new Date(date + 'T12:00:00').getDay();
                 
                 const records = staffList
                     .filter(p => p.schedule && p.schedule[dayOfWeek]) // Apenas quem trabalha no dia
                     .map(p => ({
                         collaborator_name: p.name,
-                        date: dateStr,
+                        date: date,
                         status: 'FE',
                         is_manual: true,
-                        observation: 'Feriado Geral'
+                        observation: obs
                     }));
 
                 const { error } = await window.supabase.from('tb_assiduidade').upsert(records);
                 
                 if (error) Swal.fire('Erro', error.message, 'error');
                 else {
-                    Swal.close();
+                    Swal.fire({ icon: 'success', title: 'Sucesso!', text: `Feriado marcado como ${obs} para todos.`, timer: 2000, showConfirmButton: false });
                     await renderGrid();
                     await renderObservations();
                 }
             }
         }
+
+        let currentFilterDate = null;
+        let colFilterSearchQuery = '';
+
+        function showColumnFilter(dateStr, thElement) {
+            currentFilterDate = dateStr;
+            const dropdown = document.getElementById('col-filter-dropdown');
+            const rect = thElement.getBoundingClientRect();
+            
+            // Posicionamento
+            dropdown.style.display = 'block';
+            dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            dropdown.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 300) + 'px';
+            
+            document.getElementById('col-filter-search').value = '';
+            colFilterSearchQuery = '';
+            
+            renderColumnFilterOptions();
+            
+            // Setup events once
+            if (!dropdown.dataset.eventsSet) {
+                document.getElementById('col-filter-search').oninput = (e) => {
+                    colFilterSearchQuery = e.target.value.toLowerCase();
+                    renderColumnFilterOptions();
+                };
+                
+                document.getElementById('col-filter-check-all').onchange = (e) => {
+                    const checked = e.target.checked;
+                    const allStatuses = ['__BLANK__', ...legendasList.map(l => l.codigo)];
+                    if (checked) {
+                        activeFilters.columnFilters[currentFilterDate] = allStatuses;
+                    } else {
+                        delete activeFilters.columnFilters[currentFilterDate];
+                    }
+                    renderColumnFilterOptions();
+                    renderGrid();
+                };
+                dropdown.dataset.eventsSet = 'true';
+            }
+        }
+
+        function renderColumnFilterOptions() {
+            const body = document.getElementById('col-filter-body');
+            const selected = activeFilters.columnFilters[currentFilterDate] || [];
+            
+            const allOptions = [
+                { codigo: '__BLANK__', nome: 'Células em Branco (Vazio)' },
+                ...legendasList
+            ];
+
+            const filteredOptions = allOptions.filter(opt => 
+                opt.nome.toLowerCase().includes(colFilterSearchQuery) || 
+                opt.codigo.toLowerCase().includes(colFilterSearchQuery)
+            );
+
+            body.innerHTML = filteredOptions.map(opt => `
+                <div class="col-filter-option" onclick="toggleColumnFilterStatus('${opt.codigo}')">
+                    <input type="checkbox" ${selected.includes(opt.codigo) ? 'checked' : ''} onclick="event.stopPropagation(); toggleColumnFilterStatus('${opt.codigo}')">
+                    <span>${opt.nome} ${opt.codigo !== '__BLANK__' ? `(${opt.codigo})` : ''}</span>
+                </div>
+            `).join('');
+            
+            // Update Check All state
+            const checkAll = document.getElementById('col-filter-check-all');
+            const totalOptions = allOptions.length;
+            checkAll.checked = selected.length === totalOptions && totalOptions > 0;
+            checkAll.indeterminate = selected.length > 0 && selected.length < totalOptions;
+        }
+
+        function toggleColumnFilterStatus(status) {
+            if (!activeFilters.columnFilters[currentFilterDate]) {
+                activeFilters.columnFilters[currentFilterDate] = [];
+            }
+            
+            const list = activeFilters.columnFilters[currentFilterDate];
+            const index = list.indexOf(status);
+            
+            if (index > -1) {
+                list.splice(index, 1);
+            } else {
+                list.push(status);
+            }
+            
+            if (list.length === 0) delete activeFilters.columnFilters[currentFilterDate];
+            
+            renderColumnFilterOptions();
+            renderGrid();
+        }
+
+        // Fecha o dropdown ao clicar fora
+        document.addEventListener('mousedown', (e) => {
+            const dropdown = document.getElementById('col-filter-dropdown');
+            if (dropdown && dropdown.style.display === 'block' && !dropdown.contains(e.target)) {
+                const isBtn = e.target.closest('.column-filter-btn');
+                if (!isBtn) dropdown.style.display = 'none';
+            }
+        });
 
         function openStatusSelector(e, cell) {
             if (cell.classList.contains('not-working')) return;
@@ -2432,17 +2755,46 @@
             } catch (err) { console.error('Erro ao salvar:', err); }
         }
 
-        function exportFullGrid() {
+        async function exportFullGrid() {
             try {
                 if (staffList.length === 0) {
                     Swal.fire('Aviso', 'Nenhum colaborador carregado para exportar.', 'info');
                     return;
                 }
 
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth();
-                const start = new Date(year, month, 21);
-                const end = new Date(year, month + 1, 20);
+                Swal.fire({
+                    title: 'Gerando Excel...',
+                    text: 'Processando dados da grade',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading(),
+                    background: getSwalTheme().background,
+                    color: getSwalTheme().color
+                });
+
+                const start = new Date(currentDate);
+                const end = new Date(start);
+                end.setMonth(end.getMonth() + 1);
+                end.setDate(20);
+
+                const startDateStr = start.toISOString().split('T')[0];
+                const endDateStr = end.toISOString().split('T')[0];
+
+                // Re-fetch attendance data to ensure we have everything for the export
+                let records = [];
+                let fromR = 0, stepR = 999, hasMoreR = true;
+                while(hasMoreR) {
+                    const { data } = await window.supabase
+                        .from('tb_assiduidade')
+                        .select('*')
+                        .gte('date', startDateStr)
+                        .lte('date', endDateStr)
+                        .range(fromR, fromR + stepR);
+                    if (data && data.length > 0) { records = records.concat(data); fromR += stepR + 1; }
+                    if (!data || data.length <= stepR) hasMoreR = false;
+                }
+
+                const attendanceMap = {};
+                records?.forEach(r => attendanceMap[`${r.collaborator_name}_${r.date}`] = r.status);
 
                 const days = [];
                 let temp = new Date(start);
@@ -2452,49 +2804,63 @@
                 }
 
                 // Build header row
-                const header = ['Colaborador', 'Função'];
+                const header = ['Colaborador', 'Equipe', 'Projeto'];
                 days.forEach(d => {
                     header.push(d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0'));
                 });
                 header.push('Presenças', 'Faltas', 'Atestados', 'Abonadas');
 
-                // Collect data from the rendered table
-                const rows = document.querySelectorAll('#attendance-body tr');
+                // Apply UI filters to match the visible table
+                const filteredStaff = staffList.filter(s => {
+                    if (activeFilters.names.length > 0 && !activeFilters.names.includes(s.name)) return false;
+                    if (activeFilters.projects.length > 0 && !activeFilters.projects.includes(s.project)) return false;
+                    if (activeFilters.equipes.length > 0 && !activeFilters.equipes.includes(s.equipe)) return false;
+                    if (s.data_admissao && s.data_admissao > endDateStr) return false;
+                    if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
+                        const hasRecords = records.some(r => r.collaborator_name === s.name);
+                        if (!hasRecords) return false;
+                    }
+                    return true;
+                });
+
                 const exportData = [header];
 
-                rows.forEach(tr => {
-                    const cells = tr.querySelectorAll('td');
-                    if (cells.length < 4) return;
+                filteredStaff.forEach(person => {
+                    const row = [person.name, person.equipe, person.project];
+                    let countP = 0, countF = 0, countA = 0, countFA = 0;
 
-                    const row = [];
-                    // Name
-                    const nameEl = cells[0].querySelector('.collaborator-name');
-                    row.push(nameEl ? nameEl.textContent.trim() : cells[0].textContent.trim());
-                    // Role
-                    const roleEl = cells[1].querySelector('.collaborator-role');
-                    row.push(roleEl ? roleEl.textContent.trim() : cells[1].textContent.trim());
+                    days.forEach(dayObj => {
+                        const dateStr = getLocalDateString(dayObj);
+                        const status = attendanceMap[`${person.name}_${dateStr}`] || '';
+                        
+                        if (status === 'P') countP++;
+                        else if (status === 'FT') countF++;
+                        else if (status === 'ATT') countA++;
+                        else if (status === 'FA') countFA++;
 
-                    // Day cells (skip first 2 cols and last 4 summary cols)
-                    for (let i = 2; i < cells.length - 4; i++) {
-                        const badge = cells[i].querySelector('.status-badge');
-                        row.push(badge ? badge.textContent.trim() : '');
-                    }
+                        row.push(status);
+                    });
 
-                    // Summary cols (last 4)
-                    for (let i = cells.length - 4; i < cells.length; i++) {
-                        row.push(cells[i].textContent.trim());
-                    }
-
+                    row.push(countP, countF, countA, countFA);
                     exportData.push(row);
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(exportData);
                 const wb = XLSX.utils.book_new();
-                const sheetName = monthNames[month] + '_' + year;
+                const sheetName = monthNames[start.getMonth()] + '_' + start.getFullYear();
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
                 XLSX.writeFile(wb, 'assiduidade_' + sheetName.toLowerCase() + '.xlsx');
 
-                Swal.fire({title: 'Exportado!', text: 'Grade completa salva com sucesso.', icon: 'success', timer: 2000, showConfirmButton: false, background: getSwalTheme().background, color: getSwalTheme().color});
+                Swal.close();
+                Swal.fire({
+                    title: 'Exportado!',
+                    text: 'Grade completa salva com sucesso.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: getSwalTheme().background,
+                    color: getSwalTheme().color
+                });
             } catch (err) {
                 console.error('Erro ao exportar grade:', err);
                 Swal.fire('Erro', 'Falha ao gerar o arquivo Excel.', 'error');
