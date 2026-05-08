@@ -141,7 +141,7 @@
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
 
         th {
-            background: var(--bg-accent);
+            background: var(--bg-accent) !important;
             color: var(--text-muted);
             font-weight: 700;
             text-transform: uppercase;
@@ -150,7 +150,9 @@
             border-bottom: 1px solid var(--border);
             border-right: 1px solid var(--border);
             white-space: nowrap;
-            position: sticky; top: 0; z-index: 50;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 60; /* Acima das células do corpo */
         }
 
         td {
@@ -158,32 +160,24 @@
             border-bottom: 1px solid var(--border);
             border-right: 1px solid var(--border);
             white-space: nowrap; height: 46px;
-            transition: var(--transition);
             background: var(--bg-card);
         }
 
         .sticky-col {
             position: sticky; left: 0;
             background: var(--bg-card) !important;
-            z-index: 35;
+            z-index: 40;
             border-right: 1px solid var(--border) !important;
-            width: 180px; min-width: 180px; max-width: 180px;
-            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+            width: 280px; min-width: 280px; max-width: 280px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
         }
 
-        .sticky-equipe {
-            background: var(--bg-card) !important;
-            border-right: 1px solid var(--border) !important;
-            width: 140px; min-width: 140px; max-width: 140px;
+        thead th.sticky-col { 
+            z-index: 100 !important; 
+            top: 0; left: 0; 
+            position: sticky; 
+            background: var(--bg-accent) !important; 
         }
-
-        .sticky-role {
-            background: var(--bg-card) !important;
-            border-right: 1px solid var(--border) !important;
-            width: 140px; min-width: 140px; max-width: 140px;
-        }
-
-        thead th.sticky-col { z-index: 70 !important; top: 0; left: 0; position: sticky; background: var(--bg-accent) !important; }
 
         .day-cell { text-align: center; width: 42px; min-width: 42px; cursor: pointer !important; }
         .day-cell.weekend { background: rgba(0, 0, 0, 0.15) !important; }
@@ -230,15 +224,20 @@
             width: 44px; min-width: 44px;
             color: var(--primary); 
             position: sticky; 
-            z-index: 25; 
+            z-index: 40; 
             border-left: 1px solid var(--border) !important;
-            box-shadow: -4px 0 10px rgba(0,0,0,0.05);
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
         }
         .summary-col:nth-last-child(1) { right: 0; }
         .summary-col:nth-last-child(2) { right: 44px; }
         .summary-col:nth-last-child(3) { right: 88px; }
         .summary-col:nth-last-child(4) { right: 132px; }
-        thead th.summary-col { z-index: 46; background: var(--bg-accent) !important; }
+        
+        thead th.summary-col { 
+            z-index: 100; 
+            top: 0; 
+            background: var(--bg-accent) !important; 
+        }
 
         .day-header { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; }
         .day-header span:first-child { font-size: 14px; font-weight: 800; color: var(--text-main); }
@@ -656,8 +655,7 @@
         }
         /* Modern KPI Cards */
         .summary-kpi {
-            background: rgba(255, 255, 255, 0.03) !important;
-            backdrop-filter: blur(10px);
+            background: var(--bg-card) !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
             border-radius: 20px !important;
             padding: 20px !important;
@@ -737,13 +735,13 @@
                     Inserir Feriado
                 </button>
 
-                <button class="sync-btn" id="btn-manage-staff" style="background: var(--bg-accent); border: 1px solid var(--border);">
+                <button class="sync-btn" id="btn-manage-staff" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
                     Gerenciar Equipe
                 </button>
 
-                <button class="sync-btn" id="btn-manage-legends" style="background: var(--bg-accent); border: 1px solid var(--border);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></svg>
+                <button class="sync-btn" id="btn-manage-legends" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
                     Gerenciar Legendas
                 </button>
             </div>

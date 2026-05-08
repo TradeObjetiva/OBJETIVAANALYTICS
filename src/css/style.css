@@ -16,6 +16,7 @@
     --bg-card: #121216;
     --bg-nav: rgba(18, 18, 22, 0.85);
     --bg-accent: #1c1c24;
+    --bg-tabs: rgba(0, 0, 0, 0.25);
 
     --text-main: #ffffff;
     --text-muted: #a1a1aa;
@@ -50,6 +51,7 @@
     --bg-card: #ffffff;
     --bg-nav: rgba(255, 255, 255, 0.85);
     --bg-accent: #f1f5f9;
+    --bg-tabs: #e2e8f0;
 
     --text-main: #0f172a;
     --text-muted: #475569;
@@ -159,7 +161,7 @@ body {
 .tabs {
     display: flex;
     gap: 8px;
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--bg-tabs);
     padding: 6px;
     border-radius: 16px;
     overflow-x: auto;
