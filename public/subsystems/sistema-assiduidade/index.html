@@ -1967,11 +1967,18 @@
             let queryError = null;
 
             while(hasMoreO) {
+                const filterStart = startInput.value;
+                const filterEnd = endInput.value;
+                
+                // Fetch a wider range (30 days before and after) to catch overlapping events
+                const wideStart = new Date(new Date(filterStart).getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const wideEnd = new Date(new Date(filterEnd).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
                 let query = window.supabase
                     .from('tb_assiduidade')
                     .select('*')
-                    .gte('date', startInput.value)
-                    .lte('date', endInput.value)
+                    .gte('date', wideStart)
+                    .lte('date', wideEnd)
                     .not('status', 'eq', 'P')
                     .not('status', 'is', null)
                     .not('observation', 'eq', 'Feriado Geral');
@@ -2015,11 +2022,13 @@
                 const last = groups[groups.length - 1];
                 const dateObj = new Date(rec.date + 'T12:00:00');
                 const dateFmt = dateObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+                const isWithinFilter = rec.date >= filterStart && rec.date <= filterEnd;
 
                 if (last && last.collaborator_name === rec.collaborator_name && last.status === rec.status && last.observation === rec.observation) {
                     last.endDate = dateFmt;
                     last.count++;
                     last.ids.push(rec.id);
+                    if (isWithinFilter) last.hasInFilterRecord = true;
                 } else {
                     groups.push({
                         ids: [rec.id],
@@ -2030,14 +2039,26 @@
                         certificate_url: rec.certificate_url,
                         startDate: dateFmt,
                         endDate: dateFmt,
-                        count: 1
+                        count: 1,
+                        hasInFilterRecord: isWithinFilter
                     });
                 }
             });
 
-            currentObsGroups = groups;
+            // Filtra para mostrar apenas grupos que tocam o período selecionado
+            const filteredGroups = groups.filter(g => g.hasInFilterRecord);
+            currentObsGroups = filteredGroups;
 
-            groups.forEach(row => {
+            if (filteredGroups.length === 0) {
+                observationsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
+                        Nenhuma observação ou afastamento registrado para este período específico.
+                    </div>
+                `;
+                return;
+            }
+
+            filteredGroups.forEach(row => {
                 const rangeStr = row.count > 1 ? `${row.startDate} - ${row.endDate}` : row.startDate;
                 const statusName = row.statusName;
                 const div = document.createElement('div');
