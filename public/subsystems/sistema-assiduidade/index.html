@@ -45,6 +45,7 @@
             max-width: 100%;
             margin: 0 auto;
             animation: fadeIn 0.5s ease-out;
+            background: transparent;
         }
 
         @keyframes fadeIn {
@@ -127,17 +128,15 @@
         .sync-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
         .table-wrapper {
-            background: var(--bg-card);
+            background: transparent;
             border-radius: 16px;
-            border: 1px solid var(--border);
             overflow: auto;
             max-height: calc(100vh - 220px);
             position: relative;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
         }
 
         .table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
-        .table-wrapper::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 10px; }
+        .table-wrapper::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.2); border-radius: 10px; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
 
@@ -160,6 +159,7 @@
             border-right: 1px solid var(--border);
             white-space: nowrap; height: 46px;
             transition: var(--transition);
+            background: var(--bg-card);
         }
 
         .sticky-col {
@@ -654,6 +654,25 @@
         .swal2-html-container {
             overflow-x: hidden !important; /* Remove barra horizontal */
         }
+        /* Modern KPI Cards */
+        .summary-kpi {
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
+            padding: 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 16px !important;
+            transition: var(--transition);
+        }
+        .summary-kpi:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
     </style>
 </head>
 <body>
@@ -755,7 +774,7 @@
 
         <!-- Summary Cards -->
         <div id="summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
-            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+            <div class="summary-kpi">
                 <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
@@ -764,7 +783,7 @@
                     <div id="kpi-staff-count" style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">--</div>
                 </div>
             </div>
-            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+            <div class="summary-kpi">
                 <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 </div>
@@ -773,7 +792,7 @@
                     <div id="kpi-presence-rate" style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">--%</div>
                 </div>
             </div>
-            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+            <div class="summary-kpi">
                 <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </div>
@@ -782,7 +801,7 @@
                     <div id="kpi-absence-count" style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">--</div>
                 </div>
             </div>
-            <div class="summary-kpi" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+            <div class="summary-kpi">
                 <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 </div>
@@ -803,12 +822,11 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="grid-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             </div>
                         </th>
-                        <th class="sticky-equipe">Equipe</th>
-                        <th class="sticky-role">Projeto</th>
+                        <!-- Equipe e Projeto ocultos na UI, mas mantidos no objeto de dados -->
                         <!-- Days will be injected here -->
                         <th class="summary-col" title="Presença">P</th>
                         <th class="summary-col" title="Falta">F</th>
-                        <th class="summary-col" title="Atestado">A</th>
+                        <th class="summary-col" title="Atestado (ATT + ATH)">A</th>
                         <th class="summary-col" title="Abonada">FA</th>
                     </tr>
                 </thead>
@@ -1397,7 +1415,9 @@
 
             monthDisplay.textContent = `${start.getDate()} ${monthNames[start.getMonth()].slice(0,3)} - ${end.getDate()} ${monthNames[end.getMonth()].slice(0,3)}`;
 
-            while (headerRow.cells.length > 7) headerRow.deleteCell(3);
+            // Limpa dias antigos mantendo as colunas fixas e sumários
+            // Colunas fixas agora: Colaborador (1) + Sumários (4) = 5 colunas fixas.
+            while (headerRow.cells.length > 5) headerRow.deleteCell(1);
 
             const days = [];
             let temp = new Date(start);
@@ -1511,16 +1531,8 @@
                 tdName.innerHTML = `<div class="collaborator-name" title="${person.name}">${person.name}</div>`;
                 tr.appendChild(tdName);
 
-                const tdEquipe = document.createElement('td');
-                tdEquipe.className = 'sticky-equipe';
-                tdEquipe.innerHTML = `<div class="collaborator-role" title="${person.equipe}">${person.equipe}</div>`;
-                tr.appendChild(tdEquipe);
-
-                const tdProject = document.createElement('td');
-                tdProject.className = 'sticky-role';
-                tdProject.innerHTML = `<div class="collaborator-role" title="${person.project}">${person.project}</div>`;
-                tr.appendChild(tdProject);
-
+                // Equipe e Projeto ocultos na UI conforme solicitação
+                
                 let countP = 0, countF = 0, countA = 0, countFA = 0;
                 
                 days.forEach(dayObj => {
@@ -1529,7 +1541,7 @@
                     
                     if (status === 'P') countP++;
                     else if (status === 'FT') countF++;
-                    else if (status === 'ATT') countA++;
+                    else if (status === 'ATT' || status === 'ATH') countA++;
                     else if (status === 'FA') countFA++;
 
                     const isWorkingDay = person.schedule[dayObj.getDay()];
@@ -1610,7 +1622,7 @@
 
                     // Contadores de apoio
                     if (status === 'FT') totalFT++;
-                    if (status === 'ATT') totalATT++;
+                    if (status === 'ATT' || status === 'ATH') totalATT++;
                     if (status === 'FE') totalFE++;
                 });
             });
@@ -2211,23 +2223,31 @@
         }
 
         async function toggleGridSearch() {
+            const names = [...new Set(staffList.map(s => s.name))].sort();
             const theme = getSwalTheme();
-            const names = staffList.map(s => s.name).sort();
+            const icon = document.getElementById('grid-search-icon');
             
             const { value: selectedNames } = await Swal.fire({
                 title: 'Filtrar Colaboradores',
                 html: `
-                    <div style="text-align: left; max-height: 300px; overflow-y: auto; padding: 10px; background: ${theme.inputBg}; border-radius: 12px;">
-                        <div style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="swal-all-names" onchange="document.querySelectorAll('.swal-name-check').forEach(c => c.checked = this.checked)" style="width:18px; height:18px;">
-                            <label for="swal-all-names" style="font-weight: 800; cursor: pointer;">SELECIONAR TODOS</label>
-                        </div>
-                        ${names.map(name => `
-                            <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                                <input type="checkbox" class="swal-name-check" value="${name}" ${activeFilters.names.includes(name) ? 'checked' : ''} style="width:16px; height:16px;">
-                                <label style="cursor: pointer;">${name}</label>
+                    <div style="text-align: left; padding: 10px;">
+                        <input type="text" id="swal-name-search" placeholder="Pesquisar colaborador..." style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" oninput="filterSwalNames(this.value)">
+                        <div id="swal-name-list" style="max-height: 350px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; padding: 12px; background: ${theme.inputBg};">
+                            <div style="margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid ${theme.inputBorder};">
+                                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 800;">
+                                    <input type="checkbox" id="swal-name-all" style="width: 18px; height: 18px;" onchange="toggleSwalNames(this.checked)">
+                                    SELECIONAR TODOS
+                                </label>
                             </div>
-                        `).join('')}
+                            <div id="names-container">
+                                ${names.map(name => `
+                                    <div class="swal-name-item" style="margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+                                        <input type="checkbox" class="swal-name-check" value="${name}" ${activeFilters.names.includes(name) ? 'checked' : ''} style="width:16px; height:16px;">
+                                        <label style="font-size: 13px; cursor: pointer;">${name}</label>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
                     </div>
                 `,
                 showCancelButton: true,
@@ -2235,18 +2255,31 @@
                 cancelButtonText: 'Limpar',
                 background: theme.background,
                 color: theme.color,
+                didOpen: () => {
+                    window.filterSwalNames = (query) => {
+                        const q = query.toLowerCase();
+                        const items = document.querySelectorAll('.swal-name-item');
+                        items.forEach(item => {
+                            const name = item.querySelector('label').textContent.toLowerCase();
+                            item.style.display = name.includes(q) ? 'flex' : 'none';
+                        });
+                    };
+                    window.toggleSwalNames = (checked) => {
+                        document.querySelectorAll('.swal-name-check').forEach(cb => {
+                            if (cb.parentElement.style.display !== 'none') cb.checked = checked;
+                        });
+                    };
+                },
                 preConfirm: () => {
-                    const checks = document.querySelectorAll('.swal-name-check:checked');
-                    return Array.from(checks).map(c => c.value);
+                    return Array.from(document.querySelectorAll('.swal-name-check:checked')).map(cb => cb.value);
                 }
             });
 
             if (selectedNames !== undefined) {
                 activeFilters.names = selectedNames;
-                const icon = document.getElementById('grid-search-icon');
+                renderGrid();
                 if (activeFilters.names.length > 0) icon.style.color = '#4F46E5';
                 else icon.style.color = 'currentColor';
-                renderGrid();
             }
         }
 
@@ -3110,7 +3143,7 @@
                         
                         if (status === 'P') countP++;
                         else if (status === 'FT') countF++;
-                        else if (status === 'ATT') countA++;
+                        else if (status === 'ATT' || status === 'ATH') countA++;
                         else if (status === 'FA') countFA++;
 
                         row.push(status);
