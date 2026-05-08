@@ -225,13 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = { ...window.app, showToast };
 
     // --- Event Listeners ---
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-target')));
-    });
-
-    mobileBtns.forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-target')));
-    });
+    // Navigation handled by hashchange listener in init()
 
     themeToggle.addEventListener('click', () => {
         applyTheme(state.theme === 'dark' ? 'light' : 'dark');
