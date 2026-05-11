@@ -2812,102 +2812,91 @@
 
                     if (status && status !== 'P') {
                         const theme = getSwalTheme();
+                        const isATH = status === 'ATH';
+                        const isCertificate = status === 'ATT' || isATH;
                         
-                        // Lógica Especial para Atestado de Horas (ATH)
-                        if (status === 'ATH') {
-                            const { value: type } = await Swal.fire({
-                                title: 'Atestado de Horas',
-                                text: 'Selecione o período ou insira as horas:',
-                                icon: 'question',
-                                input: 'radio',
-                                inputOptions: {
-                                    'matutino': 'Matutino',
-                                    'vespertino': 'Vespertino',
-                                    'horas': 'Inserir Horas Específicas'
-                                },
-                                inputValidator: (value) => {
-                                    if (!value) return 'Você precisa escolher uma opção!';
-                                },
-                                showCancelButton: true,
-                                confirmButtonText: 'Próximo',
-                                background: theme.background,
-                                color: theme.color
-                            });
-
-                            if (!type) return;
-
-                            if (type === 'horas') {
-                                const { value: hours } = await Swal.fire({
-                                    title: 'Inserir Horas',
-                                    input: 'text',
-                                    inputLabel: 'Ex: 2 horas, 08:00 às 10:00, etc.',
-                                    showCancelButton: true,
-                                    background: theme.background,
-                                    color: theme.color
-                                });
-                                if (!hours) return;
-                                observation = `Atestado de Horas - ${hours}`;
-                            } else {
-                                observation = `Atestado de Horas - ${type === 'matutino' ? 'Matutino' : 'Vespertino'}`;
-                            }
-                        } else {
-                            // Comportamento padrão para outras legendas
-                            const isCertificate = status === 'ATT' || status === 'ATH';
-                            const { value: formValues } = await Swal.fire({
-                                title: `Detalhes: ${getStatusName(status)}`,
-                                html: `
-                                    <div style="text-align: left; font-size: 14px;">
-                                        <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Observação:</label>
-                                        <input id="swal-obs" class="swal2-input" style="margin: 0 0 15px 0; width: 100%; border-radius:12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Ex: Gripe, Viagem, etc.">
-                                        <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Duração (dias):</label>
-                                        <input id="swal-days" type="number" value="1" min="1" class="swal2-input" style="margin: 0 ${isCertificate ? '0 15px 0' : ''}; width: 100%; border-radius:12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
-                                        
-                                        ${isCertificate ? `
-                                        <label style="display:block; margin-top: 15px; margin-bottom: 5px; color: var(--text-muted);">Atestado Médico (PDF ou Imagem):</label>
-                                        <div id="drop-zone-new" class="upload-drop-zone">
-                                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                            <p>Arraste o arquivo aqui ou clique para selecionar</p>
-                                            <input type="file" id="swal-file" accept="image/*,.pdf">
-                                        </div>
-                                        ` : ''}
+                        const { value: formValues } = await Swal.fire({
+                            title: `Detalhes: ${getStatusName(status)}`,
+                            html: `
+                                <div style="text-align: left; font-size: 14px;">
+                                    <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Observação:</label>
+                                    <input id="swal-obs" class="swal2-input" style="margin: 0 0 15px 0; width: 100%; border-radius:12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};" placeholder="Ex: Gripe, Consulta, etc.">
+                                    
+                                    ${isATH ? `
+                                    <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Período / Quantidade de Horas:</label>
+                                    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                                        <select id="swal-ath-type" class="swal2-select" style="margin: 0; flex: 1; height: 45px; border-radius: 12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                                            <option value="Matutino">Matutino</option>
+                                            <option value="Vespertino">Vespertino</option>
+                                            <option value="Custom">Horas Específicas</option>
+                                        </select>
+                                        <input id="swal-hours" class="swal2-input" style="margin: 0; flex: 1; height: 45px; display: none;" placeholder="Ex: 2 horas, 08:00-10:00">
                                     </div>
-                                `,
-                                didOpen: () => {
-                                    if (isCertificate) {
-                                        initDragAndDrop('drop-zone-new', 'swal-file');
-                                    }
-                                },
-                                focusConfirm: false,
-                                showCancelButton: true,
-                                confirmButtonText: 'Salvar',
-                                cancelButtonText: 'Cancelar',
-                                background: theme.background,
-                                color: theme.color,
-                                preConfirm: async () => {
-                                    const obs = document.getElementById('swal-obs').value;
-                                    const days = parseInt(document.getElementById('swal-days').value) || 1;
-                                    const fileInput = document.getElementById('swal-file');
-                                    let certificate_url = null;
+                                    ` : ''}
 
-                                    if (fileInput && fileInput.files.length > 0) {
-                                        try {
-                                            Swal.showLoading();
-                                            certificate_url = await uploadCertificate(fileInput.files[0]);
-                                        } catch (err) {
-                                            Swal.showValidationMessage(`Erro no upload: ${err.message}`);
-                                            return false;
-                                        }
-                                    }
-
-                                    return { obs, days, certificate_url };
+                                    <label style="display:block; margin-bottom: 5px; color: var(--text-muted);">Duração (dias):</label>
+                                    <input id="swal-days" type="number" value="1" min="1" class="swal2-input" style="margin: 0 0 15px 0; width: 100%; border-radius:12px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder};">
+                                    
+                                    ${isCertificate ? `
+                                    <label style="display:block; margin-top: 15px; margin-bottom: 5px; color: var(--text-muted);">Arquivo do Atestado (PDF ou Imagem):</label>
+                                    <div id="drop-zone-new" class="upload-drop-zone">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                        <p>Arraste o arquivo aqui ou clique para selecionar</p>
+                                        <input type="file" id="swal-file" accept="image/*,.pdf">
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            `,
+                            didOpen: () => {
+                                if (isCertificate) {
+                                    initDragAndDrop('drop-zone-new', 'swal-file');
                                 }
-                            });
+                                if (isATH) {
+                                    const typeSelect = document.getElementById('swal-ath-type');
+                                    const hoursInput = document.getElementById('swal-hours');
+                                    typeSelect.onchange = (e) => {
+                                        hoursInput.style.display = e.target.value === 'Custom' ? 'block' : 'none';
+                                    };
+                                }
+                            },
+                            focusConfirm: false,
+                            showCancelButton: true,
+                            confirmButtonText: 'Salvar',
+                            cancelButtonText: 'Cancelar',
+                            background: theme.background,
+                            color: theme.color,
+                            preConfirm: async () => {
+                                const obs = document.getElementById('swal-obs').value;
+                                const days = parseInt(document.getElementById('swal-days').value) || 1;
+                                const fileInput = document.getElementById('swal-file');
+                                let certificate_url = null;
 
-                            if (!formValues) return;
-                            observation = formValues.obs;
-                            days = formValues.days;
-                            certificate_url = formValues.certificate_url;
-                        }
+                                let finalObs = obs;
+                                if (isATH) {
+                                    const type = document.getElementById('swal-ath-type').value;
+                                    const hours = document.getElementById('swal-hours').value;
+                                    const athValue = type === 'Custom' ? hours : type;
+                                    finalObs = `Atestado de Horas - ${athValue}${obs ? ' (' + obs + ')' : ''}`;
+                                }
+
+                                if (fileInput && fileInput.files.length > 0) {
+                                    try {
+                                        Swal.showLoading();
+                                        certificate_url = await uploadCertificate(fileInput.files[0]);
+                                    } catch (err) {
+                                        Swal.showValidationMessage(`Erro no upload: ${err.message}`);
+                                        return false;
+                                    }
+                                }
+
+                                return { obs: finalObs, days, certificate_url };
+                            }
+                        });
+
+                        if (!formValues) return;
+                        observation = formValues.obs;
+                        days = formValues.days;
+                        certificate_url = formValues.certificate_url;
                     }
 
                     const baseDate = new Date(date + 'T12:00:00');
