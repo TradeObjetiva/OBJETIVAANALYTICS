@@ -1197,18 +1197,30 @@
             }
 
             if (!error && data) {
-                let mappedStaff = data.map(item => ({ 
-                    name: item.nome, 
-                    role: item.cargo || 'PROMOTOR',
-                    project: item.projeto || 'GERAL',
-                    equipe: item.equipe || 'GERAL',
-                    ativo: item.ativo !== false,
-                    data_admissao: item.data_admissao || null,
-                    data_desativacao: item.data_desativacao || null,
-                    schedule: {
-                        0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
-                    }
-                }));
+                let mappedStaff = data.map(item => {
+                    // Normaliza datas para ISO YYYY-MM-DD para garantir comparabilidade
+                    const normalizeDate = (d) => {
+                        if (!d) return null;
+                        if (d.includes('/')) {
+                            const p = d.split('/');
+                            if (p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                        }
+                        return d.split('T')[0];
+                    };
+
+                    return { 
+                        name: item.nome, 
+                        role: item.cargo || 'PROMOTOR',
+                        project: item.projeto || 'GERAL',
+                        equipe: item.equipe || 'GERAL',
+                        ativo: item.ativo !== false,
+                        data_admissao: normalizeDate(item.data_admissao),
+                        data_desativacao: normalizeDate(item.data_desativacao),
+                        schedule: {
+                            0: item.dom, 1: item.seg, 2: item.ter, 3: item.qua, 4: item.qui, 5: item.sex, 6: item.sab
+                        }
+                    };
+                });
 
                 // Apply Project Restriction
                 if (!isMaster && allowedProjects.length > 0) {
@@ -1304,6 +1316,22 @@
             const m = (date.getMonth() + 1).toString().padStart(2, '0');
             const d = date.getDate().toString().padStart(2, '0');
             return `${y}-${m}-${d}`;
+        }
+
+        // Função para formatar data para exibição BR (DD/MM/YYYY) sem erro de fuso
+        function formatDateBR(dateStr) {
+            if (!dateStr) return 'Não inf.';
+            try {
+                // Se já estiver no formato BR, apenas retorna
+                if (dateStr.includes('/') && dateStr.split('/').length === 3) return dateStr;
+                
+                // Se for ISO (YYYY-MM-DD), divide e rearranja
+                const parts = dateStr.split('T')[0].split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+                return dateStr;
+            } catch (e) { return dateStr; }
         }
 
         function timeToSeconds(value) {
@@ -2608,7 +2636,7 @@
                                     : '<button onclick="reactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Reativar</button>';
 
                                 return '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);' + (!isAtivo ? ' opacity: 0.6;' : '') + '">'
-                                    + '<td style="padding: 8px;">' + s.nome + '<br><small style="color:var(--text-dim)">Adm: ' + (s.data_admissao || 'Não inf.') + '</small></td>'
+                                    + '<td style="padding: 8px;">' + s.nome + '<br><small style="color:var(--text-dim)">Adm: ' + formatDateBR(s.data_admissao) + '</small></td>'
                                     + '<td style="padding: 8px; color: var(--text-muted);">' + (s.projeto || '-') + '</td>'
                                     + '<td style="padding: 8px; text-align: center;">' + statusHtml + '</td>'
                                     + '<td style="padding: 8px; text-align: right; white-space: nowrap;">'
@@ -2623,11 +2651,18 @@
             };
 
             window.editStaffAdmission = async (nome, current) => {
+                // Garante que o valor inicial para o input date seja YYYY-MM-DD
+                let initialDate = current;
+                if (current && current.includes('/')) {
+                    const parts = current.split('/');
+                    initialDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+
                 const { value: date } = await Swal.fire({
                     title: 'Data de Admissão',
                     text: 'Atualizar admissão para ' + nome + ':',
                     input: 'date',
-                    inputValue: current,
+                    inputValue: initialDate,
                     showCancelButton: true,
                     background: getSwalTheme().background,
                     color: getSwalTheme().color
@@ -2641,7 +2676,7 @@
             };
 
             window.deactivateStaff = async (nome) => {
-                const today = new Date().toISOString().split('T')[0];
+                const today = getLocalDateString(new Date());
                 const { value: date } = await Swal.fire({
                     title: 'Confirmar Demissão',
                     text: 'Informe a data de demissão para ' + nome + ':',
@@ -2692,11 +2727,23 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-                        const formattedStaff = jsonData.map(row => ({
-                            nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
-                            projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase(),
-                            data_admissao: row.ADMISSAO || row.admissao || null
-                        })).filter(s => s.nome !== "");
+                        const formattedStaff = jsonData.map(row => {
+                            let adm = row.ADMISSAO || row.admissao || null;
+                            // Se for número (serial do Excel), converte para Date
+                            if (typeof adm === 'number') {
+                                const d = new Date((adm - 25569) * 86400 * 1000);
+                                adm = getLocalDateString(d);
+                            } else if (adm instanceof Date) {
+                                adm = getLocalDateString(adm);
+                            }
+
+                            return {
+                                nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
+                                projeto: (row.PROJETO || row.projeto || row.FUNCAO || row.funcao || "PROMOTOR").toString().trim().toUpperCase(),
+                                data_admissao: adm
+                            };
+                        }).filter(s => s.nome !== "");
+                        
                         if (formattedStaff.length === 0) throw new Error("Nenhum dado válido encontrado. Use as colunas NOME e PROJETO.");
                         const { error } = await window.supabase.from('tb_colaboradores').upsert(formattedStaff, { onConflict: 'nome' });
                         if (error) throw error;

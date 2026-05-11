@@ -1094,6 +1094,17 @@ document.addEventListener('DOMContentLoaded', () => {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
                    </button>`;
 
+            // Função segura para formatar data ISO (YYYY-MM-DD) para BR (DD/MM/YYYY)
+            const formatDateSafe = (dateStr) => {
+                if (!dateStr) return null;
+                const parts = dateStr.split('T')[0].split('-');
+                if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                return dateStr;
+            };
+
+            const admFmt = formatDateSafe(s.data_admissao);
+            const demFmt = formatDateSafe(s.data_desativacao);
+
             return `
                 <tr style="height: 70px; ${!isAtivo ? 'opacity: 0.6;' : ''}">
                     <td>
@@ -1104,8 +1115,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div>
                                 <strong style="font-size: 14px; letter-spacing: -0.2px;">${s.nome}</strong>
                                 <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
-                                    ${s.data_admissao ? 'Adm: ' + new Date(s.data_admissao).toLocaleDateString('pt-BR') : 'Sem data adm.'}
-                                    ${s.data_desativacao ? ' | Dem: ' + new Date(s.data_desativacao).toLocaleDateString('pt-BR') : ''}
+                                    ${admFmt ? 'Adm: ' + admFmt : 'Sem data adm.'}
+                                    ${demFmt ? ' | Dem: ' + demFmt : ''}
                                 </div>
                             </div>
                         </div>
