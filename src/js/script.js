@@ -622,15 +622,15 @@ document.addEventListener('DOMContentLoaded', () => {
             item.className = 'checkin-row';
             
             item.innerHTML = `
-                <div class="col-promotor">
-                    ${avatarHtml}
-                    <div class="name">${agentName}</div>
-                </div>
-                <div class="col-pdv">${checkinData.clientId || 'Visita Técnica'}</div>
-                <div class="col-data">${dateFormatted}</div>
-                <div class="col-hora">${timeFormatted}</div>
                 <div class="col-foto">
                     ${agentPhoto ? `<img src="${agentPhoto}" class="checkin-photo-thumb" onclick="window.open('${agentPhoto}', '_blank')">` : '<span style="color:var(--text-dim); font-size:11px;">Sem Foto</span>'}
+                </div>
+                <div class="checkin-content">
+                    <div class="col-promotor">
+                        <div class="name">${agentName}</div>
+                    </div>
+                    <div class="col-pdv">${checkinData.clientId || 'Visita Técnica'}</div>
+                    <div class="col-hora">${timeFormatted}</div>
                 </div>
                 <div class="col-actions">
                     <div class="action-icon-btn">

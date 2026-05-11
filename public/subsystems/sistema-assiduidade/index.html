@@ -2069,9 +2069,12 @@
                     last.ids.push(rec.id);
                     if (isWithinFilter) last.hasInFilterRecord = true;
                 } else {
+                    const person = staffList.find(s => s.name === rec.collaborator_name);
                     groups.push({
                         ids: [rec.id],
                         collaborator_name: rec.collaborator_name,
+                        project: person ? person.project : 'N/A',
+                        equipe: person ? person.equipe : 'N/A',
                         status: rec.status,
                         statusName: getStatusName(rec.status),
                         observation: rec.observation || 'Sem observação',
@@ -2260,6 +2263,8 @@
 
                 const data = currentObsGroups.map(row => ({
                     'Colaborador': row.collaborator_name,
+                    'Equipe': row.equipe,
+                    'Projeto': row.project,
                     'Período': row.count > 1 ? `${row.startDate} - ${row.endDate}` : row.startDate,
                     'Status': row.statusName,
                     'Duração': `${row.count} dia(s)`,
