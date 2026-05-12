@@ -6,6 +6,8 @@
     <title>Controle de Assiduidade - Objetiva Analytics</title>
     <link rel="stylesheet" href="../../style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -766,6 +768,10 @@
                 </button>
                 <button class="sync-btn" id="btn-start-reconcile" style="background: #10b981; display: none;">
                     Iniciar Conciliação
+                </button>
+                <button class="sync-btn" id="btn-export-pdf" style="background: #ef4444; display: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Exportar PDF (Folhas)
                 </button>
             </div>
         </div>
@@ -2365,11 +2371,14 @@
             const startReconcileBtn = document.getElementById('btn-start-reconcile');
             
             reconcileInput.addEventListener('change', (e) => {
+                const exportPdfBtn = document.getElementById('btn-export-pdf');
                 if (e.target.files.length > 0) {
                     startReconcileBtn.style.display = 'flex';
-                    startReconcileBtn.textContent = `Conciliar ${e.target.files[0].name}`;
+                    startReconcileBtn.textContent = `Excel: ${e.target.files[0].name}`;
+                    exportPdfBtn.style.display = 'flex';
                 } else {
                     startReconcileBtn.style.display = 'none';
+                    exportPdfBtn.style.display = 'none';
                 }
             });
 
@@ -2557,6 +2566,256 @@
                 } finally {
                     reconcileInput.value = '';
                     startReconcileBtn.style.display = 'none';
+                    document.getElementById('btn-export-pdf').style.display = 'none';
+                }
+            };
+
+            document.getElementById('btn-export-pdf').onclick = async () => {
+                const file = reconcileInput.files[0];
+                if (!file) return;
+
+                Swal.fire({
+                    title: 'Gerando PDF Fiel ao Excel',
+                    text: 'Replicando layout e processando dados...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = new ExcelJS.Workbook();
+                    await workbook.xlsx.load(arrayBuffer);
+                    
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    const startDateStr = getLocalDateString(new Date(year, month, 21));
+                    const endDateStr = getLocalDateString(new Date(year, month + 1, 20));
+
+                    const { data: allAttendance, error } = await window.supabase
+                        .from('tb_assiduidade')
+                        .select('*')
+                        .gte('date', startDateStr)
+                        .lte('date', endDateStr);
+
+                    if (error) throw error;
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber todas as colunas
+                    let sheetIndex = 0;
+
+                    const blueHeader = [22, 53, 90]; // Azul escuro da imagem
+                    const lightBlue = [217, 226, 243]; // Azul clarinho das células de título
+
+                    workbook.eachSheet((worksheet, sheetId) => {
+                        if (sheetIndex > 0) doc.addPage('l', 'mm', 'a4');
+                        
+                        const collaboratorNameInSheet = worksheet.name.trim().toUpperCase();
+                        const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorNameInSheet);
+                        
+                        const collaboratorFullName = worksheet.getCell('B3').value || worksheet.name;
+                        const companyName = worksheet.getCell('B1').value || "O+ MARKETING E RECURSOS HUMANOS LTDA";
+
+                        // --- 1. CABEÇALHO EM GRADE (Fiel à Imagem) ---
+                        doc.setDrawColor(200);
+                        doc.setLineWidth(0.1);
+                        
+                        // Razão Social, CNPJ, Nome, CPF, Endereço
+                        const info = [
+                            { label: 'Razão Social:', value: worksheet.getCell('B1').value || "O+ Marketing e Recursos Humanos Ltda" },
+                            { label: 'CNPJ:', value: worksheet.getCell('B2').value || "53751253000163" },
+                            { label: 'Nome:', value: worksheet.getCell('B3').value || worksheet.name },
+                            { label: 'CPF:', value: worksheet.getCell('B4').value || "" },
+                            { label: 'Endereço:', value: worksheet.getCell('B5').value || "" }
+                        ];
+
+                        let headerY = 10;
+                        doc.setFontSize(8);
+                        doc.setFont('Inter', 'bold');
+                        
+                        // Desenhar Grid de Informações
+                        info.forEach((item, i) => {
+                            const y = headerY + (i * 6);
+                            doc.setFillColor(240, 240, 240);
+                            doc.rect(10, y, 30, 6, 'F');
+                            doc.rect(10, y, 30, 6, 'D');
+                            doc.text(item.label, 12, y + 4);
+                            
+                            doc.rect(40, y, 90, 6, 'D');
+                            doc.setFont('Inter', 'normal');
+                            doc.text(String(item.value || ""), 42, y + 4);
+                            doc.setFont('Inter', 'bold');
+                        });
+
+                        // Bloco Jornada de Trabalho (Direita)
+                        doc.setFillColor(blueHeader[0], blueHeader[1], blueHeader[2]);
+                        doc.rect(140, 10, 147, 6, 'F');
+                        doc.setTextColor(255, 255, 255);
+                        doc.text("Jornada de Trabalho", 213, 14, { align: 'center' });
+                        doc.setTextColor(0, 0, 0);
+
+                        doc.rect(140, 16, 147, 6, 'D');
+                        doc.setFont('Inter', 'normal');
+                        doc.text(String(worksheet.getCell('I2').value || "Segunda à Sexta: 08:00 às 17:00 (intervalo 01:00)"), 142, 20);
+                        doc.rect(140, 22, 147, 6, 'D');
+                        doc.text(String(worksheet.getCell('I3').value || "Sábado: 08:00 às 12:00"), 142, 26);
+                        doc.rect(140, 28, 147, 6, 'D');
+
+                        // Linha de Equipe / Período / Contrato
+                        const y6 = headerY + 30;
+                        doc.setFillColor(240, 240, 240);
+                        doc.rect(10, y6, 20, 6, 'F'); doc.rect(10, y6, 20, 6, 'D');
+                        doc.setFont('Inter', 'bold'); doc.text("Equipe:", 12, y6 + 4);
+                        doc.rect(30, y6, 45, 6, 'D'); doc.setFont('Inter', 'normal'); doc.text(String(worksheet.getCell('B6').value || ""), 32, y6 + 4);
+
+                        doc.setFillColor(240, 240, 240);
+                        doc.rect(75, y6, 25, 6, 'F'); doc.rect(75, y6, 25, 6, 'D');
+                        doc.setFont('Inter', 'bold'); doc.text("Período:", 77, y6 + 4);
+                        doc.rect(100, y6, 60, 6, 'D'); doc.setFont('Inter', 'normal'); doc.text(String(worksheet.getCell('F6').value || ""), 102, y6 + 4);
+
+                        doc.setFillColor(240, 240, 240);
+                        doc.rect(160, y6, 20, 6, 'F'); doc.rect(160, y6, 20, 6, 'D');
+                        doc.setFont('Inter', 'bold'); doc.text("Contrato:", 162, y6 + 4);
+                        doc.rect(180, y6, 40, 6, 'D'); doc.setFont('Inter', 'normal'); doc.text("Full Time", 182, y6 + 4);
+
+                        // --- 2. TABELA COM CABEÇALHO DUPLO ---
+                        const tableBody = [];
+                        let totalRowData = null;
+
+                        // Mapeamento fixo baseado na imagem (Colunas A a N)
+                        worksheet.eachRow((row, rowNumber) => {
+                            if (rowNumber < 10) return; // Dados começam geralmente na linha 10
+                            
+                            const firstCellVal = String(row.getCell(1).value || "").toUpperCase().trim();
+                            if (firstCellVal === 'TOTAL') {
+                                totalRowData = row;
+                                return;
+                            }
+
+                            const dateVal = row.getCell(1).value;
+                            if (!dateVal) return;
+
+                            let displayDate = "";
+                            let targetDateStr = "";
+                            if (dateVal instanceof Date) {
+                                displayDate = dateVal.toLocaleDateString('pt-BR');
+                                targetDateStr = getLocalDateString(dateVal);
+                            } else {
+                                displayDate = String(dateVal);
+                                if (displayDate.includes('/')) {
+                                    const parts = displayDate.split('/');
+                                    targetDateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                                }
+                            }
+
+                            // Conciliação de Observações
+                            const record = personAttendance.find(a => a.date === targetDateStr);
+                            let obs = row.getCell(14).value || ""; // Coluna N
+                            if (record && record.status !== 'P') {
+                                let statusText = record.status;
+                                if (record.observation) statusText += ` - ${record.observation}`;
+                                obs = statusText;
+                            }
+
+                            // Formatação de horários (garantir string)
+                            const getV = (col) => {
+                                const val = row.getCell(col).value;
+                                if (val instanceof Date) return val.toLocaleTimeString('pt-BR', {hour12:false});
+                                if (val && typeof val === 'object' && val.result) return val.result;
+                                return val || "";
+                            };
+
+                            tableBody.push([
+                                displayDate,               // A: Data
+                                row.getCell(2).value || "", // B: Dia
+                                getV(3),                   // C: Inicio (Exec)
+                                getV(4),                   // D: Intervalo (Exec)
+                                getV(5),                   // E: Retorno (Exec)
+                                getV(6),                   // F: Saida (Exec)
+                                getV(7),                   // G: Tempo Int (Exec)
+                                getV(8),                   // H: Total (Exec)
+                                getV(9),                   // I: Inicio (Plan)
+                                getV(10),                  // J: Saida (Plan)
+                                getV(11),                  // K: Tempo Int (Plan)
+                                getV(12),                  // L: Total (Plan)
+                                getV(13),                  // M: Dif Tempo
+                                obs                        // N: Observações
+                            ]);
+                        });
+
+                        // Adicionar linha de TOTAL
+                        if (totalRowData) {
+                            tableBody.push([
+                                { content: 'Total', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
+                                "", "", "", "", "", 
+                                totalRowData.getCell(8).value || "", // Total Exec
+                                "", "", "", 
+                                totalRowData.getCell(12).value || "", // Total Plan
+                                totalRowData.getCell(13).value || "", // Total Dif
+                                ""
+                            ]);
+                        }
+
+                        doc.autoTable({
+                            startY: y6 + 10,
+                            head: [
+                                [
+                                    { content: '', colSpan: 2 },
+                                    { content: 'Executado', colSpan: 6, styles: { halign: 'center', fillColor: [240, 240, 240] } },
+                                    { content: 'Planejado', colSpan: 4, styles: { halign: 'center', fillColor: [240, 240, 240] } },
+                                    { content: 'Diferença', colSpan: 1, styles: { halign: 'center', fillColor: [240, 240, 240] } },
+                                    { content: '', colSpan: 1 }
+                                ],
+                                [
+                                    'Data', 'Dia', 'Inicio', 'Intervalo', 'Retorno', 'Saida', 'Tempo Int.', 'Total',
+                                    'Inicio', 'Saida', 'Tempo Int.', 'Total', 'Dif. Tempo', 'Observações'
+                                ]
+                            ],
+                            body: tableBody,
+                            theme: 'grid',
+                            styles: { fontSize: 6.5, cellPadding: 1, textColor: 50, lineColor: [200, 200, 200] },
+                            headStyles: { fillColor: [255, 255, 255], textColor: 0, fontStyle: 'bold', halign: 'center', lineWidth: 0.1 },
+                            columnStyles: {
+                                0: { cellWidth: 16, halign: 'center' },
+                                1: { cellWidth: 18 },
+                                13: { cellWidth: 'auto' } // Observações expande
+                            },
+                            margin: { left: 10, right: 10, bottom: 35 }, // Margem maior para não bater nas assinaturas
+                            didDrawPage: (data) => {
+                                // Assinaturas no rodapé de cada página
+                                const pageSize = doc.internal.pageSize;
+                                const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                                const sigY = pageHeight - 15; // Ajustado para ficar mais no final
+                                
+                                doc.setFontSize(8);
+                                doc.setDrawColor(0);
+                                doc.line(40, sigY, 120, sigY);
+                                doc.text(String(collaboratorFullName).toUpperCase(), 80, sigY + 5, { align: 'center' });
+                                
+                                doc.line(170, sigY, 250, sigY);
+                                doc.text("O+ MARKETING E RECURSOS HUMANOS LTDA", 210, sigY + 5, { align: 'center' });
+                            }
+                        });
+
+                        sheetIndex++;
+                    });
+
+                    doc.save(`folhas_conciliadas_${monthNames[month]}_${year}.pdf`);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'PDF Gerado com Sucesso!',
+                        text: 'Layout idêntico ao Excel aplicado.',
+                        background: getSwalTheme().background,
+                        color: getSwalTheme().color
+                    });
+
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire('Erro ao gerar PDF', err.message, 'error');
+                } finally {
+                    reconcileInput.value = '';
+                    startReconcileBtn.style.display = 'none';
+                    document.getElementById('btn-export-pdf').style.display = 'none';
                 }
             };
 
