@@ -28,13 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeName = document.getElementById('welcome-name');
     const updateMyProfileForm = document.getElementById('update-my-profile-form');
     const pwaBanner = document.getElementById('pwa-install-banner');
-    
+
     // Mobile Sidebar Elements
     const mobileSidebar = document.getElementById('mobile-sidebar');
     const sidebarOverlay = document.getElementById('mobile-sidebar-overlay');
     const logoTrigger = document.getElementById('mobile-logo-trigger');
     const closeSidebarBtn = document.getElementById('close-sidebar');
-    
+
     let deferredPrompt;
 
     // --- Core Functions ---
@@ -83,6 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Solicitar permissão para Notificações Nativas (Windows/Chrome)
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
     };
 
     // 2. Tab Switching
@@ -222,7 +229,101 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     };
 
-    window.app = { ...window.app, showToast };
+    // 7. WhatsApp-Style Check-in Notification System
+    const showCheckinNotification = (agentName, storeName, photoUrl, timeStr) => {
+        const container = document.getElementById('checkin-notification-container');
+        if (!container) return;
+
+        // Limita a 4 notificações visíveis
+        while (container.children.length >= 4) {
+            container.firstChild.remove();
+        }
+
+        const notif = document.createElement('div');
+        notif.className = 'checkin-notification';
+
+        const avatarHtml = photoUrl
+            ? `<img src="${photoUrl}" class="checkin-notif-avatar" onerror="this.outerHTML='<div class=\\'checkin-notif-avatar-placeholder\\'>${agentName[0]}</div>'">`
+            : `<div class="checkin-notif-avatar-placeholder">${agentName[0]}</div>`;
+
+        const now = timeStr || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const storeText = storeName || 'Visita em campo';
+
+        notif.innerHTML = `
+            ${avatarHtml}
+            <div class="checkin-notif-body">
+                <div class="checkin-notif-header">
+                    <span class="checkin-notif-app-name">CHECK-IN</span>
+                    <span class="checkin-notif-time">${now}</span>
+                </div>
+                <div class="checkin-notif-name">${agentName}</div>
+                <div class="checkin-notif-message">
+                    <svg class="notif-icon-checkin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    ${storeText}
+                </div>
+            </div>
+            <button class="checkin-notif-close" onclick="event.stopPropagation(); this.closest('.checkin-notification').classList.add('dismissing'); setTimeout(() => this.closest('.checkin-notification')?.remove(), 400);">✕</button>
+            <div class="checkin-notif-progress"></div>
+        `;
+
+        // Click para ir ao dashboard
+        notif.addEventListener('click', () => {
+            if (window.app && window.app.switchTab) {
+                window.app.switchTab('home');
+            }
+            notif.classList.add('dismissing');
+            setTimeout(() => notif.remove(), 400);
+        });
+
+        container.appendChild(notif);
+
+        // Som de notificação sutil (Web Audio API)
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.3);
+        } catch (e) {
+            // Ignora erro de áudio (pode falhar antes de interação do usuário)
+        }
+
+        // --- NOTIFICAÇÃO NATIVA (WINDOWS/DESKTOP) ---
+        if ("Notification" in window && Notification.permission === "granted") {
+            try {
+                const nativeNotif = new Notification(`Check-in: ${agentName}`, {
+                    body: storeText,
+                    icon: photoUrl || 'https://cdn-icons-png.flaticon.com/512/3261/3261301.png',
+                    tag: 'checkin-alert', // Evita flood de janelas se chegarem várias
+                    silent: true // Já tocamos o som via Web Audio
+                });
+
+                nativeNotif.onclick = () => {
+                    window.focus();
+                    if (window.app && window.app.switchTab) window.app.switchTab('home');
+                    nativeNotif.close();
+                };
+            } catch (err) {
+                console.error("Erro ao disparar notificação nativa:", err);
+            }
+        }
+
+        // Auto-dismiss após 6 segundos
+        setTimeout(() => {
+            if (notif.parentElement) {
+                notif.classList.add('dismissing');
+                setTimeout(() => notif.remove(), 400);
+            }
+        }, 6000);
+    };
+
+    window.app = { ...window.app, showToast, showCheckinNotification };
 
     // --- Event Listeners ---
     // Navigation handled by hashchange listener in init()
@@ -247,10 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const btn = refreshBtn;
             const icon = btn.querySelector('svg');
             if (icon) icon.style.transform = 'rotate(360deg)';
-            
+
             // Re-run population
-            checkAuth(); 
-            
+            checkAuth();
+
             setTimeout(() => {
                 if (icon) icon.style.transform = 'rotate(0deg)';
             }, 600);
@@ -331,10 +432,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (navUsers) navUsers.classList.remove('hidden');
                 const mobileNavUsers = document.getElementById('mobile-nav-users');
                 if (mobileNavUsers) mobileNavUsers.classList.remove('hidden');
-                if(adminUploadArea) adminUploadArea.style.display = 'block';
-                if(adminQuickActions) adminQuickActions.style.display = 'flex';
+                if (adminUploadArea) adminUploadArea.style.display = 'block';
+                if (adminQuickActions) adminQuickActions.style.display = 'flex';
                 loadUsersList();
-                
+
                 tabBtns.forEach(btn => btn.classList.remove('hidden'));
                 mobileBtns.forEach(btn => btn.classList.remove('hidden'));
             } else {
@@ -342,11 +443,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (navUsers) navUsers.classList.add('hidden');
                 const mobileNavUsers = document.getElementById('mobile-nav-users');
                 if (mobileNavUsers) mobileNavUsers.classList.add('hidden');
-                if(adminUploadArea) adminUploadArea.style.display = 'none';
-                if(adminQuickActions) adminQuickActions.style.display = 'none';
-                
+                if (adminUploadArea) adminUploadArea.style.display = 'none';
+                if (adminQuickActions) adminQuickActions.style.display = 'none';
+
                 const allowedTabs = profile?.allowed_tabs || [];
-                
+
                 const enforceVisibility = (btn) => {
                     const target = btn.getAttribute('data-target');
                     if (target === 'profile') {
@@ -373,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 tabBtns.forEach(enforceVisibility);
                 mobileBtns.forEach(enforceVisibility);
-                
+
                 if (state.activeTab !== 'profile' && state.activeTab !== 'home' && allowedTabs.length > 0 && !allowedTabs.includes(state.activeTab)) {
                     switchTab(allowedTabs[0] || 'profile');
                 } else if (state.activeTab === 'users') {
@@ -459,13 +560,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         .from('tb_planilha')
                         .select('local, form, municipio, horas_por_visita, rede, seg, ter, qua, qui, sex, sab')
                         .range(page * pageSize, (page + 1) * pageSize - 1);
-                    
+
                     if (error) throw error;
                     if (data && data.length > 0) allData = allData.concat(data);
                     if (!data || data.length < pageSize) hasMore = false;
                     page++;
                 }
-                
+
                 const clientesSet = new Set();
                 const redesSet = new Set();
                 const lojasSet = new Set();
@@ -478,14 +579,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (formName) clientesSet.add(formName);
                     }
                     if (row.municipio) municipiosSet.add(row.municipio.trim().toUpperCase());
-                    
+
                     ['seg', 'ter', 'qua', 'qui', 'sex', 'sab'].forEach(dia => {
                         if (row[dia]) {
                             let val = parseFloat(String(row[dia]).replace(',', '.'));
                             if (!isNaN(val)) totalHoras += val;
                         }
                     });
-                    
+
                     if (row.rede) {
                         let rede = row.rede.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
                         if (rede) redesSet.add(rede);
@@ -529,7 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.warn('Erro ao ler tb_planilha:', err.message);
             [clientesEl, redesEl, lojasEl, municipiosEl, horasEl].forEach(el => {
-                if(el) { el.classList.remove('skeleton'); el.innerHTML = '-'; }
+                if (el) { el.classList.remove('skeleton'); el.innerHTML = '-'; }
             });
         }
     };
@@ -591,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let hasActivities = false;
 
-        window.addDashboardCheckin = function(checkinData, prepend = false) {
+        window.addDashboardCheckin = function (checkinData, prepend = false) {
             if (!hasActivities) {
                 activityList.innerHTML = '';
                 hasActivities = true;
@@ -599,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let agentName = "Agente";
             let agentPhoto = "";
-            
+
             if (checkinData.activityId && checkinData.activityId.includes(';')) {
                 const parts = checkinData.activityId.split(';').filter(p => p.trim() !== '');
                 agentName = parts[0] || "Agente";
@@ -609,18 +710,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 agentPhoto = checkinData.photoUrl || "";
             }
 
-            const avatarHtml = agentPhoto 
-                ? `<img src="${agentPhoto}" class="avatar-mini" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=3b82f6&color=fff'">` 
+            const avatarHtml = agentPhoto
+                ? `<img src="${agentPhoto}" class="avatar-mini" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(agentName)}&background=3b82f6&color=fff'">`
                 : `<div class="avatar-mini">${agentName[0]}</div>`;
 
             const dateStr = checkinData.historyId || new Date().toISOString();
-            const dateObj = new Date(dateStr.replace(' ', 'T')); 
+            const dateObj = new Date(dateStr.replace(' ', 'T'));
             const timeFormatted = isNaN(dateObj.getTime()) ? "--:--" : `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
-            const dateFormatted = isNaN(dateObj.getTime()) ? "--/--/----" : `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth()+1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+            const dateFormatted = isNaN(dateObj.getTime()) ? "--/--/----" : `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 
             const item = document.createElement('div');
             item.className = 'checkin-row';
-            
+
             item.innerHTML = `
                 <div class="col-foto">
                     ${agentPhoto ? `<img src="${agentPhoto}" class="checkin-photo-thumb" onclick="window.open('${agentPhoto}', '_blank')">` : '<span style="color:var(--text-dim); font-size:11px;">Sem Foto</span>'}
@@ -659,12 +760,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function markPresenceAuto(agentName, taskId) {
             if (!agentName || agentName === "Agente") return;
-            
+
             // Filtro Crítico: Apenas 'CHECK IN' conta como presença
             if (taskId !== 'CHECK IN') return;
 
             const today = new Date().toISOString().split('T')[0];
-            
+
             try {
                 // Check if already marked today
                 const { data, error: fetchError } = await window.supabase
@@ -685,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             checkin_time: new Date().toLocaleTimeString('pt-BR'),
                             is_manual: false
                         }]);
-                    
+
                     console.log(`Assiduidade: ${agentName} marcado como PRESENTE automaticamente.`);
                 }
             } catch (err) {
@@ -697,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadCheckins = async (page = 0) => {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             const from = page * state.checkinsPerPage;
             const to = from + state.checkinsPerPage - 1;
 
@@ -710,12 +811,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!error && data) {
                 if (page === 0) activityList.innerHTML = '';
-                
+
                 if (data.length > 0) {
                     hasActivities = true;
                     // Se for página 0, limpamos e re-populamos. Se for página > 0, podemos adicionar ao final ou substituir.
                     if (page === 0) activityList.innerHTML = '';
-                    
+
                     data.forEach(row => {
                         window.addDashboardCheckin({
                             historyId: row.created_at,
@@ -728,7 +829,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Atualizar contador de total
                     const countEl = document.getElementById('checkins-count');
                     if (countEl) countEl.textContent = `Total: ${count || data.length} check-ins hoje`;
-                    
+
                     updatePaginationUI(count || 0, page);
                 } else if (page === 0 && !hasActivities) {
                     activityList.innerHTML = `
@@ -748,11 +849,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const totalPages = Math.ceil(total / state.checkinsPerPage);
             let html = `<span style="margin-right: 8px;">Página</span>`;
-            
+
             for (let i = 0; i < Math.min(totalPages, 5); i++) {
                 html += `<div class="page-num ${i === currentPage ? 'active' : ''}" onclick="changeFeedPage(${i})">${i + 1}</div>`;
             }
-            
+
             if (totalPages > 5) html += `<div class="page-num">...</div>`;
             controls.innerHTML = html;
         };
@@ -768,12 +869,34 @@ document.addEventListener('DOMContentLoaded', () => {
         window.supabase
             .channel('public:checkins_main')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'checkins' }, payload => {
-                window.addDashboardCheckin({
-                    historyId: payload.new.created_at, 
+                const checkinData = {
+                    historyId: payload.new.created_at,
                     activityId: payload.new.activity_id,
                     clientId: payload.new.client_id,
                     taskId: payload.new.task_id
-                }, true); // Prepend para novos caírem no topo
+                };
+
+                window.addDashboardCheckin(checkinData, true); // Prepend para novos caírem no topo
+
+                // WhatsApp-Style Notification para TODOS os usuários
+                let notifName = 'Agente';
+                let notifPhoto = '';
+                if (checkinData.activityId && checkinData.activityId.includes(';')) {
+                    const parts = checkinData.activityId.split(';').filter(p => p.trim() !== '');
+                    notifName = parts[0] || 'Agente';
+                    notifPhoto = parts.length > 1 ? parts[parts.length - 1] : '';
+                }
+
+                const dateStr = checkinData.historyId || new Date().toISOString();
+                const dateObj = new Date(dateStr.replace(' ', 'T'));
+                const timeFormatted = isNaN(dateObj.getTime()) ? new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
+
+                showCheckinNotification(
+                    notifName,
+                    checkinData.clientId || 'Visita Técnica',
+                    notifPhoto,
+                    timeFormatted
+                );
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED' && liveStatusText) {
@@ -806,17 +929,17 @@ document.addEventListener('DOMContentLoaded', () => {
         usersListBody.innerHTML = data.map(u => {
             const allowedProjs = u.allowed_projects || [];
             const projsStr = allowedProjs.length > 0 ? allowedProjs.join(', ') : 'Todos';
-            
+
             const allowedTabs = u.allowed_tabs || [];
             const tabsStr = allowedTabs.length > 0 ? allowedTabs.join(', ') : 'Padrão';
-            
+
             return `
             <tr>
                 <td>
                     <strong>${u.full_name || 'Sem nome'}</strong><br>
                     <span style="font-size: 11px; color: var(--text-dim);">${u.email || '-'}</span>
                 </td>
-                <td style="font-family: monospace; font-size: 11px;">${u.id.substring(0,8)}...</td>
+                <td style="font-family: monospace; font-size: 11px;">${u.id.substring(0, 8)}...</td>
                 <td>
                     <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;" title="Projetos: ${projsStr}">
                         📌 ${u.role === 'user' ? projsStr : 'Acesso Total'}
@@ -845,7 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .from('profiles')
             .update({ role: newRole })
             .eq('id', userId);
-        
+
         if (error) showToast(error.message, 'error');
         else {
             showToast('Nível de acesso atualizado!', 'success');
@@ -862,7 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('new-user-password').value;
         const full_name = document.getElementById('new-user-name').value;
         const role = document.getElementById('new-user-role').value;
-        
+
         // Projetos selecionados
         const allowedProjects = Array.from(document.querySelectorAll('#project-checkboxes input:checked')).map(cb => cb.value);
         // Módulos selecionados
@@ -967,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let parsedExcelData = [];
     const excelWorker = new Worker('/excel-worker.js');
 
-    excelWorker.onmessage = function(e) {
+    excelWorker.onmessage = function (e) {
         const { type, data, message } = e.data;
         if (type === 'SUCCESS') {
             parsedExcelData = data;
@@ -987,13 +1110,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnProcessExcel.style.display = 'none';
                 return;
             }
-            
+
             btnProcessExcel.style.display = 'inline-block';
             btnProcessExcel.textContent = 'Lendo arquivo...';
             btnProcessExcel.disabled = true;
 
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = function (event) {
                 excelWorker.postMessage({ type: 'PARSE_EXCEL', data: new Uint8Array(event.target.result) });
             };
             reader.readAsArrayBuffer(file);
@@ -1003,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnProcessExcel) {
         btnProcessExcel.addEventListener('click', async () => {
             if (parsedExcelData.length === 0) return;
-            
+
             btnProcessExcel.disabled = true;
             btnProcessExcel.textContent = 'Enviando para o banco...';
 
@@ -1011,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Limpa a base atual
                 const { error: delError } = await window.supabase.from('tb_planilha').delete().neq('id', -1);
                 if (delError && !delError.message.includes('does not exist')) throw delError;
-                
+
                 // 2. Insere os novos dados em lotes
                 const batchSize = 1000;
                 for (let i = 0; i < parsedExcelData.length; i += batchSize) {
@@ -1026,15 +1149,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (row.agente) {
                         const name = row.agente.trim().toUpperCase();
                         if (!uniqueStaff[name]) {
-                            uniqueStaff[name] = { 
-                                nome: name, 
+                            uniqueStaff[name] = {
+                                nome: name,
                                 projeto: row.projeto || 'GERAL',
                                 cargo: row.funcao || row.cargo || 'PROMOTOR'
                             };
                         }
                     }
                 });
-                
+
                 const staffArray = Object.values(uniqueStaff);
                 if (staffArray.length > 0) {
                     await window.supabase.from('tb_colaboradores').upsert(staffArray, { onConflict: 'nome' });
@@ -1043,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.fire('Sucesso!', `Base atualizada com ${parsedExcelData.length} registros e lista de colaboradores sincronizada.`, 'success');
                 excelInput.value = '';
                 btnProcessExcel.style.display = 'none';
-                populateDashboardData(); 
+                populateDashboardData();
 
             } catch (err) {
                 console.error(err);
@@ -1055,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Staff Base (Colaboradores) Management ---
-    
+
     const loadStaffBaseList = async () => {
         const listBody = document.getElementById('staff-base-list');
         if (!listBody || !window.supabase) return;
@@ -1080,9 +1203,9 @@ document.addEventListener('DOMContentLoaded', () => {
         listBody.innerHTML = data.map(s => {
             const days = ['seg', 'ter', 'qua', 'qui', 'sex', 'sab', 'dom'];
             const scaleHtml = days.map(d => `<span style="font-size: 9px; margin-right: 3px; color: ${s[d] ? 'var(--primary)' : 'var(--text-dim)'}; font-weight: ${s[d] ? '800' : '400'}">${d[0].toUpperCase()}</span>`).join('');
-            
+
             const isAtivo = s.ativo !== false;
-            const statusHtml = isAtivo 
+            const statusHtml = isAtivo
                 ? '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 6px; font-size: 11px;">Ativo</span>'
                 : '<span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 8px; border-radius: 6px; font-size: 11px;">Inativo</span>';
 
@@ -1149,14 +1272,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 '<label style="color: var(--text-muted);">Nome Completo:</label>' +
                 '<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" placeholder="Ex: JOÃO SILVA">' +
                 '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
-                    '<div>' +
-                        '<label style="color: var(--text-muted);">Função:</label>' +
-                        '<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: PROMOTOR">' +
-                    '</div>' +
-                    '<div>' +
-                        '<label style="color: var(--text-muted);">Projeto:</label>' +
-                        '<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: GERAL">' +
-                    '</div>' +
+                '<div>' +
+                '<label style="color: var(--text-muted);">Função:</label>' +
+                '<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: PROMOTOR">' +
+                '</div>' +
+                '<div>' +
+                '<label style="color: var(--text-muted);">Projeto:</label>' +
+                '<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: GERAL">' +
+                '</div>' +
                 '</div>' +
                 '<label style="color: var(--text-muted);">Equipe:</label>' +
                 '<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" placeholder="Ex: EQUIPE ALPHA">' +
@@ -1208,7 +1331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .select('*')
             .eq('nome', currentNome)
             .single();
-        
+
         if (error) { showToast('Erro ao carregar dados.', 'error'); return; }
 
         const { value: formValues } = await Swal.fire({
@@ -1218,14 +1341,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 '<label style="color: var(--text-muted);">Nome Completo:</label>' +
                 `<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" value="${data.nome}">` +
                 '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
-                    '<div>' +
-                        '<label style="color: var(--text-muted);">Função:</label>' +
-                        `<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.cargo || ''}">` +
-                    '</div>' +
-                    '<div>' +
-                        '<label style="color: var(--text-muted);">Projeto:</label>' +
-                        `<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.projeto || ''}">` +
-                    '</div>' +
+                '<div>' +
+                '<label style="color: var(--text-muted);">Função:</label>' +
+                `<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.cargo || ''}">` +
+                '</div>' +
+                '<div>' +
+                '<label style="color: var(--text-muted);">Projeto:</label>' +
+                `<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.projeto || ''}">` +
+                '</div>' +
                 '</div>' +
                 '<label style="color: var(--text-muted);">Equipe:</label>' +
                 `<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" value="${data.equipe || ''}">` +
@@ -1339,7 +1462,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('tb_colaboradores')
                 .update({ ativo: false, data_desativacao: date })
                 .eq('nome', nome);
-            
+
             if (error) showToast(error.message, 'error');
             else {
                 showToast('Colaborador demitido!', 'success');
@@ -1354,7 +1477,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .from('tb_colaboradores')
             .update({ ativo: true, data_desativacao: null })
             .eq('nome', nome);
-        
+
         if (error) showToast(error.message, 'error');
         else {
             showToast('Colaborador reativado!', 'success');
@@ -1408,11 +1531,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
-            
+
             // Gerar nome do arquivo com data
             const date = new Date().toISOString().split('T')[0];
             XLSX.writeFile(wb, `lista_colaboradores_${date}.xlsx`);
-            
+
             showToast('Lista exportada com sucesso!', 'success');
         } catch (err) {
             console.error('Erro ao exportar:', err);
@@ -1490,52 +1613,52 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 });
 
-    window.openEditPermissions = async (userId) => {
-        const { data: user, error: userError } = await window.supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
+window.openEditPermissions = async (userId) => {
+    const { data: user, error: userError } = await window.supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-        if (userError) {
-            showToast('Erro ao buscar usuário', 'error');
-            return;
-        }
+    if (userError) {
+        showToast('Erro ao buscar usuário', 'error');
+        return;
+    }
 
-        // Buscar todos os projetos disponíveis
-        const { data: staffData } = await window.supabase.from('tb_colaboradores').select('projeto');
-        const allProjects = [...new Set(staffData?.map(item => item.projeto || 'GERAL') || [])].sort();
-        
-        const modules = [
-            { id: 'home', label: 'Dashboard' },
-            { id: 'relatorio', label: 'Relatórios' },
-            { id: 'cartas', label: 'Cartas' },
-            { id: 'roteiro', label: 'Rotas' },
-            { id: 'analytics', label: 'Analytics' },
-            { id: 'assiduidade', label: 'Assiduidade' },
-            { id: 'colaboradores-base', label: 'Colaboradores' }
-        ];
+    // Buscar todos os projetos disponíveis
+    const { data: staffData } = await window.supabase.from('tb_colaboradores').select('projeto');
+    const allProjects = [...new Set(staffData?.map(item => item.projeto || 'GERAL') || [])].sort();
 
-        const userProjs = user.allowed_projects || [];
-        const userTabs = user.allowed_tabs || [];
+    const modules = [
+        { id: 'home', label: 'Dashboard' },
+        { id: 'relatorio', label: 'Relatórios' },
+        { id: 'cartas', label: 'Cartas' },
+        { id: 'roteiro', label: 'Rotas' },
+        { id: 'analytics', label: 'Analytics' },
+        { id: 'assiduidade', label: 'Assiduidade' },
+        { id: 'colaboradores-base', label: 'Colaboradores' }
+    ];
 
-        const projectsHtml = allProjects.map(p => `
+    const userProjs = user.allowed_projects || [];
+    const userTabs = user.allowed_tabs || [];
+
+    const projectsHtml = allProjects.map(p => `
             <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #fff; cursor: pointer; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;">
                 <input type="checkbox" class="edit-proj-cb" value="${p}" ${userProjs.includes(p) ? 'checked' : ''} style="accent-color: #6366f1; width: 16px; height: 16px;">
                 ${p}
             </label>
         `).join('');
 
-        const modulesHtml = modules.map(m => `
+    const modulesHtml = modules.map(m => `
             <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #fff; cursor: pointer; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;">
                 <input type="checkbox" class="edit-tab-cb" value="${m.id}" ${userTabs.includes(m.id) ? 'checked' : ''} style="accent-color: #6366f1; width: 16px; height: 16px;">
                 ${m.label}
             </label>
         `).join('');
 
-        Swal.fire({
-            title: `<span style="color: #fff">Editar Acessos: ${user.full_name}</span>`,
-            html: `
+    Swal.fire({
+        title: `<span style="color: #fff">Editar Acessos: ${user.full_name}</span>`,
+        html: `
                 <div style="text-align: left; max-height: 400px; overflow-y: auto; padding: 10px;">
                     <div style="margin-bottom: 20px;">
                         <h4 style="color: #6366f1; font-size: 14px; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Projetos Permitidos</h4>
@@ -1551,58 +1674,58 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `,
-            background: '#121216',
-            showCancelButton: true,
-            confirmButtonText: 'Salvar Alterações',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#6366f1',
-            cancelButtonColor: '#3f3f46',
-            width: '600px',
-            preConfirm: () => {
-                const selectedProjs = Array.from(document.querySelectorAll('.edit-proj-cb:checked')).map(cb => cb.value);
-                const selectedTabs = Array.from(document.querySelectorAll('.edit-tab-cb:checked')).map(cb => cb.value);
-                return { selectedProjs, selectedTabs };
-            }
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const { selectedProjs, selectedTabs } = result.value;
-
-                const { error: updateError } = await window.supabase
-                    .from('profiles')
-                    .update({
-                        allowed_projects: selectedProjs,
-                        allowed_tabs: selectedTabs
-                    })
-                    .eq('id', userId);
-
-                if (updateError) showToast(updateError.message, 'error');
-                else {
-                    showToast('Acessos atualizados com sucesso!', 'success');
-                    loadUsersList();
-                }
-            }
-        });
-    };
-
-    const populateProjectCheckboxes = async () => {
-        const container = document.getElementById('project-checkboxes');
-        if (!container || !window.supabase) return;
-
-        const { data, error } = await window.supabase
-            .from('tb_colaboradores')
-            .select('projeto');
-
-        if (error) {
-            container.innerHTML = '<div style="color: #ef4444; font-size: 11px;">Erro ao carregar projetos</div>';
-            return;
+        background: '#121216',
+        showCancelButton: true,
+        confirmButtonText: 'Salvar Alterações',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#6366f1',
+        cancelButtonColor: '#3f3f46',
+        width: '600px',
+        preConfirm: () => {
+            const selectedProjs = Array.from(document.querySelectorAll('.edit-proj-cb:checked')).map(cb => cb.value);
+            const selectedTabs = Array.from(document.querySelectorAll('.edit-tab-cb:checked')).map(cb => cb.value);
+            return { selectedProjs, selectedTabs };
         }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const { selectedProjs, selectedTabs } = result.value;
 
-        const projects = [...new Set(data.map(item => item.projeto || 'GERAL'))].sort();
-        
-        container.innerHTML = projects.map(p => `
+            const { error: updateError } = await window.supabase
+                .from('profiles')
+                .update({
+                    allowed_projects: selectedProjs,
+                    allowed_tabs: selectedTabs
+                })
+                .eq('id', userId);
+
+            if (updateError) showToast(updateError.message, 'error');
+            else {
+                showToast('Acessos atualizados com sucesso!', 'success');
+                loadUsersList();
+            }
+        }
+    });
+};
+
+const populateProjectCheckboxes = async () => {
+    const container = document.getElementById('project-checkboxes');
+    if (!container || !window.supabase) return;
+
+    const { data, error } = await window.supabase
+        .from('tb_colaboradores')
+        .select('projeto');
+
+    if (error) {
+        container.innerHTML = '<div style="color: #ef4444; font-size: 11px;">Erro ao carregar projetos</div>';
+        return;
+    }
+
+    const projects = [...new Set(data.map(item => item.projeto || 'GERAL'))].sort();
+
+    container.innerHTML = projects.map(p => `
             <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer; color: var(--text-main);">
                 <input type="checkbox" value="${p}" style="accent-color: var(--primary);">
                 ${p}
             </label>
         `).join('') || '<div style="font-size: 11px; color: var(--text-dim);">Nenhum projeto encontrado</div>';
-    };
+};
