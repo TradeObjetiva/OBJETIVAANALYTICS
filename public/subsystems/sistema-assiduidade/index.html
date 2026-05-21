@@ -2320,34 +2320,53 @@
                     return;
                 }
 
-                const data = currentObsGroups.map(row => ({
-                    'Colaborador': row.collaborator_name,
-                    'Equipe': row.equipe,
-                    'Projeto': row.project,
-                    'Período': row.count > 1 ? `${row.startDate} - ${row.endDate}` : row.startDate,
-                    'Status': row.statusName,
-                    'Duração': `${row.count} dia(s)`,
-                    'Observação': row.observation,
-                    'Link Atestado': row.certificate_url || ''
-                }));
+                // Descobrir o número máximo de atestados em uma única linha
+                let maxLinks = 1;
+                currentObsGroups.forEach(row => {
+                    if (row.certificate_url) {
+                        const urls = row.certificate_url.split(',');
+                        if (urls.length > maxLinks) maxLinks = urls.length;
+                    }
+                });
+
+                const data = currentObsGroups.map(row => {
+                    const rowData = {
+                        'Colaborador': row.collaborator_name,
+                        'Equipe': row.equipe,
+                        'Projeto': row.project,
+                        'Período': row.count > 1 ? `${row.startDate} - ${row.endDate}` : row.startDate,
+                        'Status': row.statusName,
+                        'Duração': `${row.count} dia(s)`,
+                        'Observação': row.observation
+                    };
+
+                    let urls = [];
+                    if (row.certificate_url) {
+                        urls = row.certificate_url.split(',').map(u => u.trim());
+                    }
+
+                    // Preencher colunas de link dinamicamente
+                    for (let i = 0; i < maxLinks; i++) {
+                        rowData[`Link Atestado ${i + 1}`] = urls[i] || '';
+                    }
+
+                    return rowData;
+                });
 
                 const ws = XLSX.utils.json_to_sheet(data);
                 
                 // Adiciona hyperlink real aos links de atestado
-                // 'Link Atestado' é a 8ª coluna (índice 7, H)
+                // As colunas de link começam no índice 7 (coluna H) e vão até 7 + maxLinks - 1
                 for (let i = 0; i < data.length; i++) {
-                    const cellRef = XLSX.utils.encode_cell({ r: i + 1, c: 7 }); // A partir da linha 2 (índice 1)
-                    if (ws[cellRef] && ws[cellRef].v) {
-                        let urls = ws[cellRef].v.toString().split(',');
-                        let firstUrl = urls[0].trim();
-                        if (firstUrl.startsWith('http')) {
-                            // Define a célula como hyperlink
-                            ws[cellRef].l = { Target: firstUrl };
-                            // Muda o texto visível se tiver múltiplos links para avisar, ou apenas deixa o link
-                            if (urls.length > 1) {
-                                ws[cellRef].v = 'Ver Atestado 1 (Tem ' + urls.length + ' links)';
-                            } else {
-                                ws[cellRef].v = 'Ver Atestado';
+                    for (let j = 0; j < maxLinks; j++) {
+                        const colIndex = 7 + j;
+                        const cellRef = XLSX.utils.encode_cell({ r: i + 1, c: colIndex }); // A partir da linha 2
+                        
+                        if (ws[cellRef] && ws[cellRef].v) {
+                            let url = ws[cellRef].v.toString().trim();
+                            if (url.startsWith('http')) {
+                                ws[cellRef].l = { Target: url };
+                                ws[cellRef].v = `Ver Atestado ${j + 1}`;
                             }
                         }
                     }
@@ -2361,9 +2380,13 @@
                     {wch: 25}, // Período
                     {wch: 15}, // Status
                     {wch: 15}, // Duração
-                    {wch: 40}, // Observação
-                    {wch: 30}  // Link Atestado
+                    {wch: 40}  // Observação
                 ];
+                
+                for (let j = 0; j < maxLinks; j++) {
+                    wscols.push({wch: 20}); // Link Atestado X
+                }
+                
                 ws['!cols'] = wscols;
 
                 const wb = XLSX.utils.book_new();
