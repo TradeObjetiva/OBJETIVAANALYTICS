@@ -673,6 +673,19 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
 
+        /* --- EMPTY CELL HIGHLIGHTS --- */
+        @keyframes pulse-highlight {
+            0% { box-shadow: inset 0 0 0 2px #ef4444, 0 0 8px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.1), 0 0 0px rgba(239, 68, 68, 0); }
+            100% { box-shadow: inset 0 0 0 2px #ef4444, 0 0 8px rgba(239, 68, 68, 0.4); }
+        }
+        .empty-cell-highlight {
+            animation: pulse-highlight 2.0s infinite ease-in-out;
+            background: rgba(239, 68, 68, 0.08) !important;
+            position: relative;
+            z-index: 5;
+        }
+
     </style>
 </head>
 <body>
@@ -732,6 +745,11 @@
                     Exportar Grade
                 </button>
 
+                <button class="sync-btn" id="btn-detect-empty" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    Identificar Células Vazias
+                </button>
+
                 <button class="sync-btn" id="btn-insert-holiday" onclick="setHolidayForAll()" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
                     Inserir Feriado
@@ -772,6 +790,13 @@
                 <button class="sync-btn" id="btn-export-pdf" style="background: #ef4444; display: none;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     Exportar PDF (Folhas)
+                </button>
+                
+                <!-- IMPORTAÇÃO PROVISÓRIA 18 a 20 MAIO -->
+                <input type="file" id="temp-import-file-input" style="display: none;" accept=".xlsx, .xls">
+                <button class="sync-btn" onclick="document.getElementById('temp-import-file-input').click()" style="background: #8b5cf6; color: white;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
+                    Importar Base Provisória (18-20/Mai)
                 </button>
             </div>
         </div>
@@ -1133,6 +1158,9 @@
         ];
         let gridSearchQuery = '';
         let initialDatesSet = false;
+        let lastFilteredStaff = [];
+        let lastDays = [];
+        let lastAttendanceMap = {};
 
         // Controle de Acesso
         const userProfile = JSON.parse(localStorage.getItem('currentUserProfile') || '{}');
@@ -1207,11 +1235,13 @@
                     // Normaliza datas para ISO YYYY-MM-DD para garantir comparabilidade
                     const normalizeDate = (d) => {
                         if (!d) return null;
+                        if (typeof d !== 'string') d = String(d);
+                        d = d.trim();
                         if (d.includes('/')) {
                             const p = d.split('/');
                             if (p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
                         }
-                        return d.split('T')[0];
+                        return d.split('T')[0].split(' ')[0].trim();
                     };
 
                     return { 
@@ -1588,7 +1618,12 @@
                     }
 
                     // Dias após desativação
-                    if (!person.ativo && person.data_desativacao && dateStr > person.data_desativacao) {
+                    if (person.data_desativacao && dateStr > person.data_desativacao) {
+                        isNotWorkingDay = true;
+                    }
+
+                    // Se inativo sem data_desativacao, bloqueia tudo
+                    if (!person.ativo && !person.data_desativacao) {
                         isNotWorkingDay = true;
                     }
                     
@@ -1624,6 +1659,12 @@
 
             // Atualiza os cards de resumo
             updateSummaryCards(filteredStaff, attendanceMap, days);
+
+            // Salva dados globais para detecção de células vazias
+            lastFilteredStaff = filteredStaff;
+            lastDays = days;
+            lastAttendanceMap = attendanceMap;
+
             console.log('Grade de assiduidade renderizada com sucesso.');
         }
 
@@ -2130,14 +2171,17 @@
                     </div>
                     <div style="flex: 2; text-align: right; font-style: italic; color: var(--text-muted); font-size: 13px;">
                         "${row.observation}"
-                        ${row.certificate_url ? `
-                        <div style="margin-top: 6px;">
-                            <a href="${row.certificate_url}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: rgba(79, 70, 229, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(79, 70, 229, 0.2);">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                                VER ATESTADO
-                            </a>
-                        </div>
-                        ` : ''}
+                        ${row.certificate_url ? (() => {
+                            const urls = row.certificate_url.split(',');
+                            return urls.map((url, idx) => `
+                                <div style="margin-top: 6px; display: inline-block; margin-right: 6px; text-align: left;">
+                                    <a href="${url.trim()}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: rgba(79, 70, 229, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(79, 70, 229, 0.2);">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                        ATESTADO ${urls.length > 1 ? `#${idx + 1}` : ''}
+                                    </a>
+                                </div>
+                            `).join('');
+                        })() : ''}
                     </div>
                     ${(isMaster || !allowedProjects.length) ? `
                     <div style="display: flex; gap: 8px;">
@@ -2171,17 +2215,26 @@
                         
                         <div id="swal-edit-file-group" style="margin-top: 15px;">
                             <label style="color: var(--text-muted); display: block; margin-bottom: 5px;">Atestado Médico (PDF ou Imagem):</label>
-                            ${currentUrl ? `
-                            <div style="margin-bottom: 8px; font-size: 11px; color: #10b981; display: flex; align-items: center; gap: 6px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                Já possui atestado vinculado. Arraste um novo para substituir.
-                            </div>
-                            ` : ''}
+                            ${currentUrl ? (() => {
+                                const urls = currentUrl.split(',');
+                                return `
+                                <div style="margin-bottom: 12px; font-size: 11px; color: #10b981; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span>Possui ${urls.length} arquivo(s) vinculado(s):</span>
+                                    <div style="width: 100%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;">
+                                        ${urls.map((url, idx) => `
+                                            <a href="${url.trim()}" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: 700; background: rgba(79, 70, 229, 0.05); padding: 2px 6px; border-radius: 4px;">Atestado ${urls.length > 1 ? `#${idx + 1}` : ''}</a>
+                                        `).join('')}
+                                    </div>
+                                    <span style="display:block; width:100%; color: var(--text-dim); margin-top: 4px;">Arraste novos arquivos para substituir todos.</span>
+                                </div>
+                                `;
+                            })() : ''}
                             
                             <div id="drop-zone-edit" class="upload-drop-zone">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                <p>Arraste o arquivo aqui ou clique para selecionar</p>
-                                <input type="file" id="swal-edit-file" accept="image/*,.pdf">
+                                <p>Arraste um ou mais arquivos aqui ou clique para selecionar</p>
+                                <input type="file" id="swal-edit-file" accept="image/*,.pdf" multiple>
                             </div>
                         </div>
                     </div>
@@ -2204,7 +2257,7 @@
                     if (fileInput.files.length > 0) {
                         try {
                             Swal.showLoading();
-                            certificate_url = await uploadCertificate(fileInput.files[0]);
+                            certificate_url = await uploadMultipleCertificates(fileInput.files);
                         } catch (err) {
                             Swal.showValidationMessage(`Erro no upload: ${err.message}`);
                             return false;
@@ -2279,6 +2332,40 @@
                 }));
 
                 const ws = XLSX.utils.json_to_sheet(data);
+                
+                // Adiciona hyperlink real aos links de atestado
+                // 'Link Atestado' é a 8ª coluna (índice 7, H)
+                for (let i = 0; i < data.length; i++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: i + 1, c: 7 }); // A partir da linha 2 (índice 1)
+                    if (ws[cellRef] && ws[cellRef].v) {
+                        let urls = ws[cellRef].v.toString().split(',');
+                        let firstUrl = urls[0].trim();
+                        if (firstUrl.startsWith('http')) {
+                            // Define a célula como hyperlink
+                            ws[cellRef].l = { Target: firstUrl };
+                            // Muda o texto visível se tiver múltiplos links para avisar, ou apenas deixa o link
+                            if (urls.length > 1) {
+                                ws[cellRef].v = 'Ver Atestado 1 (Tem ' + urls.length + ' links)';
+                            } else {
+                                ws[cellRef].v = 'Ver Atestado';
+                            }
+                        }
+                    }
+                }
+
+                // Ajusta a largura das colunas
+                const wscols = [
+                    {wch: 25}, // Colaborador
+                    {wch: 15}, // Equipe
+                    {wch: 20}, // Projeto
+                    {wch: 25}, // Período
+                    {wch: 15}, // Status
+                    {wch: 15}, // Duração
+                    {wch: 40}, // Observação
+                    {wch: 30}  // Link Atestado
+                ];
+                ws['!cols'] = wscols;
+
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Observações");
                 
@@ -2365,6 +2452,12 @@
             
             // Botão Exportar Grade Completa
             document.getElementById('btn-export-grid').onclick = () => exportFullGrid();
+
+            // Botão Identificar Células Vazias
+            const btnDetectEmpty = document.getElementById('btn-detect-empty');
+            if (btnDetectEmpty) {
+                btnDetectEmpty.onclick = () => detectEmptyCells();
+            }
 
             // Lógica do Conciliador de Excel
             const reconcileInput = document.getElementById('reconcile-file-input');
@@ -3152,8 +3245,8 @@
                                     <label style="display:block; margin-top: 15px; margin-bottom: 5px; color: var(--text-muted);">Arquivo do Atestado (PDF ou Imagem):</label>
                                     <div id="drop-zone-new" class="upload-drop-zone">
                                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                        <p>Arraste o arquivo aqui ou clique para selecionar</p>
-                                        <input type="file" id="swal-file" accept="image/*,.pdf">
+                                        <p>Arraste um ou mais arquivos aqui ou clique para selecionar</p>
+                                        <input type="file" id="swal-file" accept="image/*,.pdf" multiple>
                                     </div>
                                     ` : ''}
                                 </div>
@@ -3193,7 +3286,7 @@
                                 if (fileInput && fileInput.files.length > 0) {
                                     try {
                                         Swal.showLoading();
-                                        certificate_url = await uploadCertificate(fileInput.files[0]);
+                                        certificate_url = await uploadMultipleCertificates(fileInput.files);
                                     } catch (err) {
                                         Swal.showValidationMessage(`Erro no upload: ${err.message}`);
                                         return false;
@@ -3293,18 +3386,22 @@
                 zone.classList.remove('dragover');
                 if (e.dataTransfer.files.length > 0) {
                     input.files = e.dataTransfer.files;
-                    updateName(e.dataTransfer.files[0].name);
+                    updateName(e.dataTransfer.files);
                 }
             };
 
             input.onchange = () => {
                 if (input.files.length > 0) {
-                    updateName(input.files[0].name);
+                    updateName(input.files);
                 }
             };
 
-            function updateName(name) {
-                text.innerHTML = `<span style="color: var(--primary); font-weight: 700;">${name}</span> selecionado.`;
+            function updateName(files) {
+                if (files.length === 1) {
+                    text.innerHTML = `<span style="color: var(--primary); font-weight: 700;">${files[0].name}</span> selecionado.`;
+                } else {
+                    text.innerHTML = `<span style="color: var(--primary); font-weight: 700;">${files.length} arquivos</span> selecionados.`;
+                }
                 zone.style.borderStyle = 'solid';
                 zone.style.borderColor = 'var(--primary)';
             }
@@ -3392,6 +3489,336 @@
                 .getPublicUrl(filePath);
 
             return publicUrl;
+        }
+
+        async function uploadMultipleCertificates(files) {
+            if (!files || files.length === 0) return null;
+            const uploadPromises = [];
+            for (let i = 0; i < files.length; i++) {
+                uploadPromises.push(uploadCertificate(files[i]));
+            }
+            const urls = await Promise.all(uploadPromises);
+            return urls.filter(u => u).join(',');
+        }
+
+        function getEmptyCells() {
+            const emptyCells = [];
+            
+            if (!lastFilteredStaff || !lastDays) return [];
+
+            lastFilteredStaff.forEach(person => {
+                lastDays.forEach(dayObj => {
+                    const dateStr = getLocalDateString(dayObj);
+                    const status = lastAttendanceMap[`${person.name}_${dateStr}`] || '';
+                    
+                    // Regra de trabalho
+                    const isWorkingDay = person.schedule[dayObj.getDay()];
+                    let isNotWorkingDay = !isWorkingDay;
+                    
+                    // Dias antes da admissão
+                    if (person.data_admissao && dateStr < person.data_admissao) {
+                        isNotWorkingDay = true;
+                    }
+
+                    // Dias após desativação
+                    if (person.data_desativacao && dateStr > person.data_desativacao) {
+                        isNotWorkingDay = true;
+                    }
+
+                    // Se inativo sem data_desativacao, bloqueia tudo
+                    if (!person.ativo && !person.data_desativacao) {
+                        isNotWorkingDay = true;
+                    }
+
+                    // Se for dia de trabalho esperado e estiver sem status
+                    if (!isNotWorkingDay && !status) {
+                        emptyCells.push({
+                            collaborator: person.name,
+                            project: person.project,
+                            equipe: person.equipe,
+                            date: dateStr,
+                            dateBR: formatDateBR(dateStr),
+                            weekday: dayShort[dayObj.getDay()]
+                        });
+                    }
+                });
+            });
+            return emptyCells;
+        }
+
+        function highlightEmptyCells(emptyCells) {
+            // Limpa qualquer destaque anterior
+            clearEmptyCellHighlights();
+
+            let count = 0;
+            emptyCells.forEach(c => {
+                // Escapa caracteres especiais no nome do colaborador
+                const safeName = c.collaborator.replace(/"/g, '\\"');
+                const selector = `.day-cell[data-collaborator="${safeName}"][data-date="${c.date}"]`;
+                const td = document.querySelector(selector);
+                if (td) {
+                    td.classList.add('empty-cell-highlight');
+                    count++;
+                }
+            });
+
+            Swal.fire({
+                title: 'Destaque Aplicado',
+                text: `${count} células vazias foram destacadas em vermelho pulsante. Você pode clicar diretamente nelas para preencher.`,
+                icon: 'info',
+                timer: 4500,
+                showConfirmButton: false,
+                background: getSwalTheme().background,
+                color: getSwalTheme().color
+            });
+
+            // Adiciona evento de clique geral para limpar os destaques
+            const clearHighlightsHandler = (e) => {
+                if (e.target.closest('.day-cell')) {
+                    setTimeout(clearEmptyCellHighlights, 500);
+                } else if (!e.target.closest('#btn-detect-empty')) {
+                    clearEmptyCellHighlights();
+                }
+            };
+            
+            document.addEventListener('click', clearHighlightsHandler, { once: true });
+        }
+
+        function clearEmptyCellHighlights() {
+            document.querySelectorAll('.empty-cell-highlight').forEach(el => {
+                el.classList.remove('empty-cell-highlight');
+            });
+        }
+
+        function exportEmptyCellsExcel(emptyCells) {
+            try {
+                Swal.fire({
+                    title: 'Gerando Excel...',
+                    text: 'Processando lista de células não preenchidas',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading(),
+                    background: getSwalTheme().background,
+                    color: getSwalTheme().color
+                });
+
+                // Cabeçalhos
+                const header = ['Colaborador', 'Projeto', 'Equipe', 'Data', 'Dia da Semana', 'Status Esperado'];
+                const exportData = [header];
+
+                emptyCells.forEach(c => {
+                    exportData.push([
+                        c.collaborator,
+                        c.project,
+                        c.equipe,
+                        c.dateBR,
+                        c.weekday,
+                        'Pendente (Dia de Trabalho)'
+                    ]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(exportData);
+                
+                // Ajusta largura das colunas
+                const wscols = [
+                    {wch: 30}, // Colaborador
+                    {wch: 20}, // Projeto
+                    {wch: 20}, // Equipe
+                    {wch: 15}, // Data
+                    {wch: 15}, // Dia da Semana
+                    {wch: 25}  // Status Esperado
+                ];
+                ws['!cols'] = wscols;
+
+                const wb = XLSX.utils.book_new();
+                const sheetName = 'Células Vazias';
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                
+                const periodDisplay = monthDisplay.textContent.replace(/\s+/g, '_').toLowerCase();
+                XLSX.writeFile(wb, `celulas_vazias_${periodDisplay}.xlsx`);
+
+                Swal.close();
+                Swal.fire({
+                    title: 'Exportado!',
+                    text: 'Relatório de células vazias gerado com sucesso.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: getSwalTheme().background,
+                    color: getSwalTheme().color
+                });
+            } catch (err) {
+                console.error('Erro ao exportar células vazias:', err);
+                Swal.fire('Erro', 'Falha ao gerar o arquivo Excel.', 'error');
+            }
+        }
+
+        async function bulkFillEmptyCells(emptyCells) {
+            const theme = getSwalTheme();
+            
+            // Gerar as opções de preenchimento dinamicamente a partir das legendas
+            const optionsHtml = legendasList.map(l => `
+                <option value="${l.codigo}">${l.codigo} - ${l.nome}</option>
+            `).join('');
+
+            const { value: statusSelected } = await Swal.fire({
+                title: 'Preenchimento em Lote',
+                html: `
+                    <div style="text-align: left;">
+                        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 15px;">
+                            Você está prestes a preencher as <strong>${emptyCells.length}</strong> células vazias encontradas neste período.
+                        </p>
+                        <label style="display:block; margin-bottom: 8px; font-weight:700; font-size:12px; color: var(--text-dim);">SELECIONE O STATUS PARA APLICAR:</label>
+                        <select id="bulk-status-select" class="swal2-select" style="margin: 0; width: 100%; display: block; border-radius: 12px; border: 1px solid ${theme.inputBorder}; background: ${theme.inputBg}; color: ${theme.color};">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Aplicar a Todos',
+                cancelButtonText: 'Cancelar',
+                background: theme.background,
+                color: theme.color,
+                preConfirm: () => {
+                    return document.getElementById('bulk-status-select').value;
+                }
+            });
+
+            if (statusSelected) {
+                Swal.fire({
+                    title: 'Salvando no Banco...',
+                    text: 'Atualizando registros de assiduidade',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading(),
+                    background: theme.background,
+                    color: theme.color
+                });
+
+                try {
+                    const batch = emptyCells.map(c => ({
+                        collaborator_name: c.collaborator,
+                        date: c.date,
+                        status: statusSelected,
+                        is_manual: true
+                    }));
+
+                    const BATCH_SIZE = 100;
+                    for (let i = 0; i < batch.length; i += BATCH_SIZE) {
+                        const chunk = batch.slice(i, i + BATCH_SIZE);
+                        const { error } = await window.supabase.from('tb_assiduidade').upsert(chunk);
+                        if (error) throw error;
+                    }
+
+                    Swal.close();
+                    await Swal.fire({
+                        title: 'Sucesso!',
+                        text: `${emptyCells.length} células preenchidas com "${statusSelected}" com sucesso!`,
+                        icon: 'success',
+                        background: theme.background,
+                        color: theme.color
+                    });
+
+                    // Recarrega o grid para mostrar os novos dados
+                    await renderGrid();
+                } catch (err) {
+                    console.error('Erro no preenchimento em lote:', err);
+                    Swal.fire('Erro', 'Falha ao salvar os registros no banco de dados.', 'error');
+                }
+            }
+        }
+
+        async function detectEmptyCells() {
+            const emptyCells = getEmptyCells();
+            const theme = getSwalTheme();
+
+            if (emptyCells.length === 0) {
+                Swal.fire({
+                    title: 'Tudo Certo!',
+                    text: 'Nenhuma célula vazia foi detectada nos dias de trabalho previstos para o período selecionado.',
+                    icon: 'success',
+                    confirmButtonColor: 'var(--primary)',
+                    background: theme.background,
+                    color: theme.color
+                });
+                return;
+            }
+
+            // Exibir modal interativo com o resumo e opções
+            const htmlContent = `
+                <div style="text-align: left; font-family: 'Inter', sans-serif;">
+                    <p style="font-size: 13px; margin-bottom: 15px; color: var(--text-dim);">
+                        Identificamos <strong style="color: #ef4444; font-size: 15px;">${emptyCells.length}</strong> células não preenchidas em dias de trabalho planejados para o período visível.
+                    </p>
+                    
+                    <div style="max-height: 180px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; padding: 10px; background: ${theme.inputBg}; margin-bottom: 20px; font-size: 12px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid ${theme.inputBorder}; font-weight: 700; color: var(--text-dim);">
+                                    <th style="padding: 6px 4px;">Colaborador</th>
+                                    <th style="padding: 6px 4px;">Data</th>
+                                    <th style="padding: 6px 4px;">Dia</th>
+                                    <th style="padding: 6px 4px;">Projeto / Equipe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${emptyCells.map(c => `
+                                    <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
+                                        <td style="padding: 6px 4px; font-weight: 600; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.collaborator}</td>
+                                        <td style="padding: 6px 4px;">${c.dateBR}</td>
+                                        <td style="padding: 6px 4px; color: var(--text-dim);">${c.weekday}</td>
+                                        <td style="padding: 6px 4px; color: var(--text-dim); font-size: 11px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.project} / ${c.equipe}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button id="swal-btn-highlight" class="sync-btn" style="width: 100%; justify-content: center; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #6366f1; height: 42px; font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                            Destacar Células Vazias na Grade
+                        </button>
+                        
+                        <button id="swal-btn-export" class="sync-btn" style="width: 100%; justify-content: center; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; height: 42px; font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                            Exportar Relatório Excel (.xlsx)
+                        </button>
+                        
+                        <button id="swal-btn-bulk-fill" class="sync-btn" style="width: 100%; justify-content: center; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; height: 42px; font-size: 13px; font-weight: 700; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            Preencher Células em Lote (Bulk Fill)
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'Células Não Preenchidas',
+                html: htmlContent,
+                showConfirmButton: false,
+                showCloseButton: true,
+                background: theme.background,
+                color: theme.color,
+                width: '460px',
+                didOpen: () => {
+                    // Botão para destacar células
+                    document.getElementById('swal-btn-highlight').onclick = () => {
+                        Swal.close();
+                        highlightEmptyCells(emptyCells);
+                    };
+
+                    // Botão para exportar células vazias para Excel
+                    document.getElementById('swal-btn-export').onclick = () => {
+                        Swal.close();
+                        exportEmptyCellsExcel(emptyCells);
+                    };
+
+                    // Botão para preenchimento em lote
+                    document.getElementById('swal-btn-bulk-fill').onclick = () => {
+                        Swal.close();
+                        bulkFillEmptyCells(emptyCells);
+                    };
+                }
+            });
         }
 
         async function exportFullGrid() {
@@ -3507,6 +3934,130 @@
         }
 
         init();
+
+        // Lógica para a Importação Provisória (18 a 20 de Maio)
+        document.getElementById('temp-import-file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Swal.fire({
+                title: 'Processando...',
+                text: 'Lendo planilha base provisória.',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
+                background: getSwalTheme().background,
+                color: getSwalTheme().color
+            });
+
+            const reader = new FileReader();
+            reader.onload = async function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, {type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd'});
+                    
+                    const presencasParaInserir = [];
+                    // Para evitar duplicidades antes do upsert
+                    const presencasUnicas = new Set();
+                    
+                    const datasAlvo = ['2026-05-18', '2026-05-19', '2026-05-20'];
+                    const datasAlvoBR = ['18/05/2026', '19/05/2026', '20/05/2026'];
+
+                    const sheetName = workbook.SheetNames[0]; // Normalmente esse relatório tem 1 aba principal
+                    const ws = workbook.Sheets[sheetName];
+                    const sheetData = XLSX.utils.sheet_to_json(ws, {header: 1, raw: false, dateNF: 'yyyy-mm-dd'});
+
+                    // Procurar pelas datas
+                    for (let i = 1; i < sheetData.length; i++) { // Ignora cabeçalho (linha 0)
+                        const row = sheetData[i];
+                        if (!row || !row.length) continue;
+                        
+                        // Índices baseados na estrutura do relatorio_roteiro.xls:
+                        // 1: Colaborador
+                        // 9: Data Visita
+                        // 15: Status Roteiros
+                        
+                        const nomeColaborador = row[1] ? row[1].toString().trim().toUpperCase() : '';
+                        let dataVisita = row[9] ? row[9].toString().trim() : '';
+                        const statusRoteiro = row[15] ? row[15].toString().trim() : '';
+                        
+                        if (!nomeColaborador) continue;
+
+                        // Normaliza a data para YYYY-MM-DD caso esteja em outro formato
+                        if (dataVisita.includes('/')) {
+                            const parts = dataVisita.split('/');
+                            if (parts[0].length === 2 && parts[2].length === 4) {
+                                dataVisita = `${parts[2]}-${parts[1]}-${parts[0]}`; // DD/MM/YYYY -> YYYY-MM-DD
+                            }
+                        }
+                        // Remove hora se houver (caso a leitura traga '2026-05-18 00:00:00')
+                        dataVisita = dataVisita.split(' ')[0];
+
+                        // Verifica se a data é o alvo e se tem o status correto
+                        if (datasAlvo.includes(dataVisita) && statusRoteiro === 'Finalizado pelo Colaborador') {
+                            const chaveUnica = `${nomeColaborador}_${dataVisita}`;
+                            if (!presencasUnicas.has(chaveUnica)) {
+                                presencasUnicas.add(chaveUnica);
+                                presencasParaInserir.push({
+                                    collaborator_name: nomeColaborador,
+                                    date: dataVisita,
+                                    status: 'P',
+                                    checkin_time: '08:00:00', // Padrão
+                                    is_manual: true
+                                });
+                            }
+                        }
+                    }
+
+                    if (presencasParaInserir.length === 0) {
+                        Swal.fire('Aviso', 'Nenhuma presença encontrada para os dias 18 a 20 de Maio de 2026 com base nas regras.', 'info');
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Confirmar inserção
+                    const confirm = await Swal.fire({
+                        title: 'Confirmar Importação',
+                        html: `Encontramos <b>${presencasParaInserir.length}</b> registros de presença para o período (18-20/Mai).<br><br>Deseja inserir no banco?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sim, importar',
+                        cancelButtonText: 'Cancelar',
+                        background: getSwalTheme().background,
+                        color: getSwalTheme().color
+                    });
+
+                    if (confirm.isConfirmed) {
+                        Swal.fire({
+                            title: 'Inserindo...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading(),
+                            background: getSwalTheme().background,
+                            color: getSwalTheme().color
+                        });
+
+                        const { error } = await window.supabase
+                            .from('tb_assiduidade')
+                            .upsert(presencasParaInserir, { onConflict: 'collaborator_name,date' });
+
+                        if (error) throw error;
+
+                        Swal.fire('Sucesso!', 'Presenças importadas com sucesso.', 'success').then(() => {
+                            if (window.fetchAttendanceData) {
+                                window.fetchAttendanceData();
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    }
+
+                } catch (error) {
+                    console.error("Erro na importação:", error);
+                    Swal.fire('Erro', 'Ocorreu um erro ao processar o arquivo: ' + error.message, 'error');
+                }
+                e.target.value = ''; // Limpar input
+            };
+            reader.readAsArrayBuffer(file);
+        });
     </script>
 </body>
 </html>
