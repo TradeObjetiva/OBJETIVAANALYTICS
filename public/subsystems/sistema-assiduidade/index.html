@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +14,11 @@
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             background: var(--bg-main);
@@ -31,14 +36,17 @@
             width: 6px;
             height: 6px;
         }
+
         ::-webkit-scrollbar-track {
             background: transparent;
         }
+
         ::-webkit-scrollbar-thumb {
             background: rgba(128, 128, 128, 0.2);
             border-radius: 10px;
             transition: var(--transition);
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(128, 128, 128, 0.4);
         }
@@ -51,8 +59,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .header-actions {
@@ -90,7 +105,7 @@
             padding: 4px;
             border-radius: 12px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .month-btn {
@@ -102,10 +117,15 @@
             height: 32px;
             border-radius: 8px;
             transition: var(--transition);
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .month-btn:hover { background: var(--bg-accent); color: var(--text-main); }
+        .month-btn:hover {
+            background: var(--bg-accent);
+            color: var(--text-main);
+        }
 
         .current-month {
             font-weight: 700;
@@ -118,16 +138,25 @@
 
         .sync-btn {
             background: var(--primary);
-            color: white; border: none;
-            padding: 0 18px; height: 42px;
-            border-radius: 12px; cursor: pointer;
-            font-weight: 600; font-size: 13px;
-            display: flex; align-items: center; gap: 10px;
+            color: white;
+            border: none;
+            padding: 0 18px;
+            height: 42px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             transition: var(--transition);
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
 
-        .sync-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .sync-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
 
         .table-wrapper {
             background: transparent;
@@ -137,10 +166,22 @@
             position: relative;
         }
 
-        .table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
-        .table-wrapper::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.2); border-radius: 10px; }
+        .table-wrapper::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
 
-        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(128, 128, 128, 0.2);
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 12px;
+        }
 
         th {
             background: var(--bg-accent) !important;
@@ -154,36 +195,53 @@
             white-space: nowrap;
             position: sticky !important;
             top: 0 !important;
-            z-index: 60; /* Acima das células do corpo */
+            z-index: 60;
+            /* Acima das células do corpo */
         }
 
         td {
             padding: 8px 12px;
             border-bottom: 1px solid var(--border);
             border-right: 1px solid var(--border);
-            white-space: nowrap; height: 46px;
+            white-space: nowrap;
+            height: 46px;
             background: var(--bg-card);
         }
 
         .sticky-col {
-            position: sticky; left: 0;
+            position: sticky;
+            left: 0;
             background: var(--bg-card) !important;
             z-index: 40;
             border-right: 1px solid var(--border) !important;
-            width: 280px; min-width: 280px; max-width: 280px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
 
-        thead th.sticky-col { 
-            z-index: 100 !important; 
-            top: 0; left: 0; 
-            position: sticky; 
-            background: var(--bg-accent) !important; 
+        thead th.sticky-col {
+            z-index: 100 !important;
+            top: 0;
+            left: 0;
+            position: sticky;
+            background: var(--bg-accent) !important;
         }
 
-        .day-cell { text-align: center; width: 42px; min-width: 42px; cursor: pointer !important; }
-        .day-cell.weekend { background: rgba(0, 0, 0, 0.15) !important; }
-        .day-cell:hover { background: rgba(255, 255, 255, 0.05) !important; }
+        .day-cell {
+            text-align: center;
+            width: 42px;
+            min-width: 42px;
+            cursor: pointer !important;
+        }
+
+        .day-cell.weekend {
+            background: rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .day-cell:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
 
         .status-badge {
             min-width: 26px;
@@ -195,85 +253,230 @@
             justify-content: center;
             border-radius: 7px;
             font-weight: 800;
-            font-size: 10px; /* Reduzi levemente para caber melhor */
+            font-size: 10px;
+            /* Reduzi levemente para caber melhor */
             pointer-events: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             line-height: 1;
         }
 
         /* Ajuste específico para siglas longas */
-        .status-badge:empty { display: none; }
-        .status-SAPP { font-size: 8px; letter-spacing: -0.02em; }
-        .status-ATT { font-size: 9px; }
+        .status-badge:empty {
+            display: none;
+        }
 
-        .status-P { background: #10b981; color: #fff; }
-        .status-FT { background: #ef4444; color: #fff; }
-        .status-ATT { background: #3b82f6; color: #fff; }
-        .status-FG { background: #f59e0b; color: #fff; }
-        .status-FA { background: #8b5cf6; color: #fff; }
-        .status-FE { background: #64748b; color: #fff; }
-        .status-FR { background: #06b6d4; color: #fff; }
-        .status-SAPP { background: #4b5563; color: #fff; }
-        .status-ATH { background: #8b5cf6; color: #fff; } /* Violeta para Atestado de Horas */
+        .status-SAPP {
+            font-size: 8px;
+            letter-spacing: -0.02em;
+        }
 
-        .collaborator-name { font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .collaborator-role { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .status-ATT {
+            font-size: 9px;
+        }
+
+        .status-P {
+            background: #10b981;
+            color: #fff;
+        }
+
+        .status-FT {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .status-ATT {
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .status-FG {
+            background: #f59e0b;
+            color: #fff;
+        }
+
+        .status-FA {
+            background: #8b5cf6;
+            color: #fff;
+        }
+
+        .status-FE {
+            background: #64748b;
+            color: #fff;
+        }
+
+        .status-FR {
+            background: #06b6d4;
+            color: #fff;
+        }
+
+        .status-SAPP {
+            background: #4b5563;
+            color: #fff;
+        }
+
+        .status-ATH {
+            background: #8b5cf6;
+            color: #fff;
+        }
+
+        /* Violeta para Atestado de Horas */
+
+        .collaborator-name {
+            font-weight: 600;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .collaborator-role {
+            font-size: 10px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
         .summary-col {
-            background: var(--bg-card) !important; 
-            font-weight: 800; 
+            background: var(--bg-card) !important;
+            font-weight: 800;
             text-align: center;
-            width: 44px; min-width: 44px;
-            color: var(--primary); 
-            position: sticky; 
-            z-index: 40; 
+            width: 44px;
+            min-width: 44px;
+            color: var(--primary);
+            position: sticky;
+            z-index: 40;
             border-left: 1px solid var(--border) !important;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-        }
-        .summary-col:nth-last-child(1) { right: 0; }
-        .summary-col:nth-last-child(2) { right: 44px; }
-        .summary-col:nth-last-child(3) { right: 88px; }
-        .summary-col:nth-last-child(4) { right: 132px; }
-        
-        thead th.summary-col { 
-            z-index: 100; 
-            top: 0; 
-            background: var(--bg-accent) !important; 
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
         }
 
-        .day-header { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; }
-        .day-header span:first-child { font-size: 14px; font-weight: 800; color: var(--text-main); }
-        .day-header span:last-child { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .summary-col:nth-last-child(1) {
+            right: 0;
+        }
 
-        .day-cell { text-align: center; width: 52px; min-width: 52px; cursor: pointer !important; transition: var(--transition); border-right: 1px solid rgba(255,255,255,0.03) !important; }
-        .day-cell:hover { background: rgba(99, 102, 241, 0.15) !important; }
-        
+        .summary-col:nth-last-child(2) {
+            right: 44px;
+        }
+
+        .summary-col:nth-last-child(3) {
+            right: 88px;
+        }
+
+        .summary-col:nth-last-child(4) {
+            right: 132px;
+        }
+
+        thead th.summary-col {
+            z-index: 100;
+            top: 0;
+            background: var(--bg-accent) !important;
+        }
+
+        .day-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 0;
+        }
+
+        .day-header span:first-child {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .day-header span:last-child {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .day-cell {
+            text-align: center;
+            width: 52px;
+            min-width: 52px;
+            cursor: pointer !important;
+            transition: var(--transition);
+            border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
+        }
+
+        .day-cell:hover {
+            background: rgba(99, 102, 241, 0.15) !important;
+        }
+
         /* Removido definições duplicadas de sticky-col */
 
         .legend-container {
-            margin-top: 32px; display: flex; flex-wrap: wrap; gap: 20px;
-            padding: 20px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border);
+            margin-top: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
         }
-        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
 
         .status-selector {
-            position: absolute; background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            display: none; z-index: 9999; padding: 8px;
-            grid-template-columns: repeat(2, 1fr); gap: 6px;
+            position: absolute;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 9999;
+            padding: 8px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
         }
+
         .status-option {
-            padding: 8px 14px; border-radius: 10px; cursor: pointer;
-            font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 10px;
-            color: var(--text-main); transition: var(--transition);
+            padding: 8px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+            transition: var(--transition);
         }
-        .status-option:hover { background: var(--bg-accent); }
-        
+
+        .status-option:hover {
+            background: var(--bg-accent);
+        }
+
         .loader {
-            border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--primary);
-            border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
         /* Estilo para dias que o colaborador NÃO trabalha */
         .day-cell.not-working {
@@ -282,12 +485,21 @@
             cursor: not-allowed !important;
         }
 
-        th.day-cell { cursor: pointer !important; transition: var(--transition); }
-        th.day-cell:hover { background: var(--bg-accent) !important; color: #fff !important; }
+        th.day-cell {
+            cursor: pointer !important;
+            transition: var(--transition);
+        }
+
+        th.day-cell:hover {
+            background: var(--bg-accent) !important;
+            color: #fff !important;
+        }
 
         /* --- MOBILE RESPONSIVENESS --- */
         @media (max-width: 768px) {
-            body { padding: 12px; }
+            body {
+                padding: 12px;
+            }
 
             .header-actions {
                 flex-direction: column;
@@ -296,8 +508,13 @@
                 margin-bottom: 20px;
             }
 
-            .header-title h1 { font-size: 20px; }
-            .header-title p { font-size: 12px; }
+            .header-title h1 {
+                font-size: 20px;
+            }
+
+            .header-title p {
+                font-size: 12px;
+            }
 
             .controls-group {
                 width: 100%;
@@ -305,9 +522,9 @@
                 gap: 10px;
             }
 
-            .month-selector { 
-                width: 100%; 
-                justify-content: space-between; 
+            .month-selector {
+                width: 100%;
+                justify-content: space-between;
             }
 
             .sync-btn {
@@ -328,26 +545,30 @@
                 min-width: 130px !important;
             }
 
-            .sticky-role, .summary-col {
+            .sticky-role,
+            .summary-col {
                 display: none !important;
             }
 
             /* Observations Section */
-            #obs-section > div:first-child {
+            #obs-section>div:first-child {
                 flex-direction: column;
                 align-items: flex-start !important;
                 gap: 16px;
             }
 
-            #obs-section h3 { font-size: 16px; }
+            #obs-section h3 {
+                font-size: 16px;
+            }
 
-            #obs-section > div:first-child > div {
+            #obs-section>div:first-child>div {
                 flex-direction: column;
                 align-items: stretch !important;
                 width: 100%;
             }
 
-            #obs-section .date-input, #obs-staff-search {
+            #obs-section .date-input,
+            #obs-staff-search {
                 width: 100% !important;
             }
 
@@ -355,7 +576,10 @@
                 padding: 12px;
                 gap: 10px;
             }
-            .legend-item { font-size: 11px; }
+
+            .legend-item {
+                font-size: 11px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -363,23 +587,37 @@
                 width: 100px !important;
                 min-width: 100px !important;
             }
-            .day-cell { width: 42px; min-width: 42px; }
-            .day-header span:first-child { font-size: 12px; }
-            .day-header span:last-child { font-size: 8px; }
+
+            .day-cell {
+                width: 42px;
+                min-width: 42px;
+            }
+
+            .day-header span:first-child {
+                font-size: 12px;
+            }
+
+            .day-header span:last-child {
+                font-size: 8px;
+            }
         }
 
         /* --- SWEETALERT CUSTOM STYLES --- */
-        .swal2-popup { border-radius: 20px !important; }
+        .swal2-popup {
+            border-radius: 20px !important;
+        }
+
         .swal2-radio {
             display: flex !important;
             flex-direction: column;
             align-items: flex-start;
             gap: 8px;
             padding: 15px !important;
-            background: rgba(128,128,128,0.1) !important;
+            background: rgba(128, 128, 128, 0.1) !important;
             border-radius: 14px;
             margin: 1em 2em !important;
         }
+
         .swal2-radio label {
             font-size: 14px !important;
             color: var(--text-main) !important;
@@ -393,13 +631,24 @@
             border-radius: 8px;
             transition: var(--transition);
         }
-        .swal2-radio label:hover { background: rgba(128,128,128,0.1); }
-        .swal2-radio input { margin: 0 !important; width: 18px; height: 18px; cursor: pointer; }
-        
-        .swal2-input, .swal2-select, .swal2-textarea {
+
+        .swal2-radio label:hover {
+            background: rgba(128, 128, 128, 0.1);
+        }
+
+        .swal2-radio input {
+            margin: 0 !important;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .swal2-input,
+        .swal2-select,
+        .swal2-textarea {
             border-radius: 12px !important;
             border: 1px solid var(--border) !important;
-            background: rgba(128,128,128,0.05) !important;
+            background: rgba(128, 128, 128, 0.05) !important;
             color: var(--text-main) !important;
             box-shadow: none !important;
             width: 100% !important;
@@ -410,10 +659,10 @@
         }
 
         /* Hide default Swal inputs that might be auto-generated outside our HTML container */
-        .swal2-popup > .swal2-input, 
-        .swal2-popup > .swal2-select, 
-        .swal2-popup > .swal2-file, 
-        .swal2-popup > .swal2-textarea {
+        .swal2-popup>.swal2-input,
+        .swal2-popup>.swal2-select,
+        .swal2-popup>.swal2-file,
+        .swal2-popup>.swal2-textarea {
             display: none !important;
         }
 
@@ -422,7 +671,7 @@
             background-color: var(--bg-card) !important;
             color: var(--text-main) !important;
         }
-        
+
         /* --- DRAG SELECTION STYLES --- */
         .day-cell.cell-selecting {
             background: rgba(79, 70, 229, 0.2) !important;
@@ -431,23 +680,30 @@
         }
 
         /* --- COLUMN ACTIONS --- */
-        th.day-cell { position: relative; }
+        th.day-cell {
+            position: relative;
+        }
+
         th.day-cell.column-empty {
             background: rgba(239, 68, 68, 0.05) !important;
         }
+
         th.day-cell.column-empty .day-header span:first-child {
             color: #ef4444;
             text-decoration: underline wavy #ef4444 1px;
         }
+
         th.day-cell.filter-active {
             background: rgba(99, 102, 241, 0.15) !important;
             border-bottom: 2px solid var(--primary) !important;
         }
+
         th.day-cell.filter-active .column-filter-btn {
             opacity: 1;
             background: var(--primary);
             color: white;
         }
+
         .column-filter-btn {
             position: absolute;
             top: 4px;
@@ -465,8 +721,16 @@
             transition: var(--transition);
             z-index: 60;
         }
-        th.day-cell:hover .column-filter-btn { opacity: 1; }
-        .column-filter-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        th.day-cell:hover .column-filter-btn {
+            opacity: 1;
+        }
+
+        .column-filter-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
 
         /* --- COL FILTER DROPDOWN (IMAGE MATCH) --- */
         .col-filter-dropdown {
@@ -474,7 +738,7 @@
             width: 280px;
             background: var(--bg-card);
             border-radius: 6px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             z-index: 2000;
             display: none;
             overflow: hidden;
@@ -482,10 +746,19 @@
             border: 1px solid var(--border);
             animation: slideDown 0.2s ease-out;
         }
+
         @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .col-filter-header {
             background: var(--primary);
             color: white;
@@ -494,14 +767,16 @@
             align-items: center;
             gap: 12px;
         }
+
         .col-filter-search-container {
             flex: 1;
             display: flex;
             align-items: center;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 4px;
             padding: 0 10px;
         }
+
         .col-filter-search-container input {
             background: transparent;
             border: none;
@@ -511,7 +786,11 @@
             width: 100%;
             outline: none;
         }
-        .col-filter-search-container input::placeholder { color: rgba(255,255,255,0.7); }
+
+        .col-filter-search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
         .col-filter-close {
             background: none;
             border: none;
@@ -522,13 +801,18 @@
             opacity: 0.8;
             padding: 4px;
         }
-        .col-filter-close:hover { opacity: 1; }
+
+        .col-filter-close:hover {
+            opacity: 1;
+        }
+
         .col-filter-body {
             max-height: 320px;
             overflow-y: auto;
             padding: 6px 0;
             background: var(--bg-card);
         }
+
         .col-filter-option {
             padding: 10px 16px;
             display: flex;
@@ -540,13 +824,18 @@
             transition: background 0.15s;
             border-bottom: 1px solid var(--border);
         }
-        .col-filter-option:hover { background: var(--bg-accent); }
+
+        .col-filter-option:hover {
+            background: var(--bg-accent);
+        }
+
         .col-filter-option input[type="checkbox"] {
             width: 18px;
             height: 18px;
             cursor: pointer;
             accent-color: var(--primary);
         }
+
         .col-filter-check-all {
             width: 18px;
             height: 18px;
@@ -565,6 +854,7 @@
             cursor: pointer;
             user-select: none;
         }
+
         .multi-select-header {
             padding: 8px 12px;
             display: flex;
@@ -576,6 +866,7 @@
             height: 38px;
             gap: 8px;
         }
+
         .multi-select-dropdown {
             position: absolute;
             top: 100%;
@@ -589,9 +880,10 @@
             overflow-y: auto;
             z-index: 1000;
             display: none;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             padding: 4px;
         }
+
         .multi-select-option {
             padding: 8px 12px;
             border-radius: 8px;
@@ -601,7 +893,11 @@
             font-size: 13px;
             transition: var(--transition);
         }
-        .multi-select-option:hover { background: var(--bg-accent); }
+
+        .multi-select-option:hover {
+            background: var(--bg-accent);
+        }
+
         .multi-select-option input[type="checkbox"] {
             width: 16px;
             height: 16px;
@@ -627,19 +923,23 @@
             position: relative;
             overflow: hidden;
         }
+
         .upload-drop-zone:hover {
             background: rgba(79, 70, 229, 0.05);
             border-color: var(--primary);
         }
+
         .upload-drop-zone.dragover {
             background: rgba(79, 70, 229, 0.1);
             border-color: var(--primary);
             transform: scale(1.02);
         }
+
         .upload-drop-zone svg {
             color: var(--primary);
             transition: var(--transition);
         }
+
         .upload-drop-zone p {
             font-size: 13px;
             color: var(--text-muted);
@@ -647,14 +947,17 @@
             text-align: center;
             padding: 0 20px;
         }
+
         .upload-drop-zone input[type="file"] {
             display: none;
         }
-        
+
         /* Modal Cleanup */
         .swal2-html-container {
-            overflow-x: hidden !important; /* Remove barra horizontal */
+            overflow-x: hidden !important;
+            /* Remove barra horizontal */
         }
+
         /* Modern KPI Cards */
         .summary-kpi {
             background: var(--bg-card) !important;
@@ -666,36 +969,56 @@
             gap: 16px !important;
             transition: var(--transition);
         }
+
         .summary-kpi:hover {
             transform: translateY(-5px);
             background: rgba(255, 255, 255, 0.05) !important;
             border-color: var(--primary) !important;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
 
         /* --- EMPTY CELL HIGHLIGHTS --- */
         @keyframes pulse-highlight {
-            0% { box-shadow: inset 0 0 0 2px #ef4444, 0 0 8px rgba(239, 68, 68, 0.4); }
-            50% { box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.1), 0 0 0px rgba(239, 68, 68, 0); }
-            100% { box-shadow: inset 0 0 0 2px #ef4444, 0 0 8px rgba(239, 68, 68, 0.4); }
+            0% {
+                box-shadow: inset 0 0 0 2px #ef4444, 0 0 8px rgba(239, 68, 68, 0.4);
+            }
+
+            50% {
+                box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.1), 0 0 0px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: inset 0 0 0 2px #ef4444, 0 0 8px rgba(239, 68, 68, 0.4);
+            }
         }
+
         .empty-cell-highlight {
             animation: pulse-highlight 2.0s infinite ease-in-out;
             background: rgba(239, 68, 68, 0.08) !important;
             position: relative;
             z-index: 5;
         }
-
     </style>
 </head>
+
 <body>
     <div class="assiduidade-container">
-        <div id="missing-staff-alert" style="display: none; background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 14px 20px; border-radius: 14px; margin-bottom: 24px; font-size: 14px; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div id="missing-staff-alert"
+            style="display: none; background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 14px 20px; border-radius: 14px; margin-bottom: 24px; font-size: 14px; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: #d97706;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                <span>Nomes detectados no check-in fora da lista: <strong id="missing-names-list" style="color: #d97706;">...</strong></span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    style="color: #d97706;">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Nomes detectados no check-in fora da lista: <strong id="missing-names-list"
+                        style="color: #d97706;">...</strong></span>
             </div>
-            <button id="btn-add-missing" style="background: #d97706; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; transition: var(--transition);">INSERIR NA LISTA</button>
+            <button id="btn-add-missing"
+                style="background: #d97706; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; transition: var(--transition);">INSERIR
+                NA LISTA</button>
         </div>
 
         <div class="header-actions">
@@ -703,15 +1026,21 @@
                 <h1>Controle de Assiduidade</h1>
                 <p>Monitoramento em tempo real e gestão administrativa.</p>
             </div>
-            
+
             <div class="controls-group">
                 <div class="month-selector">
                     <button class="month-btn" id="prev-month">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
                     </button>
                     <div class="current-month" id="month-display">...</div>
                     <button class="month-btn" id="next-month">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
                     </button>
                 </div>
 
@@ -719,7 +1048,10 @@
                     <div class="multi-select-container" id="project-multi-select">
                         <div class="multi-select-header">
                             <span class="selected-text">TODOS PROJETOS</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </div>
                         <div class="multi-select-dropdown" id="project-dropdown"></div>
                     </div>
@@ -729,114 +1061,208 @@
                     <div class="multi-select-container" id="equipe-multi-select">
                         <div class="multi-select-header">
                             <span class="selected-text">TODAS EQUIPES</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
                         </div>
                         <div class="multi-select-dropdown" id="equipe-dropdown"></div>
                     </div>
                 </div>
 
-                <button class="sync-btn" onclick="showCollectivePresenceModal()" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                <button class="sync-btn" onclick="showCollectivePresenceModal()"
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <polyline points="17 11 19 13 23 9"></polyline>
+                    </svg>
                     Presença Coletiva
                 </button>
 
-                <button class="sync-btn" id="btn-export-grid" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                <button class="sync-btn" id="btn-export-grid"
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                    </svg>
                     Exportar Grade
                 </button>
 
-                <button class="sync-btn" id="btn-detect-empty" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <button class="sync-btn" id="btn-detect-empty"
+                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
                     Identificar Células Vazias
                 </button>
 
-                <button class="sync-btn" id="btn-insert-holiday" onclick="setHolidayForAll()" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                <button class="sync-btn" id="btn-insert-holiday" onclick="setHolidayForAll()"
+                    style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path
+                            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41">
+                        </path>
+                    </svg>
                     Inserir Feriado
                 </button>
 
-                <button class="sync-btn" id="btn-manage-staff" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                <button class="sync-btn" id="btn-manage-staff"
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
                     Gerenciar Equipe
                 </button>
 
-                <button class="sync-btn" id="btn-manage-legends" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                <button class="sync-btn" id="btn-manage-legends"
+                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path
+                            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41">
+                        </path>
+                    </svg>
                     Gerenciar Legendas
                 </button>
             </div>
         </div>
 
         <!-- Ferramenta de Conciliação de Excel -->
-        <div id="excel-reconcile-card" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.05)); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <div id="excel-reconcile-card"
+            style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.05)); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="width: 48px; height: 48px; border-radius: 12px; background: #10b981; display: flex; align-items: center; justify-content: center; color: white;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <div
+                    style="width: 48px; height: 48px; border-radius: 12px; background: #10b981; display: flex; align-items: center; justify-content: center; color: white;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
                 </div>
                 <div>
-                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Conciliador de Folha de Ponto</h3>
-                    <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Substitua "sem registro" pelas justificativas do sistema automaticamente.</p>
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Conciliador de Folha de Ponto
+                    </h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Substitua "sem registro" pelas
+                        justificativas do sistema automaticamente.</p>
                 </div>
             </div>
             <div style="display: flex; gap: 12px;">
                 <input type="file" id="reconcile-file-input" style="display: none;" accept=".xlsx, .xls">
-                <button class="sync-btn" onclick="document.getElementById('reconcile-file-input').click()" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
+                <button class="sync-btn" onclick="document.getElementById('reconcile-file-input').click()"
+                    style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                    </svg>
                     Selecionar Planilha
                 </button>
                 <button class="sync-btn" id="btn-start-reconcile" style="background: #10b981; display: none;">
                     Iniciar Conciliação
                 </button>
                 <button class="sync-btn" id="btn-export-pdf" style="background: #ef4444; display: none;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
                     Exportar PDF (Folhas)
                 </button>
-                
-                <!-- IMPORTAÇÃO PROVISÓRIA 18 a 20 MAIO -->
+
+                <!-- IMPORTAÇÃO PLANILHA BASE PROVISÓRIA (QUALQUER PERÍODO) -->
                 <input type="file" id="temp-import-file-input" style="display: none;" accept=".xlsx, .xls">
-                <button class="sync-btn" onclick="document.getElementById('temp-import-file-input').click()" style="background: #8b5cf6; color: white;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
-                    Importar Base Provisória (18-20/Mai)
+                <button class="sync-btn" onclick="document.getElementById('temp-import-file-input').click()"
+                    style="background: #8b5cf6; color: white;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                    </svg>
+                    Importar Base Provisória
                 </button>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div id="summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+        <div id="summary-cards"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
             <div class="summary-kpi">
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <div
+                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
                 </div>
                 <div>
-                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Equipe Ativa</div>
-                    <div id="kpi-staff-count" style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">--</div>
+                    <div
+                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Equipe Ativa</div>
+                    <div id="kpi-staff-count"
+                        style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">--</div>
                 </div>
             </div>
             <div class="summary-kpi">
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <div
+                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
                 </div>
                 <div>
-                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Taxa de Presença</div>
-                    <div id="kpi-presence-rate" style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">--%</div>
+                    <div
+                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Taxa de Presença</div>
+                    <div id="kpi-presence-rate"
+                        style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">--%</div>
                 </div>
             </div>
             <div class="summary-kpi">
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <div
+                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </div>
                 <div>
-                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total de Faltas</div>
-                    <div id="kpi-absence-count" style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">--</div>
+                    <div
+                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Total de Faltas</div>
+                    <div id="kpi-absence-count"
+                        style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">--</div>
                 </div>
             </div>
             <div class="summary-kpi">
-                <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <div
+                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
                 </div>
                 <div>
-                    <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Atestados</div>
-                    <div id="kpi-certificate-count" style="font-size: 22px; font-weight: 800; color: #f59e0b; line-height: 1.2;">--</div>
+                    <div
+                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Atestados</div>
+                    <div id="kpi-certificate-count"
+                        style="font-size: 22px; font-weight: 800; color: #f59e0b; line-height: 1.2;">--</div>
                 </div>
             </div>
         </div>
@@ -847,8 +1273,12 @@
                     <tr id="header-row">
                         <th class="sticky-col" onclick="toggleGridSearch()" style="cursor: pointer;">
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                 Colaborador
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="grid-search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                Colaborador
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" id="grid-search-icon">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
                             </div>
                         </th>
                         <!-- Equipe e Projeto ocultos na UI, mas mantidos no objeto de dados -->
@@ -875,48 +1305,72 @@
         </div>
 
         <div id="obs-section" style="margin-top: 32px; padding-bottom: 50px;">
-            <div class="obs-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div class="obs-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color: var(--primary);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        style="color: var(--primary);">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
                     Resumo de Observações e Afastamentos
                 </h3>
                 <div class="obs-filters" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                     <div class="filter-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Buscar:</span>
-                        <input type="text" id="obs-staff-search" placeholder="Nome do colaborador..." style="padding: 5px 10px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 160px; font-size: 12px;" oninput="renderObservations()">
-                        
-                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Projeto:</span>
+                        <span
+                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Buscar:</span>
+                        <input type="text" id="obs-staff-search" placeholder="Nome do colaborador..."
+                            style="padding: 5px 10px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 160px; font-size: 12px;"
+                            oninput="renderObservations()">
+
+                        <span
+                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Projeto:</span>
                         <div class="multi-select-container" id="obs-project-multi-select" style="min-width: 140px;">
                             <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
                                 <span class="selected-text">TODOS</span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
                             </div>
                             <div class="multi-select-dropdown" id="obs-project-dropdown"></div>
                         </div>
 
-                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Equipe:</span>
+                        <span
+                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Equipe:</span>
                         <div class="multi-select-container" id="obs-equipe-multi-select" style="min-width: 140px;">
                             <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
                                 <span class="selected-text">TODAS</span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
                             </div>
                             <div class="multi-select-dropdown" id="obs-equipe-dropdown"></div>
                         </div>
-                        
-                        <span style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
-                        <input type="date" id="obs-filter-start" class="date-input" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+
+                        <span
+                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
+                        <input type="date" id="obs-filter-start" class="date-input"
+                            style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
                         <span style="font-size: 12px; color: var(--text-dim);">até</span>
-                        <input type="date" id="obs-filter-end" class="date-input" style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
-                        <button onclick="renderObservations()" style="background: var(--primary); color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; cursor: pointer;">Filtrar</button>
+                        <input type="date" id="obs-filter-end" class="date-input"
+                            style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+                        <button onclick="renderObservations()"
+                            style="background: var(--primary); color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; cursor: pointer;">Filtrar</button>
                     </div>
-                    <button onclick="exportObservations()" style="background: #10b981; color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                    <button onclick="exportObservations()"
+                        style="background: #10b981; color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                        </svg>
                         Exportar Excel
                     </button>
                 </div>
             </div>
             <div id="observations-list" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-                <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
+                <div
+                    style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
                     Nenhuma observação ou afastamento registrado para este período.
                 </div>
             </div>
@@ -938,10 +1392,15 @@
         <div class="col-filter-header">
             <input type="checkbox" id="col-filter-check-all" class="col-filter-check-all" title="Selecionar Todos">
             <div class="col-filter-search-container">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right: 6px; opacity: 0.8;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                    style="margin-right: 6px; opacity: 0.8;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
                 <input type="text" id="col-filter-search" placeholder="Pesquisar status...">
             </div>
-            <button class="col-filter-close" onclick="document.getElementById('col-filter-dropdown').style.display='none'">&times;</button>
+            <button class="col-filter-close"
+                onclick="document.getElementById('col-filter-dropdown').style.display='none'">&times;</button>
         </div>
         <div id="col-filter-body" class="col-filter-body">
             <!-- Opções injetadas via JS -->
@@ -953,7 +1412,7 @@
     <script>
         const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
         const dayShort = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-        
+
         let currentDate = new Date();
         // Ajusta para o início do ciclo atual (dia 21)
         if (currentDate.getDate() < 21) {
@@ -985,9 +1444,9 @@
             const cells = Array.from(row.querySelectorAll('.day-cell[data-date]'));
             const startIdx = cells.indexOf(selectionStartCell);
             const endIdx = cells.indexOf(cell);
-            
+
             const [min, max] = [Math.min(startIdx, endIdx), Math.max(startIdx, endIdx)];
-            
+
             for (let i = min; i <= max; i++) {
                 const targetCell = cells[i];
                 targetCell.classList.add('cell-selecting');
@@ -1002,14 +1461,14 @@
         function endDragSelection(e, cell) {
             if (!isDragging) return;
             isDragging = false;
-            
+
             if (selectedRange.length > 0) {
                 isMenuOpening = true;
                 selectedCell = selectionStartCell;
                 statusSelector.style.display = 'grid';
                 statusSelector.style.left = `${Math.min(e.pageX, window.innerWidth - 180)}px`;
                 statusSelector.style.top = `${Math.min(e.pageY, window.innerHeight - 200)}px`;
-                
+
                 // Reset flag after a short delay to allow the current click event to pass
                 setTimeout(() => { isMenuOpening = false; }, 100);
             }
@@ -1060,7 +1519,7 @@
         function initMultiSelect(containerId, options, filterKey, onUpdate) {
             const dropdown = document.querySelector(`#${containerId} .multi-select-dropdown`);
             const header = document.querySelector(`#${containerId} .multi-select-header`);
-            
+
             header.onclick = (e) => { e.stopPropagation(); toggleMultiSelect(containerId); };
 
             let html = `<div class="multi-select-option" onclick="event.stopPropagation()">
@@ -1108,7 +1567,7 @@
             const span = document.querySelector(`#${containerId} .selected-text`);
             const count = activeFilters[filterKey].length;
             const total = document.querySelectorAll(`#${containerId} .opt-check`).length;
-            
+
             if (count === 0) span.textContent = 'SELECIONE...';
             else if (count === total && total > 0) span.textContent = 'TODOS';
             else if (count === 1) span.textContent = activeFilters[filterKey][0];
@@ -1131,7 +1590,7 @@
         try {
             const observer = new MutationObserver(() => syncTheme());
             observer.observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-        } catch (e) {}
+        } catch (e) { }
 
         function getSwalTheme() {
             const theme = document.documentElement.getAttribute('data-theme');
@@ -1142,7 +1601,7 @@
                 inputBorder: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'
             };
         }
-        
+
         let selectedCell = null;
         let staffList = [];
         let legendasList = [
@@ -1198,13 +1657,13 @@
                     if (window.Notification && Notification.permission === 'default') {
                         Notification.requestPermission();
                     }
-                } catch(e) { console.warn('Notificações não suportadas neste ambiente.'); }
+                } catch (e) { console.warn('Notificações não suportadas neste ambiente.'); }
 
                 // Notificações agora são gerenciadas pelo Dashboard principal para evitar duplicidade.
 
                 await syncStaff();
                 await syncLegendas();
-                await processExistingCheckins(); 
+                await processExistingCheckins();
                 await renderGrid();
                 await renderObservations();
                 setupEventListeners();
@@ -1219,7 +1678,7 @@
                 .from('tb_colaboradores')
                 .select('nome, projeto, equipe, cargo, seg, ter, qua, qui, sex, sab, dom, ativo, data_desativacao, data_admissao')
                 .order('nome', { ascending: true });
-            
+
             if (error && (error.code === '42703' || (error.message && error.message.includes('Could not find')))) {
                 console.warn('Colunas novas não encontradas. Usando fallback...');
                 const fallback = await window.supabase
@@ -1239,13 +1698,13 @@
                         d = d.trim();
                         if (d.includes('/')) {
                             const p = d.split('/');
-                            if (p.length === 3) return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+                            if (p.length === 3) return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
                         }
                         return d.split('T')[0].split(' ')[0].trim();
                     };
 
-                    return { 
-                        name: item.nome, 
+                    return {
+                        name: item.nome,
                         role: item.cargo || 'PROMOTOR',
                         project: item.projeto || 'GERAL',
                         equipe: item.equipe || 'GERAL',
@@ -1262,13 +1721,13 @@
                 if (!isMaster && allowedProjects.length > 0) {
                     mappedStaff = mappedStaff.filter(s => allowedProjects.includes(s.project));
                 }
-                
+
                 staffList = mappedStaff;
 
                 // Populate Project & Equipe Filters
                 const projects = [...new Set(staffList.map(s => s.project))].sort();
                 const equipes = [...new Set(staffList.map(s => s.equipe))].sort();
-                
+
                 initMultiSelect('project-multi-select', projects, 'projects', renderGrid);
                 initMultiSelect('equipe-multi-select', equipes, 'equipes', renderGrid);
                 initMultiSelect('obs-project-multi-select', projects, 'obsProjects', renderObservations);
@@ -1282,14 +1741,14 @@
                     .from('tb_legendas')
                     .select('codigo, nome, cor, ordem')
                     .order('ordem', { ascending: true });
-                
+
                 if (error && (error.message?.includes('ordem') || error.code === '42703')) {
                     console.warn('Coluna "ordem" não encontrada, usando ordenação alfabética com swap manual...');
                     let fallback = await window.supabase
                         .from('tb_legendas')
                         .select('codigo, nome, cor')
                         .order('codigo', { ascending: true });
-                    
+
                     data = fallback.data;
                     error = fallback.error;
 
@@ -1303,7 +1762,7 @@
                         }
                     }
                 }
-                
+
                 if (!error && data && data.length > 0) {
                     legendasList = data;
                 } else if (error && error.code === '42P01') {
@@ -1315,7 +1774,7 @@
         function renderLegendasUI() {
             const container = document.getElementById('main-legend-container');
             const selector = document.getElementById('status-selector');
-            
+
             if (container) {
                 container.innerHTML = legendasList.map(l => `
                     <div class="legend-item"><span class="status-badge status-${l.codigo}" style="background: ${l.cor}">${l.codigo}</span> ${l.nome}</div>
@@ -1328,7 +1787,7 @@
                 `).join('') + `
                     <div class="status-option" data-status=""><span class="status-badge" style="background:#444">-</span> Limpar</div>
                 `;
-                
+
                 // Reatribui eventos para as novas opções
                 selector.querySelectorAll('.status-option').forEach(opt => {
                     opt.onclick = () => handleStatusSelection(opt.dataset.status);
@@ -1360,7 +1819,7 @@
             try {
                 // Se já estiver no formato BR, apenas retorna
                 if (dateStr.includes('/') && dateStr.split('/').length === 3) return dateStr;
-                
+
                 // Se for ISO (YYYY-MM-DD), divide e rearranja
                 const parts = dateStr.split('T')[0].split('-');
                 if (parts.length === 3) {
@@ -1379,16 +1838,16 @@
                 return Math.round(value * 86400);
             }
             if (typeof value === 'object' && value.result) return timeToSeconds(value.result);
-            
+
             const str = String(value).trim();
             const isNegative = str.startsWith('-');
             const parts = str.replace('-', '').split(':');
             if (parts.length < 2) return 0;
-            
+
             let h = parseInt(parts[0]) || 0;
             let m = parseInt(parts[1]) || 0;
             let s = parseInt(parts[2]) || 0;
-            
+
             const total = h * 3600 + m * 60 + s;
             return isNegative ? -total : total;
         }
@@ -1412,10 +1871,10 @@
 
             const startDateStr = start.toISOString().split('T')[0];
             const endDateStr = end.toISOString().split('T')[0];
-            
+
             let checkins = [];
             let fromC = 0, stepC = 999, hasMoreC = true;
-            while(hasMoreC) {
+            while (hasMoreC) {
                 const { data } = await window.supabase
                     .from('checkins')
                     .select('activity_id, created_at, task_id')
@@ -1428,7 +1887,7 @@
 
             let existingAttendance = [];
             let fromE = 0, stepE = 999, hasMoreE = true;
-            while(hasMoreE) {
+            while (hasMoreE) {
                 const { data } = await window.supabase
                     .from('tb_assiduidade')
                     .select('collaborator_name, status, is_manual, observation, date')
@@ -1475,7 +1934,7 @@
             end.setMonth(end.getMonth() + 1);
             end.setDate(20);
 
-            monthDisplay.textContent = `${start.getDate()} ${monthNames[start.getMonth()].slice(0,3)} - ${end.getDate()} ${monthNames[end.getMonth()].slice(0,3)}`;
+            monthDisplay.textContent = `${start.getDate()} ${monthNames[start.getMonth()].slice(0, 3)} - ${end.getDate()} ${monthNames[end.getMonth()].slice(0, 3)}`;
 
             // Limpa dias antigos mantendo as colunas fixas e sumários
             // Colunas fixas agora: Colaborador (1) + Sumários (4) = 5 colunas fixas.
@@ -1490,7 +1949,7 @@
 
             let records = [];
             let fromR = 0, stepR = 999, hasMoreR = true;
-            while(hasMoreR) {
+            while (hasMoreR) {
                 const { data } = await window.supabase
                     .from('tb_assiduidade')
                     .select('*')
@@ -1512,13 +1971,13 @@
             }
 
             tableBody.innerHTML = '';
-            
+
             const startDateStr = start.toISOString().split('T')[0];
             const endDateStr = end.toISOString().split('T')[0];
-            
+
             const filteredStaff = staffList.filter(s => {
                 if (activeFilters.names.length > 0 && !activeFilters.names.includes(s.name)) return false;
-                
+
                 if (activeFilters.projects.length > 0 && !activeFilters.projects.includes(s.project)) return false;
                 if (activeFilters.equipes.length > 0 && !activeFilters.equipes.includes(s.equipe)) return false;
 
@@ -1527,10 +1986,10 @@
                 for (const date of activeColDates) {
                     const targetStatuses = activeFilters.columnFilters[date];
                     if (!targetStatuses || targetStatuses.length === 0) continue;
-                    
+
                     const currentStatus = attendanceMap[`${s.name}_${date}`] || '';
                     const compareStatus = currentStatus === '' ? '__BLANK__' : currentStatus;
-                    
+
                     if (!targetStatuses.includes(compareStatus)) return false;
                 }
 
@@ -1552,7 +2011,7 @@
                 const dateStr = getLocalDateString(d);
                 const th = document.createElement('th');
                 th.className = 'day-cell';
-                
+
                 // Indica se a coluna tem filtro ativo
                 if (activeFilters.columnFilters[dateStr]) th.classList.add('filter-active');
 
@@ -1569,7 +2028,7 @@
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </div>
                 `;
-                
+
                 // Menu de ações da coluna (AGORA É FILTRO)
                 const filterBtn = th.querySelector('.column-filter-btn');
                 filterBtn.onclick = (e) => {
@@ -1594,13 +2053,13 @@
                 tr.appendChild(tdName);
 
                 // Equipe e Projeto ocultos na UI conforme solicitação
-                
+
                 let countP = 0, countF = 0, countA = 0, countFA = 0;
-                
+
                 days.forEach(dayObj => {
                     const dateStr = getLocalDateString(dayObj);
                     const status = attendanceMap[`${person.name}_${dateStr}`] || '';
-                    
+
                     if (status === 'P') countP++;
                     else if (status === 'FT') countF++;
                     else if (status === 'ATT' || status === 'ATH') countA++;
@@ -1609,9 +2068,9 @@
                     const isWorkingDay = person.schedule[dayObj.getDay()];
                     const td = document.createElement('td');
                     td.className = 'day-cell';
-                    
+
                     let isNotWorkingDay = !isWorkingDay;
-                    
+
                     // Dias antes da admissão
                     if (person.data_admissao && dateStr < person.data_admissao) {
                         isNotWorkingDay = true;
@@ -1626,12 +2085,12 @@
                     if (!person.ativo && !person.data_desativacao) {
                         isNotWorkingDay = true;
                     }
-                    
+
                     if (isNotWorkingDay) td.classList.add('not-working');
-                    
+
                     td.dataset.date = dateStr;
                     td.dataset.collaborator = person.name;
-                    
+
                     // Eventos de Arrastar
                     td.onmousedown = (e) => startDragSelection(e, td);
                     td.onmouseenter = (e) => updateDragSelection(e, td);
@@ -1642,7 +2101,7 @@
                             openStatusSelector(e, td);
                         }
                     };
-                    
+
                     if (status) td.innerHTML = `<span class="status-badge status-${status}">${status}</span>`;
                     tr.appendChild(td);
                 });
@@ -1767,18 +2226,18 @@
 
             if (formValues) {
                 Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                
+
                 const { selectedEquipes, date } = formValues;
                 const members = staffList.filter(s => selectedEquipes.includes(s.equipe));
-                
+
                 // Verificar quem já tem algo marcado
                 const { data: existing } = await window.supabase
                     .from('tb_assiduidade')
                     .select('collaborator_name')
                     .eq('date', date);
-                
+
                 const existingNames = new Set(existing?.map(e => e.collaborator_name.toUpperCase().trim()) || []);
-                
+
                 const records = members
                     .filter(m => {
                         // Não tem registro ainda
@@ -1813,12 +2272,12 @@
 
                 if (hasError) Swal.fire('Erro', 'Alguns registros não puderam ser salvos.', 'error');
                 else {
-                    Swal.fire({ 
-                        icon: 'success', 
-                        title: 'Sucesso!', 
-                        text: `${records.length} presenças registradas para: ${selectedEquipes.join(', ')}.`, 
-                        timer: 3000, 
-                        showConfirmButton: false 
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso!',
+                        text: `${records.length} presenças registradas para: ${selectedEquipes.join(', ')}.`,
+                        timer: 3000,
+                        showConfirmButton: false
                     });
                     await renderGrid();
                     await renderObservations();
@@ -1828,7 +2287,7 @@
 
         async function setHolidayForAll() {
             const theme = getSwalTheme();
-            
+
             // Passo 1: Selecionar a Data e o Tipo de Feriado
             const { value: formValues } = await Swal.fire({
                 title: 'Inserir Feriado para Todos',
@@ -1881,11 +2340,11 @@
             if (formValues) {
                 const { date, type, state } = formValues;
                 const obs = type === 'NACIONAL' ? 'Feriado Nacional' : `Feriado Estadual (${state})`;
-                
+
                 Swal.fire({ title: 'Processando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                
+
                 const dayOfWeek = new Date(date + 'T12:00:00').getDay();
-                
+
                 const records = staffList
                     .filter(p => p.schedule && p.schedule[dayOfWeek]) // Apenas quem trabalha no dia
                     .map(p => ({
@@ -1897,7 +2356,7 @@
                     }));
 
                 const { error } = await window.supabase.from('tb_assiduidade').upsert(records);
-                
+
                 if (error) Swal.fire('Erro', error.message, 'error');
                 else {
                     Swal.fire({ icon: 'success', title: 'Sucesso!', text: `Feriado marcado como ${obs} para todos.`, timer: 2000, showConfirmButton: false });
@@ -1914,24 +2373,24 @@
             currentFilterDate = dateStr;
             const dropdown = document.getElementById('col-filter-dropdown');
             const rect = thElement.getBoundingClientRect();
-            
+
             // Posicionamento
             dropdown.style.display = 'block';
             dropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
             dropdown.style.left = Math.min(rect.left + window.scrollX, window.innerWidth - 300) + 'px';
-            
+
             document.getElementById('col-filter-search').value = '';
             colFilterSearchQuery = '';
-            
+
             renderColumnFilterOptions();
-            
+
             // Setup events once
             if (!dropdown.dataset.eventsSet) {
                 document.getElementById('col-filter-search').oninput = (e) => {
                     colFilterSearchQuery = e.target.value.toLowerCase();
                     renderColumnFilterOptions();
                 };
-                
+
                 document.getElementById('col-filter-check-all').onchange = (e) => {
                     const checked = e.target.checked;
                     const allStatuses = ['__BLANK__', ...legendasList.map(l => l.codigo)];
@@ -1950,14 +2409,14 @@
         function renderColumnFilterOptions() {
             const body = document.getElementById('col-filter-body');
             const selected = activeFilters.columnFilters[currentFilterDate] || [];
-            
+
             const allOptions = [
                 { codigo: '__BLANK__', nome: 'Células em Branco (Vazio)' },
                 ...legendasList
             ];
 
-            const filteredOptions = allOptions.filter(opt => 
-                opt.nome.toLowerCase().includes(colFilterSearchQuery) || 
+            const filteredOptions = allOptions.filter(opt =>
+                opt.nome.toLowerCase().includes(colFilterSearchQuery) ||
                 opt.codigo.toLowerCase().includes(colFilterSearchQuery)
             );
 
@@ -1967,7 +2426,7 @@
                     <span>${opt.nome} ${opt.codigo !== '__BLANK__' ? `(${opt.codigo})` : ''}</span>
                 </div>
             `).join('');
-            
+
             // Update Check All state
             const checkAll = document.getElementById('col-filter-check-all');
             const totalOptions = allOptions.length;
@@ -1979,18 +2438,18 @@
             if (!activeFilters.columnFilters[currentFilterDate]) {
                 activeFilters.columnFilters[currentFilterDate] = [];
             }
-            
+
             const list = activeFilters.columnFilters[currentFilterDate];
             const index = list.indexOf(status);
-            
+
             if (index > -1) {
                 list.splice(index, 1);
             } else {
                 list.push(status);
             }
-            
+
             if (list.length === 0) delete activeFilters.columnFilters[currentFilterDate];
-            
+
             renderColumnFilterOptions();
             renderGrid();
         }
@@ -2028,18 +2487,18 @@
             const startInput = document.getElementById('obs-filter-start');
             const endInput = document.getElementById('obs-filter-end');
             const staffSearchInput = document.getElementById('obs-staff-search');
-            
+
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
-            const firstDay = `${year}-${(month+1).toString().padStart(2, '0')}-01`;
-            const lastDay = `${year}-${(month+1).toString().padStart(2, '0')}-${new Date(year, month+1, 0).getDate()}`;
+            const firstDay = `${year}-${(month + 1).toString().padStart(2, '0')}-01`;
+            const lastDay = `${year}-${(month + 1).toString().padStart(2, '0')}-${new Date(year, month + 1, 0).getDate()}`;
 
             if (!startInput.value) startInput.value = firstDay;
             if (!endInput.value) endInput.value = lastDay;
 
             const filterStart = startInput.value;
             const filterEnd = endInput.value;
-            
+
             // Cálculo seguro de datas (+/- 30 dias) usando o meio do dia para evitar problemas de fuso
             const getOffsetDate = (baseStr, days) => {
                 const d = new Date(baseStr + 'T12:00:00');
@@ -2055,7 +2514,7 @@
             let queryError = null;
 
             try {
-                while(hasMoreO) {
+                while (hasMoreO) {
                     let query = window.supabase
                         .from('tb_assiduidade')
                         .select('*')
@@ -2069,7 +2528,7 @@
                         let filteredNames = staffList;
                         if (activeFilters.obsProjects.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsProjects.includes(s.project));
                         if (activeFilters.obsEquipes.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsEquipes.includes(s.equipe));
-                        
+
                         const names = filteredNames.map(s => s.name);
                         if (names.length > 0) {
                             query = query.in('collaborator_name', names);
@@ -2107,7 +2566,7 @@
             data.forEach(rec => {
                 const last = groups[groups.length - 1];
                 const dateObj = new Date(rec.date + 'T12:00:00');
-                const dateFmt = dateObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+                const dateFmt = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
                 const isWithinFilter = rec.date >= filterStart && rec.date <= filterEnd;
 
                 if (last && last.collaborator_name === rec.collaborator_name && last.status === rec.status && last.observation === rec.observation) {
@@ -2172,8 +2631,8 @@
                     <div style="flex: 2; text-align: right; font-style: italic; color: var(--text-muted); font-size: 13px;">
                         "${row.observation}"
                         ${row.certificate_url ? (() => {
-                            const urls = row.certificate_url.split(',');
-                            return urls.map((url, idx) => `
+                        const urls = row.certificate_url.split(',');
+                        return urls.map((url, idx) => `
                                 <div style="margin-top: 6px; display: inline-block; margin-right: 6px; text-align: left;">
                                     <a href="${url.trim()}" target="_blank" style="color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: rgba(79, 70, 229, 0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(79, 70, 229, 0.2);">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
@@ -2181,7 +2640,7 @@
                                     </a>
                                 </div>
                             `).join('');
-                        })() : ''}
+                    })() : ''}
                     </div>
                     ${(isMaster || !allowedProjects.length) ? `
                     <div style="display: flex; gap: 8px;">
@@ -2216,8 +2675,8 @@
                         <div id="swal-edit-file-group" style="margin-top: 15px;">
                             <label style="color: var(--text-muted); display: block; margin-bottom: 5px;">Atestado Médico (PDF ou Imagem):</label>
                             ${currentUrl ? (() => {
-                                const urls = currentUrl.split(',');
-                                return `
+                        const urls = currentUrl.split(',');
+                        return `
                                 <div style="margin-bottom: 12px; font-size: 11px; color: #10b981; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="flex-shrink: 0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                     <span>Possui ${urls.length} arquivo(s) vinculado(s):</span>
@@ -2229,7 +2688,7 @@
                                     <span style="display:block; width:100%; color: var(--text-dim); margin-top: 4px;">Arraste novos arquivos para substituir todos.</span>
                                 </div>
                                 `;
-                            })() : ''}
+                    })() : ''}
                             
                             <div id="drop-zone-edit" class="upload-drop-zone">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
@@ -2354,14 +2813,14 @@
                 });
 
                 const ws = XLSX.utils.json_to_sheet(data);
-                
+
                 // Adiciona hyperlink real aos links de atestado
                 // As colunas de link começam no índice 7 (coluna H) e vão até 7 + maxLinks - 1
                 for (let i = 0; i < data.length; i++) {
                     for (let j = 0; j < maxLinks; j++) {
                         const colIndex = 7 + j;
                         const cellRef = XLSX.utils.encode_cell({ r: i + 1, c: colIndex }); // A partir da linha 2
-                        
+
                         if (ws[cellRef] && ws[cellRef].v) {
                             let url = ws[cellRef].v.toString().trim();
                             if (url.startsWith('http')) {
@@ -2374,24 +2833,24 @@
 
                 // Ajusta a largura das colunas
                 const wscols = [
-                    {wch: 25}, // Colaborador
-                    {wch: 15}, // Equipe
-                    {wch: 20}, // Projeto
-                    {wch: 25}, // Período
-                    {wch: 15}, // Status
-                    {wch: 15}, // Duração
-                    {wch: 40}  // Observação
+                    { wch: 25 }, // Colaborador
+                    { wch: 15 }, // Equipe
+                    { wch: 20 }, // Projeto
+                    { wch: 25 }, // Período
+                    { wch: 15 }, // Status
+                    { wch: 15 }, // Duração
+                    { wch: 40 }  // Observação
                 ];
-                
+
                 for (let j = 0; j < maxLinks; j++) {
-                    wscols.push({wch: 20}); // Link Atestado X
+                    wscols.push({ wch: 20 }); // Link Atestado X
                 }
-                
+
                 ws['!cols'] = wscols;
 
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Observações");
-                
+
                 const start = document.getElementById('obs-filter-start').value;
                 const end = document.getElementById('obs-filter-end').value;
                 XLSX.writeFile(wb, `resumo_observacoes_${start}_a_${end}.xlsx`);
@@ -2405,7 +2864,7 @@
             const names = [...new Set(staffList.map(s => s.name))].sort();
             const theme = getSwalTheme();
             const icon = document.getElementById('grid-search-icon');
-            
+
             const { value: selectedNames } = await Swal.fire({
                 title: 'Filtrar Colaboradores',
                 html: `
@@ -2472,7 +2931,7 @@
         function setupEventListeners() {
             document.getElementById('prev-month').onclick = () => handleMonthChange(-1);
             document.getElementById('next-month').onclick = () => handleMonthChange(1);
-            
+
             // Botão Exportar Grade Completa
             document.getElementById('btn-export-grid').onclick = () => exportFullGrid();
 
@@ -2485,7 +2944,7 @@
             // Lógica do Conciliador de Excel
             const reconcileInput = document.getElementById('reconcile-file-input');
             const startReconcileBtn = document.getElementById('btn-start-reconcile');
-            
+
             reconcileInput.addEventListener('change', (e) => {
                 const exportPdfBtn = document.getElementById('btn-export-pdf');
                 if (e.target.files.length > 0) {
@@ -2513,7 +2972,7 @@
                     const arrayBuffer = await file.arrayBuffer();
                     const workbook = new ExcelJS.Workbook();
                     await workbook.xlsx.load(arrayBuffer);
-                    
+
                     const year = currentDate.getFullYear();
                     const month = currentDate.getMonth();
                     const startDate = getLocalDateString(new Date(year, month, 21));
@@ -2533,13 +2992,13 @@
                     workbook.eachSheet((worksheet, sheetId) => {
                         const collaboratorNameInSheet = worksheet.name.trim().toUpperCase();
                         const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorNameInSheet);
-                        
+
                         // Pegar nome da empresa e colaborador das células (B1 e B3)
                         const companyName = worksheet.getCell('B1').value || "O+ MARKETING E RECURSOS HUMANOS LTDA";
                         const collaboratorFullName = worksheet.getCell('B3').value || worksheet.name;
 
                         updatedSheetsCount++;
-                        
+
                         let dateCol = -1;
                         let obsCol = -1;
                         let headerRowIndex = -1;
@@ -2585,12 +3044,12 @@
                                 if (cellDate && !isNaN(cellDate.getTime())) {
                                     const targetDateStr = getLocalDateString(cellDate);
                                     const record = personAttendance.find(a => a.date === targetDateStr);
-                                    
+
                                     if (record && record.status !== 'P') {
                                         const obsCell = row.getCell(obsCol);
                                         let statusText = record.status;
                                         if (record.observation) statusText += ` - ${record.observation}`;
-                                        
+
                                         obsCell.value = statusText;
                                         updatedRowsCount++;
                                     }
@@ -2617,7 +3076,7 @@
                                 const diffVal = row.getCell(diffCol).value;
                                 sumDiffSeconds += timeToSeconds(diffVal);
                             }
-                            
+
                             const diffCell = totalRow.getCell(diffCol);
                             diffCell.value = secondsToTime(sumDiffSeconds);
                             diffCell.font = { bold: true };
@@ -2627,10 +3086,10 @@
                         // 3. Inserir Assinaturas
                         const lastRow = totalRow ? totalRow.number : worksheet.rowCount;
                         const sigRow = lastRow + 4;
-                        
+
                         // Linhas de assinatura
-                        const sigLine1 = worksheet.getCell(`B${sigRow-1}`);
-                        const sigLine2 = worksheet.getCell(`I${sigRow-1}`);
+                        const sigLine1 = worksheet.getCell(`B${sigRow - 1}`);
+                        const sigLine2 = worksheet.getCell(`I${sigRow - 1}`);
                         sigLine1.value = "_________________________________________________";
                         sigLine2.value = "_________________________________________________";
                         sigLine1.alignment = { horizontal: 'center' };
@@ -2646,13 +3105,13 @@
                         companySigCell.value = String(companyName).toUpperCase();
                         companySigCell.font = { bold: true, size: 10 };
                         companySigCell.alignment = { horizontal: 'center' };
-                        
+
                         try {
                             worksheet.mergeCells(`B${sigRow}:G${sigRow}`);
                             worksheet.mergeCells(`I${sigRow}:M${sigRow}`);
-                            worksheet.mergeCells(`B${sigRow-1}:G${sigRow-1}`);
-                            worksheet.mergeCells(`I${sigRow-1}:M${sigRow-1}`);
-                        } catch(e) {}
+                            worksheet.mergeCells(`B${sigRow - 1}:G${sigRow - 1}`);
+                            worksheet.mergeCells(`I${sigRow - 1}:M${sigRow - 1}`);
+                        } catch (e) { }
                     });
 
                     if (updatedSheetsCount === 0) {
@@ -2701,7 +3160,7 @@
                     const arrayBuffer = await file.arrayBuffer();
                     const workbook = new ExcelJS.Workbook();
                     await workbook.xlsx.load(arrayBuffer);
-                    
+
                     const year = currentDate.getFullYear();
                     const month = currentDate.getMonth();
                     const startDateStr = getLocalDateString(new Date(year, month, 21));
@@ -2724,17 +3183,17 @@
 
                     workbook.eachSheet((worksheet, sheetId) => {
                         if (sheetIndex > 0) doc.addPage('l', 'mm', 'a4');
-                        
+
                         const collaboratorNameInSheet = worksheet.name.trim().toUpperCase();
                         const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorNameInSheet);
-                        
+
                         const collaboratorFullName = worksheet.getCell('B3').value || worksheet.name;
                         const companyName = worksheet.getCell('B1').value || "O+ MARKETING E RECURSOS HUMANOS LTDA";
 
                         // --- 1. CABEÇALHO EM GRADE (Fiel à Imagem) ---
                         doc.setDrawColor(200);
                         doc.setLineWidth(0.1);
-                        
+
                         // Razão Social, CNPJ, Nome, CPF, Endereço
                         const info = [
                             { label: 'Razão Social:', value: worksheet.getCell('B1').value || "O+ Marketing e Recursos Humanos Ltda" },
@@ -2747,7 +3206,7 @@
                         let headerY = 10;
                         doc.setFontSize(8);
                         doc.setFont('Inter', 'bold');
-                        
+
                         // Desenhar Grid de Informações
                         info.forEach((item, i) => {
                             const y = headerY + (i * 6);
@@ -2755,7 +3214,7 @@
                             doc.rect(10, y, 30, 6, 'F');
                             doc.rect(10, y, 30, 6, 'D');
                             doc.text(item.label, 12, y + 4);
-                            
+
                             doc.rect(40, y, 90, 6, 'D');
                             doc.setFont('Inter', 'normal');
                             doc.text(String(item.value || ""), 42, y + 4);
@@ -2800,7 +3259,7 @@
                         // Mapeamento fixo baseado na imagem (Colunas A a N)
                         worksheet.eachRow((row, rowNumber) => {
                             if (rowNumber < 10) return; // Dados começam geralmente na linha 10
-                            
+
                             const firstCellVal = String(row.getCell(1).value || "").toUpperCase().trim();
                             if (firstCellVal === 'TOTAL') {
                                 totalRowData = row;
@@ -2835,7 +3294,7 @@
                             // Formatação de horários (garantir string)
                             const getV = (col) => {
                                 const val = row.getCell(col).value;
-                                if (val instanceof Date) return val.toLocaleTimeString('pt-BR', {hour12:false});
+                                if (val instanceof Date) return val.toLocaleTimeString('pt-BR', { hour12: false });
                                 if (val && typeof val === 'object' && val.result) return val.result;
                                 return val || "";
                             };
@@ -2862,9 +3321,9 @@
                         if (totalRowData) {
                             tableBody.push([
                                 { content: 'Total', colSpan: 2, styles: { halign: 'center', fontStyle: 'bold' } },
-                                "", "", "", "", "", 
+                                "", "", "", "", "",
                                 totalRowData.getCell(8).value || "", // Total Exec
-                                "", "", "", 
+                                "", "", "",
                                 totalRowData.getCell(12).value || "", // Total Plan
                                 totalRowData.getCell(13).value || "", // Total Dif
                                 ""
@@ -2901,12 +3360,12 @@
                                 const pageSize = doc.internal.pageSize;
                                 const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
                                 const sigY = pageHeight - 15; // Ajustado para ficar mais no final
-                                
+
                                 doc.setFontSize(8);
                                 doc.setDrawColor(0);
                                 doc.line(40, sigY, 120, sigY);
                                 doc.text(String(collaboratorFullName).toUpperCase(), 80, sigY + 5, { align: 'center' });
-                                
+
                                 doc.line(170, sigY, 250, sigY);
                                 doc.text("O+ MARKETING E RECURSOS HUMANOS LTDA", 210, sigY + 5, { align: 'center' });
                             }
@@ -2986,7 +3445,7 @@
             window.loadStaffManageList = async () => {
                 const container = document.getElementById('staff-manage-list');
                 let { data, error } = await window.supabase.from('tb_colaboradores').select('nome, projeto, ativo, data_desativacao, data_admissao').order('nome', { ascending: true });
-                
+
                 if (error && (error.code === '42703' || (error.message && error.message.includes('Could not find')))) {
                     const fallback = await window.supabase.from('tb_colaboradores').select('*').order('nome', { ascending: true });
                     data = fallback.data;
@@ -3006,25 +3465,25 @@
                         </thead>
                         <tbody>
                             ${data.map(s => {
-                                const isAtivo = s.ativo !== false;
-                                const statusHtml = isAtivo 
-                                    ? '<span style="color: #10b981; font-weight: 600;">Ativo</span>' 
-                                    : '<span style="color: #ef4444; font-weight: 600;" title="Desativado em ' + (s.data_desativacao || '') + '">Inativo</span>';
-                                
-                                const actionHtml = isAtivo 
-                                    ? '<button onclick="deactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Desativar</button>' 
-                                    : '<button onclick="reactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Reativar</button>';
+                    const isAtivo = s.ativo !== false;
+                    const statusHtml = isAtivo
+                        ? '<span style="color: #10b981; font-weight: 600;">Ativo</span>'
+                        : '<span style="color: #ef4444; font-weight: 600;" title="Desativado em ' + (s.data_desativacao || '') + '">Inativo</span>';
 
-                                return '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);' + (!isAtivo ? ' opacity: 0.6;' : '') + '">'
-                                    + '<td style="padding: 8px;">' + s.nome + '<br><small style="color:var(--text-dim)">Adm: ' + formatDateBR(s.data_admissao) + '</small></td>'
-                                    + '<td style="padding: 8px; color: var(--text-muted);">' + (s.projeto || '-') + '</td>'
-                                    + '<td style="padding: 8px; text-align: center;">' + statusHtml + '</td>'
-                                    + '<td style="padding: 8px; text-align: right; white-space: nowrap;">'
-                                    + '<button onclick="editStaffAdmission(\'' + s.nome.replace(/'/g, "\\'") + '\', \'' + (s.data_admissao || '') + '\')" style="background: rgba(79, 70, 229, 0.1); color: var(--primary); border: 1px solid rgba(79, 70, 229, 0.2); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Calendário</button>'
-                                    + actionHtml
-                                    + '<button onclick="deleteStaffManual(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>'
-                                    + '</td></tr>';
-                            }).join('')}
+                    const actionHtml = isAtivo
+                        ? '<button onclick="deactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Desativar</button>'
+                        : '<button onclick="reactivateStaff(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Reativar</button>';
+
+                    return '<tr style="border-bottom: 1px solid rgba(255,255,255,0.05);' + (!isAtivo ? ' opacity: 0.6;' : '') + '">'
+                        + '<td style="padding: 8px;">' + s.nome + '<br><small style="color:var(--text-dim)">Adm: ' + formatDateBR(s.data_admissao) + '</small></td>'
+                        + '<td style="padding: 8px; color: var(--text-muted);">' + (s.projeto || '-') + '</td>'
+                        + '<td style="padding: 8px; text-align: center;">' + statusHtml + '</td>'
+                        + '<td style="padding: 8px; text-align: right; white-space: nowrap;">'
+                        + '<button onclick="editStaffAdmission(\'' + s.nome.replace(/'/g, "\\'") + '\', \'' + (s.data_admissao || '') + '\')" style="background: rgba(79, 70, 229, 0.1); color: var(--primary); border: 1px solid rgba(79, 70, 229, 0.2); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; margin-right: 4px;">Calendário</button>'
+                        + actionHtml
+                        + '<button onclick="deleteStaffManual(\'' + s.nome.replace(/'/g, "\\'") + '\')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px;">Excluir</button>'
+                        + '</td></tr>';
+                }).join('')}
                         </tbody>
                     </table>
                 `;
@@ -3123,7 +3582,7 @@
                                 data_admissao: adm
                             };
                         }).filter(s => s.nome !== "");
-                        
+
                         if (formattedStaff.length === 0) throw new Error("Nenhum dado válido encontrado. Use as colunas NOME e PROJETO.");
                         const { error } = await window.supabase.from('tb_colaboradores').upsert(formattedStaff, { onConflict: 'nome' });
                         if (error) throw error;
@@ -3136,7 +3595,7 @@
             };
 
             // O evento de clique das opções de status agora é gerenciado por handleStatusSelection
-            
+
             document.getElementById('btn-manage-legends').onclick = async () => {
                 const theme = getSwalTheme();
                 await Swal.fire({
@@ -3169,13 +3628,13 @@
                 const nome = document.getElementById('new-legend-name').value.trim();
                 const cor = document.getElementById('new-legend-color').value;
                 if (!codigo || !nome) return;
-                
+
                 const { error } = await window.supabase.from('tb_legendas').upsert({ codigo, nome, cor }, { onConflict: 'codigo' });
                 if (error) {
                     if (error.code === '42P01') Swal.fire('Aviso', 'Tabela tb_legendas não encontrada no Supabase. As alterações serão apenas locais nesta sessão.', 'warning');
                     else { Swal.fire('Erro!', error.message, 'error'); return; }
                 }
-                
+
                 legendasList = legendasList.filter(l => l.codigo !== codigo);
                 legendasList.push({ codigo, nome, cor });
                 loadLegendsManageList();
@@ -3217,10 +3676,10 @@
                     return;
                 }
                 if (!confirm('Deseja excluir a legenda ' + codigo + '?')) return;
-                
+
                 const { error } = await window.supabase.from('tb_legendas').delete().eq('codigo', codigo);
                 if (error && error.code !== '42P01') Swal.fire('Erro!', error.message, 'error');
-                
+
                 legendasList = legendasList.filter(l => l.codigo !== codigo);
                 loadLegendsManageList();
                 renderLegendasUI();
@@ -3232,7 +3691,7 @@
                 if (selectedCell) {
                     const collaborator = selectedCell.dataset.collaborator;
                     const date = selectedCell.dataset.date;
-                    
+
                     let observation = null;
                     let days = 1;
                     let certificate_url = null;
@@ -3241,7 +3700,7 @@
                         const theme = getSwalTheme();
                         const isATH = status === 'ATH';
                         const isCertificate = status === 'ATT' || isATH;
-                        
+
                         const { value: formValues } = await Swal.fire({
                             title: `Detalhes: ${getStatusName(status)}`,
                             html: `
@@ -3327,7 +3786,7 @@
                     }
 
                     const baseDate = new Date(date + 'T12:00:00');
-                    
+
                     // Se houver uma seleção por arraste, usa ela. Senão usa os dias do Swal.
                     if (selectedRange.length > 1) {
                         Swal.fire({ title: 'Salvando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -3343,13 +3802,13 @@
                             await saveStatus(collaborator, currentStr, status, observation, certificate_url);
                         }
                     }
-                    
+
                     clearDragSelection();
                     await renderGrid();
                     await renderObservations();
                 }
             };
-            
+
             document.addEventListener('click', () => statusSelector.style.display = 'none');
         }
 
@@ -3371,14 +3830,14 @@
                 if (!status) {
                     await window.supabase.from('tb_assiduidade').delete().eq('collaborator_name', collaborator).eq('date', date);
                 } else {
-                    const dataToUpsert = { 
-                        collaborator_name: collaborator, 
-                        date: date, 
-                        status: status, 
+                    const dataToUpsert = {
+                        collaborator_name: collaborator,
+                        date: date,
+                        status: status,
                         is_manual: true,
                         observation: observation
                     };
-                    
+
                     if (certificate_url) {
                         dataToUpsert.certificate_url = certificate_url;
                     }
@@ -3478,9 +3937,9 @@
 
         async function uploadCertificate(file) {
             if (!file) return null;
-            
+
             let finalFile = file;
-            
+
             // Tenta comprimir se for uma imagem
             if (file.type.startsWith('image/')) {
                 try {
@@ -3490,7 +3949,7 @@
                     console.warn('Não foi possível comprimir a imagem, enviando original.', e);
                 }
             }
-            
+
             const fileExt = finalFile.name.split('.').pop();
             const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `atestados/${fileName}`;
@@ -3526,18 +3985,18 @@
 
         function getEmptyCells() {
             const emptyCells = [];
-            
+
             if (!lastFilteredStaff || !lastDays) return [];
 
             lastFilteredStaff.forEach(person => {
                 lastDays.forEach(dayObj => {
                     const dateStr = getLocalDateString(dayObj);
                     const status = lastAttendanceMap[`${person.name}_${dateStr}`] || '';
-                    
+
                     // Regra de trabalho
                     const isWorkingDay = person.schedule[dayObj.getDay()];
                     let isNotWorkingDay = !isWorkingDay;
-                    
+
                     // Dias antes da admissão
                     if (person.data_admissao && dateStr < person.data_admissao) {
                         isNotWorkingDay = true;
@@ -3603,7 +4062,7 @@
                     clearEmptyCellHighlights();
                 }
             };
-            
+
             document.addEventListener('click', clearHighlightsHandler, { once: true });
         }
 
@@ -3640,22 +4099,22 @@
                 });
 
                 const ws = XLSX.utils.aoa_to_sheet(exportData);
-                
+
                 // Ajusta largura das colunas
                 const wscols = [
-                    {wch: 30}, // Colaborador
-                    {wch: 20}, // Projeto
-                    {wch: 20}, // Equipe
-                    {wch: 15}, // Data
-                    {wch: 15}, // Dia da Semana
-                    {wch: 25}  // Status Esperado
+                    { wch: 30 }, // Colaborador
+                    { wch: 20 }, // Projeto
+                    { wch: 20 }, // Equipe
+                    { wch: 15 }, // Data
+                    { wch: 15 }, // Dia da Semana
+                    { wch: 25 }  // Status Esperado
                 ];
                 ws['!cols'] = wscols;
 
                 const wb = XLSX.utils.book_new();
                 const sheetName = 'Células Vazias';
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
-                
+
                 const periodDisplay = monthDisplay.textContent.replace(/\s+/g, '_').toLowerCase();
                 XLSX.writeFile(wb, `celulas_vazias_${periodDisplay}.xlsx`);
 
@@ -3677,7 +4136,7 @@
 
         async function bulkFillEmptyCells(emptyCells) {
             const theme = getSwalTheme();
-            
+
             // Gerar as opções de preenchimento dinamicamente a partir das legendas
             const optionsHtml = legendasList.map(l => `
                 <option value="${l.codigo}">${l.codigo} - ${l.nome}</option>
@@ -3871,7 +4330,7 @@
                 // Re-fetch attendance data to ensure we have everything for the export
                 let records = [];
                 let fromR = 0, stepR = 999, hasMoreR = true;
-                while(hasMoreR) {
+                while (hasMoreR) {
                     const { data } = await window.supabase
                         .from('tb_assiduidade')
                         .select('*')
@@ -3921,7 +4380,7 @@
                     days.forEach(dayObj => {
                         const dateStr = getLocalDateString(dayObj);
                         const status = attendanceMap[`${person.name}_${dateStr}`] || '';
-                        
+
                         if (status === 'P') countP++;
                         else if (status === 'FT') countF++;
                         else if (status === 'ATT' || status === 'ATH') countA++;
@@ -3958,8 +4417,8 @@
 
         init();
 
-        // Lógica para a Importação Provisória (18 a 20 de Maio)
-        document.getElementById('temp-import-file-input').addEventListener('change', function(e) {
+        // Lógica para a Importação Planilha Base Provisória (Qualquer Período)
+        document.getElementById('temp-import-file-input').addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -3973,36 +4432,34 @@
             });
 
             const reader = new FileReader();
-            reader.onload = async function(evt) {
+            reader.onload = async function (evt) {
                 try {
                     const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, {type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd'});
-                    
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' });
+
                     const presencasParaInserir = [];
                     // Para evitar duplicidades antes do upsert
                     const presencasUnicas = new Set();
-                    
-                    const datasAlvo = ['2026-05-18', '2026-05-19', '2026-05-20'];
-                    const datasAlvoBR = ['18/05/2026', '19/05/2026', '20/05/2026'];
+                    const datasEncontradas = new Set();
 
                     const sheetName = workbook.SheetNames[0]; // Normalmente esse relatório tem 1 aba principal
                     const ws = workbook.Sheets[sheetName];
-                    const sheetData = XLSX.utils.sheet_to_json(ws, {header: 1, raw: false, dateNF: 'yyyy-mm-dd'});
+                    const sheetData = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' });
 
                     // Procurar pelas datas
                     for (let i = 1; i < sheetData.length; i++) { // Ignora cabeçalho (linha 0)
                         const row = sheetData[i];
                         if (!row || !row.length) continue;
-                        
+
                         // Índices baseados na estrutura do relatorio_roteiro.xls:
                         // 1: Colaborador
                         // 9: Data Visita
                         // 15: Status Roteiros
-                        
+
                         const nomeColaborador = row[1] ? row[1].toString().trim().toUpperCase() : '';
                         let dataVisita = row[9] ? row[9].toString().trim() : '';
                         const statusRoteiro = row[15] ? row[15].toString().trim() : '';
-                        
+
                         if (!nomeColaborador) continue;
 
                         // Normaliza a data para YYYY-MM-DD caso esteja em outro formato
@@ -4015,11 +4472,16 @@
                         // Remove hora se houver (caso a leitura traga '2026-05-18 00:00:00')
                         dataVisita = dataVisita.split(' ')[0];
 
-                        // Verifica se a data é o alvo e se tem o status correto
-                        if (datasAlvo.includes(dataVisita) && statusRoteiro === 'Finalizado pelo Colaborador') {
+                        // Valida formato YYYY-MM-DD
+                        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                        if (!dateRegex.test(dataVisita)) continue;
+
+                        // Verifica se tem o status correto
+                        if (statusRoteiro === 'Finalizado pelo Colaborador') {
                             const chaveUnica = `${nomeColaborador}_${dataVisita}`;
                             if (!presencasUnicas.has(chaveUnica)) {
                                 presencasUnicas.add(chaveUnica);
+                                datasEncontradas.add(dataVisita);
                                 presencasParaInserir.push({
                                     collaborator_name: nomeColaborador,
                                     date: dataVisita,
@@ -4032,15 +4494,27 @@
                     }
 
                     if (presencasParaInserir.length === 0) {
-                        Swal.fire('Aviso', 'Nenhuma presença encontrada para os dias 18 a 20 de Maio de 2026 com base nas regras.', 'info');
+                        Swal.fire('Aviso', 'Nenhuma presença com status "Finalizado pelo Colaborador" foi encontrada no arquivo com base nas regras.', 'info');
                         e.target.value = '';
                         return;
+                    }
+
+                    // Ordena as datas encontradas para exibir o período de forma clara no modal de confirmação
+                    const datasOrdenadas = Array.from(datasEncontradas).sort();
+                    let periodoTexto = '';
+                    if (datasOrdenadas.length === 1) {
+                        const parts = datasOrdenadas[0].split('-');
+                        periodoTexto = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    } else if (datasOrdenadas.length > 1) {
+                        const first = datasOrdenadas[0].split('-');
+                        const last = datasOrdenadas[datasOrdenadas.length - 1].split('-');
+                        periodoTexto = `${first[2]}/${first[1]}/${first[0]} a ${last[2]}/${last[1]}/${last[0]}`;
                     }
 
                     // Confirmar inserção
                     const confirm = await Swal.fire({
                         title: 'Confirmar Importação',
-                        html: `Encontramos <b>${presencasParaInserir.length}</b> registros de presença para o período (18-20/Mai).<br><br>Deseja inserir no banco?`,
+                        html: `Encontramos <b>${presencasParaInserir.length}</b> registros de presença para o período (<b>${periodoTexto}</b>).<br><br>Deseja inserir no banco?`,
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonText: 'Sim, importar',
@@ -4083,4 +4557,5 @@
         });
     </script>
 </body>
+
 </html>
