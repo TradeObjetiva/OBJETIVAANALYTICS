@@ -2569,10 +2569,24 @@
                 const dateFmt = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
                 const isWithinFilter = rec.date >= filterStart && rec.date <= filterEnd;
 
-                if (last && last.collaborator_name === rec.collaborator_name && last.status === rec.status && last.observation === rec.observation) {
+                // Verificar se a data é consecutiva (dia seguinte ao último do grupo)
+                let isConsecutive = false;
+                if (last) {
+                    const lastDateParts = last._lastRawDate.split('-');
+                    const lastDateObj = new Date(Number(lastDateParts[0]), Number(lastDateParts[1]) - 1, Number(lastDateParts[2]));
+                    lastDateObj.setDate(lastDateObj.getDate() + 1);
+                    const expectedNext = `${lastDateObj.getFullYear()}-${String(lastDateObj.getMonth() + 1).padStart(2, '0')}-${String(lastDateObj.getDate()).padStart(2, '0')}`;
+                    isConsecutive = (rec.date === expectedNext);
+                }
+
+                // Só agrupa se: mesmo colaborador, status, observação, certificate_url E datas consecutivas
+                const sameCertificate = last && (last.certificate_url || '') === (rec.certificate_url || '');
+
+                if (last && last.collaborator_name === rec.collaborator_name && last.status === rec.status && last.observation === rec.observation && isConsecutive && sameCertificate) {
                     last.endDate = dateFmt;
                     last.count++;
                     last.ids.push(rec.id);
+                    last._lastRawDate = rec.date;
                     if (isWithinFilter) last.hasInFilterRecord = true;
                 } else {
                     const person = staffList.find(s => s.name === rec.collaborator_name);
@@ -2588,7 +2602,8 @@
                         startDate: dateFmt,
                         endDate: dateFmt,
                         count: 1,
-                        hasInFilterRecord: isWithinFilter
+                        hasInFilterRecord: isWithinFilter,
+                        _lastRawDate: rec.date
                     });
                 }
             });
