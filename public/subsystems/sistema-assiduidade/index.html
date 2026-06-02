@@ -4492,7 +4492,14 @@
                         if (!dateRegex.test(dataVisita)) continue;
 
                         // Verifica se tem o status correto
-                        if (statusRoteiro === 'Finalizado pelo Colaborador') {
+                        const statusValidos = [
+                            'Finalizado pelo Colaborador',
+                            'Finalizado pelo Supervisor',
+                            'Finalizado com Pendências',
+                            'Finalizado pelo Corte',
+                            'Em Execução'
+                        ];
+                        if (statusValidos.includes(statusRoteiro)) {
                             const chaveUnica = `${nomeColaborador}_${dataVisita}`;
                             if (!presencasUnicas.has(chaveUnica)) {
                                 presencasUnicas.add(chaveUnica);
@@ -4509,7 +4516,7 @@
                     }
 
                     if (presencasParaInserir.length === 0) {
-                        Swal.fire('Aviso', 'Nenhuma presença com status "Finalizado pelo Colaborador" foi encontrada no arquivo com base nas regras.', 'info');
+                        Swal.fire('Aviso', 'Nenhuma presença com status válido (Finalizado pelo Colaborador, Finalizado pelo Supervisor, Finalizado com Pendências, Finalizado pelo Corte ou Em Execução) foi encontrada no arquivo com base nas regras.', 'info');
                         e.target.value = '';
                         return;
                     }

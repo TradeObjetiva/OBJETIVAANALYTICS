@@ -1,13 +1,17 @@
 function agruparLojas(rows) {
     const map = new Map();
     const registroCpfAgentes = new Map();
+    const registroRgAgentes = new Map();
+    const registroCtpsAgentes = new Map();
     state.avisos = []; // Limpa avisos anteriores
 
-    // Primeiro passo: Mapear todos os CPFs disponíveis por Agente
+    // Primeiro passo: Mapear todos os CPFs, RGs e CTPSs disponíveis por Agente
     rows.forEach((row, index) => {
         const agente = String(getValue(row, "AGENTE") || "").trim();
         const local = String(getValue(row, "LOCAL") || "").trim();
         const cpf = String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim();
+        const rg = String(getValue(row, "RG") || "").trim();
+        const ctps = String(getValue(row, "CTPS") || "").trim();
 
         const linhaReal = index + 2; // +1 zero-indexed, +1 header
 
@@ -18,10 +22,16 @@ function agruparLojas(rows) {
             state.avisos.push(`Linha ${linhaReal}: Nome da Loja (Local) faltando.`);
         }
 
-        if (agente && cpf) {
+        if (agente) {
             const nomeNormalizado = normalizeText(agente).toUpperCase();
-            if (!registroCpfAgentes.has(nomeNormalizado)) {
+            if (cpf && !registroCpfAgentes.has(nomeNormalizado)) {
                 registroCpfAgentes.set(nomeNormalizado, cpf);
+            }
+            if (rg && !registroRgAgentes.has(nomeNormalizado)) {
+                registroRgAgentes.set(nomeNormalizado, rg);
+            }
+            if (ctps && !registroCtpsAgentes.has(nomeNormalizado)) {
+                registroCtpsAgentes.set(nomeNormalizado, ctps);
             }
         }
     });
@@ -38,12 +48,15 @@ function agruparLojas(rows) {
             map.set(key, {
                 local,
                 agente,
-                // Busca o CPF no registro global primeiro, depois na linha
+                // Busca no registro global primeiro, depois na linha
                 cpf: registroCpfAgentes.get(nomeNormalizado) || String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim(),
+                rg: registroRgAgentes.get(nomeNormalizado) || String(getValue(row, "RG") || "").trim(),
+                ctps: registroCtpsAgentes.get(nomeNormalizado) || String(getValue(row, "CTPS") || "").trim(),
                 endereco: montarEndereco(row),
                 rede: String(getValue(row, "REDE") || "").trim(),
                 razaoSocial: String(getValue(row, "RAZÃO SOCIAL") || getValue(row, "RAZAO SOCIAL") || "").trim(),
                 marcas: [],
+                cargo: null, // Inicializa como nulo para sobrescritas individuais
             });
         }
 
@@ -52,9 +65,15 @@ function agruparLojas(rows) {
 
         if (marca) grupo.marcas.push(marca);
 
-        // Reforço caso o CPF apareça em linhas posteriores para o mesmo grupo
+        // Reforço caso dados apareçam em linhas posteriores para o mesmo grupo
         const cpfLinha = String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim();
         if (!grupo.cpf && cpfLinha) grupo.cpf = cpfLinha;
+
+        const rgLinha = String(getValue(row, "RG") || "").trim();
+        if (!grupo.rg && rgLinha) grupo.rg = rgLinha;
+
+        const ctpsLinha = String(getValue(row, "CTPS") || "").trim();
+        if (!grupo.ctps && ctpsLinha) grupo.ctps = ctpsLinha;
 
         if (!grupo.endereco) grupo.endereco = montarEndereco(row);
         if (!grupo.rede) grupo.rede = String(getValue(row, "REDE") || "").trim();

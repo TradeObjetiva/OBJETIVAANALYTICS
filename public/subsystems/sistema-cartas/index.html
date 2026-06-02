@@ -43,6 +43,17 @@
         </div>
       </div>
 
+      <div class="field-group drag-zone" id="attachmentsDropZone">
+        <label for="attachmentsFiles">Documentos Anexos (PDFs Intercalados)</label>
+        <div class="drop-area">
+          <input type="file" id="attachmentsFiles" accept=".pdf" multiple />
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-bottom: 10px;">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          <p class="drop-text" id="attachmentsFileName">Arraste múltiplos PDFs de anexo aqui ou clique</p>
+        </div>
+      </div>
+
       <div class="field-group">
         <label for="cidadeData">Cidade e data</label>
         <input type="text" id="cidadeData" />
@@ -55,6 +66,14 @@
           <option value="RG">RG</option>
           <option value="CPF e RG">CPF e RG</option>
           <option value="CTPS DIGITAL, RG e CPF">CTPS DIGITAL, RG e CPF</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label for="empresaRemetente">Empresa Remetente</label>
+        <select id="empresaRemetente">
+          <option value="O+ MARKETING E RECURSOS HUMANOS LTDA" selected>O+ MARKETING E RECURSOS HUMANOS LTDA</option>
+          <option value="OBJETIVA MARKETING E RECURSOS HUMANOS LTDA">OBJETIVA MARKETING E RECURSOS HUMANOS LTDA</option>
         </select>
       </div>
 

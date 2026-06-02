@@ -35,14 +35,34 @@ document.addEventListener("DOMContentLoaded", () => {
             item.className = "editable-card-item";
             item.innerHTML = `
                 <h4>${grupo.agente} <span>${grupo.local}</span></h4>
-                <div class="edit-fields">
-                    <div>
+                <div class="edit-fields" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div style="grid-column: span 2;">
                         <label>Nome do Agente (Sobrescrita)</label>
-                        <input type="text" data-idx="${index}" data-prop="agente" value="${grupo.agente}">
+                        <input type="text" data-idx="${index}" data-prop="agente" value="${grupo.agente || ''}">
                     </div>
                     <div>
                         <label>CPF (Sobrescrita)</label>
-                        <input type="text" data-idx="${index}" data-prop="cpf" value="${grupo.cpf}">
+                        <input type="text" data-idx="${index}" data-prop="cpf" value="${grupo.cpf || ''}">
+                    </div>
+                    <div>
+                        <label>RG (Sobrescrita)</label>
+                        <input type="text" data-idx="${index}" data-prop="rg" value="${grupo.rg || ''}">
+                    </div>
+                    <div>
+                        <label>CTPS (Sobrescrita)</label>
+                        <input type="text" data-idx="${index}" data-prop="ctps" value="${grupo.ctps || ''}">
+                    </div>
+                    <div>
+                        <label>Cargo (Sobrescrita)</label>
+                        <input type="text" data-idx="${index}" data-prop="cargo" value="${grupo.cargo || ''}" placeholder="Padrão: ${document.getElementById("cargo")?.value || ''}">
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <label>Endereço da Loja (Sobrescrita)</label>
+                        <input type="text" data-idx="${index}" data-prop="endereco" value="${grupo.endereco || ''}">
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <label>Marcas / Produtos (Separados por vírgula)</label>
+                        <input type="text" data-idx="${index}" data-prop="marcasText" value="${grupo.marcasText !== undefined ? grupo.marcasText : (grupo.marcas ? grupo.marcas.join(', ') : '')}">
                     </div>
                 </div>
             `;
@@ -53,7 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
             input.addEventListener("input", (e) => {
                 const idx = e.target.getAttribute("data-idx");
                 const prop = e.target.getAttribute("data-prop");
-                state.grouped[idx][prop] = e.target.value;
+                
+                if (prop === "marcasText") {
+                    state.grouped[idx][prop] = e.target.value;
+                    state.grouped[idx].marcas = e.target.value.split(',').map(m => m.trim()).filter(Boolean);
+                } else {
+                    state.grouped[idx][prop] = e.target.value;
+                }
             });
         });
     };
@@ -101,6 +127,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setupDragAndDrop("excelDropZone", "excelFile");
     setupDragAndDrop("pdfDropZone", "templatePdf");
+    setupDragAndDrop("attachmentsDropZone", "attachmentsFiles");
+
+    const attachmentsFiles = document.getElementById("attachmentsFiles");
+    attachmentsFiles?.addEventListener("change", async (e) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        state.attachments = [];
+        const fileNames = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            try {
+                const bytes = await file.arrayBuffer();
+                state.attachments.push({
+                    name: file.name,
+                    bytes: bytes
+                });
+                fileNames.push(file.name);
+            } catch (error) {
+                console.error(error);
+                alert(`Erro ao ler o anexo: ${file.name}`);
+            }
+        }
+
+        const dropText = document.getElementById("attachmentsFileName");
+        if (dropText) {
+            dropText.innerHTML = `<span style="color: var(--success); font-weight: bold;">✓ ${state.attachments.length} Anexo(s) Carregado(s):</span><br>${fileNames.join(', ')}`;
+        }
+    });
 
     excelFile?.addEventListener("change", async (e) => {
         const file = e.target.files?.[0];

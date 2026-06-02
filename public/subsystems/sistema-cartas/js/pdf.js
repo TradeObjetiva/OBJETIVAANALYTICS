@@ -99,6 +99,19 @@ async function buildPdfBytes(targetGroups) {
 
     if (progressContainer) progressContainer.style.display = "block";
 
+    // Pré-carrega todos os PDFs de anexo em instâncias do pdf-lib
+    const attachmentDocs = [];
+    if (state.attachments && state.attachments.length > 0) {
+        for (const attach of state.attachments) {
+            try {
+                const attachDoc = await PDFDocument.load(attach.bytes);
+                attachmentDocs.push(attachDoc);
+            } catch (err) {
+                console.error(`Erro ao carregar anexo ${attach.name}:`, err);
+            }
+        }
+    }
+
     for (let i = 0; i < total; i++) {
         const grupo = targetGroups[i];
 
@@ -173,13 +186,26 @@ async function buildPdfBytes(targetGroups) {
             cy = addrY - 40;
         }
 
-        let valDoc = sZ(grupo.cpf || "-");
+        // Formatação inteligente e dinâmica dos tipos de documento
+        let docText = "";
         let tipoD = sZ(docTipo?.value || "CPF");
-        let cg = sZ(cargo?.value || "Promotor de Merchandising");
+        if (tipoD === "CPF") {
+            docText = `CPF: <b>${sZ(grupo.cpf || "-")}</b>`;
+        } else if (tipoD === "RG") {
+            docText = `RG: <b>${sZ(grupo.rg || "-")}</b>`;
+        } else if (tipoD === "CPF e RG") {
+            docText = `CPF: <b>${sZ(grupo.cpf || "-")}</b> e RG: <b>${sZ(grupo.rg || "-")}</b>`;
+        } else if (tipoD === "CTPS DIGITAL, RG e CPF") {
+            docText = `CTPS DIGITAL: <b>${sZ(grupo.ctps || "-")}</b>, RG: <b>${sZ(grupo.rg || "-")}</b> e CPF: <b>${sZ(grupo.cpf || "-")}</b>`;
+        } else {
+            docText = `${tipoD}: <b>${sZ(grupo.cpf || "-")}</b>`;
+        }
+
+        let cg = sZ(grupo.cargo || cargo?.value || "Promotor de Merchandising");
 
         const paragrafo1 =
             `Viemos por meio desta, apresentar o(a) nosso(a) funcionário(a) Sr(a) ` +
-            `<b>${sZ(grupo.agente) || "-"}</b>, ${tipoD}: <b>${valDoc}</b>, ` +
+            `<b>${sZ(grupo.agente) || "-"}</b>, portador(a) do ${docText}, ` +
             `que atuará na função de ${cg} ` +
             `dos produtos da empresa <b>${sZ(marcas) || "-"}</b>, no <b>${sZ(grupo.local) || "-"}</b>.`;
 
@@ -209,13 +235,27 @@ async function buildPdfBytes(targetGroups) {
             color: rgb(...rgb01(20, 20, 20)),
         });
 
+        // Apenas escreve Atenciosamente, deixando a assinatura manual ou do modelo
         page.drawText("Atenciosamente,", {
             x: 95,
-            y: cy - 50, // Huge gap for Atenciosamente
+            y: cy - 50, // Mantém o espaçamento original do Atenciosamente
             size: 11.5,
-            font: helveticaBold, // Expected image has Atenciosamente in bold
+            font: helveticaBold,
             color: rgb(...rgb01(20, 20, 20)),
         });
+
+        // Copia e intercala todas as páginas dos PDFs de anexo imediatamente após esta carta
+        for (const attachDoc of attachmentDocs) {
+            try {
+                const pageIndices = Array.from({ length: attachDoc.getPageCount() }, (_, idx) => idx);
+                const copiedAttachPages = await outputPdf.copyPages(attachDoc, pageIndices);
+                for (const attachPage of copiedAttachPages) {
+                    outputPdf.addPage(attachPage);
+                }
+            } catch (err) {
+                console.error("Erro ao mesclar páginas do anexo na carta:", err);
+            }
+        }
     }
 
     if (progressContainer) {
