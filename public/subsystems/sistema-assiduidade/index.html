@@ -2972,6 +2972,236 @@
                 }
             });
 
+
+            // Função centralizada para reconciliar o workbook na memória (Excel ou PDF)
+            function reconcileWorkbook(workbook, allAttendance) {
+                let processedSheetsCount = 0;
+                let matchedCollaboratorsCount = 0;
+                let updatedRowsCount = 0;
+
+                // Mapa global de feriados: date -> { status, observation }
+                // Aplica feriado a colaboradores que não têm registro individual mas há FE de outro colaborador na mesma data
+                const globalHolidayMap = {};
+                (allAttendance || []).forEach(a => {
+                    if (a.status === 'FE' && a.date) {
+                        if (!globalHolidayMap[a.date]) {
+                            globalHolidayMap[a.date] = { status: 'FE', observation: a.observation || '' };
+                        }
+                    }
+                });
+
+                workbook.eachSheet((worksheet, sheetId) => {
+                    const collaboratorNameInSheet = worksheet.name.trim().toUpperCase();
+                    const cellB3Value = String(worksheet.getCell('B3').value || "").trim().toUpperCase();
+
+                    const personAttendance = allAttendance.filter(a => {
+                        const dbName = a.collaborator_name.trim().toUpperCase();
+                        // 1. Coincidência exata com o valor de B3 (nome completo)
+                        if (cellB3Value && dbName === cellB3Value) return true;
+                        // 2. Coincidência exata com o nome da aba
+                        if (dbName === collaboratorNameInSheet) return true;
+                        // 3. Nome da aba é um prefixo do nome no banco (caso esteja truncada pelo limite de 31 caracteres do Excel)
+                        if (collaboratorNameInSheet.length >= 20 && dbName.startsWith(collaboratorNameInSheet)) return true;
+                        // 4. Nome no banco é um prefixo do nome da aba
+                        if (dbName.length >= 20 && collaboratorNameInSheet.startsWith(dbName)) return true;
+                        
+                        return false;
+                    });
+
+                    // Pegar nome da empresa e colaborador das células (B1 e B3)
+                    const companyName = worksheet.getCell('B1').value || "O+ MARKETING E RECURSOS HUMANOS LTDA";
+                    const collaboratorFullName = cellB3Value || worksheet.name;
+
+                    processedSheetsCount++;
+                    if (personAttendance.length > 0) {
+                        matchedCollaboratorsCount++;
+                    }
+
+                    let dateCol = -1;
+                    let obsCol = -1;
+                    let headerRowIndex = -1;
+                    let execTotalCol = 8; // Coluna H
+                    let planTotalCol = 12; // Coluna L
+                    let diffCol = 13; // Coluna M
+
+                    // Localizar cabeçalhos nas primeiras 20 linhas
+                    for (let r = 1; r <= 20; r++) {
+                        const row = worksheet.getRow(r);
+                        row.eachCell((cell, colNumber) => {
+                            if (cell.value) {
+                                const val = String(cell.value).toUpperCase().trim();
+                                if (val === 'DATA') dateCol = colNumber;
+                                if (val === 'OBSERVAÇÕES' || val === 'OBSERVAÇAO' || val === 'OBS') {
+                                    obsCol = colNumber;
+                                    headerRowIndex = r;
+                                }
+                            }
+                        });
+                        if (dateCol !== -1 && obsCol !== -1) break;
+                    }
+
+                    if (dateCol !== -1 && obsCol !== -1) {
+                        // 1. Preencher justificativas do sistema
+                        worksheet.eachRow((row, rowNumber) => {
+                            if (rowNumber <= headerRowIndex) return;
+
+                            const dateCell = row.getCell(dateCol);
+                            let targetDateStr = null;
+
+                            // Tratamento de fuso horário / timezone: Lê os dados em UTC se for Date
+                            if (dateCell.value instanceof Date) {
+                                const d = dateCell.value;
+                                const y = d.getUTCFullYear();
+                                const m = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+                                const day = d.getUTCDate().toString().padStart(2, '0');
+                                targetDateStr = `${y}-${m}-${day}`;
+                            } else if (typeof dateCell.value === 'string' && dateCell.value.includes('/')) {
+                                const parts = dateCell.value.split('/');
+                                if (parts.length === 3) {
+                                    targetDateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                }
+                            } else if (typeof dateCell.value === 'number') {
+                                const d = new Date((dateCell.value - 25569) * 86400000);
+                                const y = d.getUTCFullYear();
+                                const m = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+                                const day = d.getUTCDate().toString().padStart(2, '0');
+                                targetDateStr = `${y}-${m}-${day}`;
+                            } else if (dateCell.value && typeof dateCell.value === 'object' && dateCell.value.result) {
+                                const res = dateCell.value.result;
+                                if (res instanceof Date) {
+                                    const y = res.getUTCFullYear();
+                                    const m = (res.getUTCMonth() + 1).toString().padStart(2, '0');
+                                    const day = res.getUTCDate().toString().padStart(2, '0');
+                                    targetDateStr = `${y}-${m}-${day}`;
+                                } else if (typeof res === 'string' && res.includes('/')) {
+                                    const parts = res.split('/');
+                                    if (parts.length === 3) {
+                                        targetDateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                    }
+                                } else if (typeof res === 'number') {
+                                    const d = new Date((res - 25569) * 86400000);
+                                    const y = d.getUTCFullYear();
+                                    const m = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+                                    const day = d.getUTCDate().toString().padStart(2, '0');
+                                    targetDateStr = `${y}-${m}-${day}`;
+                                }
+                            }
+
+                            if (targetDateStr) {
+                                // Busca registro individual do colaborador
+                                const record = personAttendance.find(a => a.date === targetDateStr);
+
+                                // Fallback: se não houver registro individual mas existir feriado global nessa data,
+                                // aplica o feriado global (cobre colaboradores sem escala no dia do feriado)
+                                const effectiveRecord = (record && record.status !== 'P')
+                                    ? record
+                                    : (!record && globalHolidayMap[targetDateStr])
+                                        ? globalHolidayMap[targetDateStr]
+                                        : null;
+
+                                if (effectiveRecord) {
+                                    const obsCell = row.getCell(obsCol);
+                                    let statusText = effectiveRecord.status;
+                                    if (effectiveRecord.observation) statusText += ` - ${effectiveRecord.observation}`;
+
+                                    obsCell.value = statusText;
+                                    updatedRowsCount++;
+
+                                    // Se for Feriado (FE), Folga (FG), Férias (FR), Atestado (ATT) ou Abonada (FA),
+                                    // limpamos as colunas planejadas e a diferença para não gerar débito de horas.
+                                    if (['FE', 'FG', 'FR', 'ATT', 'FA'].includes(effectiveRecord.status)) {
+                                        row.getCell(9).value = "";  // Inicio Plan (Col I)
+                                        row.getCell(10).value = ""; // Saida Plan (Col J)
+                                        row.getCell(11).value = ""; // Tempo Int Plan (Col K)
+                                        row.getCell(12).value = ""; // Total Plan (Col L)
+                                        row.getCell(13).value = ""; // Dif Tempo (Col M)
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // 2. Realizar Cálculos de Diferença no Total
+                    let totalRow = null;
+                    for (let r = worksheet.rowCount; r > 0; r--) {
+                        const row = worksheet.getRow(r);
+                        const firstCellVal = String(row.getCell(1).value || row.getCell(2).value || "").toUpperCase().trim();
+                        if (firstCellVal === 'TOTAL') {
+                            totalRow = row;
+                            break;
+                        }
+                    }
+
+                    if (totalRow) {
+                        let sumDiffSeconds = 0;
+                        // Somar os valores da coluna de Diferença Tempo (diffCol)
+                        for (let r = headerRowIndex + 1; r < totalRow.number; r++) {
+                            const row = worksheet.getRow(r);
+                            const diffVal = row.getCell(diffCol).value;
+                            sumDiffSeconds += timeToSeconds(diffVal);
+                        }
+
+                        const diffCell = totalRow.getCell(diffCol);
+                        diffCell.value = secondsToTime(sumDiffSeconds);
+                        diffCell.font = { bold: true };
+                        diffCell.alignment = { horizontal: 'center' };
+                    }
+
+                    // 3. Inserir Assinaturas
+                    const lastRow = totalRow ? totalRow.number : worksheet.rowCount;
+                    const sigRow = lastRow + 4;
+
+                    // Linhas de assinatura
+                    const sigLine1 = worksheet.getCell(`B${sigRow - 1}`);
+                    const sigLine2 = worksheet.getCell(`I${sigRow - 1}`);
+                    sigLine1.value = "_________________________________________________";
+                    sigLine2.value = "_________________________________________________";
+                    sigLine1.alignment = { horizontal: 'center' };
+                    sigLine2.alignment = { horizontal: 'center' };
+
+                    const collaboratorSigCell = worksheet.getCell(`B${sigRow}`);
+                    const companySigCell = worksheet.getCell(`I${sigRow}`);
+
+                    collaboratorSigCell.value = String(collaboratorFullName).toUpperCase();
+                    collaboratorSigCell.font = { bold: true, size: 10 };
+                    collaboratorSigCell.alignment = { horizontal: 'center' };
+
+                    companySigCell.value = String(companyName).toUpperCase();
+                    companySigCell.font = { bold: true, size: 10 };
+                    companySigCell.alignment = { horizontal: 'center' };
+
+                    try {
+                        worksheet.mergeCells(`B${sigRow}:G${sigRow}`);
+                        worksheet.mergeCells(`I${sigRow}:M${sigRow}`);
+                        worksheet.mergeCells(`B${sigRow - 1}:G${sigRow - 1}`);
+                        worksheet.mergeCells(`I${sigRow - 1}:M${sigRow - 1}`);
+                    } catch (e) { }
+                });
+
+                return { processedSheetsCount, matchedCollaboratorsCount, updatedRowsCount };
+            }
+
+            // Busca TODOS os registros de assiduidade do período com paginação
+            // (evita o limite padrão de 1000 linhas do Supabase)
+            async function fetchAllAttendance(startDate, endDate) {
+                let allData = [];
+                let from = 0;
+                const pageSize = 1000;
+                while (true) {
+                    const { data, error } = await window.supabase
+                        .from('tb_assiduidade')
+                        .select('*')
+                        .gte('date', startDate)
+                        .lte('date', endDate)
+                        .range(from, from + pageSize - 1);
+                    if (error) throw error;
+                    if (data && data.length > 0) allData = allData.concat(data);
+                    if (!data || data.length < pageSize) break;
+                    from += pageSize;
+                }
+                return allData;
+            }
+
             startReconcileBtn.onclick = async () => {
                 const file = reconcileInput.files[0];
                 if (!file) return;
@@ -2993,143 +3223,11 @@
                     const startDate = getLocalDateString(new Date(year, month, 21));
                     const endDate = getLocalDateString(new Date(year, month + 1, 20));
 
-                    const { data: allAttendance, error } = await window.supabase
-                        .from('tb_assiduidade')
-                        .select('*')
-                        .gte('date', startDate)
-                        .lte('date', endDate);
+                    const allAttendance = await fetchAllAttendance(startDate, endDate);
 
-                    if (error) throw error;
+                    const result = reconcileWorkbook(workbook, allAttendance);
 
-                    let updatedSheetsCount = 0;
-                    let updatedRowsCount = 0;
-
-                    workbook.eachSheet((worksheet, sheetId) => {
-                        const collaboratorNameInSheet = worksheet.name.trim().toUpperCase();
-                        const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorNameInSheet);
-
-                        // Pegar nome da empresa e colaborador das células (B1 e B3)
-                        const companyName = worksheet.getCell('B1').value || "O+ MARKETING E RECURSOS HUMANOS LTDA";
-                        const collaboratorFullName = worksheet.getCell('B3').value || worksheet.name;
-
-                        updatedSheetsCount++;
-
-                        let dateCol = -1;
-                        let obsCol = -1;
-                        let headerRowIndex = -1;
-                        let execTotalCol = 8; // Coluna H
-                        let planTotalCol = 12; // Coluna L
-                        let diffCol = 13; // Coluna M
-
-                        // Localizar cabeçalhos nas primeiras 20 linhas
-                        for (let r = 1; r <= 20; r++) {
-                            const row = worksheet.getRow(r);
-                            row.eachCell((cell, colNumber) => {
-                                if (cell.value) {
-                                    const val = String(cell.value).toUpperCase().trim();
-                                    if (val === 'DATA') dateCol = colNumber;
-                                    if (val === 'OBSERVAÇÕES' || val === 'OBSERVAÇAO' || val === 'OBS') {
-                                        obsCol = colNumber;
-                                        headerRowIndex = r;
-                                    }
-                                }
-                            });
-                            if (dateCol !== -1 && obsCol !== -1) break;
-                        }
-
-                        if (dateCol !== -1 && obsCol !== -1) {
-                            // 1. Preencher justificativas do sistema
-                            worksheet.eachRow((row, rowNumber) => {
-                                if (rowNumber <= headerRowIndex) return;
-
-                                const dateCell = row.getCell(dateCol);
-                                let cellDate = null;
-
-                                if (dateCell.value instanceof Date) {
-                                    cellDate = dateCell.value;
-                                } else if (typeof dateCell.value === 'string' && dateCell.value.includes('/')) {
-                                    const parts = dateCell.value.split('/');
-                                    if (parts.length === 3) {
-                                        cellDate = new Date(parts[2], parts[1] - 1, parts[0]);
-                                    }
-                                } else if (dateCell.value && typeof dateCell.value === 'object' && dateCell.value.result instanceof Date) {
-                                    cellDate = dateCell.value.result;
-                                }
-
-                                if (cellDate && !isNaN(cellDate.getTime())) {
-                                    const targetDateStr = getLocalDateString(cellDate);
-                                    const record = personAttendance.find(a => a.date === targetDateStr);
-
-                                    if (record && record.status !== 'P') {
-                                        const obsCell = row.getCell(obsCol);
-                                        let statusText = record.status;
-                                        if (record.observation) statusText += ` - ${record.observation}`;
-
-                                        obsCell.value = statusText;
-                                        updatedRowsCount++;
-                                    }
-                                }
-                            });
-                        }
-
-                        // 2. Realizar Cálculos de Diferença no Total
-                        let totalRow = null;
-                        for (let r = worksheet.rowCount; r > 0; r--) {
-                            const row = worksheet.getRow(r);
-                            const firstCellVal = String(row.getCell(1).value || row.getCell(2).value || "").toUpperCase().trim();
-                            if (firstCellVal === 'TOTAL') {
-                                totalRow = row;
-                                break;
-                            }
-                        }
-
-                        if (totalRow) {
-                            let sumDiffSeconds = 0;
-                            // Somar os valores da coluna de Diferença Tempo (diffCol)
-                            for (let r = headerRowIndex + 1; r < totalRow.number; r++) {
-                                const row = worksheet.getRow(r);
-                                const diffVal = row.getCell(diffCol).value;
-                                sumDiffSeconds += timeToSeconds(diffVal);
-                            }
-
-                            const diffCell = totalRow.getCell(diffCol);
-                            diffCell.value = secondsToTime(sumDiffSeconds);
-                            diffCell.font = { bold: true };
-                            diffCell.alignment = { horizontal: 'center' };
-                        }
-
-                        // 3. Inserir Assinaturas
-                        const lastRow = totalRow ? totalRow.number : worksheet.rowCount;
-                        const sigRow = lastRow + 4;
-
-                        // Linhas de assinatura
-                        const sigLine1 = worksheet.getCell(`B${sigRow - 1}`);
-                        const sigLine2 = worksheet.getCell(`I${sigRow - 1}`);
-                        sigLine1.value = "_________________________________________________";
-                        sigLine2.value = "_________________________________________________";
-                        sigLine1.alignment = { horizontal: 'center' };
-                        sigLine2.alignment = { horizontal: 'center' };
-
-                        const collaboratorSigCell = worksheet.getCell(`B${sigRow}`);
-                        const companySigCell = worksheet.getCell(`I${sigRow}`);
-
-                        collaboratorSigCell.value = String(collaboratorFullName).toUpperCase();
-                        collaboratorSigCell.font = { bold: true, size: 10 };
-                        collaboratorSigCell.alignment = { horizontal: 'center' };
-
-                        companySigCell.value = String(companyName).toUpperCase();
-                        companySigCell.font = { bold: true, size: 10 };
-                        companySigCell.alignment = { horizontal: 'center' };
-
-                        try {
-                            worksheet.mergeCells(`B${sigRow}:G${sigRow}`);
-                            worksheet.mergeCells(`I${sigRow}:M${sigRow}`);
-                            worksheet.mergeCells(`B${sigRow - 1}:G${sigRow - 1}`);
-                            worksheet.mergeCells(`I${sigRow - 1}:M${sigRow - 1}`);
-                        } catch (e) { }
-                    });
-
-                    if (updatedSheetsCount === 0) {
+                    if (result.matchedCollaboratorsCount === 0) {
                         throw new Error("Nenhum colaborador da planilha foi encontrado no sistema. Verifique se o nome da ABA é idêntico ao nome no sistema.");
                     }
 
@@ -3145,7 +3243,7 @@
                     Swal.fire({
                         icon: 'success',
                         title: 'Conciliação Concluída!',
-                        html: `Assinaturas e cálculos aplicados.<br><b>${updatedSheetsCount} abas</b> processadas.<br><b>${updatedRowsCount} observações</b> inseridas.`,
+                        html: `Assinaturas e cálculos aplicados.<br><b>${result.matchedCollaboratorsCount} abas</b> reconciliadas.<br><b>${result.updatedRowsCount} observações</b> inseridas.`,
                         background: getSwalTheme().background,
                         color: getSwalTheme().color
                     });
@@ -3181,13 +3279,10 @@
                     const startDateStr = getLocalDateString(new Date(year, month, 21));
                     const endDateStr = getLocalDateString(new Date(year, month + 1, 20));
 
-                    const { data: allAttendance, error } = await window.supabase
-                        .from('tb_assiduidade')
-                        .select('*')
-                        .gte('date', startDateStr)
-                        .lte('date', endDateStr);
+                    const allAttendance = await fetchAllAttendance(startDateStr, endDateStr);
 
-                    if (error) throw error;
+                    // Reconcilia o workbook na memória antes de renderizar o PDF
+                    reconcileWorkbook(workbook, allAttendance);
 
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('l', 'mm', 'a4'); // Paisagem para caber todas as colunas
@@ -3198,9 +3293,6 @@
 
                     workbook.eachSheet((worksheet, sheetId) => {
                         if (sheetIndex > 0) doc.addPage('l', 'mm', 'a4');
-
-                        const collaboratorNameInSheet = worksheet.name.trim().toUpperCase();
-                        const personAttendance = allAttendance.filter(a => a.collaborator_name.trim().toUpperCase() === collaboratorNameInSheet);
 
                         const collaboratorFullName = worksheet.getCell('B3').value || worksheet.name;
                         const companyName = worksheet.getCell('B1').value || "O+ MARKETING E RECURSOS HUMANOS LTDA";
@@ -3271,7 +3363,25 @@
                         const tableBody = [];
                         let totalRowData = null;
 
-                        // Mapeamento fixo baseado na imagem (Colunas A a N)
+                        let dateCol = -1;
+                        let obsCol = 14; // Default para N
+                        let headerRowIndex = -1;
+                        for (let r = 1; r <= 20; r++) {
+                            const row = worksheet.getRow(r);
+                            row.eachCell((cell, colNumber) => {
+                                if (cell.value) {
+                                    const val = String(cell.value).toUpperCase().trim();
+                                    if (val === 'DATA') dateCol = colNumber;
+                                    if (val === 'OBSERVAÇÕES' || val === 'OBSERVAÇAO' || val === 'OBS') {
+                                        obsCol = colNumber;
+                                        headerRowIndex = r;
+                                    }
+                                }
+                            });
+                            if (dateCol !== -1 && obsCol !== 14) break;
+                        }
+
+                        // Mapeamento fixo baseado no Excel reconciliado (Colunas A a N)
                         worksheet.eachRow((row, rowNumber) => {
                             if (rowNumber < 10) return; // Dados começam geralmente na linha 10
 
@@ -3287,24 +3397,23 @@
                             let displayDate = "";
                             let targetDateStr = "";
                             if (dateVal instanceof Date) {
-                                displayDate = dateVal.toLocaleDateString('pt-BR');
-                                targetDateStr = getLocalDateString(dateVal);
+                                const y = dateVal.getUTCFullYear();
+                                const m = (dateVal.getUTCMonth() + 1).toString().padStart(2, '0');
+                                const d = dateVal.getUTCDate().toString().padStart(2, '0');
+                                displayDate = `${d}/${m}/${y}`;
+                                targetDateStr = `${y}-${m}-${d}`;
                             } else {
-                                displayDate = String(dateVal);
+                                displayDate = String(dateVal || "");
                                 if (displayDate.includes('/')) {
                                     const parts = displayDate.split('/');
-                                    targetDateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                                    if (parts.length === 3) {
+                                        targetDateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                    }
                                 }
                             }
 
-                            // Conciliação de Observações
-                            const record = personAttendance.find(a => a.date === targetDateStr);
-                            let obs = row.getCell(14).value || ""; // Coluna N
-                            if (record && record.status !== 'P') {
-                                let statusText = record.status;
-                                if (record.observation) statusText += ` - ${record.observation}`;
-                                obs = statusText;
-                            }
+                            // A observação já está preenchida na worksheet pelo reconcileWorkbook!
+                            let obs = row.getCell(obsCol).value || "";
 
                             // Formatação de horários (garantir string)
                             const getV = (col) => {
