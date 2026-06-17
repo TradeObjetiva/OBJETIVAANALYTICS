@@ -1997,11 +1997,9 @@
                 if (s.data_admissao && s.data_admissao > endDateStr) return false;
 
                 // Regra de Desativação: 
-                // Se inativo e a desativação foi ANTES do início do período
-                if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
-                    // Verificar se existe algum registro dele neste período
-                    const hasRecords = records.some(r => r.collaborator_name === s.name);
-                    if (!hasRecords) return false;
+                // Se inativo e (não há data de desativação ou a desativação foi ANTES do início do período)
+                if (!s.ativo && (!s.data_desativacao || s.data_desativacao < startDateStr)) {
+                    return false;
                 }
                 return true;
             });
@@ -4488,9 +4486,8 @@
                     if (activeFilters.projects.length > 0 && !activeFilters.projects.includes(s.project)) return false;
                     if (activeFilters.equipes.length > 0 && !activeFilters.equipes.includes(s.equipe)) return false;
                     if (s.data_admissao && s.data_admissao > endDateStr) return false;
-                    if (!s.ativo && s.data_desativacao && s.data_desativacao < startDateStr) {
-                        const hasRecords = records.some(r => r.collaborator_name === s.name);
-                        if (!hasRecords) return false;
+                    if (!s.ativo && (!s.data_desativacao || s.data_desativacao < startDateStr)) {
+                        return false;
                     }
                     return true;
                 });
