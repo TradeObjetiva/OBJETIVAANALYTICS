@@ -29,5 +29,7 @@ yarn-error.log*
 scratch/
 *.csv
 
-# Supabase temp
-supabase/.temp/
+# Temp excel
+*.xlsx
+xl/
+

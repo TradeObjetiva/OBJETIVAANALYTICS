@@ -1,4 +1,4 @@
-const CACHE_NAME = 'objetiva-analytics-v1.2.0';
+const CACHE_NAME = 'objetiva-analytics-v10.0.0';
 const ASSETS = [
     './',
     './index.html',
@@ -35,14 +35,15 @@ self.addEventListener('activate', (event) => {
 });
 
 // Estratégia Network First: Tenta internet, se falhar, usa cache
-// IMPORTANTE: Só cacheia GETs de assets estáticos, ignora POSTs e chamadas ao Supabase
+// IMPORTANTE: Só cacheia GETs de assets estáticos, ignora POSTs e chamadas ao Supabase/Laivon
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // Não intercepta: métodos não-GET, chamadas ao Supabase, CDNs dinâmicas
+    // Não intercepta: métodos não-GET, chamadas ao Supabase, Laivon, CDNs dinâmicas
     if (
         event.request.method !== 'GET' ||
         url.hostname.includes('supabase') ||
+        url.hostname.includes('laivon') ||
         url.hostname.includes('googleapis.com') ||
         url.pathname.startsWith('/rest/') ||
         url.pathname.startsWith('/auth/') ||

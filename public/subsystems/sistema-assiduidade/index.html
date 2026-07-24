@@ -1070,17 +1070,6 @@
                     </div>
                 </div>
 
-                <button class="sync-btn" onclick="showCollectivePresenceModal()"
-                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <polyline points="17 11 19 13 23 9"></polyline>
-                    </svg>
-                    Presença Coletiva
-                </button>
-
                 <button class="sync-btn" id="btn-export-grid"
                     style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1133,66 +1122,6 @@
                         </path>
                     </svg>
                     Gerenciar Legendas
-                </button>
-            </div>
-        </div>
-
-        <!-- Ferramenta de Conciliação de Excel -->
-        <div id="excel-reconcile-card"
-            style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.05)); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <div
-                    style="width: 48px; height: 48px; border-radius: 12px; background: #10b981; display: flex; align-items: center; justify-content: center; color: white;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                </div>
-                <div>
-                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Conciliador de Folha de Ponto
-                    </h3>
-                    <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Substitua "sem registro" pelas
-                        justificativas do sistema automaticamente.</p>
-                </div>
-            </div>
-            <div style="display: flex; gap: 12px;">
-                <input type="file" id="reconcile-file-input" style="display: none;" accept=".xlsx, .xls">
-                <button class="sync-btn" onclick="document.getElementById('reconcile-file-input').click()"
-                    style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
-                    </svg>
-                    Selecionar Planilha
-                </button>
-                <button class="sync-btn" id="btn-start-reconcile" style="background: #10b981; display: none;">
-                    Iniciar Conciliação
-                </button>
-                <button class="sync-btn" id="btn-export-pdf" style="background: #ef4444; display: none;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                    Exportar PDF (Folhas)
-                </button>
-
-                <!-- IMPORTAÇÃO PLANILHA BASE PROVISÓRIA (QUALQUER PERÍODO) -->
-                <input type="file" id="temp-import-file-input" style="display: none;" accept=".xlsx, .xls">
-                <button class="sync-btn" onclick="document.getElementById('temp-import-file-input').click()"
-                    style="background: #8b5cf6; color: white;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
-                    </svg>
-                    Importar Base Provisória
                 </button>
             </div>
         </div>
@@ -4105,7 +4034,7 @@
             return urls.filter(u => u).join(',');
         }
 
-        function getEmptyCells() {
+        function getEmptyCells(startDateStr = null, endDateStr = null) {
             const emptyCells = [];
 
             if (!lastFilteredStaff || !lastDays) return [];
@@ -4113,6 +4042,11 @@
             lastFilteredStaff.forEach(person => {
                 lastDays.forEach(dayObj => {
                     const dateStr = getLocalDateString(dayObj);
+
+                    // Filtro de intervalo de datas (se fornecido)
+                    if (startDateStr && dateStr < startDateStr) return;
+                    if (endDateStr && dateStr > endDateStr) return;
+
                     const status = lastAttendanceMap[`${person.name}_${dateStr}`] || '';
 
                     // Regra de trabalho
@@ -4331,13 +4265,66 @@
         }
 
         async function detectEmptyCells() {
-            const emptyCells = getEmptyCells();
+            if (!lastDays || lastDays.length === 0) {
+                Swal.fire('Aviso', 'Carregue os dados do período primeiro.', 'info');
+                return;
+            }
+
+            const minDateStr = getLocalDateString(lastDays[0]);
+            const maxDateStr = getLocalDateString(lastDays[lastDays.length - 1]);
             const theme = getSwalTheme();
+
+            // Modal para selecionar o filtro de datas
+            const { value: formValues } = await Swal.fire({
+                title: 'Filtrar Período para Identificação',
+                html: `
+                    <div style="text-align: left; font-family: 'Inter', sans-serif;">
+                        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 15px;">
+                            Selecione o intervalo de datas para verificar células não preenchidas:
+                        </p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-dim); margin-bottom: 5px;">Data Inicial</label>
+                                <input type="date" id="swal-detect-start-date" class="swal2-input" value="${minDateStr}" min="${minDateStr}" max="${maxDateStr}" style="margin:0; width:100%; box-sizing:border-box; font-size:13px; border-radius:10px; border:1px solid ${theme.inputBorder}; background:${theme.inputBg}; color:${theme.color};">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 700; color: var(--text-dim); margin-bottom: 5px;">Data Final</label>
+                                <input type="date" id="swal-detect-end-date" class="swal2-input" value="${maxDateStr}" min="${minDateStr}" max="${maxDateStr}" style="margin:0; width:100%; box-sizing:border-box; font-size:13px; border-radius:10px; border:1px solid ${theme.inputBorder}; background:${theme.inputBg}; color:${theme.color};">
+                            </div>
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: '🔍 Analisar Células Vazias',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#ef4444',
+                background: theme.background,
+                color: theme.color,
+                preConfirm: () => {
+                    const startDate = document.getElementById('swal-detect-start-date').value;
+                    const endDate = document.getElementById('swal-detect-end-date').value;
+                    if (!startDate || !endDate) {
+                        Swal.showValidationMessage('Selecione ambas as datas inicial e final');
+                        return false;
+                    }
+                    if (startDate > endDate) {
+                        Swal.showValidationMessage('A data inicial não pode ser maior que a data final');
+                        return false;
+                    }
+                    return { startDate, endDate };
+                }
+            });
+
+            if (!formValues) return;
+
+            const { startDate, endDate } = formValues;
+            const emptyCells = getEmptyCells(startDate, endDate);
 
             if (emptyCells.length === 0) {
                 Swal.fire({
                     title: 'Tudo Certo!',
-                    text: 'Nenhuma célula vazia foi detectada nos dias de trabalho previstos para o período selecionado.',
+                    text: `Nenhuma célula vazia foi detectada no período de ${formatDateBR(startDate)} a ${formatDateBR(endDate)}.`,
                     icon: 'success',
                     confirmButtonColor: 'var(--primary)',
                     background: theme.background,
@@ -4349,8 +4336,8 @@
             // Exibir modal interativo com o resumo e opções
             const htmlContent = `
                 <div style="text-align: left; font-family: 'Inter', sans-serif;">
-                    <p style="font-size: 13px; margin-bottom: 15px; color: var(--text-dim);">
-                        Identificamos <strong style="color: #ef4444; font-size: 15px;">${emptyCells.length}</strong> células não preenchidas em dias de trabalho planejados para o período visível.
+                    <p style="font-size: 13px; margin-bottom: 12px; color: var(--text-dim);">
+                        Identificamos <strong style="color: #ef4444; font-size: 15px;">${emptyCells.length}</strong> células não preenchidas no período de <strong style="color: var(--text-main);">${formatDateBR(startDate)} a ${formatDateBR(endDate)}</strong>.
                     </p>
                     
                     <div style="max-height: 180px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; padding: 10px; background: ${theme.inputBg}; margin-bottom: 20px; font-size: 12px;">
@@ -4424,6 +4411,7 @@
                 }
             });
         }
+
 
         async function exportFullGrid() {
             try {

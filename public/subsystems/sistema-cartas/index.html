@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gerador de Carta de Loja</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2.5.0" />
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js"></script>
   <script defer src="js/state.js"></script>
@@ -32,25 +32,25 @@
       </div>
 
       <div class="field-group drag-zone" id="pdfDropZone">
-        <label for="templatePdf">PDF modelo</label>
+        <label for="templatePdf">PDF modelo <span class="badge-default">CARTA.pdf padrão carregado</span></label>
         <div class="drop-area">
           <input type="file" id="templatePdf" accept=".pdf" />
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-bottom: 10px;">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
           </svg>
-          <p class="drop-text" id="pdfFileName">Arraste o modelo PDF aqui ou clique para selecionar</p>
+          <p class="drop-text" id="pdfFileName">Arraste para substituir o modelo padrão (CARTA.pdf)</p>
         </div>
       </div>
 
       <div class="field-group drag-zone" id="attachmentsDropZone">
-        <label for="attachmentsFiles">Documentos Anexos (PDFs Intercalados)</label>
+        <label for="attachmentsFiles">Documentos Anexos (PDF, JPG, PNG — múltiplos)</label>
         <div class="drop-area">
-          <input type="file" id="attachmentsFiles" accept=".pdf" multiple />
+          <input type="file" id="attachmentsFiles" accept=".pdf,.jpg,.jpeg,.png" multiple />
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-bottom: 10px;">
             <path d="M12 5v14M5 12h14"></path>
           </svg>
-          <p class="drop-text" id="attachmentsFileName">Arraste múltiplos PDFs de anexo aqui ou clique</p>
+          <p class="drop-text" id="attachmentsFileName">Arraste PDF, JPG ou PNG aqui — pode selecionar vários</p>
         </div>
       </div>
 
@@ -82,8 +82,6 @@
         <input type="text" id="cargo" value="Promotor de Merchandising" />
       </div>
 
-
-
       <div class="field-group">
         <label for="textoVinculoModo">Texto de vínculo empregatício</label>
         <select id="textoVinculoModo">
@@ -92,8 +90,6 @@
           <option value="rede" selected>Usar rede</option>
         </select>
       </div>
-
-
 
       <div class="field-group">
         <label for="zipName">Nome do arquivo PDF final</label>
@@ -112,6 +108,26 @@
         <ul id="warningList"></ul>
       </div>
 
+      <!-- Filtros de Agente e Local (Multi-select) -->
+      <div class="filter-section" id="filterSection" style="display: none;">
+        <div class="filter-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          <span>Filtros</span>
+          <button id="clearFiltersBtn" type="button" class="clear-filter-btn" title="Limpar Filtros">✕ Limpar</button>
+        </div>
+        <div class="field-group">
+          <label>Filtrar por Agente</label>
+          <div id="filterAgenteContainer"></div>
+        </div>
+        <div class="field-group">
+          <label>Filtrar por Local</label>
+          <div id="filterLocalContainer"></div>
+        </div>
+        <div class="filter-count" id="filterCount"></div>
+      </div>
+
       <div class="button-row">
         <button id="previewBtn" type="button">Atualizar prévia</button>
         <button id="generateBtn" type="button" class="primary">Gerar PDF Final</button>
@@ -122,7 +138,7 @@
 
     <main class="panel preview-panel">
       <div class="preview-header">
-        <h2>Prévia (Todas as Cartas)</h2>
+        <h2 id="previewTitle">Prévia (Todas as Cartas)</h2>
         <div class="header-actions">
            <button id="toggleEditBtn" class="secondary-btn">Editar Dados Individuais</button>
         </div>

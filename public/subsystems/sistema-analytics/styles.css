@@ -580,6 +580,54 @@ body {
     color: var(--text-muted);
 }
 
+/* Laivon Photo Cards & Extra Panels */
+.laivon-photo-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: pointer;
+}
+.laivon-photo-card:hover {
+    transform: translateY(-2px);
+    border-color: #10b981;
+}
+.laivon-photo-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+    background: #0f172a;
+}
+.laivon-photo-details {
+    padding: 8px 10px;
+}
+.laivon-photo-details strong {
+    font-size: 11px;
+    display: block;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.laivon-photo-details span {
+    font-size: 10px;
+    color: var(--text-muted);
+    display: block;
+}
+
+.laivon-rupture-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 8px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .stats-grid { grid-template-columns: 1fr 1fr; }
@@ -587,4 +635,61 @@ body {
     .rankings-row { grid-template-columns: 1fr; }
     .insights-grid { grid-template-columns: 1fr; }
     .page-header { flex-direction: column; gap: 16px; }
+}
+
+/* Subtabs Navigation inside Analytics */
+.subtabs-bar {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-card);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+    overflow-x: auto;
+}
+
+.subtab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.subtab-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.subtab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.analytics-subview {
+    display: none;
+}
+
+.analytics-subview.active {
+    display: block;
+}
+
+.submodule-iframe {
+    width: 100%;
+    height: calc(100vh - 200px);
+    min-height: 600px;
+    border: none;
+    border-radius: 16px;
+    background: transparent;
 }

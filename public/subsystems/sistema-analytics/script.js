@@ -42,6 +42,31 @@ window.handleFile = (file) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Sub-Tab Navigation inside Analytics ---
+    const subtabBtns = document.querySelectorAll('.subtab-btn');
+    const subviews = document.querySelectorAll('.analytics-subview');
+
+    const switchAnalyticsSubtab = (targetSubtab) => {
+        subtabBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-subtab') === targetSubtab);
+        });
+        subviews.forEach(view => {
+            view.classList.toggle('active', view.id === `subview-${targetSubtab}`);
+        });
+    };
+
+    subtabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const subtab = btn.getAttribute('data-subtab');
+            switchAnalyticsSubtab(subtab);
+        });
+    });
+
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SWITCH_SUBTAB') {
+            switchAnalyticsSubtab(event.data.subtab);
+        }
+    });
     const excelFile = document.getElementById('excelFile');
     const uploadBtn = document.getElementById('uploadBtn');
     const exportBtn = document.getElementById('exportBtn');
@@ -58,6 +83,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let map = null;
     let markers = []; 
     let globalStatsReference = null;
+
+    const laivonSyncBtn = document.getElementById('laivonSyncBtn');
+    const welcomeSyncBtn = document.getElementById('welcomeSyncBtn');
+    const laivonKeyBtn = document.getElementById('laivonKeyBtn');
+
+    if (laivonSyncBtn) laivonSyncBtn.addEventListener('click', syncLaivonData);
+    if (welcomeSyncBtn) welcomeSyncBtn.addEventListener('click', syncLaivonData);
+    if (laivonKeyBtn) laivonKeyBtn.addEventListener('click', () => {
+        const modal = document.getElementById('laivonConfigModal');
+        const input = document.getElementById('laivonApiKeyInput');
+        if (input) input.value = getLaivonApiKey();
+        if (modal) modal.style.display = 'flex';
+    });
 
     if (uploadBtn && excelFile) {
         uploadBtn.addEventListener('click', (e) => {
@@ -771,4 +809,274 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fim da Lógica Real-Time de Check-ins
 
 });
+
+// =============================== INTEGRAÇÃO LAIVON API ===============================
+const DEFAULT_LAIVON_KEY = 'pk_live_W4OMfCgBGyhp.ofbx_r2HlbcXsXH98jm8HW0wut3K_6Y-vSgmOzq2xj8';
+
+function getLaivonApiKey() {
+    const saved = localStorage.getItem('laivon_api_key');
+    if (saved && saved.trim().length > 10) {
+        return saved.trim();
+    }
+    return DEFAULT_LAIVON_KEY;
+}
+
+window.closeLaivonModal = function() {
+    const modal = document.getElementById('laivonConfigModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.saveLaivonApiKey = function() {
+    const keyInput = document.getElementById('laivonApiKeyInput').value.trim();
+    if (keyInput) {
+        localStorage.setItem('laivon_api_key', keyInput);
+        window.closeLaivonModal();
+        syncLaivonData();
+    }
+};
+
+window.resetLaivonApiKey = function() {
+    localStorage.removeItem('laivon_api_key');
+    const input = document.getElementById('laivonApiKeyInput');
+    if (input) input.value = DEFAULT_LAIVON_KEY;
+    window.closeLaivonModal();
+    syncLaivonData();
+};
+
+async function fetchLaivonEndpoint(endpoint, headers) {
+    const supabaseProxyBase = (window.SUPABASE_URL || 'https://xgbvokegqxqxpgznpxiq.supabase.co') + '/functions/v1/laivon-proxy';
+    
+    let lastError = null;
+
+    try {
+        const res = await fetch(`${supabaseProxyBase}${endpoint}`, { headers });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok) {
+            return json;
+        }
+        if (res.status === 401 || res.status === 403) {
+            throw new Error(json?.error?.message || json?.message || `Chave de API inválida (${res.status})`);
+        }
+        lastError = new Error(json?.error?.message || json?.message || `Erro HTTP ${res.status}`);
+    } catch (e) {
+        if (e.message && (e.message.includes('Chave') || e.message.includes('API'))) throw e;
+        lastError = e;
+        console.warn(`[Laivon Sync] Proxy Supabase falhou para ${endpoint}:`, e);
+    }
+
+    try {
+        const res = await fetch(`https://proxy.cors.sh/https://promoter-api.laivon.com/v1${endpoint}`, { headers });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok) {
+            return json;
+        }
+        if (res.status === 401 || res.status === 403) {
+            throw new Error(json?.error?.message || json?.message || `Chave de API inválida (${res.status})`);
+        }
+    } catch (e) {
+        if (e.message && (e.message.includes('Chave') || e.message.includes('API'))) throw e;
+        console.warn(`[Laivon Sync] Proxy CORS falhou para ${endpoint}:`, e);
+    }
+
+    throw lastError || new Error('Falha ao conectar na API Laivon.');
+}
+
+async function syncLaivonData() {
+    const apiKey = getLaivonApiKey();
+    const loader = document.getElementById('loadingOverlay');
+    const loadingMsg = document.getElementById('loadingMsg');
+    
+    if (loader) loader.style.display = 'flex';
+    if (loadingMsg) loadingMsg.textContent = 'Conectando à API Laivon (Promoter)...';
+
+    try {
+        if (loadingMsg) loadingMsg.textContent = 'Buscando tarefas, lojas, agentes e clientes da Laivon...';
+
+        const headers = { 'X-API-Key': apiKey };
+
+        const [tasksRes, agentsRes, localsRes, clientsRes, photosRes, rupturesRes, pricesRes] = await Promise.allSettled([
+            fetchLaivonEndpoint('/tasks?limit=500', headers),
+            fetchLaivonEndpoint('/agents?limit=500', headers),
+            fetchLaivonEndpoint('/locals?limit=500', headers),
+            fetchLaivonEndpoint('/clients?limit=500', headers),
+            fetchLaivonEndpoint('/photos?limit=100', headers),
+            fetchLaivonEndpoint('/ruptures?limit=100', headers),
+            fetchLaivonEndpoint('/prices?limit=100', headers)
+        ]);
+
+        const tasksData = tasksRes.status === 'fulfilled' && tasksRes.value?.data ? tasksRes.value.data : [];
+        const agentsData = agentsRes.status === 'fulfilled' && agentsRes.value?.data ? agentsRes.value.data : [];
+        const localsData = localsRes.status === 'fulfilled' && localsRes.value?.data ? localsRes.value.data : [];
+        const clientsData = clientsRes.status === 'fulfilled' && clientsRes.value?.data ? clientsRes.value.data : [];
+        const photosData = photosRes.status === 'fulfilled' && photosRes.value?.data ? photosRes.value.data : [];
+        const rupturesData = rupturesRes.status === 'fulfilled' && rupturesRes.value?.data ? rupturesRes.value.data : [];
+        const pricesData = pricesRes.status === 'fulfilled' && pricesRes.value?.data ? pricesRes.value.data : [];
+
+        if (tasksData.length === 0 && localsData.length === 0) {
+            let errorMsg = 'Nenhum dado retornado pela API Laivon.';
+            if (tasksRes.status === 'rejected') {
+                errorMsg += '\nDetalhe: ' + (tasksRes.reason?.message || 'Falha de comunicação');
+                if (tasksRes.reason?.message?.includes('401') || tasksRes.reason?.message?.includes('Chave')) {
+                    localStorage.removeItem('laivon_api_key');
+                    errorMsg += '\n\n(Sua chave customizada foi resetada para a padrão oficial. Tente clicar em Sincronizar novamente)';
+                }
+            } else {
+                errorMsg += '\nVerifique sua chave de API.';
+            }
+            alert(errorMsg);
+            return;
+        }
+
+        // Mapeamentos
+        const agentMap = new Map();
+        agentsData.forEach(a => agentMap.set(a.id, a.name));
+
+        const localMap = new Map();
+        localsData.forEach(l => localMap.set(l.id, l));
+
+        const clientMap = new Map();
+        clientsData.forEach(c => clientMap.set(c.id, c.name));
+
+        // Converter tarefas para o formato padrão do Analytics
+        const convertedRows = tasksData.map(task => {
+            const localObj = localMap.get(task.id_local) || {};
+            const agentName = task.agent_name || agentMap.get(task.id_agent) || 'Agente #' + (task.id_agent || '');
+            const storeName = localObj.name || ('Loja #' + task.id_local);
+            const networkName = localObj.neighborhood ? `${localObj.city || ''} (${localObj.neighborhood})` : (localObj.city || 'Outros');
+            const clientName = clientMap.get(task.id_client) || 'Trade Objetiva';
+
+            // Duração
+            let durationStr = '00:30:00';
+            if (task.real_initial_dt && task.real_final_dt) {
+                const diffMs = new Date(task.real_final_dt) - new Date(task.real_initial_dt);
+                if (diffMs > 0) {
+                    const totalSecs = Math.floor(diffMs / 1000);
+                    const hrs = Math.floor(totalSecs / 3600);
+                    const mins = Math.floor((totalSecs % 3600) / 60);
+                    const secs = totalSecs % 60;
+                    durationStr = `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }
+            } else if (task.schedule_initial_dt && task.schedule_final_dt) {
+                const diffMs = new Date(task.schedule_final_dt) - new Date(task.schedule_initial_dt);
+                if (diffMs > 0) {
+                    const totalSecs = Math.floor(diffMs / 1000);
+                    const hrs = Math.floor(totalSecs / 3600);
+                    const mins = Math.floor((totalSecs % 3600) / 60);
+                    const secs = totalSecs % 60;
+                    durationStr = `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }
+            }
+
+            const isDone = Boolean(task.real_final_dt || task.real_initial_dt || task.situation_id === 50 || task.situation_id === 2);
+
+            return {
+                'Agente': agentName,
+                'Local': storeName,
+                'Feito': isDone ? 'Sim' : 'Não',
+                'Cliente': clientName,
+                'Rede': networkName,
+                'Formulário': task.type || 'Visita Operacional',
+                'Duração': durationStr,
+                'Lat': localObj.lat ? parseFloat(localObj.lat) : null,
+                'Lng': localObj.lng ? parseFloat(localObj.lng) : null
+            };
+        });
+
+        // Processar dados no dashboard principal
+        window.processDataInternal(convertedRows);
+
+        // Renderizar Fotos e Rupturas
+        renderLaivonPhotos(photosData, localMap);
+        renderLaivonRuptures(rupturesData, pricesData, localMap);
+
+    } catch (err) {
+        console.error('Erro ao sincronizar dados da Laivon:', err);
+        alert('Erro na comunicação com a API Laivon: ' + err.message);
+    } finally {
+        if (loader) loader.style.display = 'none';
+    }
+}
+
+function renderLaivonPhotos(photos, localMap) {
+    const extraPanels = document.getElementById('laivonExtraPanels');
+    const grid = document.getElementById('laivonPhotosGrid');
+    const badge = document.getElementById('photoCountBadge');
+    if (!grid) return;
+
+    if (extraPanels) extraPanels.style.display = 'grid';
+    if (badge) badge.textContent = `${photos.length} fotos`;
+
+    if (photos.length === 0) {
+        grid.innerHTML = `<p style="color: #94a3b8; font-size: 13px; text-align: center; grid-column: 1 / -1; padding: 30px;">Nenhuma foto registrada na API Laivon.</p>`;
+        return;
+    }
+
+    grid.innerHTML = photos.map(p => {
+        const local = localMap.get(p.local_id) || {};
+        const storeName = local.name || `Loja #${p.local_id}`;
+        const dateStr = p.date ? new Date(p.date).toLocaleDateString('pt-BR') : '';
+
+        return `
+            <div class="laivon-photo-card" onclick="window.open('${p.photo}', '_blank')" title="Clique para expandir a imagem">
+                <img src="${p.photo}" alt="${p.description || 'Foto'}" loading="lazy" onerror="this.src='https://placehold.co/200x120?text=Sem+Foto'">
+                <div class="laivon-photo-details">
+                    <strong title="${p.description || 'Evidência'}">${p.description || 'Evidência Fotográfica'}</strong>
+                    <span>📍 ${storeName}</span>
+                    <span style="font-size: 9px; color: #64748b; margin-top: 2px;">📅 ${dateStr}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderLaivonRuptures(ruptures, prices, localMap) {
+    const list = document.getElementById('laivonRupturesList');
+    const badge = document.getElementById('ruptureCountBadge');
+    if (!list) return;
+
+    const totalCount = ruptures.length + prices.length;
+    if (badge) badge.textContent = `${totalCount} registros`;
+
+    let html = '';
+
+    if (ruptures.length > 0) {
+        html += '<h4 style="font-size: 12px; color: #ef4444; margin: 0 0 8px 0; text-transform: uppercase;">⚠️ Faltas / Rupturas de Estoque</h4>';
+        html += ruptures.slice(0, 15).map(r => {
+            const local = localMap.get(r.local_id) || {};
+            const storeName = local.name || `Loja #${r.local_id}`;
+            return `
+                <div class="laivon-rupture-card">
+                    <div>
+                        <strong style="font-size: 12px; color: #f8fafc;">Produto ID: #${r.product_id}</strong>
+                        <span style="display: block; font-size: 10px; color: #94a3b8;">📍 ${storeName}</span>
+                    </div>
+                    <span class="badge badge-danger" style="padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">RUPTURA</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    if (prices.length > 0) {
+        html += '<h4 style="font-size: 12px; color: #10b981; margin: 12px 0 8px 0; text-transform: uppercase;">🏷️ Pesquisa de Preços em Loja</h4>';
+        html += prices.slice(0, 15).map(p => {
+            const local = localMap.get(p.local_id) || {};
+            const storeName = local.name || `Loja #${p.local_id}`;
+            return `
+                <div class="laivon-rupture-card" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.15);">
+                    <div>
+                        <strong style="font-size: 12px; color: #f8fafc;">Produto ID: #${p.product_id}</strong>
+                        <span style="display: block; font-size: 10px; color: #94a3b8;">📍 ${storeName}</span>
+                    </div>
+                    <span style="color: #10b981; font-weight: 700; font-size: 13px;">R$ ${parseFloat(p.price || 0).toFixed(2)}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    if (!html) {
+        html = `<p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 30px;">Nenhuma ruptura ou preço registrado.</p>`;
+    }
+
+    list.innerHTML = html;
+}
 

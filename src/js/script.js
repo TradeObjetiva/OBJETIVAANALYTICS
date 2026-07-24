@@ -93,11 +93,29 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 2. Tab Switching
+    const analyticsSubItems = ['analytics', 'relatorio', 'cartas', 'roteiro'];
+
     const switchTab = (targetId, save = true) => {
-        // Update Buttons
+        // Update all tab buttons
         tabBtns.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-target') === targetId);
         });
+
+        // Update sub-items inside accordion
+        const subItems = document.querySelectorAll('.tab-btn.sub-item');
+        subItems.forEach(item => {
+            item.classList.toggle('active', item.getAttribute('data-target') === targetId);
+        });
+
+        // Manage accordion state
+        const accordion = document.getElementById('analytics-accordion');
+        const isAnalyticsSubItem = analyticsSubItems.includes(targetId);
+        if (accordion) {
+            accordion.classList.toggle('has-active', isAnalyticsSubItem);
+            if (isAnalyticsSubItem) {
+                accordion.classList.add('open');
+            }
+        }
 
         // Update Mobile Buttons
         mobileBtns.forEach(btn => {
@@ -131,6 +149,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Close mobile sidebar if open
         closeSidebar();
     };
+
+    // Accordion Toggle for Analytics
+    const accordionBtn = document.getElementById('analytics-accordion-btn');
+    if (accordionBtn) {
+        accordionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const accordion = document.getElementById('analytics-accordion');
+            if (accordion) {
+                accordion.classList.toggle('open');
+            }
+        });
+    }
 
     // Mobile Sidebar Logic
     const openSidebar = () => {
@@ -326,6 +356,23 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = { ...window.app, showToast, showCheckinNotification };
 
     // --- Event Listeners ---
+    // Navigation click handler - handles .tab-btn with data-target but NOT accordion-toggle (handled separately above)
+    document.addEventListener('click', (e) => {
+        // Skip if clicking inside import dropdown
+        if (e.target.closest('#import-dropdown')) return;
+        // Skip accordion toggle (handled by its own listener)
+        if (e.target.closest('#analytics-accordion-btn')) return;
+
+        const btn = e.target.closest('.tab-btn[data-target], .sub-item[data-target]');
+        if (btn) {
+            const target = btn.getAttribute('data-target');
+            if (target) {
+                e.preventDefault();
+                switchTab(target, true);
+            }
+        }
+    });
+
     // Navigation handled by hashchange listener in init()
 
     themeToggle.addEventListener('click', () => {

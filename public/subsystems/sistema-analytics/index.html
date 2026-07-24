@@ -29,25 +29,32 @@
             <div class="header-actions">
                 <button id="exportCsvBtn" class="secondary-btn" style="display: none;">📊 Baixar Relação de Cobertura</button>
                 <button id="exportBtn" class="secondary-btn" style="display: none;">📄 Gerar Relatório PDF</button>
-                <button id="uploadBtn" class="primary-btn">Importar Planilha</button>
+                <button id="laivonSyncBtn" class="primary-btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; font-weight: 600; padding: 10px 16px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">⚡ Sincronizar Laivon (Ao Vivo)</button>
+                <button id="laivonKeyBtn" class="secondary-btn" title="Configurar Chave Laivon API" style="padding: 10px 12px; border-radius: 10px; cursor: pointer;">⚙️ API</button>
+                <button id="uploadBtn" class="secondary-btn">Importar Planilha</button>
                 <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" hidden>
             </div>
         </header>
 
-        <div id="welcomeScreen" class="welcome-screen" onclick="document.getElementById('excelFile').click()" 
-             ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+
+
+        <div id="welcomeScreen" class="welcome-screen">
             <div class="upload-icon">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
                 </svg>
             </div>
-            <h2>Arraste e solte o seu arquivo CSV aqui</h2>
-            <p>Ou clique para procurar em seu computador (Funciona offline)</p>
+            <h2>Carregue seus dados operacionais</h2>
+            <p style="margin-bottom: 20px;">Conecte diretamente à <strong>API Laivon (Ao Vivo)</strong> ou envie sua planilha CSV/Excel</p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button id="welcomeSyncBtn" class="primary-btn" style="background: linear-gradient(135deg, #10b981, #059669); padding: 12px 24px; font-size: 15px;">⚡ Carregar via Laivon API (Ao Vivo)</button>
+                <button onclick="document.getElementById('excelFile').click()" class="secondary-btn" style="padding: 12px 24px; font-size: 15px;">📁 Procurar Arquivo Excel / CSV</button>
+            </div>
         </div>
 
         <div id="loadingOverlay" class="loading-overlay" style="display: none;">
             <div class="loader"></div>
-            <p>Processando dados operacionais...</p>
+            <p id="loadingMsg">Processando dados operacionais...</p>
         </div>
 
         <div id="dashboardContent" class="dashboard-content" style="display: none;">
@@ -112,6 +119,29 @@
                 </div>
             </div>
 
+            <!-- PAINEL DE FOTOS DE CAMPO & RUPTURAS DA LAIVON -->
+            <div class="rankings-row" id="laivonExtraPanels" style="display: none;">
+                <div class="ranking-panel" style="background: var(--surface-card); border-radius: 16px; padding: 20px;">
+                    <div class="chart-header">
+                        <h3>📸 Evidências Fotográficas em Campo (Laivon)</h3>
+                        <span id="photoCountBadge" style="background: rgba(16,185,129,0.15); color: #10b981; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">0 fotos</span>
+                    </div>
+                    <div id="laivonPhotosGrid" class="laivon-photos-grid scrollable" style="max-height: 350px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 15px;">
+                        <p style="color: #94a3b8; font-size: 13px; text-align: center; grid-column: 1 / -1; padding: 30px;">Nenhuma foto carregada ainda.</p>
+                    </div>
+                </div>
+
+                <div class="ranking-panel worst" style="background: var(--surface-card); border-radius: 16px; padding: 20px;">
+                    <div class="chart-header">
+                        <h3>🚨 Rupturas e Preços Coletados</h3>
+                        <span id="ruptureCountBadge" style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">0 registros</span>
+                    </div>
+                    <div id="laivonRupturesList" class="rank-list scrollable" style="max-height: 350px; overflow-y: auto; margin-top: 15px;">
+                        <p style="color: #94a3b8; font-size: 13px; text-align: center; padding: 30px;">Nenhuma ruptura registrada.</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="rankings-row">
                 <div class="ranking-panel worst">
                     <div class="chart-header">
@@ -162,8 +192,28 @@
                 </section>
             </div>
         </div>
+
     </div>
 
-    <script src="script.js"></script>
+    <!-- Modal de Configuração da API Key Laivon -->
+    <div id="laivonConfigModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: var(--surface-card, #1e293b); color: var(--text-primary, #f8fafc); border-radius: 16px; padding: 24px; max-width: 480px; width: 90%; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+            <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 18px; display: flex; align-items: center; gap: 8px;">⚙️ Configuração Laivon API</h3>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 16px;">Insira a chave de autenticação (X-API-Key) para acesso somente-leitura dos dados da Laivon Promoter.</p>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #cbd5e1;">X-API-Key</label>
+                <input type="text" id="laivonApiKeyInput" placeholder="pk_live_..." style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-family: monospace; font-size: 12px; box-sizing: border-box;" />
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <button onclick="resetLaivonApiKey()" class="secondary-btn" style="padding: 8px 12px; font-size: 12px; color: #f87171; border-color: rgba(248,113,113,0.3);">Restaurar Chave Padrão</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="closeLaivonModal()" class="secondary-btn" style="padding: 8px 16px;">Cancelar</button>
+                    <button onclick="saveLaivonApiKey()" class="primary-btn" style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Salvar e Conectar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=1.0.2"></script>
 </body>
 </html>

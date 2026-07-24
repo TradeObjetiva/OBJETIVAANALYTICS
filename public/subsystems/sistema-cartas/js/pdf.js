@@ -99,13 +99,22 @@ async function buildPdfBytes(targetGroups) {
 
     if (progressContainer) progressContainer.style.display = "block";
 
-    // Pré-carrega todos os PDFs de anexo em instâncias do pdf-lib
+    // Pré-carrega todos os documentos de anexo (PDF, JPG, PNG)
     const attachmentDocs = [];
     if (state.attachments && state.attachments.length > 0) {
         for (const attach of state.attachments) {
             try {
-                const attachDoc = await PDFDocument.load(attach.bytes);
-                attachmentDocs.push(attachDoc);
+                const ext = (attach.type || attach.name.split('.').pop()).toLowerCase();
+                if (ext === 'pdf') {
+                    const attachDoc = await PDFDocument.load(attach.bytes);
+                    attachmentDocs.push({ type: 'pdf', doc: attachDoc });
+                } else if (ext === 'jpg' || ext === 'jpeg') {
+                    const embeddedImg = await outputPdf.embedJpg(attach.bytes);
+                    attachmentDocs.push({ type: 'image', img: embeddedImg, name: attach.name });
+                } else if (ext === 'png') {
+                    const embeddedImg = await outputPdf.embedPng(attach.bytes);
+                    attachmentDocs.push({ type: 'image', img: embeddedImg, name: attach.name });
+                }
             } catch (err) {
                 console.error(`Erro ao carregar anexo ${attach.name}:`, err);
             }
@@ -244,16 +253,30 @@ async function buildPdfBytes(targetGroups) {
             color: rgb(...rgb01(20, 20, 20)),
         });
 
-        // Copia e intercala todas as páginas dos PDFs de anexo imediatamente após esta carta
-        for (const attachDoc of attachmentDocs) {
+        // Copia e intercala todas as páginas dos documentos de anexo imediatamente após esta carta
+        for (const attachItem of attachmentDocs) {
             try {
-                const pageIndices = Array.from({ length: attachDoc.getPageCount() }, (_, idx) => idx);
-                const copiedAttachPages = await outputPdf.copyPages(attachDoc, pageIndices);
-                for (const attachPage of copiedAttachPages) {
-                    outputPdf.addPage(attachPage);
+                if (attachItem.type === 'pdf') {
+                    const pageIndices = Array.from({ length: attachItem.doc.getPageCount() }, (_, idx) => idx);
+                    const copiedAttachPages = await outputPdf.copyPages(attachItem.doc, pageIndices);
+                    for (const attachPage of copiedAttachPages) {
+                        outputPdf.addPage(attachPage);
+                    }
+                } else if (attachItem.type === 'image') {
+                    // Create an A4 page (595 x 842 pts) and draw the image scaled to fit
+                    const imgPage = outputPdf.addPage([595, 842]);
+                    const { width: imgW, height: imgH } = attachItem.img;
+                    const maxW = 555;
+                    const maxH = 802;
+                    const scale = Math.min(maxW / imgW, maxH / imgH);
+                    const drawW = imgW * scale;
+                    const drawH = imgH * scale;
+                    const x = (595 - drawW) / 2;
+                    const y = (842 - drawH) / 2;
+                    imgPage.drawImage(attachItem.img, { x, y, width: drawW, height: drawH });
                 }
             } catch (err) {
-                console.error("Erro ao mesclar páginas do anexo na carta:", err);
+                console.error("Erro ao mesclar anexo:", err);
             }
         }
     }
@@ -281,6 +304,20 @@ async function gerarPDF() {
     }
 }
 
+async function gerarPDFFiltrado(grupos) {
+    try {
+        const pdfBytes = await buildPdfBytes(grupos);
+        const zipName = document.getElementById("zipName");
+        let dt = new Date().toISOString().slice(0, 10);
+        let name = zipName && zipName.value ? zipName.value : `cartas_lojas_${dt}.pdf`;
+        if (!name.toLowerCase().endsWith('.pdf')) name += '.pdf';
+
+        baixarArquivo(pdfBytes, name, "application/pdf");
+    } catch (e) {
+        alert(e.message);
+    }
+}
+
 async function gerarPreviaPDF() {
     try {
         if (!state.grouped || !state.grouped.length) {
@@ -289,6 +326,28 @@ async function gerarPreviaPDF() {
         }
 
         const pdfBytes = await buildPdfBytes(state.grouped);
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        const iframe = document.getElementById("previewIframe");
+        if (iframe) {
+            iframe.src = url;
+            iframe.style.display = "block";
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Não foi possível carregar a prévia: " + e.message);
+    }
+}
+
+async function gerarPreviaPDFFiltrado(grupos) {
+    try {
+        if (!grupos || !grupos.length) {
+            alert("Nenhuma carta corresponde ao filtro selecionado.");
+            return;
+        }
+
+        const pdfBytes = await buildPdfBytes(grupos);
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
 

@@ -17,8 +17,7 @@ const state = {
     processedData: [],
     colMap: {},
     taskCols: [],
-    agents: [],
-    projectType: localStorage.getItem("roteiro_projectType") || "compartilhado"
+    agents: []
 };
 
 // =============================== ELEMENTOS DOM ===============================
@@ -30,6 +29,7 @@ const elements = {
     customTitle: document.getElementById("custom-title"),
     colorMode: document.getElementById("color-mode"),
     btnGenerate: document.getElementById("btn-generate"),
+    btnGenerateZip: document.getElementById("btn-generate-zip"),
     previewContent: document.getElementById("preview-content"),
     loading: document.getElementById("loading"),
     statusMsg: document.getElementById("status-msg")
@@ -146,17 +146,26 @@ function detectHeaderRow(rows) {
 
 // =============================== MAPEAMENTO DE COLUNAS ===============================
 function buildColumnMap(headers) {
-    if (state.projectType === "exclusivo") {
-        return buildColumnMapExclusivo(headers);
-    }
-
     const h = headers.map(normalizeLoose);
     const find = (patterns) => h.findIndex((col) => patterns.some((p) => p.test(col)));
 
     const days = {};
-    DAY_ORDER.forEach((day) => {
-        days[day] = h.findIndex((col) => col === day || col === day.toLowerCase());
-    });
+    const clienteOrFormIndex = find([/CLIENTE/, /FORM/, /PESQUISA/, /TAREFA/]);
+    
+    // Tenta encontrar padrão de dias (SEG, TER... ou S, T, Q, Q, S, S)
+    const segIdx = h.findIndex((col, i) => (clienteOrFormIndex === -1 || i > clienteOrFormIndex) && (col === "S" || col === "SEG"));
+    if (segIdx !== -1 && h[segIdx] === "S") {
+        days.SEG = segIdx;
+        days.TER = segIdx + 1;
+        days.QUA = segIdx + 2;
+        days.QUI = segIdx + 3;
+        days.SEX = segIdx + 4;
+        days.SAB = segIdx + 5;
+    } else {
+        DAY_ORDER.forEach((day) => {
+            days[day] = h.findIndex((col) => col === day || col === day.toLowerCase() || col === day[0]);
+        });
+    }
 
     days.DOM = h.findIndex((col) => col === "DOM" || col === "dom");
 
@@ -171,55 +180,18 @@ function buildColumnMap(headers) {
         );
     });
 
+    const formIndex = find([/FORM/, /PESQUISA/, /TAREFA/, /CLIENTE/]);
+    const redeIndex = find([/REDE/, /CLIENTE/]);
+
     return {
         agente: find([/AGENTE/, /PROMOTOR/]),
         local: find([/LOCAL/, /LOJA/]),
-        form: find([/FORM/, /PESQUISA/, /TAREFA/]),
-        logradouro: logradouroIndex,
+        form: formIndex,
+        logradouro: logradouroIndex !== -1 ? logradouroIndex : find([/ENDERECO/, /LOGRADOURO/, /RUA/, /ENDEREÇO/]),
         bairro: find([/BAIRRO/]),
         municipio: find([/MUNICIPIO/, /MUNICÍPIO/, /CIDADE/]),
-        estado: find([/ESTADO/]),
-        rede: find([/REDE/]),
-        days: days
-    };
-}
-
-function buildColumnMapExclusivo(headers) {
-    const h = headers.map(normalizeLoose);
-    const find = (patterns) => h.findIndex((col) => patterns.some((p) => p.test(col)));
-
-    // Mapeamento baseado no pedido do usuário e na imagem:
-    // promotor = agente
-    // endereço = logradouro
-    // cliente = form
-    
-    const days = {};
-    const clienteIndex = find([/CLIENTE/]);
-    
-    // Dias: No projeto exclusivo eles podem vir como S, T, Q, Q, S, S ou SEG, TER...
-    const segIdx = h.findIndex((col, i) => i > clienteIndex && (col === "S" || col === "SEG"));
-    if (segIdx !== -1) {
-        days.SEG = segIdx;
-        days.TER = segIdx + 1;
-        days.QUA = segIdx + 2;
-        days.QUI = segIdx + 3;
-        days.SEX = segIdx + 4;
-        days.SAB = segIdx + 5;
-    } else {
-        DAY_ORDER.forEach((day) => {
-            days[day] = h.findIndex((col) => col === day || col === day[0]);
-        });
-    }
-
-    return {
-        agente: find([/PROMOTOR/, /AGENTE/]),
-        local: find([/LOCAL/, /LOJA/]),
-        form: find([/CLIENTE/]), // Agora mapeado conforme solicitado
-        logradouro: find([/ENDERECO/, /LOGRADOURO/, /RUA/, /ENDEREÇO/]),
-        bairro: find([/BAIRRO/]),
-        municipio: find([/MUNICIPIO/, /CIDADE/]),
-        estado: find([/UF/, /ESTADO/]),
-        rede: find([/CLIENTE/]), // Usamos o cliente como rede também se for o caso
+        estado: find([/ESTADO/, /UF/]),
+        rede: redeIndex !== -1 ? redeIndex : formIndex,
         days: days
     };
 }
@@ -304,53 +276,32 @@ function groupData(rows) {
             };
         }
 
-        // Se for exclusivo e não tiver tarefas fixas, criamos uma tarefa genérica
-        if (state.projectType === "exclusivo" && state.taskCols.length === 0) {
-            const days = extractDaysFromRow(r);
-            days.forEach((day) => {
-                if (Object.prototype.hasOwnProperty.call(map[key].allDays, day)) {
-                    map[key].allDays[day] = true;
-                }
-            });
-
-            const taskName = "Atendimento Geral";
-            const existingTask = map[key].tasks.find((task) => task.name === taskName);
-            if (existingTask) {
-                days.forEach((d) => {
-                    if (!existingTask.days.includes(d)) existingTask.days.push(d);
-                });
-            } else {
-                map[key].tasks.push({
-                    name: taskName,
-                    days: days
-                });
+        const days = extractDaysFromRow(r);
+        days.forEach((day) => {
+            if (Object.prototype.hasOwnProperty.call(map[key].allDays, day)) {
+                map[key].allDays[day] = true;
             }
-        } else if (state.taskCols.length > 0) {
+        });
+
+        let taskName = "Atendimento Geral";
+        if (state.taskCols.length > 0) {
             const taskCol = state.taskCols[0];
             const taskValue = clean(r[taskCol.index]);
-
             if (taskValue) {
-                const taskName = cleanTaskName(taskValue);
-                const days = extractDaysFromRow(r);
-
-                days.forEach((day) => {
-                    if (Object.prototype.hasOwnProperty.call(map[key].allDays, day)) {
-                        map[key].allDays[day] = true;
-                    }
-                });
-
-                const existingTask = map[key].tasks.find((task) => task.name === taskName);
-                if (existingTask) {
-                    days.forEach((d) => {
-                        if (!existingTask.days.includes(d)) existingTask.days.push(d);
-                    });
-                } else {
-                    map[key].tasks.push({
-                        name: taskName,
-                        days: days
-                    });
-                }
+                taskName = cleanTaskName(taskValue);
             }
+        }
+
+        const existingTask = map[key].tasks.find((task) => task.name === taskName);
+        if (existingTask) {
+            days.forEach((d) => {
+                if (!existingTask.days.includes(d)) existingTask.days.push(d);
+            });
+        } else {
+            map[key].tasks.push({
+                name: taskName,
+                days: days
+            });
         }
     });
 
@@ -599,11 +550,6 @@ async function exportPDF() {
 
             const container = document.createElement('div');
 
-            // Removido style="position:absolute" pois isso quebra a renderização do html2canvas 
-            // resultando numa página em branco.
-            // Para não quebrar por tamanho (Canvas Height Limit), criamos e processamos
-            // um contêiner de cada vez, aguardando (await) antes de inserir o próximo!
-
             // Replicando o body original no container
             container.innerHTML = `
                 <div style="font-family: Arial, Helvetica, sans-serif; background: white; padding: 15px; margin: 0; box-sizing: border-box;">
@@ -626,9 +572,6 @@ async function exportPDF() {
                 }).from(container).toContainer().toCanvas().toPdf();
             }
 
-            // O SEGredo para não criar uma tela infinita que estoura a memória do navegador
-            // é ESPERAR a renderização terminar para DEPOIS apagar o container,
-            // garantindo que no próximo laço o top/offset será sempre zero!
             await worker;
             document.body.removeChild(container);
         }
@@ -644,6 +587,186 @@ async function exportPDF() {
     } catch (error) {
         console.error("Erro ao gerar PDF:", error);
         showToast("Erro ao gerar PDF: " + error.message, "error");
+    } finally {
+        showLoading(false);
+    }
+}
+
+// =============================== EXPORTAR ZIP (1 PDF POR AGENTE) ===============================
+async function exportZIP() {
+    if (!state.data || state.data.length === 0) {
+        showToast("Nenhum dado para exportar!", "error");
+        return;
+    }
+
+    if (typeof JSZip === 'undefined') {
+        showToast("Biblioteca JSZip não carregada!", "error");
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        const title = elements.customTitle.value || "Roteiro Agência Objetiva";
+        const isColorMode = elements.colorMode && elements.colorMode.value === "color";
+
+        const colors = {
+            primary: isColorMode ? "#f97316" : "#333333",
+            badgeActive: isColorMode ? "#f97316" : "#444444",
+            badgeInactive: isColorMode ? "#e2e8f0" : "#dddddd",
+            badgeActiveText: isColorMode ? "white" : "white",
+            badgeInactiveText: isColorMode ? "#64748b" : "#666666",
+            headerBg: isColorMode ? "#f97316" : "#444444",
+            activeDayBg: isColorMode ? "#fff3e0" : "#eeeeee"
+        };
+
+        const agentsToExport = state.selectedPromoter === "ALL" ? state.agents : [state.selectedPromoter];
+
+        const validAgents = agentsToExport.filter(agent => {
+            const rows = state.data.filter(r => normalize(clean(r[state.colMap.agente])) === normalize(agent));
+            return rows.length > 0;
+        });
+
+        if (validAgents.length === 0) {
+            showToast("Nenhum dado válido para exportar!", "error");
+            showLoading(false);
+            return;
+        }
+
+        function renderTableHTML(agentStores, agentName) {
+            const MAX_ROWS_PER_PAGE = 45;
+            const tablePages = [];
+
+            for (let i = 0; i < agentStores.length; i += MAX_ROWS_PER_PAGE) {
+                tablePages.push(agentStores.slice(i, i + MAX_ROWS_PER_PAGE));
+            }
+
+            let allTablesHtml = '';
+
+            for (let pageIdx = 0; pageIdx < tablePages.length; pageIdx++) {
+                const pageStores = tablePages[pageIdx];
+
+                let tableHtml = `
+                    <div style="page-break-after: ${pageIdx < tablePages.length - 1 ? 'always' : 'auto'}; break-after: ${pageIdx < tablePages.length - 1 ? 'page' : 'auto'};">
+                        <div style="margin-bottom: 15px;">
+                            <h2 style="color: ${colors.primary}; font-size: 18px; margin: 0 0 10px 0; border-bottom: 2px solid ${colors.primary}; padding-bottom: 6px; display: inline-block;">
+                                📊 Roteiro Agência Objetiva
+                            </h2>
+                            <div style="font-size: 10px; color: #555; margin: 8px 0;">
+                                <strong>Promotor(a):</strong> ${escapeHtml(agentName)}
+                            </div>
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 9px; page-break-inside: auto;">
+                            <thead>
+                                <tr style="background: ${colors.headerBg};">
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: left; color: white; font-size: 8px; width: 25%;">Loja</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: left; color: white; font-size: 8px; width: 40%;">Endereço</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">SEG</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">TER</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">QUA</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">QUI</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">SEX</th>
+                                    <th style="padding: 6px; border: 1px solid #ddd; text-align: center; color: white; font-size: 8px; width: 5.7%;">SAB</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                for (let i = 0; i < pageStores.length; i++) {
+                    const store = pageStores[i];
+                    const days = store.allDays || { SEG: false, TER: false, QUA: false, QUI: false, SEX: false, SAB: false };
+                    const bgColor = i % 2 === 0 ? "#ffffff" : "#fafafa";
+
+                    tableHtml += `
+                        <tr style="background: ${bgColor}; page-break-inside: avoid; break-inside: avoid;">
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; font-weight: bold; color: #000000; font-size: 8px;">${escapeHtml(store.name)}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; color: #444; font-size: 7.5px;">${escapeHtml(store.enderecoCompleto || "---")}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SEG ? colors.activeDayBg : "white"}; font-size: 8px;">${days.SEG ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.TER ? colors.activeDayBg : "white"}; font-size: 8px;">${days.TER ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.QUA ? colors.activeDayBg : "white"}; font-size: 8px;">${days.QUA ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.QUI ? colors.activeDayBg : "white"}; font-size: 8px;">${days.QUI ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SEX ? colors.activeDayBg : "white"}; font-size: 8px;">${days.SEX ? "✅" : ""}</td>
+                            <td style="padding: 5px 6px; border: 1px solid #ddd; text-align: center; background: ${days.SAB ? colors.activeDayBg : "white"}; font-size: 8px;">${days.SAB ? "✅" : ""}</td>
+                        </tr>
+                    `;
+                }
+
+                tableHtml += `
+                            </tbody>
+                        </table>
+                        <p style="font-size: 8px; color: #666; margin-top: 8px;">✅ = Dia com atendimento</p>
+                    </div>
+                `;
+
+                allTablesHtml += tableHtml;
+            }
+
+            return allTablesHtml;
+        }
+
+        const zip = new JSZip();
+        const originalScroll = window.scrollY;
+        window.scroll(0, 0);
+
+        for (let idx = 0; idx < validAgents.length; idx++) {
+            const currentAgent = validAgents[idx];
+            setStatus(`Gerando PDF (${idx + 1}/${validAgents.length}): ${currentAgent}...`, "info");
+
+            const rows = state.data.filter(
+                (r) => normalize(clean(r[state.colMap.agente])) === normalize(currentAgent)
+            );
+
+            const processed = groupData(rows);
+            if (processed.length === 0) continue;
+
+            const sortedStores = [...processed].sort((a, b) => a.name.localeCompare(b.name));
+
+            const container = document.createElement('div');
+            container.innerHTML = `
+                <div style="font-family: Arial, Helvetica, sans-serif; background: white; padding: 15px; margin: 0; box-sizing: border-box;">
+                    <div style="margin-bottom: 20px; text-align: center;">
+                        <img src="logo-objetiva-pdf.png" style="height: 50px; width: auto;" alt="Logo" onerror="this.style.display='none'">
+                    </div>
+                    ${renderTableHTML(sortedStores, currentAgent)}
+                </div>
+            `;
+
+            document.body.appendChild(container);
+
+            const sanitizedAgentName = currentAgent.replace(/[/\\?%*:|"<>]/g, '_').trim();
+            const optAgent = {
+                margin: [8, 5, 8, 5],
+                filename: `Roteiro_${sanitizedAgentName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, letterRendering: true, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const pdfBlob = await html2pdf().set(optAgent).from(container).outputPdf('blob');
+            document.body.removeChild(container);
+
+            zip.file(`Roteiro_${sanitizedAgentName}.pdf`, pdfBlob);
+        }
+
+        setStatus("Compactando arquivo ZIP...", "info");
+        const zipContent = await zip.generateAsync({ type: 'blob' });
+
+        const zipFilename = `${title.replace(/[^a-z0-9]/gi, '_')}_AGENTES.zip`;
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipContent);
+        link.download = zipFilename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        window.scroll(0, originalScroll);
+        setStatus("✅ Exportação ZIP concluída com sucesso!", "success");
+        showToast("Arquivo ZIP exportado com sucesso!", "success");
+
+    } catch (error) {
+        console.error("Erro ao exportar ZIP:", error);
+        showToast("Erro ao exportar ZIP: " + error.message, "error");
     } finally {
         showLoading(false);
     }
@@ -763,38 +886,14 @@ if (elements.btnGenerate) {
     elements.btnGenerate.addEventListener("click", exportPDF);
 }
 
+if (elements.btnGenerateZip) {
+    elements.btnGenerateZip.addEventListener("click", exportZIP);
+}
+
 const btnDebug = document.getElementById("btn-debug");
 if (btnDebug) {
     btnDebug.addEventListener("click", showDebugModal);
 }
-
-// Inicializar Seletor de Projeto
-document.querySelectorAll('.project-btn').forEach(btn => {
-    // Definir estado inicial dos botões baseado no localStorage
-    if (btn.getAttribute('data-type') === state.projectType) {
-        btn.classList.add('active');
-    } else {
-        btn.classList.remove('active');
-    }
-
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.project-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        state.projectType = btn.getAttribute('data-type');
-        localStorage.setItem("roteiro_projectType", state.projectType);
-        
-        if (state.data.length > 0) {
-            // Re-mapear colunas se o tipo mudar
-            try {
-                state.colMap = buildColumnMap(state.headers);
-                updatePreview();
-                showToast(`Modo ${state.projectType} aplicado`, "info");
-            } catch (e) {
-                console.error(e);
-            }
-        }
-    });
-});
 
 // Sync Theme via BroadcastChannel
 const syncChannel = new BroadcastChannel('app_sync');

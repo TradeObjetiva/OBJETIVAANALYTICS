@@ -10,10 +10,212 @@ document.addEventListener("DOMContentLoaded", () => {
     const progressBar = document.getElementById("progressBar");
     const progressText = document.getElementById("progressText");
 
+    const filterSection = document.getElementById("filterSection");
+    const filterCount = document.getElementById("filterCount");
+    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+    const previewTitle = document.getElementById("previewTitle");
+
     // Inicializa a data atual
     if (cidadeDataInput) {
         cidadeDataInput.value = dataAtualExtenso();
     }
+
+    // ─── CARTA.pdf permanente ─────────────────────────────────────────────────
+    async function carregarModeloPermanente() {
+        try {
+            const response = await fetch('./CARTA.pdf');
+            if (!response.ok) throw new Error('Não foi possível carregar CARTA.pdf');
+            state.templateBytes = await response.arrayBuffer();
+            // Atualiza UI
+            const dropText = document.getElementById("pdfFileName");
+            if (dropText) {
+                dropText.innerHTML = `<span style="color: var(--success); font-weight: bold;">✓ Modelo Padrão Carregado:</span><br>CARTA.pdf`;
+            }
+            const dropZone = document.getElementById("pdfDropZone");
+            if (dropZone) {
+                dropZone.style.border = "2px solid var(--success)";
+                dropZone.setAttribute("title", "Modelo CARTA.pdf carregado automaticamente. Você pode substituir arrastando outro PDF.");
+            }
+            const statusBox = document.getElementById("statusBox");
+            if (statusBox && statusBox.textContent.includes("lojas identificadas")) {
+                if (!statusBox.textContent.includes("Modelo PDF")) {
+                    statusBox.textContent += " | Modelo PDF OK";
+                }
+            }
+        } catch (err) {
+            console.warn('CARTA.pdf não pôde ser carregado automaticamente:', err);
+        }
+    }
+    carregarModeloPermanente();
+
+    // ─── Multi-Select Filtros ────────────────────────────────────────────────
+    // Estado dos filtros como conjuntos
+    const selectedAgentes = new Set();
+    const selectedLocais = new Set();
+
+    function getFilteredGroups() {
+        if (!state.grouped || !state.grouped.length) return [];
+        return state.grouped.filter(g => {
+            const matchAgente = selectedAgentes.size === 0 || selectedAgentes.has(g.agente);
+            const matchLocal = selectedLocais.size === 0 || selectedLocais.has(g.local);
+            return matchAgente && matchLocal;
+        });
+    }
+
+    function buildMultiSelectDropdown(containerId, items, selectedSet, onChange) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = "";
+        const wrapper = document.createElement("div");
+        wrapper.className = "multi-select-dropdown";
+
+        // Summary button
+        const summary = document.createElement("button");
+        summary.type = "button";
+        summary.className = "multi-select-summary";
+        summary.setAttribute("aria-expanded", "false");
+        const updateSummary = () => {
+            const count = selectedSet.size;
+            summary.textContent = count === 0 ? "Todos" : `${count} selecionado${count > 1 ? 's' : ''}`;
+            summary.classList.toggle("has-selection", count > 0);
+        };
+        updateSummary();
+
+        // Dropdown list
+        const list = document.createElement("div");
+        list.className = "multi-select-list";
+        list.style.display = "none";
+
+        // Search input
+        const searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = "Pesquisar...";
+        searchInput.className = "multi-select-search";
+        list.appendChild(searchInput);
+
+        // "Selecionar todos" row
+        const allRow = document.createElement("label");
+        allRow.className = "multi-select-item select-all-row";
+        const allCb = document.createElement("input");
+        allCb.type = "checkbox";
+        allCb.checked = selectedSet.size === 0;
+        allRow.appendChild(allCb);
+        allRow.appendChild(document.createTextNode(" Todos"));
+        list.appendChild(allRow);
+
+        // Item rows
+        const itemRows = [];
+        items.forEach(item => {
+            const row = document.createElement("label");
+            row.className = "multi-select-item";
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = item;
+            cb.checked = selectedSet.has(item);
+            row.appendChild(cb);
+            row.appendChild(document.createTextNode(` ${item}`));
+            list.appendChild(row);
+            itemRows.push({ row, cb, label: item });
+
+            cb.addEventListener("change", () => {
+                if (cb.checked) selectedSet.add(item);
+                else selectedSet.delete(item);
+                allCb.checked = selectedSet.size === 0;
+                updateSummary();
+                onChange();
+            });
+        });
+
+        // "Todos" checkbox logic
+        allCb.addEventListener("change", () => {
+            if (allCb.checked) {
+                selectedSet.clear();
+                itemRows.forEach(({ cb }) => { cb.checked = false; });
+            }
+            updateSummary();
+            onChange();
+        });
+
+        // Search filter
+        searchInput.addEventListener("input", () => {
+            const q = searchInput.value.toLowerCase();
+            itemRows.forEach(({ row, label }) => {
+                row.style.display = label.toLowerCase().includes(q) ? "" : "none";
+            });
+        });
+
+        // Toggle dropdown
+        summary.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = list.style.display !== "none";
+            list.style.display = isOpen ? "none" : "block";
+            summary.setAttribute("aria-expanded", String(!isOpen));
+            if (!isOpen) searchInput.focus();
+        });
+
+        // Close on outside click
+        document.addEventListener("click", (e) => {
+            if (!wrapper.contains(e.target)) {
+                list.style.display = "none";
+                summary.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        wrapper.appendChild(summary);
+        wrapper.appendChild(list);
+        container.appendChild(wrapper);
+    }
+
+    function populateFilterSelects() {
+        if (!state.grouped || !state.grouped.length) return;
+
+        const agentes = [...new Set(state.grouped.map(g => g.agente).filter(Boolean))].sort();
+        const locais = [...new Set(state.grouped.map(g => g.local).filter(Boolean))].sort();
+
+        buildMultiSelectDropdown("filterAgenteContainer", agentes, selectedAgentes, updateFilterCount);
+        buildMultiSelectDropdown("filterLocalContainer", locais, selectedLocais, updateFilterCount);
+
+        if (filterSection) filterSection.style.display = "block";
+        updateFilterCount();
+    }
+
+    function updateFilterCount() {
+        const filtered = getFilteredGroups();
+        const total = state.grouped ? state.grouped.length : 0;
+        const count = filtered.length;
+
+        if (filterCount) {
+            if (count < total) {
+                filterCount.innerHTML = `<span class="filter-active-badge">${count} de ${total} cartas selecionadas</span>`;
+            } else {
+                filterCount.innerHTML = `<span class="filter-all-badge">${total} cartas (sem filtro)</span>`;
+            }
+        }
+
+        if (previewTitle) {
+            const hasAgente = selectedAgentes.size > 0;
+            const hasLocal = selectedLocais.size > 0;
+            if (hasAgente || hasLocal) {
+                const parts = [];
+                if (hasAgente) parts.push(`${selectedAgentes.size} agente${selectedAgentes.size > 1 ? 's' : ''}`);
+                if (hasLocal) parts.push(`${selectedLocais.size} local${selectedLocais.size > 1 ? 'is' : ''}`);
+                previewTitle.textContent = `Prévia — ${parts.join(", ")} filtrado${parts.length > 1 ? 's' : ''} (${count} carta${count !== 1 ? 's' : ''})`;
+            } else {
+                previewTitle.textContent = `Prévia (Todas as Cartas — ${total})`;
+            }
+        }
+    }
+
+    clearFiltersBtn?.addEventListener("click", () => {
+        selectedAgentes.clear();
+        selectedLocais.clear();
+        // Rebuild dropdowns
+        if (state.grouped && state.grouped.length) {
+            populateFilterSelects();
+        }
+    });
+    // ─── End Filtros ─────────────────────────────────────────────────────────
 
     const toggleEditBtn = document.getElementById("toggleEditBtn");
     const cardManager = document.getElementById("cardManager");
@@ -73,7 +275,6 @@ document.addEventListener("DOMContentLoaded", () => {
             input.addEventListener("input", (e) => {
                 const idx = e.target.getAttribute("data-idx");
                 const prop = e.target.getAttribute("data-prop");
-                
                 if (prop === "marcasText") {
                     state.grouped[idx][prop] = e.target.value;
                     state.grouped[idx].marcas = e.target.value.split(',').map(m => m.trim()).filter(Boolean);
@@ -139,11 +340,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            const ext = file.name.split('.').pop().toLowerCase();
             try {
                 const bytes = await file.arrayBuffer();
                 state.attachments.push({
                     name: file.name,
-                    bytes: bytes
+                    bytes: bytes,
+                    type: ext  // 'pdf', 'jpg', 'jpeg', 'png'
                 });
                 fileNames.push(file.name);
             } catch (error) {
@@ -154,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const dropText = document.getElementById("attachmentsFileName");
         if (dropText) {
-            dropText.innerHTML = `<span style="color: var(--success); font-weight: bold;">✓ ${state.attachments.length} Anexo(s) Carregado(s):</span><br>${fileNames.join(', ')}`;
+            dropText.innerHTML = `<span style="color: var(--success); font-weight: bold;">✓ ${state.attachments.length} Documento(s) Carregado(s):</span><br>${fileNames.join(', ')}`;
         }
     });
 
@@ -181,11 +384,13 @@ document.addEventListener("DOMContentLoaded", () => {
                      statusBox.textContent = baseMsg;
                 }
             }
+            populateFilterSelects();
         } catch (error) {
             console.error(error);
             alert("Erro ao ler a planilha.");
         }
     });
+
     templatePdf?.addEventListener("change", async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -211,7 +416,12 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             generateBtn.textContent = "Gerando...";
             generateBtn.classList.add("loading");
-            await gerarPDF();
+            const filtered = getFilteredGroups();
+            if (!filtered.length) {
+                alert("Nenhuma carta corresponde ao filtro selecionado.");
+                return;
+            }
+            await gerarPDFFiltrado(filtered);
         } catch (error) {
             console.error(error);
             alert("Erro ao gerar o PDF. Verifique o console.");
@@ -224,16 +434,19 @@ document.addEventListener("DOMContentLoaded", () => {
     previewBtn?.addEventListener("click", () => {
         const previewPage = document.getElementById("previewPage");
         if (previewPage) previewPage.style.display = "none";
-        
+
         previewBtn.textContent = "Atualizando...";
-        // Pequeno delay para a UI respirar e o layout do iframe redesenhar
         setTimeout(async () => {
-            await gerarPreviaPDF();
+            const filtered = getFilteredGroups();
+            if (!filtered.length) {
+                previewBtn.textContent = "Atualizar prévia";
+                alert("Nenhuma carta corresponde ao filtro selecionado.");
+                return;
+            }
+            await gerarPreviaPDFFiltrado(filtered);
             previewBtn.textContent = "Atualizar prévia";
         }, 100);
     });
 
-    previewSelect?.addEventListener("change", () => {
-        // Option to auto-trigger when dropdown changes? Let's just require clicking the button to avoid constant re-rendering.
-    });
+    previewSelect?.addEventListener("change", () => {});
 });
