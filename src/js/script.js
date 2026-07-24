@@ -674,11 +674,259 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
 
+            // Carrega o Dashboard de Produtividade & Permanência em Loja embarcado
+            await loadMainDashboardProductivity('TODOS');
+
         } catch (err) {
-            console.warn('Erro ao ler tb_planilha:', err.message);
-            [clientesEl, redesEl, lojasEl, municipiosEl, horasEl].forEach(el => {
-                if (el) { el.classList.remove('skeleton'); el.innerHTML = '-'; }
+            console.warn('Erro ao ler métricas:', err.message);
+        }
+    };
+
+    const loadMainDashboardProductivity = async (selectedProject = 'TODOS') => {
+        const brandsBody = document.getElementById('main-prod-brands-body');
+        const promotersBody = document.getElementById('main-prod-promoters-body');
+        const projSelect = document.getElementById('main-prod-proj-select');
+
+        if (!brandsBody || !promotersBody) return;
+
+        try {
+            let { data: staffData } = await window.supabase
+                .from('tb_colaboradores')
+                .select('nome, projeto, equipe');
+
+            const staffList = staffData || [];
+
+            if (projSelect && projSelect.options.length <= 1) {
+                const projects = [...new Set(staffList.map(s => s.projeto).filter(Boolean))].sort();
+                projects.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    projSelect.appendChild(opt);
+                });
+
+                projSelect.onchange = (e) => {
+                    loadMainDashboardProductivity(e.target.value);
+                };
+            }
+
+            const today = new Date();
+            const startCycle = new Date(today);
+            startCycle.setDate(startCycle.getDate() - 30);
+
+            let { data: checkinsData } = await window.supabase
+                .from('checkins')
+                .select('activity_id, created_at, task_id, client_id, history_id')
+                .gte('created_at', startCycle.toISOString())
+                .order('created_at', { ascending: true });
+
+            const checkins = checkinsData || [];
+
+            const visitsMap = {};
+            checkins.forEach(c => {
+                const parts = (c.activity_id || '').split(';');
+                const name = parts[0]?.trim().toUpperCase();
+                if (!name) return;
+
+                let timestampStr = c.history_id || c.created_at;
+                let eventDate = new Date(timestampStr);
+                if (isNaN(eventDate.getTime())) eventDate = new Date(c.created_at);
+
+                const dateStr = eventDate.toISOString().split('T')[0];
+                const key = `${name}_${dateStr}`;
+
+                if (!visitsMap[key]) visitsMap[key] = [];
+                visitsMap[key].push({
+                    name: name,
+                    clientId: (c.client_id || 'LOJA NÃO INFORMADA').trim().toUpperCase(),
+                    taskId: (c.task_id || 'CHECK IN').trim().toUpperCase(),
+                    timestamp: eventDate
+                });
             });
+
+            let totalVisits = 0;
+            let completedVisits = 0;
+            let openVisits = 0;
+            let shortVisits = 0;
+            let totalDurationMin = 0;
+
+            const brandMap = {};
+            const promoterMap = {};
+
+            Object.keys(visitsMap).forEach(key => {
+                const lastIdx = key.lastIndexOf('_');
+                const name = key.substring(0, lastIdx);
+
+                const person = staffList.find(s => s.nome === name);
+                const proj = person ? (person.projeto || 'GERAL') : 'GERAL';
+                const eq = person ? (person.equipe || 'GERAL') : 'GERAL';
+
+                if (selectedProject !== 'TODOS' && proj !== selectedProject) return;
+
+                const events = visitsMap[key];
+                events.sort((a, b) => a.timestamp - b.timestamp);
+
+                const sessions = [];
+                const openIns = {};
+
+                events.forEach(ev => {
+                    const store = ev.clientId;
+                    if (ev.taskId.includes('CHECK IN') || ev.taskId.includes('CHECK-IN') || ev.taskId.includes('ENTRADA')) {
+                        openIns[store] = ev;
+                    } else if (ev.taskId.includes('CHECK OUT') || ev.taskId.includes('CHECK-OUT') || ev.taskId.includes('SAIDA') || ev.taskId.includes('SAÍDA')) {
+                        const inEv = openIns[store] || Object.values(openIns)[0];
+                        if (inEv) {
+                            const durationMs = ev.timestamp - inEv.timestamp;
+                            const durationMin = Math.max(1, Math.round(durationMs / 60000));
+                            const isShort = durationMin < 20;
+
+                            sessions.push({
+                                clientId: store,
+                                durationMin: durationMin,
+                                isShort: isShort,
+                                isOpen: false
+                            });
+                            delete openIns[inEv.clientId];
+                        } else {
+                            sessions.push({
+                                clientId: store,
+                                durationMin: 0,
+                                isShort: false,
+                                isOpen: false
+                            });
+                        }
+                    }
+                });
+
+                Object.values(openIns).forEach(inEv => {
+                    sessions.push({
+                        clientId: inEv.clientId,
+                        durationMin: 0,
+                        isShort: false,
+                        isOpen: true
+                    });
+                });
+
+                sessions.forEach(sess => {
+                    totalVisits++;
+                    if (sess.isOpen) {
+                        openVisits++;
+                    } else {
+                        completedVisits++;
+                        totalDurationMin += sess.durationMin;
+                        if (sess.isShort) shortVisits++;
+                    }
+
+                    const rawStore = sess.clientId || 'LOJA DESCONHECIDA';
+                    const storeParts = rawStore.split(' ');
+                    const brandName = storeParts.length > 1 ? `${storeParts[0]} ${storeParts[1]}` : storeParts[0];
+
+                    if (!brandMap[brandName]) {
+                        brandMap[brandName] = {
+                            brand: brandName,
+                            totalVisits: 0,
+                            completedVisits: 0,
+                            totalDurationMin: 0,
+                            shortVisits: 0,
+                            openVisits: 0,
+                            storesSet: new Set()
+                        };
+                    }
+                    brandMap[brandName].totalVisits++;
+                    brandMap[brandName].storesSet.add(rawStore);
+                    if (sess.isOpen) {
+                        brandMap[brandName].openVisits++;
+                    } else {
+                        brandMap[brandName].completedVisits++;
+                        brandMap[brandName].totalDurationMin += sess.durationMin;
+                        if (sess.isShort) brandMap[brandName].shortVisits++;
+                    }
+
+                    if (!promoterMap[name]) {
+                        promoterMap[name] = {
+                            name: name,
+                            project: proj,
+                            equipe: eq,
+                            visitsCount: 0,
+                            completedCount: 0,
+                            totalDurationMin: 0,
+                            shortCount: 0,
+                            openCount: 0
+                        };
+                    }
+                    promoterMap[name].visitsCount++;
+                    if (sess.isOpen) {
+                        promoterMap[name].openCount++;
+                    } else {
+                        promoterMap[name].completedCount++;
+                        promoterMap[name].totalDurationMin += sess.durationMin;
+                        if (sess.isShort) promoterMap[name].shortCount++;
+                    }
+                });
+            });
+
+            const kpiTotal = document.getElementById('main-kpi-total-visitas');
+            const kpiConcl = document.getElementById('main-kpi-concluidas');
+            const kpiMedia = document.getElementById('main-kpi-media-loja');
+            const kpiHoras = document.getElementById('main-kpi-horas-loja');
+            const kpiAlertTotal = document.getElementById('main-kpi-alertas-total');
+            const kpiAlertDetail = document.getElementById('main-kpi-alertas-detail');
+
+            const avgMin = completedVisits > 0 ? Math.round(totalDurationMin / completedVisits) : 0;
+            const formatMin = (m) => {
+                if (!m) return '0min';
+                const h = Math.floor(m / 60);
+                const r = m % 60;
+                return h > 0 ? `${h}h ${r}min` : `${r}min`;
+            };
+
+            if (kpiTotal) kpiTotal.textContent = totalVisits;
+            if (kpiConcl) kpiConcl.textContent = `${completedVisits} concluídas`;
+            if (kpiMedia) kpiMedia.textContent = formatMin(avgMin);
+            if (kpiHoras) kpiHoras.textContent = `${(totalDurationMin / 60).toFixed(1)}h`;
+            if (kpiAlertTotal) kpiAlertTotal.textContent = shortVisits + openVisits;
+            if (kpiAlertDetail) kpiAlertDetail.textContent = `${shortVisits} curtas | ${openVisits} abertas`;
+
+            const sortedBrands = Object.values(brandMap).sort((a, b) => b.totalVisits - a.totalVisits);
+            if (sortedBrands.length === 0) {
+                brandsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 25px; color: var(--text-dim);">Nenhum registro de visita encontrado.</td></tr>`;
+            } else {
+                brandsBody.innerHTML = sortedBrands.map(b => {
+                    const avg = b.completedVisits > 0 ? Math.round(b.totalDurationMin / b.completedVisits) : 0;
+                    return `
+                        <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
+                            <td style="padding: 12px 14px; font-weight: 700; color: var(--text-main);">${b.brand} <span style="font-size: 11px; font-weight:400; color: var(--text-dim);">(${b.storesSet.size} lojas)</span></td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 600;">${b.totalVisits}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #6366f1;">${formatMin(avg)}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #10b981;">${formatMin(b.totalDurationMin)}</td>
+                            <td style="padding: 12px 14px; text-align: center;">
+                                ${b.shortVisits > 0 ? `<span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">⚠️ ${b.shortVisits} curtas</span>` : '<span style="color: var(--text-dim);">-</span>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const sortedPromoters = Object.values(promoterMap).sort((a, b) => b.totalDurationMin - a.totalDurationMin);
+            if (sortedPromoters.length === 0) {
+                promotersBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 25px; color: var(--text-dim);">Nenhum promotor encontrado.</td></tr>`;
+            } else {
+                promotersBody.innerHTML = sortedPromoters.map(p => {
+                    const avg = p.completedCount > 0 ? Math.round(p.totalDurationMin / p.completedCount) : 0;
+                    return `
+                        <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
+                            <td style="padding: 12px 14px; font-weight: 700; color: var(--text-main);">${p.name}</td>
+                            <td style="padding: 12px 14px; color: var(--text-dim); font-size: 11px;">${p.project} / ${p.equipe}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 600;">${p.visitsCount}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #6366f1;">${formatMin(avg)}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #10b981;">${formatMin(p.totalDurationMin)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+        } catch (e) {
+            console.warn('Erro ao carregar produtividade do dashboard:', e);
         }
     };
 
@@ -730,6 +978,116 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Configuração do Feed de Check-ins (webhook) na tela principal
         setupLiveFeed();
+    }
+
+    function updateOperationalAlertsToday(allEvents) {
+        const alertsContainer = document.getElementById('dashboard-operational-alerts-list');
+        const badgeCount = document.getElementById('alerts-badge-count');
+        if (!alertsContainer) return;
+
+        if (!allEvents || allEvents.length === 0) {
+            alertsContainer.innerHTML = `
+                <div style="padding: 16px; text-align: center; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; color: #10b981; font-size: 13px; font-weight: 600;">
+                    ✅ Nenhuma anomalia de permanência detectada no dia de hoje.
+                </div>
+            `;
+            if (badgeCount) {
+                badgeCount.textContent = '0 Alertas';
+                badgeCount.style.background = 'rgba(16, 185, 129, 0.15)';
+                badgeCount.style.color = '#10b981';
+            }
+            return;
+        }
+
+        const groups = {};
+        
+        allEvents.forEach(ev => {
+            const parts = (ev.activity_id || '').split(';');
+            const agentName = parts[0]?.trim() || "Agente";
+            const storeName = (ev.client_id || 'Loja não informada').trim().toUpperCase();
+            const taskId = (ev.task_id || 'CHECK IN').trim().toUpperCase();
+            const timestamp = new Date(ev.created_at);
+
+            const key = `${agentName}_${storeName}`;
+            if (!groups[key]) {
+                groups[key] = { agentName, storeName, inEvents: [], outEvents: [] };
+            }
+
+            if (taskId.includes('CHECK IN') || taskId.includes('CHECK-IN') || taskId.includes('ENTRADA')) {
+                groups[key].inEvents.push(timestamp);
+            } else if (taskId.includes('CHECK OUT') || taskId.includes('CHECK-OUT') || taskId.includes('SAIDA') || taskId.includes('SAÍDA')) {
+                groups[key].outEvents.push(timestamp);
+            }
+        });
+
+        const alerts = [];
+        const now = new Date();
+
+        Object.values(groups).forEach(g => {
+            g.inEvents.sort((a, b) => a - b);
+            g.outEvents.sort((a, b) => a - b);
+
+            g.inEvents.forEach(inTime => {
+                const outIdx = g.outEvents.findIndex(outTime => outTime >= inTime);
+                if (outIdx !== -1) {
+                    const outTime = g.outEvents[outIdx];
+                    const durationMin = Math.round((outTime - inTime) / 60000);
+                    if (durationMin < 20) {
+                        const inFmt = inTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const outFmt = outTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        alerts.push({
+                            type: 'SHORT_VISIT',
+                            title: `⚠️ Visita Curta (${durationMin} min)`,
+                            detail: `${g.agentName} em ${g.storeName}`,
+                            subdetail: `Entrada: ${inFmt} | Saída: ${outFmt}`,
+                            time: outFmt
+                        });
+                    }
+                } else {
+                    const ageHours = (now - inTime) / (1000 * 3600);
+                    if (ageHours > 8) {
+                        const inFmt = inTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        alerts.push({
+                            type: 'FORGOTTEN_CHECKOUT',
+                            title: `⚠️ Check-Out Pendente (>8h)`,
+                            detail: `${g.agentName} em ${g.storeName}`,
+                            subdetail: `Em atendimento desde ${inFmt}`,
+                            time: inFmt
+                        });
+                    }
+                }
+            });
+        });
+
+        if (alerts.length === 0) {
+            alertsContainer.innerHTML = `
+                <div style="padding: 16px; text-align: center; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; color: #10b981; font-size: 13px; font-weight: 600;">
+                    ✅ Nenhuma anomalia de permanência detectada no dia de hoje.
+                </div>
+            `;
+            if (badgeCount) {
+                badgeCount.textContent = '0 Alertas';
+                badgeCount.style.background = 'rgba(16, 185, 129, 0.15)';
+                badgeCount.style.color = '#10b981';
+            }
+        } else {
+            alertsContainer.innerHTML = alerts.map(a => `
+                <div style="padding: 12px 14px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 800; color: #ef4444;">${a.title}</div>
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-top: 2px;">${a.detail}</div>
+                        <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">${a.subdetail}</div>
+                    </div>
+                    <span style="font-size: 11px; font-weight: 700; color: #ef4444; background: rgba(239, 68, 68, 0.12); padding: 4px 8px; border-radius: 6px;">${a.time}</span>
+                </div>
+            `).join('');
+
+            if (badgeCount) {
+                badgeCount.textContent = `${alerts.length} Alerta${alerts.length > 1 ? 's' : ''}`;
+                badgeCount.style.background = 'rgba(239, 68, 68, 0.2)';
+                badgeCount.style.color = '#ef4444';
+            }
+        }
     }
 
     function setupLiveFeed() {
@@ -841,52 +1199,152 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 1. Busca Iniciais do Dia (Com Suporte a Paginação)
         const loadCheckins = async (page = 0) => {
+            const activityList = document.getElementById('activity-list');
+            if (!activityList) return;
+
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            const from = page * state.checkinsPerPage;
-            const to = from + state.checkinsPerPage - 1;
-
-            const { data, error, count } = await window.supabase
+            const { data, error } = await window.supabase
                 .from('checkins')
-                .select('created_at, activity_id, client_id, task_id', { count: 'exact' })
+                .select('created_at, activity_id, client_id, task_id, history_id')
                 .gte('created_at', today.toISOString())
-                .order('created_at', { ascending: false })
-                .range(from, to);
+                .order('created_at', { ascending: true });
 
             if (!error && data) {
-                if (page === 0) activityList.innerHTML = '';
+                activityList.innerHTML = '';
 
-                if (data.length > 0) {
-                    hasActivities = true;
-                    // Se for página 0, limpamos e re-populamos. Se for página > 0, podemos adicionar ao final ou substituir.
-                    if (page === 0) activityList.innerHTML = '';
+                const storeVisits = [];
+                const groups = {};
 
-                    data.forEach(row => {
-                        window.addDashboardCheckin({
-                            historyId: row.created_at,
-                            activityId: row.activity_id,
-                            clientId: row.client_id,
-                            taskId: row.task_id
-                        }, false);
-                    });
+                data.forEach(row => {
+                    let agentName = "Agente";
+                    let agentPhoto = "";
+                    if (row.activity_id && row.activity_id.includes(';')) {
+                        const parts = row.activity_id.split(';').filter(p => p.trim() !== '');
+                        agentName = parts[0] || "Agente";
+                        agentPhoto = parts.length > 1 ? parts[parts.length - 1] : "";
+                    } else {
+                        agentName = row.activityId || "Agente";
+                        agentPhoto = row.photoUrl || "";
+                    }
 
-                    // Atualizar contador de total
-                    const countEl = document.getElementById('checkins-count');
-                    if (countEl) countEl.textContent = `Total: ${count || data.length} check-ins hoje`;
+                    const storeName = (row.client_id || 'Visita Técnica').trim().toUpperCase();
+                    const taskId = (row.task_id || 'CHECK IN').trim().toUpperCase();
+                    
+                    let timestampStr = row.history_id || row.created_at;
+                    let eventTime = new Date(timestampStr);
+                    if (isNaN(eventTime.getTime())) eventTime = new Date(row.created_at);
 
-                    updatePaginationUI(count || 0, page);
-                } else if (page === 0 && !hasActivities) {
+                    const key = `${agentName}_${storeName}`;
+
+                    if (taskId.includes('CHECK IN') || taskId.includes('CHECK-IN') || taskId.includes('ENTRADA')) {
+                        if (!groups[key]) {
+                            groups[key] = {
+                                agentName,
+                                photoUrl: agentPhoto,
+                                storeName,
+                                inTime: eventTime,
+                                outTime: null
+                            };
+                            storeVisits.push(groups[key]);
+                        } else {
+                            groups[key].inTime = eventTime;
+                        }
+                        markPresenceAuto(agentName, 'CHECK IN');
+                    } else if (taskId.includes('CHECK OUT') || taskId.includes('CHECK-OUT') || taskId.includes('SAIDA') || taskId.includes('SAÍDA')) {
+                        if (groups[key]) {
+                            groups[key].outTime = eventTime;
+                        } else {
+                            const newVisit = {
+                                agentName,
+                                photoUrl: agentPhoto,
+                                storeName,
+                                inTime: null,
+                                outTime: eventTime
+                            };
+                            groups[key] = newVisit;
+                            storeVisits.push(newVisit);
+                        }
+                    }
+                });
+
+                if (storeVisits.length === 0) {
                     activityList.innerHTML = `
-                        <div class="activity-item">
-                            <div class="activity-info">
-                                <span class="title" style="color:var(--text-muted)">Aguardando Check-in</span>
+                        <div style="padding: 40px; text-align: center; color: var(--text-dim); font-size: 13px;">
+                            Nenhum check-in registrado hoje.
+                        </div>
+                    `;
+                    const countEl = document.getElementById('checkins-count');
+                    if (countEl) countEl.textContent = `Total: 0 visitas hoje`;
+                    return;
+                }
+
+                storeVisits.reverse();
+
+                const now = new Date();
+                storeVisits.forEach(visit => {
+                    const isOpen = !visit.outTime;
+                    const inStr = visit.inTime ? visit.inTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                    const outStr = visit.outTime ? visit.outTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
+                    let durationMin = 0;
+                    if (visit.inTime && visit.outTime) {
+                        durationMin = Math.max(1, Math.round((visit.outTime - visit.inTime) / 60000));
+                    } else if (visit.inTime && !visit.outTime) {
+                        durationMin = Math.max(0, Math.round((now - visit.inTime) / 60000));
+                    }
+
+                    const formatMinText = (min) => {
+                        if (!min || min <= 0) return '0min';
+                        const h = Math.floor(min / 60);
+                        const m = min % 60;
+                        return h > 0 ? `${h}h ${m}min` : `${m}min`;
+                    };
+
+                    const item = document.createElement('div');
+                    item.className = 'checkin-row';
+                    item.style.padding = '12px 14px';
+                    item.style.borderBottom = '1px solid var(--border)';
+                    item.style.display = 'flex';
+                    item.style.gap = '12px';
+                    item.style.alignItems = 'flex-start';
+
+                    item.innerHTML = `
+                        <div class="col-foto">
+                            ${visit.photoUrl ? `<img src="${visit.photoUrl}" class="checkin-photo-thumb" onclick="window.open('${visit.photoUrl}', '_blank')">` : '<span style="color:var(--text-dim); font-size:12px;">Sem Foto</span>'}
+                        </div>
+
+                        <div class="checkin-content" style="flex: 1; font-family: 'Inter', sans-serif;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; gap: 8px;">
+                                <strong style="font-size: 15px; font-weight: 800; color: var(--text-main); line-height: 1.3;">${visit.agentName}</strong>
+                                <span style="font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 8px; white-space: nowrap; ${isOpen ? 'background: rgba(16, 185, 129, 0.18); color: #059669;' : 'background: rgba(99, 102, 241, 0.18); color: #4f46e5;'}">
+                                    ${isOpen ? '🟢 EM LOJA' : '✅ FINALIZADA'}
+                                </span>
+                            </div>
+
+                            <div style="font-size: 13px; color: var(--text-muted); font-weight: 700; margin-bottom: 8px;">
+                                ${visit.storeName}
+                            </div>
+
+                            <div style="display: flex; gap: 12px; font-size: 13px; color: var(--text-main); background: rgba(0,0,0,0.04); padding: 8px 12px; border-radius: 10px; flex-wrap: wrap; align-items: center;">
+                                <span>In: <strong style="color: var(--text-main); font-size: 14px; font-weight: 800;">${inStr}</strong></span>
+                                <span>Out: <strong style="color: var(--text-main); font-size: 14px; font-weight: 800;">${outStr}</strong></span>
+                                <span style="color: ${isOpen ? '#059669' : '#4f46e5'}; font-weight: 800; font-size: 13px; margin-left: auto;">
+                                    ${isOpen ? 'Em loja:' : 'Permanência:'} ${formatMinText(durationMin)}
+                                </span>
                             </div>
                         </div>
                     `;
-                }
+
+                    activityList.appendChild(item);
+                });
+
+                const countEl = document.getElementById('checkins-count');
+                if (countEl) countEl.textContent = `Total: ${storeVisits.length} visitas hoje`;
+
+                updateOperationalAlertsToday(data);
             }
         };
 
