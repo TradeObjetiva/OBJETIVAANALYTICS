@@ -1079,6 +1079,15 @@
                     Exportar Grade
                 </button>
 
+                <button class="sync-btn" id="btn-productivity-dashboard" onclick="showProductivityDashboard()"
+                    style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: #6366f1;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                    </svg>
+                    Dashboard de Produtividade
+                </button>
+
                 <button class="sync-btn" id="btn-detect-empty"
                     style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1790,6 +1799,9 @@
             return `${isNegative ? '-' : ''}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         }
 
+        let globalRawCheckins = [];
+        let globalProcessedVisits = {}; // key: "NAME_YYYY-MM-DD" -> array of session objects
+
         async function processExistingCheckins() {
             // Usa as mesmas datas de start e end do grid para abranger todo o ciclo atual
             const start = new Date(currentDate);
@@ -1806,13 +1818,15 @@
             while (hasMoreC) {
                 const { data } = await window.supabase
                     .from('checkins')
-                    .select('activity_id, created_at, task_id')
+                    .select('activity_id, created_at, task_id, client_id, history_id')
                     .gte('created_at', start.toISOString())
                     .lte('created_at', end.toISOString())
                     .range(fromC, fromC + stepC);
                 if (data && data.length > 0) { checkins = checkins.concat(data); fromC += stepC + 1; }
                 if (!data || data.length <= stepC) hasMoreC = false;
             }
+
+            globalRawCheckins = checkins;
 
             let existingAttendance = [];
             let fromE = 0, stepE = 999, hasMoreE = true;
@@ -1830,22 +1844,116 @@
             const attendanceMap = new Set();
             existingAttendance?.forEach(a => attendanceMap.add(`${a.collaborator_name}_${a.date}`));
 
-            const newRecordsToUpsert = [];
-            checkins?.forEach(checkin => {
-                // Filtro Crítico: Apenas 'CHECK IN' marca presença
-                if (checkin.task_id !== 'CHECK IN') return;
+            // Agrupa todos os eventos de check-in e check-out por colaborador e data
+            const visitsMap = {}; // key: "COLLABORATOR_YYYY-MM-DD" -> array of events
 
-                const name = checkin.activity_id?.split(';')[0].trim().toUpperCase();
+            checkins?.forEach(c => {
+                const parts = (c.activity_id || '').split(';');
+                const name = parts[0]?.trim().toUpperCase();
+                const photoUrl = parts[1]?.trim() || null;
                 if (!name) return;
 
-                const checkinDate = new Date(checkin.created_at);
-                const dateStr = getLocalDateString(checkinDate);
+                let timestampStr = c.history_id || c.created_at;
+                let eventDate = new Date(timestampStr);
+                if (isNaN(eventDate.getTime())) eventDate = new Date(c.created_at);
+
+                const dateStr = getLocalDateString(eventDate);
                 const key = `${name}_${dateStr}`;
+
+                if (!visitsMap[key]) visitsMap[key] = [];
+
+                visitsMap[key].push({
+                    name: name,
+                    photoUrl: photoUrl,
+                    clientId: (c.client_id || 'LOJA NÃO INFORMADA').trim().toUpperCase(),
+                    taskId: (c.task_id || 'CHECK IN').trim().toUpperCase(),
+                    timestamp: eventDate,
+                    rawTimestamp: timestampStr
+                });
+            });
+
+            // Processa pares de Check-In e Check-Out por chave (Colaborador + Data)
+            globalProcessedVisits = {};
+            const newRecordsToUpsert = [];
+
+            Object.keys(visitsMap).forEach(key => {
+                const events = visitsMap[key];
+                events.sort((a, b) => a.timestamp - b.timestamp);
+
+                const lastIdx = key.lastIndexOf('_');
+                const name = key.substring(0, lastIdx);
+                const dateStr = key.substring(lastIdx + 1);
 
                 if (!attendanceMap.has(key)) {
                     newRecordsToUpsert.push({ collaborator_name: name, date: dateStr, status: 'P', is_manual: false });
-                    attendanceMap.add(key); // Evita duplicados na mesma execução
+                    attendanceMap.add(key);
                 }
+
+                const sessions = [];
+                const openIns = {};
+
+                events.forEach(ev => {
+                    const store = ev.clientId;
+                    if (ev.taskId.includes('CHECK IN') || ev.taskId.includes('CHECK-IN') || ev.taskId.includes('ENTRADA')) {
+                        openIns[store] = ev;
+                    } else if (ev.taskId.includes('CHECK OUT') || ev.taskId.includes('CHECK-OUT') || ev.taskId.includes('SAIDA') || ev.taskId.includes('SAÍDA')) {
+                        const inEv = openIns[store] || Object.values(openIns)[0];
+                        if (inEv) {
+                            const durationMs = ev.timestamp - inEv.timestamp;
+                            const durationMin = Math.max(1, Math.round(durationMs / 60000));
+                            const isShort = durationMin < 20;
+
+                            sessions.push({
+                                clientId: store,
+                                checkIn: inEv.timestamp,
+                                checkOut: ev.timestamp,
+                                durationMin: durationMin,
+                                isShort: isShort,
+                                isOpen: false,
+                                photoUrl: ev.photoUrl || inEv.photoUrl
+                            });
+                            delete openIns[inEv.clientId];
+                        } else {
+                            sessions.push({
+                                clientId: store,
+                                checkIn: null,
+                                checkOut: ev.timestamp,
+                                durationMin: 0,
+                                isShort: false,
+                                isOpen: false,
+                                photoUrl: ev.photoUrl
+                            });
+                        }
+                    }
+                });
+
+                Object.values(openIns).forEach(inEv => {
+                    const now = new Date();
+                    const ageHours = (now - inEv.timestamp) / (1000 * 3600);
+                    const isForgotten = ageHours > 8 || dateStr < getLocalDateString(now);
+
+                    sessions.push({
+                        clientId: inEv.clientId,
+                        checkIn: inEv.timestamp,
+                        checkOut: null,
+                        durationMin: Math.max(0, Math.round((now - inEv.timestamp) / 60000)),
+                        isShort: false,
+                        isOpen: true,
+                        isForgotten: isForgotten,
+                        photoUrl: inEv.photoUrl
+                    });
+                });
+
+                sessions.sort((a, b) => (a.checkIn || a.checkOut) - (b.checkIn || b.checkOut));
+
+                for (let i = 0; i < sessions.length - 1; i++) {
+                    if (sessions[i].checkOut && sessions[i + 1].checkIn) {
+                        const transitMs = sessions[i + 1].checkIn - sessions[i].checkOut;
+                        sessions[i].transitToNextMin = Math.max(0, Math.round(transitMs / 60000));
+                    }
+                }
+
+                globalProcessedVisits[key] = sessions;
             });
 
             if (newRecordsToUpsert.length > 0) {
@@ -4355,6 +4463,253 @@
                         Swal.close();
                         bulkFillEmptyCells(emptyCells);
                     };
+                }
+            });
+        }
+
+        async function showProductivityDashboard() {
+            const theme = getSwalTheme();
+            const projects = [...new Set(staffList.map(s => s.project))].sort();
+
+            function computeStats(selectedProject = 'TODOS') {
+                let totalVisits = 0;
+                let completedVisits = 0;
+                let openVisits = 0;
+                let shortVisits = 0;
+                let totalDurationMin = 0;
+
+                const brandMap = {};
+                const promoterMap = {};
+
+                Object.keys(globalProcessedVisits).forEach(key => {
+                    const lastIdx = key.lastIndexOf('_');
+                    const name = key.substring(0, lastIdx);
+
+                    const person = staffList.find(s => s.name === name);
+                    const proj = person ? person.project : 'GERAL';
+                    const eq = person ? person.equipe : 'GERAL';
+
+                    if (selectedProject !== 'TODOS' && proj !== selectedProject) return;
+
+                    const sessions = globalProcessedVisits[key] || [];
+                    sessions.forEach(sess => {
+                        totalVisits++;
+                        if (sess.isOpen) {
+                            openVisits++;
+                        } else {
+                            completedVisits++;
+                            totalDurationMin += (sess.durationMin || 0);
+                            if (sess.isShort) shortVisits++;
+                        }
+
+                        const rawStore = sess.clientId || 'LOJA DESCONHECIDA';
+                        const storeParts = rawStore.split(' ');
+                        const brandName = storeParts.length > 1 ? `${storeParts[0]} ${storeParts[1]}` : storeParts[0];
+
+                        if (!brandMap[brandName]) {
+                            brandMap[brandName] = {
+                                brand: brandName,
+                                totalVisits: 0,
+                                completedVisits: 0,
+                                totalDurationMin: 0,
+                                shortVisits: 0,
+                                openVisits: 0,
+                                storesSet: new Set()
+                            };
+                        }
+                        brandMap[brandName].totalVisits++;
+                        brandMap[brandName].storesSet.add(rawStore);
+                        if (sess.isOpen) {
+                            brandMap[brandName].openVisits++;
+                        } else {
+                            brandMap[brandName].completedVisits++;
+                            brandMap[brandName].totalDurationMin += (sess.durationMin || 0);
+                            if (sess.isShort) brandMap[brandName].shortVisits++;
+                        }
+
+                        if (!promoterMap[name]) {
+                            promoterMap[name] = {
+                                name: name,
+                                project: proj,
+                                equipe: eq,
+                                visitsCount: 0,
+                                completedCount: 0,
+                                totalDurationMin: 0,
+                                shortCount: 0,
+                                openCount: 0
+                            };
+                        }
+                        promoterMap[name].visitsCount++;
+                        if (sess.isOpen) {
+                            promoterMap[name].openCount++;
+                        } else {
+                            promoterMap[name].completedCount++;
+                            promoterMap[name].totalDurationMin += (sess.durationMin || 0);
+                            if (sess.isShort) promoterMap[name].shortCount++;
+                        }
+                    });
+                });
+
+                const avgMinPerVisit = completedVisits > 0 ? Math.round(totalDurationMin / completedVisits) : 0;
+                const totalHoursEff = (totalDurationMin / 60).toFixed(1);
+
+                return {
+                    totalVisits,
+                    completedVisits,
+                    openVisits,
+                    shortVisits,
+                    totalDurationMin,
+                    avgMinPerVisit,
+                    totalHoursEff,
+                    brands: Object.values(brandMap).sort((a, b) => b.totalVisits - a.totalVisits),
+                    promoters: Object.values(promoterMap).sort((a, b) => b.totalDurationMin - a.totalDurationMin)
+                };
+            }
+
+            function formatMinToHoursText(min) {
+                if (!min || min <= 0) return '0min';
+                const h = Math.floor(min / 60);
+                const m = min % 60;
+                return h > 0 ? `${h}h ${m}min` : `${m}min`;
+            }
+
+            function renderModalContent(proj = 'TODOS') {
+                const stats = computeStats(proj);
+
+                return `
+                <div style="text-align: left; font-family: 'Inter', sans-serif;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: rgba(99, 102, 241, 0.05); padding: 14px 18px; border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.15);">
+                        <div>
+                            <span style="font-size: 11px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.5px;">FILTRAR POR PROJETO:</span>
+                            <select id="prod-proj-select" style="display: block; margin-top: 4px; padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 13px; font-weight: 600;">
+                                <option value="TODOS" ${proj === 'TODOS' ? 'selected' : ''}>TODOS OS PROJETOS</option>
+                                ${projects.map(p => `<option value="${p}" ${proj === p ? 'selected' : ''}>${p}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 12px; color: var(--text-dim);">Ciclo Visível:</span>
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">${formatDateBR(getLocalDateString(currentDate))} até a data atual</div>
+                        </div>
+                    </div>
+
+                    <!-- Cards de KPI -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+                        <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Total Visitas</div>
+                            <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-top: 4px;">${stats.totalVisits}</div>
+                            <div style="font-size: 11px; color: #10b981; margin-top: 2px;">${stats.completedVisits} concluídas</div>
+                        </div>
+                        <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Média em Loja</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #6366f1; margin-top: 4px;">${formatMinToHoursText(stats.avgMinPerVisit)}</div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">por visita finalizada</div>
+                        </div>
+                        <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Horas em Loja</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #10b981; margin-top: 4px;">${stats.totalHoursEff}h</div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">tempo total acumulado</div>
+                        </div>
+                        <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Alertas</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #ef4444; margin-top: 4px;">${stats.shortVisits + stats.openVisits}</div>
+                            <div style="font-size: 11px; color: #ef4444; margin-top: 2px;">${stats.shortVisits} curtas | ${stats.openVisits} abertas</div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Desempenho por Rede -->
+                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                        <span>🏬 Tempo Médio e Permanência por Rede / Cliente</span>
+                    </h4>
+                    <div style="max-height: 220px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; background: ${theme.inputBg}; margin-bottom: 24px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid ${theme.inputBorder}; font-weight: 700; color: var(--text-dim); background: rgba(0,0,0,0.03);">
+                                    <th style="padding: 10px;">Rede / Cliente</th>
+                                    <th style="padding: 10px; text-align: center;">Total Visitas</th>
+                                    <th style="padding: 10px; text-align: center;">Média em Loja</th>
+                                    <th style="padding: 10px; text-align: center;">Tempo Total</th>
+                                    <th style="padding: 10px; text-align: center;">Alertas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${stats.brands.length === 0 ? `<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-dim);">Nenhum registro de visita encontrado para o filtro.</td></tr>` : 
+                                stats.brands.map(b => {
+                                    const avg = b.completedVisits > 0 ? Math.round(b.totalDurationMin / b.completedVisits) : 0;
+                                    return `
+                                    <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
+                                        <td style="padding: 10px; font-weight: 700; color: var(--text-main);">${b.brand} <span style="font-size: 11px; font-weight:400; color: var(--text-dim);">(${b.storesSet.size} lojas)</span></td>
+                                        <td style="padding: 10px; text-align: center; font-weight: 600;">${b.totalVisits}</td>
+                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #6366f1;">${formatMinToHoursText(avg)}</td>
+                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #10b981;">${formatMinToHoursText(b.totalDurationMin)}</td>
+                                        <td style="padding: 10px; text-align: center;">
+                                            ${b.shortVisits > 0 ? `<span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700;">⚠️ ${b.shortVisits} curtas</span>` : '<span style="color: var(--text-dim);">-</span>'}
+                                        </td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Tabela de Ranking por Promotor -->
+                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                        <span>👤 Carga Horária Efetiva por Promotor</span>
+                    </h4>
+                    <div style="max-height: 240px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; background: ${theme.inputBg};">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid ${theme.inputBorder}; font-weight: 700; color: var(--text-dim); background: rgba(0,0,0,0.03);">
+                                    <th style="padding: 10px;">Promotor</th>
+                                    <th style="padding: 10px;">Projeto / Equipe</th>
+                                    <th style="padding: 10px; text-align: center;">Lojas Visitadas</th>
+                                    <th style="padding: 10px; text-align: center;">Média / Loja</th>
+                                    <th style="padding: 10px; text-align: center;">Total em Loja</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${stats.promoters.length === 0 ? `<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-dim);">Nenhum promotor com visitas registradas no filtro.</td></tr>` :
+                                stats.promoters.map(p => {
+                                    const avg = p.completedCount > 0 ? Math.round(p.totalDurationMin / p.completedCount) : 0;
+                                    return `
+                                    <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
+                                        <td style="padding: 10px; font-weight: 700; color: var(--text-main);">${p.name}</td>
+                                        <td style="padding: 10px; color: var(--text-dim); font-size: 11px;">${p.project} / ${p.equipe}</td>
+                                        <td style="padding: 10px; text-align: center; font-weight: 600;">${p.visitsCount}</td>
+                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #6366f1;">${formatMinToHoursText(avg)}</td>
+                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #10b981;">${formatMinToHoursText(p.totalDurationMin)}</td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                `;
+            }
+
+            await Swal.fire({
+                title: '📊 Dashboard de Produtividade & Permanência em Loja',
+                html: renderModalContent('TODOS'),
+                width: '850px',
+                showConfirmButton: false,
+                showCloseButton: true,
+                background: theme.background,
+                color: theme.color,
+                didOpen: () => {
+                    const select = document.getElementById('prod-proj-select');
+                    if (select) {
+                        select.onchange = (e) => {
+                            const newProj = e.target.value;
+                            const container = Swal.getHtmlContainer();
+                            if (container) {
+                                container.innerHTML = renderModalContent(newProj);
+                                const newSelect = document.getElementById('prod-proj-select');
+                                if (newSelect) {
+                                    newSelect.onchange = select.onchange;
+                                }
+                            }
+                        };
+                    }
                 }
             });
         }
