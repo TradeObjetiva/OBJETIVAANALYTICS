@@ -1423,8 +1423,9 @@
             }
         });
 
-        document.addEventListener('click', () => {
+        document.addEventListener('click', (e) => {
             if (isMenuOpening) return;
+            if (e.target.closest('#status-selector')) return;
             statusSelector.style.display = 'none';
         });
 
@@ -2394,9 +2395,11 @@
             if (cell.classList.contains('not-working')) return;
             e.stopPropagation();
             selectedCell = cell;
+            isMenuOpening = true;
             statusSelector.style.display = 'grid';
             statusSelector.style.left = `${Math.min(e.pageX, window.innerWidth - 180)}px`;
             statusSelector.style.top = `${Math.min(e.pageY, window.innerHeight - 200)}px`;
+            setTimeout(() => { isMenuOpening = false; }, 100);
         }
 
 
@@ -3859,8 +3862,6 @@
                     await renderObservations();
                 }
             };
-
-            document.addEventListener('click', () => statusSelector.style.display = 'none');
         }
 
         async function saveStatus(collaborator, date, status, observation = null, certificate_url = null) {
