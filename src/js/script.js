@@ -1,3 +1,187 @@
+window.stateProductivityDetails = { shortVisits: [], openVisits: [], displayCycleText: '' };
+
+window.openKpiDetailsModal = function(type) {
+    const modal = document.getElementById('kpi-details-modal');
+    const title = document.getElementById('kpi-modal-title');
+    const subtitle = document.getElementById('kpi-modal-subtitle');
+    const tbody = document.getElementById('kpi-modal-table-body');
+    
+    if(!modal || !title || !subtitle || !tbody) return;
+
+    let items = [];
+    if(type === 'curtas') {
+        title.innerHTML = '⚡ Visitas Curtas (&lt; 30 min)';
+        items = window.stateProductivityDetails.shortVisits || [];
+    } else {
+        title.innerHTML = '🏪 Lojas em Aberto (Sem Check-Out)';
+        items = window.stateProductivityDetails.openVisits || [];
+    }
+    
+    subtitle.textContent = window.stateProductivityDetails.displayCycleText;
+    
+    if(items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 30px; color: var(--text-dim);">Nenhum registro encontrado para este filtro.</td></tr>`;
+    } else {
+        tbody.innerHTML = items.map(item => {
+            const inStr = item.inTime ? item.inTime.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) : '--:--';
+            const outStr = item.outTime ? item.outTime.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) : '--:--';
+            const durationText = item.durationMin > 0 ? `${item.durationMin} min` : (type === 'abertas' ? 'Em andamento' : '0 min');
+            const statusColor = type === 'abertas' ? '#ef4444' : '#f59e0b';
+            
+            return `
+                <tr style="border-bottom: 1px solid rgba(128,128,128,0.1); cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'" onclick="window.openVisitAuditModal('${item.agentName}', '${item.clientId}', '${inStr}', '${outStr}', '${item.durationMin}', '${item.laivonLocalId || ''}')">
+                    <td style="padding: 12px 14px; font-weight: 800; color: var(--text-main);">${item.agentName}</td>
+                    <td style="padding: 12px 14px; font-weight: 600; color: var(--text-dim);">${item.clientId}</td>
+                    <td style="padding: 12px 14px; text-align: center; font-weight: 700;">${inStr}</td>
+                    <td style="padding: 12px 14px; text-align: center; font-weight: 700;">${outStr}</td>
+                    <td style="padding: 12px 14px; text-align: center; font-weight: 800; color: ${statusColor};">${durationText}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+    
+    modal.classList.remove('hidden');
+};
+
+window.closeKpiDetailsModal = function() {
+    const modal = document.getElementById('kpi-details-modal');
+    if(modal) modal.classList.add('hidden');
+};
+
+window.openVisitAuditModal = async function(agentName, storeName, inTime, outTime, durationMin, laivonLocalId = '') {
+    const modal = document.getElementById('visit-audit-modal');
+    if(!modal) return;
+    
+    document.getElementById('audit-agent-name').textContent = agentName;
+    document.getElementById('audit-store-name').textContent = storeName;
+    
+    const avatarStr = agentName ? agentName.substring(0,2).toUpperCase() : 'AG';
+    document.getElementById('audit-agent-avatar').textContent = avatarStr;
+    
+    document.getElementById('audit-checkin-time').textContent = inTime;
+    document.getElementById('audit-checkout-time').textContent = outTime;
+    document.getElementById('audit-duration-display').textContent = durationMin > 0 ? `${durationMin} min` : 'Em andamento';
+    
+    const diagnosis = document.getElementById('audit-diagnosis-box');
+    const badge = document.getElementById('audit-status-badge');
+    
+    if(!outTime || outTime === '--:--') {
+        badge.innerHTML = `<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 13px;">⚠️ Em Aberto</span>`;
+        diagnosis.innerHTML = `<span style="color: #ef4444;">⚠️ O promotor ainda não registrou a saída no uMov.me. A presença continua contando.</span>`;
+    } else if(durationMin < 30) {
+        badge.innerHTML = `<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 13px;">⚡ Visita Curta</span>`;
+        diagnosis.innerHTML = `<span style="color: #f59e0b;">⚡ Atenção: Esta visita teve duração menor que 30 minutos. Verifique as fotos e pesquisas enviadas na Laivon para auditar a qualidade da execução.</span>`;
+    } else {
+        badge.innerHTML = `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 13px;">✅ Visita Padrão</span>`;
+        diagnosis.innerHTML = `<span style="color: #10b981;">✅ Tempo de permanência adequado.</span>`;
+    }
+    
+    const tasksList = document.getElementById('audit-laivon-tasks-list');
+    const photosGrid = document.getElementById('audit-laivon-photos-grid');
+
+    tasksList.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-dim); font-size: 13px;">Buscando tarefas da Laivon... ⏳</div>`;
+    photosGrid.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-dim); font-size: 13px; grid-column: 1/-1;">Buscando fotos da Laivon... ⏳</div>`;
+    
+    modal.classList.remove('hidden');
+
+    try {
+        const supabaseProxyBase = (window.SUPABASE_URL || 'https://xgbvokegqxqxpgznpxiq.supabase.co') + '/functions/v1/laivon-proxy';
+        const apiKey = localStorage.getItem('laivon_api_key') || 'pk_live_W4OMfCgBGyhp.ofbx_r2HlbcXsXH98jm8HW0wut3K_6Y-vSgmOzq2xj8';
+        const headers = { 'X-API-Key': apiKey };
+        
+        const [photosRes, tasksRes, localsRes] = await Promise.allSettled([
+            fetch(`${supabaseProxyBase}/photos?limit=200`, { headers }).then(r => r.json()),
+            fetch(`${supabaseProxyBase}/tasks?limit=200`, { headers }).then(r => r.json()),
+            fetch(`${supabaseProxyBase}/locals?limit=500`, { headers }).then(r => r.json())
+        ]);
+        
+        let photos = photosRes.status === 'fulfilled' && photosRes.value.data ? photosRes.value.data : [];
+        let tasks = tasksRes.status === 'fulfilled' && tasksRes.value.data ? tasksRes.value.data : [];
+        let locals = localsRes.status === 'fulfilled' && localsRes.value.data ? localsRes.value.data : [];
+
+        let matchedLocalId = laivonLocalId ? parseInt(laivonLocalId, 10) : null;
+        if (!matchedLocalId && storeName && locals.length > 0) {
+            const cleanStr = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+            const snClean = cleanStr(storeName);
+            const snParts = snClean.split(' ').filter(p => p.length > 2);
+            
+            let bestLoc = null;
+            let bestScore = 0;
+            
+            locals.forEach(l => {
+                if(!l.name) return;
+                const lnClean = cleanStr(l.name);
+                let score = 0;
+                if (lnClean === snClean) score += 100;
+                snParts.forEach(p => {
+                    if (lnClean.includes(p)) score += 10;
+                });
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestLoc = l;
+                }
+            });
+            
+            if (bestLoc && bestScore > 0) matchedLocalId = bestLoc.id;
+        }
+
+        let matchedTasks = tasks.filter(t => t.agent_name && t.agent_name.toUpperCase() === agentName.toUpperCase());
+        
+        if (matchedLocalId) {
+            let localTasks = matchedTasks.filter(t => t.id_local === matchedLocalId);
+            if (localTasks.length > 0) matchedTasks = localTasks; 
+        }
+
+        // Filtra tarefas genéricas e limita a 5
+        matchedTasks = matchedTasks.filter(t => {
+            const type = (t.type || '').toUpperCase();
+            return !type.includes('JORNADA') && !type.includes('VISITAS AGENDADAS');
+        }).slice(0, 5);
+
+        if (matchedTasks.length > 0) {
+            tasksList.innerHTML = matchedTasks.map(t => `
+                <div style="padding: 10px; border-bottom: 1px solid rgba(128,128,128,0.1); display: flex; justify-content: space-between;">
+                    <span style="font-weight: 600; color: var(--text-main); font-size: 12px;">${t.type || 'Tarefa Operacional'}</span>
+                    <span style="color: ${(t.real_final_dt || t.situation_id === 50 || t.situation_id === 2) ? '#10b981' : '#f59e0b'}; font-weight: 800; font-size: 11px;">
+                        ${(t.real_final_dt || t.situation_id === 50 || t.situation_id === 2) ? 'Concluído' : 'Pendente'}
+                    </span>
+                </div>
+            `).join('');
+        } else {
+            tasksList.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-dim); font-size: 12px;">Nenhum formulário ou pesquisa preenchida nesta loja hoje.</div>`;
+        }
+
+        let matchedPhotos = [];
+        if (matchedLocalId) {
+            matchedPhotos = photos.filter(p => p.local_id === matchedLocalId);
+        }
+        
+        // Se não encontrou foto para a loja exata, não mostra fotos aleatórias, mostra vazio ou fallback
+        if (matchedPhotos.length === 0 && matchedTasks.length === 0 && !matchedLocalId) {
+             matchedPhotos = photos.slice(0, 4); // fallback extremo apenas se não achou NADA
+        }
+        
+        matchedPhotos = matchedPhotos.slice(0, 8);
+
+        if (matchedPhotos.length > 0) {
+            photosGrid.innerHTML = matchedPhotos.map(p => `
+                <div style="aspect-ratio: 1; border-radius: 8px; background: url('${p.photo}') center/cover; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="window.open('${p.photo}', '_blank')" title="${p.description || 'Evidência'}"></div>
+            `).join('');
+        } else {
+            photosGrid.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-dim); font-size: 12px; grid-column: 1/-1;">Nenhuma foto registrada nesta loja.</div>`;
+        }
+        
+    } catch (e) {
+        tasksList.innerHTML = `<div style="padding: 15px; text-align: center; color: #ef4444; font-size: 12px;">Falha ao carregar tarefas.</div>`;
+        photosGrid.innerHTML = `<div style="padding: 15px; text-align: center; color: #ef4444; font-size: 12px; grid-column: 1/-1;">Falha ao carregar fotos.</div>`;
+    }
+};
+
+window.closeVisitAuditModal = function() {
+    const modal = document.getElementById('visit-audit-modal');
+    if(modal) modal.classList.add('hidden');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- State Management ---
     const state = {
@@ -683,11 +867,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadMainDashboardProductivity = async (selectedProject = 'TODOS') => {
-        const brandsBody = document.getElementById('main-prod-brands-body');
         const promotersBody = document.getElementById('main-prod-promoters-body');
         const projSelect = document.getElementById('main-prod-proj-select');
+        const periodSelect = document.getElementById('main-prod-period-select');
 
-        if (!brandsBody || !promotersBody) return;
+        if (!promotersBody) return;
 
         try {
             let { data: staffData } = await window.supabase
@@ -710,17 +894,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
 
+            if (periodSelect && !periodSelect.dataset.listenerBound) {
+                periodSelect.dataset.listenerBound = 'true';
+                periodSelect.onchange = () => {
+                    loadMainDashboardProductivity(projSelect ? projSelect.value : 'TODOS');
+                };
+            }
+
             const today = new Date();
+            const todayFormatted = today.toLocaleDateString('pt-BR');
+            let daysBack = parseInt(periodSelect?.value ?? '0', 10);
+            if (isNaN(daysBack) || daysBack < 0 || daysBack > 30) daysBack = 0;
+
             const startCycle = new Date(today);
-            startCycle.setDate(startCycle.getDate() - 30);
+            startCycle.setHours(0, 0, 0, 0);
+            if (daysBack > 0) {
+                startCycle.setDate(startCycle.getDate() - daysBack);
+            }
+            const startCycleFormatted = startCycle.toLocaleDateString('pt-BR');
 
-            let { data: checkinsData } = await window.supabase
-                .from('checkins')
-                .select('activity_id, created_at, task_id, client_id, history_id')
-                .gte('created_at', startCycle.toISOString())
-                .order('created_at', { ascending: true });
+            const cycleDisplay = document.getElementById('main-cycle-display');
+            if (cycleDisplay) {
+                if (daysBack === 0) {
+                    cycleDisplay.textContent = `${todayFormatted} (Hoje)`;
+                } else {
+                    cycleDisplay.textContent = `${startCycleFormatted} até ${todayFormatted}`;
+                }
+            }
 
-            const checkins = checkinsData || [];
+            let checkins = [];
+            let page = 0;
+            const pageSize = 1000;
+            let fetchMore = true;
+
+            while (fetchMore) {
+                const { data: pageData, error } = await window.supabase
+                    .from('checkins')
+                    .select('activity_id, created_at, task_id, client_id, history_id')
+                    .gte('created_at', startCycle.toISOString())
+                    .order('created_at', { ascending: true })
+                    .range(page * pageSize, (page + 1) * pageSize - 1);
+
+                if (error || !pageData || pageData.length === 0) {
+                    fetchMore = false;
+                } else {
+                    checkins = checkins.concat(pageData);
+                    if (pageData.length < pageSize) fetchMore = false;
+                    else page++;
+                }
+            }
 
             const visitsMap = {};
             checkins.forEach(c => {
@@ -738,7 +960,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!visitsMap[key]) visitsMap[key] = [];
                 visitsMap[key].push({
                     name: name,
-                    clientId: (c.client_id || 'LOJA NÃO INFORMADA').trim().toUpperCase(),
+                    clientId: (c.client_id ? c.client_id.split(';')[0].trim().toUpperCase() : 'LOJA NÃO INFORMADA'),
+                    laivonLocalId: (c.client_id && c.client_id.includes(';')) ? c.client_id.split(';')[1].trim() : null,
                     taskId: (c.task_id || 'CHECK IN').trim().toUpperCase(),
                     timestamp: eventDate
                 });
@@ -746,12 +969,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let totalVisits = 0;
             let completedVisits = 0;
-            let openVisits = 0;
-            let shortVisits = 0;
+            let openVisitsCount = 0;
+            let shortVisitsCount = 0;
             let totalDurationMin = 0;
 
-            const brandMap = {};
             const promoterMap = {};
+            const detailedShortVisits = [];
+            const detailedOpenVisits = [];
 
             Object.keys(visitsMap).forEach(key => {
                 const lastIdx = key.lastIndexOf('_');
@@ -778,21 +1002,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (inEv) {
                             const durationMs = ev.timestamp - inEv.timestamp;
                             const durationMin = Math.max(1, Math.round(durationMs / 60000));
-                            const isShort = durationMin < 20;
+                            const isShort = durationMin < 30;
 
                             sessions.push({
                                 clientId: store,
+                                laivonLocalId: inEv.laivonLocalId || ev.laivonLocalId,
                                 durationMin: durationMin,
                                 isShort: isShort,
-                                isOpen: false
+                                isOpen: false,
+                                inTime: inEv.timestamp,
+                                outTime: ev.timestamp
                             });
                             delete openIns[inEv.clientId];
                         } else {
                             sessions.push({
                                 clientId: store,
+                                laivonLocalId: ev.laivonLocalId,
                                 durationMin: 0,
                                 isShort: false,
-                                isOpen: false
+                                isOpen: false,
+                                inTime: null,
+                                outTime: ev.timestamp
                             });
                         }
                     }
@@ -801,45 +1031,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.values(openIns).forEach(inEv => {
                     sessions.push({
                         clientId: inEv.clientId,
+                        laivonLocalId: inEv.laivonLocalId,
                         durationMin: 0,
                         isShort: false,
-                        isOpen: true
+                        isOpen: true,
+                        inTime: inEv.timestamp,
+                        outTime: null
                     });
                 });
 
                 sessions.forEach(sess => {
                     totalVisits++;
                     if (sess.isOpen) {
-                        openVisits++;
+                        openVisitsCount++;
+                        detailedOpenVisits.push({
+                            agentName: name,
+                            clientId: sess.clientId,
+                            laivonLocalId: sess.laivonLocalId,
+                            inTime: sess.inTime,
+                            outTime: null,
+                            durationMin: 0
+                        });
                     } else {
                         completedVisits++;
                         totalDurationMin += sess.durationMin;
-                        if (sess.isShort) shortVisits++;
-                    }
-
-                    const rawStore = sess.clientId || 'LOJA DESCONHECIDA';
-                    const storeParts = rawStore.split(' ');
-                    const brandName = storeParts.length > 1 ? `${storeParts[0]} ${storeParts[1]}` : storeParts[0];
-
-                    if (!brandMap[brandName]) {
-                        brandMap[brandName] = {
-                            brand: brandName,
-                            totalVisits: 0,
-                            completedVisits: 0,
-                            totalDurationMin: 0,
-                            shortVisits: 0,
-                            openVisits: 0,
-                            storesSet: new Set()
-                        };
-                    }
-                    brandMap[brandName].totalVisits++;
-                    brandMap[brandName].storesSet.add(rawStore);
-                    if (sess.isOpen) {
-                        brandMap[brandName].openVisits++;
-                    } else {
-                        brandMap[brandName].completedVisits++;
-                        brandMap[brandName].totalDurationMin += sess.durationMin;
-                        if (sess.isShort) brandMap[brandName].shortVisits++;
+                        if (sess.isShort) {
+                            shortVisitsCount++;
+                            detailedShortVisits.push({
+                                agentName: name,
+                                clientId: sess.clientId,
+                                laivonLocalId: sess.laivonLocalId,
+                                inTime: sess.inTime,
+                                outTime: sess.outTime,
+                                durationMin: sess.durationMin
+                            });
+                        }
                     }
 
                     if (!promoterMap[name]) {
@@ -849,30 +1075,31 @@ document.addEventListener('DOMContentLoaded', () => {
                             equipe: eq,
                             visitsCount: 0,
                             completedCount: 0,
-                            totalDurationMin: 0,
-                            shortCount: 0,
-                            openCount: 0
+                            totalDurationMin: 0
                         };
                     }
                     promoterMap[name].visitsCount++;
-                    if (sess.isOpen) {
-                        promoterMap[name].openCount++;
-                    } else {
+                    if (!sess.isOpen) {
                         promoterMap[name].completedCount++;
                         promoterMap[name].totalDurationMin += sess.durationMin;
-                        if (sess.isShort) promoterMap[name].shortCount++;
                     }
                 });
             });
 
+            window.stateProductivityDetails = {
+                shortVisits: detailedShortVisits,
+                openVisits: detailedOpenVisits,
+                displayCycleText: cycleDisplay?.textContent || ''
+            };
+
             const kpiTotal = document.getElementById('main-kpi-total-visitas');
             const kpiConcl = document.getElementById('main-kpi-concluidas');
-            const kpiMedia = document.getElementById('main-kpi-media-loja');
+            const kpiCurtasTotal = document.getElementById('main-kpi-curtas-total');
+            const kpiCurtasDetail = document.getElementById('main-kpi-curtas-detail');
             const kpiHoras = document.getElementById('main-kpi-horas-loja');
-            const kpiAlertTotal = document.getElementById('main-kpi-alertas-total');
-            const kpiAlertDetail = document.getElementById('main-kpi-alertas-detail');
+            const kpiAbertasTotal = document.getElementById('main-kpi-abertas-total');
+            const kpiAbertasDetail = document.getElementById('main-kpi-abertas-detail');
 
-            const avgMin = completedVisits > 0 ? Math.round(totalDurationMin / completedVisits) : 0;
             const formatMin = (m) => {
                 if (!m) return '0min';
                 const h = Math.floor(m / 60);
@@ -882,30 +1109,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (kpiTotal) kpiTotal.textContent = totalVisits;
             if (kpiConcl) kpiConcl.textContent = `${completedVisits} concluídas`;
-            if (kpiMedia) kpiMedia.textContent = formatMin(avgMin);
+            if (kpiCurtasTotal) kpiCurtasTotal.textContent = shortVisitsCount;
+            if (kpiCurtasDetail) kpiCurtasDetail.textContent = `atendimentos < 30 min (clique para ver)`;
             if (kpiHoras) kpiHoras.textContent = `${(totalDurationMin / 60).toFixed(1)}h`;
-            if (kpiAlertTotal) kpiAlertTotal.textContent = shortVisits + openVisits;
-            if (kpiAlertDetail) kpiAlertDetail.textContent = `${shortVisits} curtas | ${openVisits} abertas`;
-
-            const sortedBrands = Object.values(brandMap).sort((a, b) => b.totalVisits - a.totalVisits);
-            if (sortedBrands.length === 0) {
-                brandsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 25px; color: var(--text-dim);">Nenhum registro de visita encontrado.</td></tr>`;
-            } else {
-                brandsBody.innerHTML = sortedBrands.map(b => {
-                    const avg = b.completedVisits > 0 ? Math.round(b.totalDurationMin / b.completedVisits) : 0;
-                    return `
-                        <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
-                            <td style="padding: 12px 14px; font-weight: 700; color: var(--text-main);">${b.brand} <span style="font-size: 11px; font-weight:400; color: var(--text-dim);">(${b.storesSet.size} lojas)</span></td>
-                            <td style="padding: 12px 14px; text-align: center; font-weight: 600;">${b.totalVisits}</td>
-                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #6366f1;">${formatMin(avg)}</td>
-                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: #10b981;">${formatMin(b.totalDurationMin)}</td>
-                            <td style="padding: 12px 14px; text-align: center;">
-                                ${b.shortVisits > 0 ? `<span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">⚠️ ${b.shortVisits} curtas</span>` : '<span style="color: var(--text-dim);">-</span>'}
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            }
+            if (kpiAbertasTotal) kpiAbertasTotal.textContent = openVisitsCount;
+            if (kpiAbertasDetail) kpiAbertasDetail.textContent = `sem check-out (clique para ver)`;
 
             const sortedPromoters = Object.values(promoterMap).sort((a, b) => b.totalDurationMin - a.totalDurationMin);
             if (sortedPromoters.length === 0) {
@@ -1124,8 +1332,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeFormatted = isNaN(dateObj.getTime()) ? "--:--" : `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}`;
             const dateFormatted = isNaN(dateObj.getTime()) ? "--/--/----" : `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
 
+            let storeName = checkinData.clientId || 'Visita Técnica';
+            let laivonLocalId = '';
+            if (storeName.includes(';')) {
+                const sp = storeName.split(';');
+                storeName = sp[0].trim();
+                laivonLocalId = sp[1].trim();
+            }
+
             const item = document.createElement('div');
             item.className = 'checkin-row';
+            item.style.cursor = 'pointer';
+            item.style.transition = 'background 0.2s';
+            item.onmouseover = () => item.style.background = 'rgba(255,255,255,0.03)';
+            item.onmouseout = () => item.style.background = 'transparent';
+
+            const isCheckIn = checkinData.taskId && checkinData.taskId.toUpperCase().includes('IN');
+            const inTimeStr = isCheckIn ? timeFormatted : '--:--';
+            const outTimeStr = isCheckIn ? '--:--' : timeFormatted;
+
+            item.onclick = (e) => {
+                // Prevent opening modal if they clicked the photo specifically
+                if (e.target.tagName.toLowerCase() === 'img') return;
+                window.openVisitAuditModal(agentName, storeName, inTimeStr, outTimeStr, 0, laivonLocalId);
+            };
 
             item.innerHTML = `
                 <div class="col-foto">
@@ -1135,7 +1365,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="col-promotor">
                         <div class="name">${agentName}</div>
                     </div>
-                    <div class="col-pdv">${checkinData.clientId || 'Visita Técnica'}</div>
+                    <div class="col-pdv">${storeName}</div>
                     <div class="col-hora">${timeFormatted}</div>
                 </div>
                 <div class="col-actions">
@@ -1230,7 +1460,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         agentPhoto = row.photoUrl || "";
                     }
 
-                    const storeName = (row.client_id || 'Visita Técnica').trim().toUpperCase();
+                    let storeName = (row.client_id || 'Visita Técnica').trim().toUpperCase();
+                    let laivonLocalId = '';
+                    if (storeName.includes(';')) {
+                        const sp = storeName.split(';');
+                        storeName = sp[0].trim();
+                        laivonLocalId = sp[1].trim();
+                    }
                     const taskId = (row.task_id || 'CHECK IN').trim().toUpperCase();
                     
                     let timestampStr = row.history_id || row.created_at;
@@ -1245,6 +1481,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 agentName,
                                 photoUrl: agentPhoto,
                                 storeName,
+                                laivonLocalId,
                                 inTime: eventTime,
                                 outTime: null
                             };
@@ -1261,6 +1498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 agentName,
                                 photoUrl: agentPhoto,
                                 storeName,
+                                laivonLocalId,
                                 inTime: null,
                                 outTime: eventTime
                             };
@@ -1310,6 +1548,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     item.style.display = 'flex';
                     item.style.gap = '12px';
                     item.style.alignItems = 'flex-start';
+                    item.style.cursor = 'pointer';
+                    item.style.transition = 'background 0.2s';
+                    item.onmouseover = () => item.style.background = 'rgba(255,255,255,0.03)';
+                    item.onmouseout = () => item.style.background = 'transparent';
+
+                    item.onclick = (e) => {
+                        if (e.target.tagName.toLowerCase() === 'img') return;
+                        window.openVisitAuditModal(visit.agentName, visit.storeName, inStr, outStr, durationMin, visit.laivonLocalId || '');
+                    };
 
                     item.innerHTML = `
                         <div class="col-foto">

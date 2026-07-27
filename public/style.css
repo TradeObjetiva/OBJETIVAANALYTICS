@@ -1081,6 +1081,29 @@ body {
     pointer-events: none;
 }
 
+/* Modal de KPIs e Auditoria */
+.kpi-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(11, 15, 26, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.kpi-modal-overlay.hidden {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 .login-card {
     background: var(--glass-bg);
     backdrop-filter: blur(40px);
