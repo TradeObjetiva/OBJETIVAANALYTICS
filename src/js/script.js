@@ -1430,9 +1430,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const loadCheckins = async (page = 0) => {
+        const feedState = {
+            currentPage: 0,
+            perPage: 5,
+            searchQuery: ''
+        };
+
+        const updatePaginationUI = (total, currentPage) => {
+            const controls = document.querySelector('.pagination-controls');
+            if (!controls) return;
+
+            const totalPages = Math.ceil(total / feedState.perPage);
+            if (totalPages <= 1) {
+                controls.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            const maxVisible = 5;
+            let startPage = Math.max(0, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisible);
+
+            if (endPage - startPage < maxVisible) {
+                startPage = Math.max(0, endPage - maxVisible);
+            }
+
+            for (let i = startPage; i < endPage; i++) {
+                html += `<div class="page-num ${i === currentPage ? 'active' : ''}" onclick="window.changeFeedPage(${i})">${i + 1}</div>`;
+            }
+
+            controls.innerHTML = html;
+        };
+
+        window.changeFeedPage = (page) => {
+            feedState.currentPage = page;
+            loadCheckins(page);
+        };
+
+        const loadCheckins = async (page = feedState.currentPage) => {
             const activityList = document.getElementById('activity-list');
             if (!activityList) return;
+
+            const searchInput = document.getElementById('checkin-search');
+            if (searchInput && !searchInput.dataset.bound) {
+                searchInput.dataset.bound = 'true';
+                searchInput.addEventListener('input', (e) => {
+                    feedState.searchQuery = (e.target.value || '').toLowerCase().trim();
+                    feedState.currentPage = 0;
+                    loadCheckins(0);
+                });
+            }
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -1518,13 +1565,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                     const countEl = document.getElementById('checkins-count');
                     if (countEl) countEl.textContent = `Total: 0 visitas hoje`;
+                    updatePaginationUI(0, 0);
                     return;
                 }
 
                 storeVisits.reverse();
 
+                let filteredVisits = storeVisits;
+                if (feedState.searchQuery) {
+                    filteredVisits = storeVisits.filter(v => 
+                        v.agentName.toLowerCase().includes(feedState.searchQuery) ||
+                        v.storeName.toLowerCase().includes(feedState.searchQuery)
+                    );
+                }
+
+                const totalVisits = filteredVisits.length;
+                const totalPages = Math.ceil(totalVisits / feedState.perPage) || 1;
+                if (page >= totalPages) page = totalPages - 1;
+                if (page < 0) page = 0;
+                feedState.currentPage = page;
+
+                const pagedVisits = filteredVisits.slice(page * feedState.perPage, (page + 1) * feedState.perPage);
+
                 const now = new Date();
-                storeVisits.forEach(visit => {
+                pagedVisits.forEach(visit => {
                     const isOpen = !visit.outTime;
                     const inStr = visit.inTime ? visit.inTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
                     const outStr = visit.outTime ? visit.outTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
@@ -1593,28 +1657,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const countEl = document.getElementById('checkins-count');
                 if (countEl) countEl.textContent = `Total: ${storeVisits.length} visitas hoje`;
 
+                updatePaginationUI(totalVisits, feedState.currentPage);
+
                 updateOperationalAlertsToday(data);
             }
-        };
-
-        const updatePaginationUI = (total, currentPage) => {
-            const controls = document.querySelector('.pagination-controls');
-            if (!controls) return;
-
-            const totalPages = Math.ceil(total / state.checkinsPerPage);
-            let html = `<span style="margin-right: 8px;">Página</span>`;
-
-            for (let i = 0; i < Math.min(totalPages, 5); i++) {
-                html += `<div class="page-num ${i === currentPage ? 'active' : ''}" onclick="changeFeedPage(${i})">${i + 1}</div>`;
-            }
-
-            if (totalPages > 5) html += `<div class="page-num">...</div>`;
-            controls.innerHTML = html;
-        };
-
-        window.changeFeedPage = (page) => {
-            state.checkinsPage = page;
-            loadCheckins(page);
         };
 
         loadCheckins(0);
@@ -1630,7 +1676,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     taskId: payload.new.task_id
                 };
 
-                window.addDashboardCheckin(checkinData, true); // Prepend para novos caírem no topo
+                loadCheckins(feedState.currentPage);
 
                 // WhatsApp-Style Notification para TODOS os usuários
                 let notifName = 'Agente';
