@@ -90,8 +90,8 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
         const headers = { 'X-API-Key': apiKey };
         
         const [photosRes, tasksRes, localsRes] = await Promise.allSettled([
-            fetch(`${supabaseProxyBase}/photos?limit=200`, { headers }).then(r => r.json()),
-            fetch(`${supabaseProxyBase}/tasks?limit=200`, { headers }).then(r => r.json()),
+            fetch(`${supabaseProxyBase}/photos?limit=500`, { headers }).then(r => r.json()),
+            fetch(`${supabaseProxyBase}/tasks?limit=500`, { headers }).then(r => r.json()),
             fetch(`${supabaseProxyBase}/locals?limit=500`, { headers }).then(r => r.json())
         ]);
         
@@ -99,8 +99,13 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
         let tasks = tasksRes.status === 'fulfilled' && tasksRes.value.data ? tasksRes.value.data : [];
         let locals = localsRes.status === 'fulfilled' && localsRes.value.data ? localsRes.value.data : [];
 
-        let matchedLocalId = laivonLocalId ? parseInt(laivonLocalId, 10) : null;
-        if (!matchedLocalId && storeName && locals.length > 0) {
+        let matchedLocal = null;
+        if (laivonLocalId) {
+            const cleanTargetId = String(laivonLocalId).trim();
+            matchedLocal = locals.find(l => String(l.id_integration).trim() === cleanTargetId || String(l.id).trim() === cleanTargetId);
+        }
+
+        if (!matchedLocal && storeName && locals.length > 0) {
             const cleanStr = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
             const snClean = cleanStr(storeName);
             const snParts = snClean.split(' ').filter(p => p.length > 2);
@@ -109,12 +114,13 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
             let bestScore = 0;
             
             locals.forEach(l => {
-                if(!l.name) return;
+                if (!l.name && !l.corporate_name) return;
                 const lnClean = cleanStr(l.name);
+                const corpClean = cleanStr(l.corporate_name);
                 let score = 0;
-                if (lnClean === snClean) score += 100;
+                if (lnClean === snClean || corpClean === snClean) score += 100;
                 snParts.forEach(p => {
-                    if (lnClean.includes(p)) score += 10;
+                    if (lnClean.includes(p) || corpClean.includes(p)) score += 10;
                 });
                 if (score > bestScore) {
                     bestScore = score;
@@ -122,31 +128,44 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
                 }
             });
             
-            if (bestLoc && bestScore > 0) matchedLocalId = bestLoc.id;
+            if (bestLoc && bestScore > 0) matchedLocal = bestLoc;
         }
 
-        let matchedTasks = tasks.filter(t => t.agent_name && t.agent_name.toUpperCase() === agentName.toUpperCase());
-        
+        const matchedLocalId = matchedLocal ? matchedLocal.id : null;
+
+        let matchedTasks = [];
         if (matchedLocalId) {
-            let localTasks = matchedTasks.filter(t => t.id_local === matchedLocalId);
-            if (localTasks.length > 0) matchedTasks = localTasks; 
+            matchedTasks = tasks.filter(t => t.id_local === matchedLocalId);
+        }
+        
+        if (matchedTasks.length === 0 && agentName) {
+            const cleanAgent = agentName.toUpperCase().trim();
+            matchedTasks = tasks.filter(t => t.agent_name && t.agent_name.toUpperCase().trim().includes(cleanAgent));
         }
 
-        // Filtra tarefas genéricas e limita a 5
+        // Filtra tarefas puramente de jornada, mantendo visitas/formularios
         matchedTasks = matchedTasks.filter(t => {
             const type = (t.type || '').toUpperCase();
-            return !type.includes('JORNADA') && !type.includes('VISITAS AGENDADAS');
-        }).slice(0, 5);
+            return !type.includes('JORNADA');
+        }).slice(0, 8);
 
         if (matchedTasks.length > 0) {
-            tasksList.innerHTML = matchedTasks.map(t => `
-                <div style="padding: 10px; border-bottom: 1px solid rgba(128,128,128,0.1); display: flex; justify-content: space-between;">
-                    <span style="font-weight: 600; color: var(--text-main); font-size: 12px;">${t.type || 'Tarefa Operacional'}</span>
-                    <span style="color: ${(t.real_final_dt || t.situation_id === 50 || t.situation_id === 2) ? '#10b981' : '#f59e0b'}; font-weight: 800; font-size: 11px;">
-                        ${(t.real_final_dt || t.situation_id === 50 || t.situation_id === 2) ? 'Concluído' : 'Pendente'}
-                    </span>
-                </div>
-            `).join('');
+            tasksList.innerHTML = matchedTasks.map(t => {
+                const isCompleted = (t.real_final_dt || t.situation_id === 50 || t.situation_id === 2);
+                const statusColor = isCompleted ? '#10b981' : '#f59e0b';
+                const statusText = isCompleted ? 'Concluído' : (t.situation_id === 40 ? 'Em Andamento' : 'Pendente');
+                return `
+                    <div style="padding: 10px; border-bottom: 1px solid rgba(128,128,128,0.1); display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <span style="font-weight: 700; color: var(--text-main); font-size: 12px; display: block;">${t.type || 'Tarefa Operacional'}</span>
+                            ${t.agent_name ? `<span style="font-size: 10px; color: var(--text-muted);">${t.agent_name}</span>` : ''}
+                        </div>
+                        <span style="color: ${statusColor}; font-weight: 800; font-size: 11px;">
+                            ${statusText}
+                        </span>
+                    </div>
+                `;
+            }).join('');
         } else {
             tasksList.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-dim); font-size: 12px;">Nenhum formulário ou pesquisa preenchida nesta loja hoje.</div>`;
         }
@@ -156,16 +175,18 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
             matchedPhotos = photos.filter(p => p.local_id === matchedLocalId);
         }
         
-        // Se não encontrou foto para a loja exata, não mostra fotos aleatórias, mostra vazio ou fallback
-        if (matchedPhotos.length === 0 && matchedTasks.length === 0 && !matchedLocalId) {
-             matchedPhotos = photos.slice(0, 4); // fallback extremo apenas se não achou NADA
+        if (matchedPhotos.length === 0 && matchedTasks.length > 0) {
+            const taskIds = matchedTasks.map(t => t.id);
+            matchedPhotos = photos.filter(p => taskIds.includes(p.task_id));
         }
         
-        matchedPhotos = matchedPhotos.slice(0, 8);
+        matchedPhotos = matchedPhotos.slice(0, 12);
 
         if (matchedPhotos.length > 0) {
             photosGrid.innerHTML = matchedPhotos.map(p => `
-                <div style="aspect-ratio: 1; border-radius: 8px; background: url('${p.photo}') center/cover; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;" onclick="window.open('${p.photo}', '_blank')" title="${p.description || 'Evidência'}"></div>
+                <div style="aspect-ratio: 1; border-radius: 8px; background: url('${p.photo}') center/cover; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; position: relative;" onclick="window.open('${p.photo}', '_blank')" title="${p.description || 'Evidência'}">
+                    ${p.description ? `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; padding: 2px 4px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">${p.description}</div>` : ''}
+                </div>
             `).join('');
         } else {
             photosGrid.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-dim); font-size: 12px; grid-column: 1/-1;">Nenhuma foto registrada nesta loja.</div>`;
