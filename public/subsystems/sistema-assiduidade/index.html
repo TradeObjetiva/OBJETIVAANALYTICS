@@ -1850,7 +1850,8 @@
             checkins?.forEach(c => {
                 const parts = (c.activity_id || '').split(';');
                 const name = parts[0]?.trim().toUpperCase();
-                const photoUrl = parts[1]?.trim() || null;
+                const photoPart = parts.find(p => p.trim().toLowerCase().includes('http'));
+                const photoUrl = photoPart ? photoPart.trim() : null;
                 if (!name) return;
 
                 let timestampStr = c.history_id || c.created_at;

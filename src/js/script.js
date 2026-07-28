@@ -1315,9 +1315,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let agentPhoto = "";
 
             if (checkinData.activityId && checkinData.activityId.includes(';')) {
-                const parts = checkinData.activityId.split(';').filter(p => p.trim() !== '');
-                agentName = parts[0] || "Agente";
-                agentPhoto = parts.length > 1 ? parts[parts.length - 1] : "";
+                const parts = checkinData.activityId.split(';');
+                agentName = parts[0]?.trim() || "Agente";
+                const photoPart = parts.find(p => p.trim().toLowerCase().includes('http'));
+                agentPhoto = photoPart ? photoPart.trim() : "";
             } else {
                 agentName = checkinData.agentName || "Agente";
                 agentPhoto = checkinData.photoUrl || "";
@@ -1359,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             item.innerHTML = `
                 <div class="col-foto">
-                    ${agentPhoto ? `<img src="${agentPhoto}" class="checkin-photo-thumb" onclick="window.open('${agentPhoto}', '_blank')">` : '<span style="color:var(--text-dim); font-size:11px;">Sem Foto</span>'}
+                    ${agentPhoto ? `<img src="${agentPhoto}" class="checkin-photo-thumb" onclick="window.open('${agentPhoto}', '_blank')" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'color:var(--text-dim); font-size:11px;\\'>Sem Foto</span>';">` : '<span style="color:var(--text-dim); font-size:11px;">Sem Foto</span>'}
                 </div>
                 <div class="checkin-content">
                     <div class="col-promotor">
@@ -1452,9 +1453,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     let agentName = "Agente";
                     let agentPhoto = "";
                     if (row.activity_id && row.activity_id.includes(';')) {
-                        const parts = row.activity_id.split(';').filter(p => p.trim() !== '');
-                        agentName = parts[0] || "Agente";
-                        agentPhoto = parts.length > 1 ? parts[parts.length - 1] : "";
+                        const parts = row.activity_id.split(';');
+                        agentName = parts[0]?.trim() || "Agente";
+                        const photoPart = parts.find(p => p.trim().toLowerCase().includes('http'));
+                        agentPhoto = photoPart ? photoPart.trim() : "";
                     } else {
                         agentName = row.activityId || "Agente";
                         agentPhoto = row.photoUrl || "";
@@ -1560,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     item.innerHTML = `
                         <div class="col-foto">
-                            ${visit.photoUrl ? `<img src="${visit.photoUrl}" class="checkin-photo-thumb" onclick="window.open('${visit.photoUrl}', '_blank')">` : '<span style="color:var(--text-dim); font-size:12px;">Sem Foto</span>'}
+                            ${visit.photoUrl ? `<img src="${visit.photoUrl}" class="checkin-photo-thumb" onclick="window.open('${visit.photoUrl}', '_blank')" onerror="this.onerror=null; this.parentElement.innerHTML='<span style=\\'color:var(--text-dim); font-size:12px;\\'>Sem Foto</span>';">` : '<span style="color:var(--text-dim); font-size:12px;">Sem Foto</span>'}
                         </div>
 
                         <div class="checkin-content" style="flex: 1; font-family: 'Inter', sans-serif;">
@@ -1634,9 +1636,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let notifName = 'Agente';
                 let notifPhoto = '';
                 if (checkinData.activityId && checkinData.activityId.includes(';')) {
-                    const parts = checkinData.activityId.split(';').filter(p => p.trim() !== '');
-                    notifName = parts[0] || 'Agente';
-                    notifPhoto = parts.length > 1 ? parts[parts.length - 1] : '';
+                    const parts = checkinData.activityId.split(';');
+                    notifName = parts[0]?.trim() || 'Agente';
+                    const photoPart = parts.find(p => p.trim().toLowerCase().includes('http'));
+                    notifPhoto = photoPart ? photoPart.trim() : '';
                 }
 
                 const dateStr = checkinData.historyId || new Date().toISOString();

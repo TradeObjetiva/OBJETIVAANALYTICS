@@ -715,9 +715,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let clientIdInfo = checkinData.clientId ? `<div style="font-size:11px; margin-top:2px; color:var(--text-main); font-weight:600;">🏪 Loja: ${checkinData.clientId}</div>` : '';
         
         if (checkinData.activityId && checkinData.activityId.includes(';')) {
-            const parts = checkinData.activityId.split(';').filter(p => p.trim() !== '');
-            agentName = parts[0] || "Agente";
-            agentPhoto = parts.length > 1 ? parts[parts.length - 1] : "";
+            const parts = checkinData.activityId.split(';');
+            agentName = parts[0]?.trim() || "Agente";
+            const photoPart = parts.find(p => p.trim().toLowerCase().includes('http'));
+            agentPhoto = photoPart ? photoPart.trim() : "";
         } else {
             agentName = checkinData.agentName || "Agente";
             agentPhoto = checkinData.photoUrl || "";
