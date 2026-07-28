@@ -90,8 +90,8 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
         const headers = { 'X-API-Key': apiKey };
         
         const [photosRes, tasksRes, localsRes] = await Promise.allSettled([
-            fetch(`${supabaseProxyBase}/photos?limit=500`, { headers }).then(r => r.json()),
-            fetch(`${supabaseProxyBase}/tasks?limit=500`, { headers }).then(r => r.json()),
+            fetch(`${supabaseProxyBase}/photos?limit=200`, { headers }).then(r => r.json()),
+            fetch(`${supabaseProxyBase}/tasks?limit=200`, { headers }).then(r => r.json()),
             fetch(`${supabaseProxyBase}/locals?limit=500`, { headers }).then(r => r.json())
         ]);
         
@@ -99,69 +99,95 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
         let tasks = tasksRes.status === 'fulfilled' && tasksRes.value.data ? tasksRes.value.data : [];
         let locals = localsRes.status === 'fulfilled' && localsRes.value.data ? localsRes.value.data : [];
 
-        let matchedLocal = null;
+        const cleanStr = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        const agentClean = cleanStr(agentName);
+        const storeClean = cleanStr(storeName);
+
+        // 1. Encontrar a Tarefa do Atendimento (por id_integration ou id)
+        let targetTask = null;
         if (laivonLocalId) {
-            const cleanTargetId = String(laivonLocalId).trim();
-            matchedLocal = locals.find(l => String(l.id_integration).trim() === cleanTargetId || String(l.id).trim() === cleanTargetId);
+            targetTask = tasks.find(t => String(t.id_integration) === String(laivonLocalId) || String(t.id) === String(laivonLocalId));
         }
 
-        if (!matchedLocal && storeName && locals.length > 0) {
-            const cleanStr = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
-            const snClean = cleanStr(storeName);
-            const snParts = snClean.split(' ').filter(p => p.length > 2);
-            
-            let bestLoc = null;
+        // 2. Encontrar a Loja (Local) por id da tarefa, id_integration ou nome da loja
+        let targetLocal = null;
+        if (targetTask && targetTask.id_local) {
+            targetLocal = locals.find(l => l.id === targetTask.id_local);
+        }
+        if (!targetLocal && laivonLocalId) {
+            targetLocal = locals.find(l => String(l.id_integration) === String(laivonLocalId) || String(l.id) === String(laivonLocalId));
+        }
+
+        if (!targetLocal && storeClean && locals.length > 0) {
+            const snParts = storeClean.split(' ').filter(p => p.length > 2);
             let bestScore = 0;
             
             locals.forEach(l => {
-                if (!l.name && !l.corporate_name) return;
-                const lnClean = cleanStr(l.name);
-                const corpClean = cleanStr(l.corporate_name);
+                const lnClean = cleanStr(l.name || l.corporate_name);
+                if (!lnClean) return;
                 let score = 0;
-                if (lnClean === snClean || corpClean === snClean) score += 100;
+                if (lnClean === storeClean) score += 100;
                 snParts.forEach(p => {
-                    if (lnClean.includes(p) || corpClean.includes(p)) score += 10;
+                    if (lnClean.includes(p)) score += 15;
                 });
                 if (score > bestScore) {
                     bestScore = score;
-                    bestLoc = l;
+                    targetLocal = l;
                 }
             });
-            
-            if (bestLoc && bestScore > 0) matchedLocal = bestLoc;
         }
 
-        const matchedLocalId = matchedLocal ? matchedLocal.id : null;
+        const matchedLocalId = targetLocal ? targetLocal.id : null;
+        const matchedTaskId = targetTask ? targetTask.id : null;
 
+        // 3. Tarefas / Formulários do Atendimento
         let matchedTasks = [];
-        if (matchedLocalId) {
-            matchedTasks = tasks.filter(t => t.id_local === matchedLocalId);
-        }
-        
-        if (matchedTasks.length === 0 && agentName) {
-            const cleanAgent = agentName.toUpperCase().trim();
-            matchedTasks = tasks.filter(t => t.agent_name && t.agent_name.toUpperCase().trim().includes(cleanAgent));
+        if (targetTask) matchedTasks.push(targetTask);
+
+        let agentTasks = tasks.filter(t => t.agent_name && cleanStr(t.agent_name).includes(agentClean));
+        if (agentTasks.length === 0) {
+            const agentParts = agentClean.split(' ').filter(p => p.length > 2);
+            if (agentParts.length > 0) {
+                agentTasks = tasks.filter(t => {
+                    if (!t.agent_name) return false;
+                    const tn = cleanStr(t.agent_name);
+                    return agentParts.some(ap => tn.includes(ap));
+                });
+            }
         }
 
-        // Filtra tarefas puramente de jornada, mantendo visitas/formularios
-        matchedTasks = matchedTasks.filter(t => {
-            const type = (t.type || '').toUpperCase();
-            return !type.includes('JORNADA');
-        }).slice(0, 8);
+        if (matchedLocalId) {
+            agentTasks = agentTasks.filter(t => t.id_local === matchedLocalId);
+        }
+
+        agentTasks.forEach(t => {
+            if (!matchedTasks.some(mt => mt.id === t.id)) matchedTasks.push(t);
+        });
+
+        // Filtrar 'Jornada de Trabalho' genérica se houver tarefas de visita específicas
+        const specificTasks = matchedTasks.filter(t => (t.type || '').toUpperCase() !== 'JORNADA DE TRABALHO');
+        if (specificTasks.length > 0) {
+            matchedTasks = specificTasks;
+        }
+
+        matchedTasks = matchedTasks.slice(0, 10);
 
         if (matchedTasks.length > 0) {
             tasksList.innerHTML = matchedTasks.map(t => {
-                const isCompleted = (t.real_final_dt || t.situation_id === 50 || t.situation_id === 2);
-                const statusColor = isCompleted ? '#10b981' : '#f59e0b';
-                const statusText = isCompleted ? 'Concluído' : (t.situation_id === 40 ? 'Em Andamento' : 'Pendente');
+                const isCompleted = !!(t.real_final_dt || t.situation_id === 50 || t.situation_id === 2);
+                const taskTitle = (t.type && t.type !== 'Visitas agendadas') ? t.type : 'Pesquisa / Atendimento de Loja';
+                const timeLabel = t.real_final_dt 
+                    ? new Date(t.real_final_dt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                    : (t.insert_dt ? new Date(t.insert_dt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '');
+
                 return `
-                    <div style="padding: 10px; border-bottom: 1px solid rgba(128,128,128,0.1); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="padding: 10px 12px; border-bottom: 1px solid rgba(128,128,128,0.1); display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <span style="font-weight: 700; color: var(--text-main); font-size: 12px; display: block;">${t.type || 'Tarefa Operacional'}</span>
-                            ${t.agent_name ? `<span style="font-size: 10px; color: var(--text-muted);">${t.agent_name}</span>` : ''}
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 13px;">📋 ${taskTitle}</div>
+                            ${timeLabel ? `<div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Horário: ${timeLabel}</div>` : ''}
                         </div>
-                        <span style="color: ${statusColor}; font-weight: 800; font-size: 11px;">
-                            ${statusText}
+                        <span style="color: ${isCompleted ? '#10b981' : '#f59e0b'}; font-weight: 800; font-size: 11px; padding: 4px 10px; background: ${isCompleted ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}; border-radius: 6px;">
+                            ${isCompleted ? '✅ Concluído' : '⏳ Pendente'}
                         </span>
                     </div>
                 `;
@@ -170,22 +196,25 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
             tasksList.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-dim); font-size: 12px;">Nenhum formulário ou pesquisa preenchida nesta loja hoje.</div>`;
         }
 
+        // 4. Fotos de Evidência do Atendimento
         let matchedPhotos = [];
+        if (matchedTaskId) {
+            matchedPhotos = photos.filter(p => p.task_id === matchedTaskId);
+        }
         if (matchedLocalId) {
-            matchedPhotos = photos.filter(p => p.local_id === matchedLocalId);
+            photos.forEach(p => {
+                if ((p.local_id === matchedLocalId || p.client_id === matchedLocalId) && !matchedPhotos.some(mp => mp.id === p.id)) {
+                    matchedPhotos.push(p);
+                }
+            });
         }
-        
-        if (matchedPhotos.length === 0 && matchedTasks.length > 0) {
-            const taskIds = matchedTasks.map(t => t.id);
-            matchedPhotos = photos.filter(p => taskIds.includes(p.task_id));
-        }
-        
+
         matchedPhotos = matchedPhotos.slice(0, 12);
 
         if (matchedPhotos.length > 0) {
             photosGrid.innerHTML = matchedPhotos.map(p => `
-                <div style="aspect-ratio: 1; border-radius: 8px; background: url('${p.photo}') center/cover; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; position: relative;" onclick="window.open('${p.photo}', '_blank')" title="${p.description || 'Evidência'}">
-                    ${p.description ? `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; padding: 2px 4px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">${p.description}</div>` : ''}
+                <div style="aspect-ratio: 1; border-radius: 8px; background: url('${p.photo}') center/cover; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; position: relative;" onclick="window.open('${p.photo}', '_blank')" title="${p.description || 'Evidência Fotográfica'}">
+                    ${p.description ? `<div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.75); color: #fff; font-size: 9px; font-weight: 700; padding: 3px 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-bottom-left-radius: 7px; border-bottom-right-radius: 7px;">${p.description}</div>` : ''}
                 </div>
             `).join('');
         } else {

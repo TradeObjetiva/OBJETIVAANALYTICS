@@ -368,41 +368,116 @@ downloadExcelBtn.addEventListener('click', async () => {
             ext: { width: 290, height: 145 }
           });
         }
-        // Os botões de navegação sao injetados via JSZip como formas nativas OpenXML (veja abaixo)
       };
 
-      // ==========================================
-      // ABA 1: PREÇO (Dados Centralizados)
-      // ==========================================
-      const wsPreco = wb.addWorksheet('PREÇO', { views: [{ showGridLines: true }] });
-      wsPreco.getRow(1).height = 24;
-
-      const hasPrices = fileObj.rows.some(row => parsePrice(row['PRECO'] || row['PREÇO']) !== null);
-
-      let headersPreco = [];
-      if (hasPrices) {
-        headersPreco = ['Data', 'Local', 'Rede', 'Produto', 'Preço'];
-      } else {
-        headersPreco = ['Local', 'Classificação', 'Produto', 'Total Reposições', 'Quantidade Total'];
-      }
-
-      const rowHeaderPreco = wsPreco.getRow(1);
-      headersPreco.forEach((h, idx) => {
-        const cell = rowHeaderPreco.getCell(idx + 4);
-        cell.value = h;
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
-        cell.font = HEADER_FONT;
-        cell.alignment = { horizontal: "center", vertical: "middle" };
+      // Identificar quais abas possuem dados reais
+      const hasPrices = fileObj.rows.some(row => {
+        const p = parsePrice(row['PRECO'] || row['PREÇO']);
+        return p !== null && p > 0;
       });
 
-      let rPrecoIdx = 2;
-      fileObj.rows.forEach(row => {
-        if (hasPrices) {
+      const validRupturaRows = fileObj.rows.filter(row => {
+        const pdvVal = row['PDV'] || row['LOCAL'] || '';
+        const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
+        if (!pdvVal || !produtoVal) return false;
+        const isRupTotal = String(row['RUPTURA TOTAL?'] || '').toUpperCase().includes('SIM');
+        if (normalizeHeader(produtoVal) === 'PADRAO') return isRupTotal;
+        return true;
+      });
+      const hasRuptura = validRupturaRows.length > 0;
+
+      const validValidadeRows = fileObj.rows.filter(row => {
+        const valStr = row['INFORME A VALIDADE'] || row['VALIDADE'] || row['(2) INFORME A VALIDADE'];
+        return !!valStr;
+      });
+      const hasValidade = validValidadeRows.length > 0;
+
+      const validAbastecimentoRows = fileObj.rows.filter(row => {
+        const caixasVal = row['QUANTAS CAIXAS FORAM ABASTECIDAS?'] || row['QTD. DE CAIXAS ABASTECIDAS'] || row['TOTAL REPOSIÇÕES'] || row['QUANTIDADE'] || '';
+        if (caixasVal === null || caixasVal === undefined || String(caixasVal).trim() === '') return false;
+        const numCaixas = parseInt(String(caixasVal).replace(',', '.'), 10);
+        return !isNaN(numCaixas) && numCaixas > 0;
+      });
+      const hasAbastecimento = validAbastecimentoRows.length > 0;
+
+      const validPontoExtraRows = fileObj.rows.filter(row => {
+        const pontoExtraVal = row['TEM PONTO EXTRA?'] || row['PONTO EXTRA'] || '';
+        return pontoExtraVal !== null && pontoExtraVal !== undefined && String(pontoExtraVal).trim() !== '';
+      });
+      const hasPontoExtra = validPontoExtraRows.length > 0;
+
+      // Lista dinâmica de abas ativas
+      const activeTabDefs = [];
+      if (hasPrices) {
+        activeTabDefs.push({
+          key: 'PRECO',
+          sheetName: 'PREÇO',
+          buttonLabel: 'PRECO',
+          buttonDisplay: 'PREÇO',
+          target: "#'PREÇO'!A1"
+        });
+      }
+      if (hasRuptura || activeTabDefs.length === 0) {
+        activeTabDefs.push({
+          key: 'RUPTURA',
+          sheetName: 'RUPTURA ',
+          buttonLabel: 'RUPTURA',
+          buttonDisplay: 'RUPTURA',
+          target: "#'RUPTURA '!A1"
+        });
+      }
+      if (hasValidade) {
+        activeTabDefs.push({
+          key: 'VALIDADE',
+          sheetName: 'VALIDADE',
+          buttonLabel: 'VALIDADE',
+          buttonDisplay: 'VALIDADE',
+          target: "#'VALIDADE'!A1"
+        });
+      }
+      if (hasAbastecimento) {
+        activeTabDefs.push({
+          key: 'ABASTECIMENTO',
+          sheetName: 'ABASTECIMENTO',
+          buttonLabel: 'ABASTECIMENTO',
+          buttonDisplay: 'ABASTECIMENTO',
+          target: "#'ABASTECIMENTO'!A1"
+        });
+      }
+      if (hasPontoExtra) {
+        activeTabDefs.push({
+          key: 'PONTO_EXTRA',
+          sheetName: 'PONTO EXTRA',
+          buttonLabel: 'PONTO_EXTRA',
+          buttonDisplay: 'PONTO EXTRA',
+          target: "#'PONTO EXTRA'!A1"
+        });
+      }
+
+      // ==========================================
+      // ABA 1: PREÇO (se houver preços)
+      // ==========================================
+      if (hasPrices) {
+        const wsPreco = wb.addWorksheet('PREÇO', { views: [{ showGridLines: true }] });
+        wsPreco.getRow(1).height = 24;
+
+        const headersPreco = ['Data', 'Local', 'Produto', 'Preço'];
+
+        const rowHeaderPreco = wsPreco.getRow(1);
+        headersPreco.forEach((h, idx) => {
+          const cell = rowHeaderPreco.getCell(idx + 4);
+          cell.value = h;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
+          cell.font = HEADER_FONT;
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
+
+        let rPrecoIdx = 2;
+        fileObj.rows.forEach(row => {
           const priceNum = parsePrice(row['PRECO'] || row['PREÇO']);
           if (priceNum !== null && priceNum > 0) {
             const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
             const pdvVal = row['PDV'] || row['LOCAL'] || '';
-            const redeVal = extractRede(pdvVal);
             const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
 
             const r = wsPreco.getRow(rPrecoIdx++);
@@ -410,337 +485,318 @@ downloadExcelBtn.addEventListener('click', async () => {
             if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
             r.getCell(5).value = pdvVal;
-            r.getCell(6).value = redeVal;
-            r.getCell(7).value = produtoVal;
-            r.getCell(8).value = priceNum;
-            r.getCell(8).numFmt = '"R$" #,##0.00;[Red]-"R$" #,##0.00';
+            r.getCell(6).value = produtoVal;
+            r.getCell(7).value = priceNum;
+            r.getCell(7).numFmt = '"R$" #,##0.00;[Red]-"R$" #,##0.00';
 
-            for (let i = 4; i <= 8; i++) {
+            for (let i = 4; i <= 7; i++) {
               r.getCell(i).font = DATA_FONT;
               r.getCell(i).border = ORANGE_BORDER;
               r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
             }
           }
-        } else {
-          const pdvVal = row['PDV'] || row['LOCAL'] || '';
-          const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
-          if (!pdvVal) return;
+        });
 
-          const redeVal = extractRede(pdvVal);
-          const reposicoes = parseInt(row['QUANTAS CAIXAS FORAM ABASTECIDAS?'] || row['TOTAL REPOSIÇÕES'] || '1', 10) || 1;
-          const qtdTotal = parseInt(row['QTD. UNIDADE NO ESTOQUE'] || row['QUANTIDADE TOTAL'] || '10', 10) || 10;
+        addSidebarToSheet(wsPreco, 'PREÇO', rPrecoIdx);
 
-          const r = wsPreco.getRow(rPrecoIdx++);
-          r.getCell(4).value = pdvVal;
-          r.getCell(5).value = redeVal;
-          r.getCell(6).value = produtoVal;
-          r.getCell(7).value = reposicoes;
-          r.getCell(8).value = qtdTotal;
+        wsPreco.autoFilter = {
+          from: { row: 1, column: 4 },
+          to: { row: Math.max(rPrecoIdx - 1, 1), column: 7 }
+        };
 
-          for (let i = 4; i <= 8; i++) {
-            r.getCell(i).font = DATA_FONT;
-            r.getCell(i).border = ORANGE_BORDER;
-            r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
-          }
-        }
-      });
-
-      addSidebarToSheet(wsPreco, 'PREÇO', rPrecoIdx);
-
-      wsPreco.autoFilter = {
-        from: { row: 1, column: 4 },
-        to: { row: rPrecoIdx - 1, column: 8 }
-      };
-
-      if (hasPrices) {
         wsPreco.getColumn(4).width = 13;  // Data
         wsPreco.getColumn(5).width = 46;  // Local
-        wsPreco.getColumn(6).width = 14;  // Rede
-        wsPreco.getColumn(7).width = 46;  // Produto
-        wsPreco.getColumn(8).width = 13;  // Preço
-      } else {
-        wsPreco.getColumn(4).width = 46;  // Local
-        wsPreco.getColumn(5).width = 24;  // Classificação / Rede
-        wsPreco.getColumn(6).width = 18;  // Produto
-        wsPreco.getColumn(7).width = 18;  // Total Reposições
-        wsPreco.getColumn(8).width = 18;  // Quantidade Total
+        wsPreco.getColumn(6).width = 46;  // Produto
+        wsPreco.getColumn(7).width = 13;  // Preço
       }
 
       // ==========================================
-      // ABA 2: RUPTURA (Dados Centralizados)
+      // ABA 2: RUPTURA (se houver dados)
       // ==========================================
-      const wsRuptura = wb.addWorksheet('RUPTURA ', { views: [{ showGridLines: true }] });
-      wsRuptura.getRow(1).height = 24;
+      if (hasRuptura || activeTabDefs.some(t => t.key === 'RUPTURA')) {
+        const wsRuptura = wb.addWorksheet('RUPTURA ', { views: [{ showGridLines: true }] });
+        wsRuptura.getRow(1).height = 24;
 
-      const headersRuptura = ['Local', 'Rede', 'Produto', 'Total de Visitas', 'Visitas com Ruptura', 'Rupturas / Total de Visitas', 'Percentual Ruptura'];
-      
-      const rowHeaderRuptura = wsRuptura.getRow(1);
-      headersRuptura.forEach((h, idx) => {
-        const cell = rowHeaderRuptura.getCell(idx + 4);
-        cell.value = h;
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
-        cell.font = HEADER_FONT;
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-      });
+        const headersRuptura = ['Local', 'Produto', 'Ruptura Total?', 'Total de Visitas', 'Visitas com Ruptura', 'Rupturas / Total de Visitas', 'Percentual Ruptura'];
+        
+        const rowHeaderRuptura = wsRuptura.getRow(1);
+        headersRuptura.forEach((h, idx) => {
+          const cell = rowHeaderRuptura.getCell(idx + 4);
+          cell.value = h;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
+          cell.font = HEADER_FONT;
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
 
-      const mapRuptura = new Map();
-      fileObj.rows.forEach(row => {
-        const pdvVal = row['PDV'] || row['LOCAL'] || '';
-        const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
-        if (!pdvVal || !produtoVal) return;
-
-        const redeVal = extractRede(pdvVal);
-        const key = `${pdvVal}|||${redeVal}|||${produtoVal}`;
-
-        if (!mapRuptura.has(key)) {
-          mapRuptura.set(key, { local: pdvVal, rede: redeVal, produto: produtoVal, totalVisitas: 0, rupturas: 0 });
-        }
-        const item = mapRuptura.get(key);
-        item.totalVisitas++;
-
-        const isRup = String(row['RUPTURA TOTAL?'] || row['PRODUTO EM RUPTURA?'] || row['RUPTURA'] || '').toUpperCase().includes('SIM');
-        if (isRup) item.rupturas++;
-      });
-
-      let rRupIdx = 2;
-      mapRuptura.forEach(item => {
-        const r = wsRuptura.getRow(rRupIdx++);
-        r.getCell(4).value = item.local;
-        r.getCell(5).value = item.rede;
-        r.getCell(6).value = item.produto;
-        r.getCell(7).value = item.totalVisitas;
-        r.getCell(8).value = item.rupturas;
-        r.getCell(9).value = `${item.rupturas}/${item.totalVisitas}`;
-
-        const pct = item.totalVisitas > 0 ? (item.rupturas / item.totalVisitas) : 0;
-        r.getCell(10).value = pct;
-        r.getCell(10).numFmt = '0.0%';
-
-        for (let i = 4; i <= 10; i++) {
-          r.getCell(i).font = DATA_FONT;
-          r.getCell(i).border = ORANGE_BORDER;
-          r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
-        }
-      });
-
-      addSidebarToSheet(wsRuptura, 'RUPTURA ', rRupIdx);
-
-      wsRuptura.autoFilter = {
-        from: { row: 1, column: 4 },
-        to: { row: rRupIdx - 1, column: 10 }
-      };
-
-      wsRuptura.getColumn(4).width = 46;  // Local
-      wsRuptura.getColumn(5).width = 14;  // Rede
-      wsRuptura.getColumn(6).width = 46;  // Produto
-      wsRuptura.getColumn(7).width = 18;  // Total de Visitas
-      wsRuptura.getColumn(8).width = 20;  // Visitas com Ruptura
-      wsRuptura.getColumn(9).width = 26;  // Rupturas / Total de Visitas
-      wsRuptura.getColumn(10).width = 20; // Percentual Ruptura
-
-      // ==========================================
-      // ABA 3: VALIDADE (Dados Centralizados)
-      // ==========================================
-      const wsValidade = wb.addWorksheet('VALIDADE', { views: [{ showGridLines: true }] });
-      wsValidade.getRow(1).height = 24;
-
-      const headersValidade = ['Data', 'Validade', 'Quantidade', 'Local', 'Rede', 'Produto', 'Agente', 'Dias Restantes'];
-      
-      const rowHeaderVal = wsValidade.getRow(1);
-      headersValidade.forEach((h, idx) => {
-        const cell = rowHeaderVal.getCell(idx + 4);
-        cell.value = h;
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
-        cell.font = HEADER_FONT;
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-      });
-
-      let rValIdx = 2;
-      fileObj.rows.forEach(row => {
-        const valStr = row['INFORME A VALIDADE'] || row['VALIDADE'] || row['(2) INFORME A VALIDADE'];
-        if (valStr) {
-          const dateExec = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
-          const dateVal = parseDateVal(valStr);
+        const mapRuptura = new Map();
+        fileObj.rows.forEach(row => {
           const pdvVal = row['PDV'] || row['LOCAL'] || '';
-          const redeVal = extractRede(pdvVal);
           const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
-          const agenteVal = row['PROMOTOR'] || row['AGENTE'] || '';
-          const qtdVal = parseInt(row['QUAL A QUANTIDADE EM UNIDADES?'] || row['QUANTIDADE'] || '0', 10) || 0;
+          if (!pdvVal || !produtoVal) return;
 
-          let diasRestantes = null;
-          if (dateExec && dateVal) {
-            const diffMs = dateVal.getTime() - dateExec.getTime();
-            diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-          } else {
-            diasRestantes = parseInt(row['DIAS PARA O VENCIMENTO'] || '0', 10) || 0;
+          const isRupTotal = String(row['RUPTURA TOTAL?'] || '').toUpperCase().includes('SIM');
+          const isPadrao = normalizeHeader(produtoVal) === 'PADRAO';
+
+          if (isPadrao && !isRupTotal) return;
+
+          const displayProduto = isPadrao ? 'RUPTURA TOTAL DO PDV' : produtoVal;
+          const rupturaTotalFlag = (isPadrao || isRupTotal) ? 'SIM' : 'NÃO';
+          const isRup = String(row['PRODUTO EM RUPTURA?'] || row['RUPTURA'] || (isRupTotal ? 'SIM' : '') || '').toUpperCase().includes('SIM');
+
+          const key = `${pdvVal}|||${displayProduto}|||${rupturaTotalFlag}`;
+
+          if (!mapRuptura.has(key)) {
+            mapRuptura.set(key, {
+              local: pdvVal,
+              produto: displayProduto,
+              isRupturaTotal: rupturaTotalFlag,
+              totalVisitas: 0,
+              rupturas: 0
+            });
           }
+          const item = mapRuptura.get(key);
+          item.totalVisitas++;
+          if (isRup) item.rupturas++;
+        });
 
-          const r = wsValidade.getRow(rValIdx++);
-          r.getCell(4).value = dateExec || (row['DATA'] || row['DATA DO DIA'] || '');
-          if (dateExec) r.getCell(4).numFmt = 'dd/mm/yyyy';
+        let rRupIdx = 2;
+        mapRuptura.forEach(item => {
+          const r = wsRuptura.getRow(rRupIdx++);
+          r.getCell(4).value = item.local;
+          r.getCell(5).value = item.produto;
+          r.getCell(6).value = item.isRupturaTotal;
+          r.getCell(7).value = item.totalVisitas;
+          r.getCell(8).value = item.rupturas;
+          r.getCell(9).value = `${item.rupturas}/${item.totalVisitas}`;
 
-          r.getCell(5).value = dateVal || valStr;
-          if (dateVal) r.getCell(5).numFmt = 'dd/mm/yyyy';
+          const pct = item.totalVisitas > 0 ? (item.rupturas / item.totalVisitas) : 0;
+          r.getCell(10).value = pct;
+          r.getCell(10).numFmt = '0.0%';
 
-          r.getCell(6).value = qtdVal;
-          r.getCell(7).value = pdvVal;
-          r.getCell(8).value = redeVal;
-          r.getCell(9).value = produtoVal;
-          r.getCell(10).value = agenteVal;
-          r.getCell(11).value = diasRestantes;
-
-          for (let i = 4; i <= 11; i++) {
+          for (let i = 4; i <= 10; i++) {
             r.getCell(i).font = DATA_FONT;
             r.getCell(i).border = ORANGE_BORDER;
             r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
           }
-        }
-      });
+        });
 
-      addSidebarToSheet(wsValidade, 'VALIDADE', rValIdx);
+        addSidebarToSheet(wsRuptura, 'RUPTURA ', rRupIdx);
 
-      wsValidade.autoFilter = {
-        from: { row: 1, column: 4 },
-        to: { row: rValIdx - 1, column: 11 }
-      };
+        wsRuptura.autoFilter = {
+          from: { row: 1, column: 4 },
+          to: { row: Math.max(rRupIdx - 1, 1), column: 10 }
+        };
 
-      wsValidade.getColumn(4).width = 13;  // Data
-      wsValidade.getColumn(5).width = 14;  // Validade
-      wsValidade.getColumn(6).width = 15;  // Quantidade
-      wsValidade.getColumn(7).width = 40;  // Local
-      wsValidade.getColumn(8).width = 14;  // Rede
-      wsValidade.getColumn(9).width = 46;  // Produto
-      wsValidade.getColumn(10).width = 32; // Agente
-      wsValidade.getColumn(11).width = 18; // Dias Restantes
+        wsRuptura.getColumn(4).width = 46;  // Local
+        wsRuptura.getColumn(5).width = 46;  // Produto
+        wsRuptura.getColumn(6).width = 18;  // Ruptura Total?
+        wsRuptura.getColumn(7).width = 18;  // Total de Visitas
+        wsRuptura.getColumn(8).width = 20;  // Visitas com Ruptura
+        wsRuptura.getColumn(9).width = 26;  // Rupturas / Total de Visitas
+        wsRuptura.getColumn(10).width = 20; // Percentual Ruptura
+      }
 
       // ==========================================
-      // ABA 4: ABASTECIMENTO (Dados Centralizados)
+      // ABA 3: VALIDADE (se houver dados)
       // ==========================================
-      const wsAbastecimento = wb.addWorksheet('ABASTECIMENTO', { views: [{ showGridLines: true }] });
-      wsAbastecimento.getRow(1).height = 24;
+      if (hasValidade) {
+        const wsValidade = wb.addWorksheet('VALIDADE', { views: [{ showGridLines: true }] });
+        wsValidade.getRow(1).height = 24;
 
-      const headersAbastecimento = ['DATA', 'PDV', 'PROMOTOR', 'QUANTAS CAIXAS FORAM ABASTECIDAS?'];
-      const rowHeaderAbastecimento = wsAbastecimento.getRow(1);
-      headersAbastecimento.forEach((h, idx) => {
-        const cell = rowHeaderAbastecimento.getCell(idx + 4);
-        cell.value = h;
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
-        cell.font = HEADER_FONT;
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-      });
-
-      let rAbastIdx = 2;
-      fileObj.rows.forEach(row => {
-        const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
-        const pdvVal = row['PDV'] || row['LOCAL'] || '';
-        const promotorVal = row['PROMOTOR'] || row['AGENTE'] || '';
-        const caixasVal = row['QUANTAS CAIXAS FORAM ABASTECIDAS?'] || row['TOTAL REPOSIÇÕES'] || row['QUANTIDADE'] || '';
-
-        if (caixasVal === null || caixasVal === undefined || String(caixasVal).trim() === '') return;
-
-        const r = wsAbastecimento.getRow(rAbastIdx++);
-        r.getCell(4).value = dateVal || (row['DATA'] || row['DATA DO DIA'] || '');
-        if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
-
-        r.getCell(5).value = pdvVal;
-        r.getCell(6).value = promotorVal;
+        const headersValidade = ['Data', 'Validade', 'Quantidade', 'Local', 'Produto', 'Agente', 'Dias Restantes'];
         
-        const numCaixas = parseInt(caixasVal, 10);
-        r.getCell(7).value = !isNaN(numCaixas) ? numCaixas : caixasVal;
+        const rowHeaderVal = wsValidade.getRow(1);
+        headersValidade.forEach((h, idx) => {
+          const cell = rowHeaderVal.getCell(idx + 4);
+          cell.value = h;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
+          cell.font = HEADER_FONT;
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
 
-        for (let i = 4; i <= 7; i++) {
-          r.getCell(i).font = DATA_FONT;
-          r.getCell(i).border = ORANGE_BORDER;
-          r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
-        }
-      });
+        let rValIdx = 2;
+        fileObj.rows.forEach(row => {
+          const valStr = row['INFORME A VALIDADE'] || row['VALIDADE'] || row['(2) INFORME A VALIDADE'];
+          if (valStr) {
+            const dateExec = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
+            const dateVal = parseDateVal(valStr);
+            const pdvVal = row['PDV'] || row['LOCAL'] || '';
+            const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
+            const agenteVal = row['PROMOTOR'] || row['AGENTE'] || '';
+            const qtdVal = parseInt(row['QUAL A QUANTIDADE EM UNIDADES?'] || row['QUANTIDADE'] || '0', 10) || 0;
 
-      addSidebarToSheet(wsAbastecimento, 'ABASTECIMENTO', rAbastIdx);
+            let diasRestantes = null;
+            if (dateExec && dateVal) {
+              const diffMs = dateVal.getTime() - dateExec.getTime();
+              diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            } else {
+              diasRestantes = parseInt(row['DIAS PARA O VENCIMENTO'] || '0', 10) || 0;
+            }
 
-      wsAbastecimento.autoFilter = {
-        from: { row: 1, column: 4 },
-        to: { row: rAbastIdx - 1, column: 7 }
-      };
+            const r = wsValidade.getRow(rValIdx++);
+            r.getCell(4).value = dateExec || (row['DATA'] || row['DATA DO DIA'] || '');
+            if (dateExec) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
-      wsAbastecimento.getColumn(4).width = 14;  // DATA
-      wsAbastecimento.getColumn(5).width = 46;  // PDV
-      wsAbastecimento.getColumn(6).width = 32;  // PROMOTOR
-      wsAbastecimento.getColumn(7).width = 36;  // QUANTAS CAIXAS FORAM ABASTECIDAS?
+            r.getCell(5).value = dateVal || valStr;
+            if (dateVal) r.getCell(5).numFmt = 'dd/mm/yyyy';
+
+            r.getCell(6).value = qtdVal;
+            r.getCell(7).value = pdvVal;
+            r.getCell(8).value = produtoVal;
+            r.getCell(9).value = agenteVal;
+            r.getCell(10).value = diasRestantes;
+
+            for (let i = 4; i <= 10; i++) {
+              r.getCell(i).font = DATA_FONT;
+              r.getCell(i).border = ORANGE_BORDER;
+              r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+            }
+          }
+        });
+
+        addSidebarToSheet(wsValidade, 'VALIDADE', rValIdx);
+
+        wsValidade.autoFilter = {
+          from: { row: 1, column: 4 },
+          to: { row: Math.max(rValIdx - 1, 1), column: 10 }
+        };
+
+        wsValidade.getColumn(4).width = 13;  // Data
+        wsValidade.getColumn(5).width = 14;  // Validade
+        wsValidade.getColumn(6).width = 15;  // Quantidade
+        wsValidade.getColumn(7).width = 40;  // Local
+        wsValidade.getColumn(8).width = 46;  // Produto
+        wsValidade.getColumn(9).width = 32;  // Agente
+        wsValidade.getColumn(10).width = 18; // Dias Restantes
+      }
 
       // ==========================================
-      // ABA 5: PONTO EXTRA (Dados Centralizados)
+      // ABA 4: ABASTECIMENTO (se houver dados)
       // ==========================================
-      const wsPontoExtra = wb.addWorksheet('PONTO EXTRA', { views: [{ showGridLines: true }] });
-      wsPontoExtra.getRow(1).height = 24;
+      if (hasAbastecimento) {
+        const wsAbastecimento = wb.addWorksheet('ABASTECIMENTO', { views: [{ showGridLines: true }] });
+        wsAbastecimento.getRow(1).height = 24;
 
-      const headersPontoExtra = ['DATA', 'PDV', 'PROMOTOR', 'TEM PONTO EXTRA?'];
-      const rowHeaderPontoExtra = wsPontoExtra.getRow(1);
-      headersPontoExtra.forEach((h, idx) => {
-        const cell = rowHeaderPontoExtra.getCell(idx + 4);
-        cell.value = h;
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
-        cell.font = HEADER_FONT;
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-      });
+        const headersAbastecimento = ['DATA', 'PDV', 'PROMOTOR', 'QUANTAS CAIXAS FORAM ABASTECIDAS?'];
+        const rowHeaderAbastecimento = wsAbastecimento.getRow(1);
+        headersAbastecimento.forEach((h, idx) => {
+          const cell = rowHeaderAbastecimento.getCell(idx + 4);
+          cell.value = h;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
+          cell.font = HEADER_FONT;
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
 
-      let rPontoExtraIdx = 2;
-      fileObj.rows.forEach(row => {
-        const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
-        const pdvVal = row['PDV'] || row['LOCAL'] || '';
-        const promotorVal = row['PROMOTOR'] || row['AGENTE'] || '';
-        const pontoExtraVal = row['TEM PONTO EXTRA?'] || row['PONTO EXTRA'] || '';
+        let rAbastIdx = 2;
+        fileObj.rows.forEach(row => {
+          const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
+          const pdvVal = row['PDV'] || row['LOCAL'] || '';
+          const promotorVal = row['PROMOTOR'] || row['AGENTE'] || '';
+          const caixasVal = row['QUANTAS CAIXAS FORAM ABASTECIDAS?'] || row['QTD. DE CAIXAS ABASTECIDAS'] || row['TOTAL REPOSIÇÕES'] || row['QUANTIDADE'] || '';
 
-        if (pontoExtraVal === null || pontoExtraVal === undefined || String(pontoExtraVal).trim() === '') return;
+          if (caixasVal === null || caixasVal === undefined || String(caixasVal).trim() === '') return;
 
-        const r = wsPontoExtra.getRow(rPontoExtraIdx++);
-        r.getCell(4).value = dateVal || (row['DATA'] || row['DATA DO DIA'] || '');
-        if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
+          const numCaixas = parseInt(String(caixasVal).replace(',', '.'), 10);
+          if (isNaN(numCaixas) || numCaixas <= 0) return;
 
-        r.getCell(5).value = pdvVal;
-        r.getCell(6).value = promotorVal;
-        r.getCell(7).value = pontoExtraVal;
+          const r = wsAbastecimento.getRow(rAbastIdx++);
+          r.getCell(4).value = dateVal || (row['DATA'] || row['DATA DO DIA'] || '');
+          if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
-        for (let i = 4; i <= 7; i++) {
-          r.getCell(i).font = DATA_FONT;
-          r.getCell(i).border = ORANGE_BORDER;
-          r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
-        }
-      });
+          r.getCell(5).value = pdvVal;
+          r.getCell(6).value = promotorVal;
+          r.getCell(7).value = numCaixas;
 
-      addSidebarToSheet(wsPontoExtra, 'PONTO EXTRA', rPontoExtraIdx);
+          for (let i = 4; i <= 7; i++) {
+            r.getCell(i).font = DATA_FONT;
+            r.getCell(i).border = ORANGE_BORDER;
+            r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+        });
 
-      wsPontoExtra.autoFilter = {
-        from: { row: 1, column: 4 },
-        to: { row: rPontoExtraIdx - 1, column: 7 }
-      };
+        addSidebarToSheet(wsAbastecimento, 'ABASTECIMENTO', rAbastIdx);
 
-      wsPontoExtra.getColumn(4).width = 14;  // DATA
-      wsPontoExtra.getColumn(5).width = 46;  // PDV
-      wsPontoExtra.getColumn(6).width = 32;  // PROMOTOR
-      wsPontoExtra.getColumn(7).width = 24;  // TEM PONTO EXTRA?
+        wsAbastecimento.autoFilter = {
+          from: { row: 1, column: 4 },
+          to: { row: Math.max(rAbastIdx - 1, 1), column: 7 }
+        };
+
+        wsAbastecimento.getColumn(4).width = 14;  // DATA
+        wsAbastecimento.getColumn(5).width = 46;  // PDV
+        wsAbastecimento.getColumn(6).width = 32;  // PROMOTOR
+        wsAbastecimento.getColumn(7).width = 36;  // QUANTAS CAIXAS FORAM ABASTECIDAS?
+      }
+
+      // ==========================================
+      // ABA 5: PONTO EXTRA (se houver dados)
+      // ==========================================
+      if (hasPontoExtra) {
+        const wsPontoExtra = wb.addWorksheet('PONTO EXTRA', { views: [{ showGridLines: true }] });
+        wsPontoExtra.getRow(1).height = 24;
+
+        const headersPontoExtra = ['DATA', 'PDV', 'PROMOTOR', 'TEM PONTO EXTRA?'];
+        const rowHeaderPontoExtra = wsPontoExtra.getRow(1);
+        headersPontoExtra.forEach((h, idx) => {
+          const cell = rowHeaderPontoExtra.getCell(idx + 4);
+          cell.value = h;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
+          cell.font = HEADER_FONT;
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
+
+        let rPontoExtraIdx = 2;
+        fileObj.rows.forEach(row => {
+          const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
+          const pdvVal = row['PDV'] || row['LOCAL'] || '';
+          const promotorVal = row['PROMOTOR'] || row['AGENTE'] || '';
+          const pontoExtraVal = row['TEM PONTO EXTRA?'] || row['PONTO EXTRA'] || '';
+
+          if (pontoExtraVal === null || pontoExtraVal === undefined || String(pontoExtraVal).trim() === '') return;
+
+          const r = wsPontoExtra.getRow(rPontoExtraIdx++);
+          r.getCell(4).value = dateVal || (row['DATA'] || row['DATA DO DIA'] || '');
+          if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
+
+          r.getCell(5).value = pdvVal;
+          r.getCell(6).value = promotorVal;
+          r.getCell(7).value = pontoExtraVal;
+
+          for (let i = 4; i <= 7; i++) {
+            r.getCell(i).font = DATA_FONT;
+            r.getCell(i).border = ORANGE_BORDER;
+            r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+        });
+
+        addSidebarToSheet(wsPontoExtra, 'PONTO EXTRA', rPontoExtraIdx);
+
+        wsPontoExtra.autoFilter = {
+          from: { row: 1, column: 4 },
+          to: { row: Math.max(rPontoExtraIdx - 1, 1), column: 7 }
+        };
+
+        wsPontoExtra.getColumn(4).width = 14;  // DATA
+        wsPontoExtra.getColumn(5).width = 46;  // PDV
+        wsPontoExtra.getColumn(6).width = 32;  // PROMOTOR
+        wsPontoExtra.getColumn(7).width = 24;  // TEM PONTO EXTRA?
+      }
 
       const buffer = await wb.xlsx.writeBuffer();
       
-      // POS-PROCESSAMENTO: Injetar botoes nativos OpenXML (xdr:sp roundRect) com hiperlinks reais
+      // POS-PROCESSAMENTO: Injetar botoes nativos OpenXML dinâmicos com hiperlinks reais
       if (typeof JSZip !== 'undefined') {
         const zip = await JSZip.loadAsync(buffer);
 
-        // ExcelJS cria drawings na ordem das abas: drawing1=PRECO, drawing2=RUPTURA, drawing3=VALIDADE, drawing4=ABASTECIMENTO, drawing5=PONTO EXTRA
-        const sheetsConfig = [
-          { drawingIdx: 1, activeIdx: 0 },
-          { drawingIdx: 2, activeIdx: 1 },
-          { drawingIdx: 3, activeIdx: 2 },
-          { drawingIdx: 4, activeIdx: 3 },
-          { drawingIdx: 5, activeIdx: 4 }
-        ];
+        const sheetsConfig = activeTabDefs.map((tab, idx) => ({
+          drawingIdx: idx + 1,
+          activeIdx: idx
+        }));
 
-        const buttonDefs = [
-          { label: "PRECO",         labelDisplay: "PREÇO",         target: "#'PREÇO'!A1" },
-          { label: "RUPTURA",       labelDisplay: "RUPTURA",       target: "#'RUPTURA '!A1" },
-          { label: "VALIDADE",      labelDisplay: "VALIDADE",      target: "#'VALIDADE'!A1" },
-          { label: "ABASTECIMENTO", labelDisplay: "ABASTECIMENTO", target: "#'ABASTECIMENTO'!A1" },
-          { label: "PONTO_EXTRA",   labelDisplay: "PONTO EXTRA",   target: "#'PONTO EXTRA'!A1" }
-        ];
+        const buttonDefs = activeTabDefs.map(tab => ({
+          label: tab.buttonLabel,
+          labelDisplay: tab.buttonDisplay,
+          target: tab.target
+        }));
 
         const BTN_X_OFF = 67236;
         const BTN_WIDTH  = 3349086;
@@ -900,7 +956,9 @@ function processCsv(content, originalFileName) {
     'FILIAL',
     'FOTO DO MIX',
     'O QUE SE RESOLVEU COM O GERENTE?',
-    'POSICAO ATUAL'
+    'POSICAO ATUAL',
+    'REDE',
+    'REDE DO PDV'
   ];
 
   // Filtramos apenas as linhas do corpo que tenham algum conteúdo real
@@ -974,12 +1032,46 @@ function processCsv(content, originalFileName) {
     allPossibleColumns.splice(targetIdx + 1, 0, dataCol);
   }
 
-  // Filtragem final: Manter apenas colunas que possuem dados em pelo menos uma linha processada
+  // Helpers para identificar colunas de preço e caixas abastecidas
+  const isPriceColName = (name) => {
+    const norm = normalizeHeader(name);
+    return norm === 'PRECO' || norm === 'PREÇO' || norm.includes('PRECO') || norm.includes('PREÇO');
+  };
+
+  const isCaixasColName = (name) => {
+    const norm = normalizeHeader(name);
+    return norm.includes('QUANTAS CAIXAS FORAM ABASTECIDAS') || norm.includes('QTD. DE CAIXAS ABASTECIDAS') || norm.includes('QTD DE CAIXAS ABASTECIDAS') || norm.includes('CAIXAS ABASTECIDAS');
+  };
+
+  // Filtragem final: Manter apenas colunas com dados reais (> 0 para Preço e Caixas, não-vazio para o restante)
   const exportColumns = allPossibleColumns.filter(col => {
+    if (isPriceColName(col)) {
+      return transformed.some(row => {
+        const p = parsePrice(row[col]);
+        return p !== null && p > 0;
+      });
+    }
+    if (isCaixasColName(col)) {
+      return transformed.some(row => {
+        const val = row[col];
+        if (val === null || val === undefined || String(val).trim() === '') return false;
+        const num = parseInt(String(val).replace(',', '.'), 10);
+        return !isNaN(num) && num > 0;
+      });
+    }
     return transformed.some(row => String(row[col] ?? '').trim() !== '');
   });
 
   return { originalFileName, rows: transformed, columns: exportColumns };
+}
+
+function parsePrice(val) {
+  if (val === null || val === undefined || val === '') return null;
+  if (typeof val === 'number') return val;
+  let str = String(val).trim().replace(/^R\$\s*/i, '');
+  if (str.includes(',')) str = str.replace(/\./g, '').replace(',', '.');
+  const num = parseFloat(str);
+  return isNaN(num) ? null : num;
 }
 
 function normalizeHeader(value) {
