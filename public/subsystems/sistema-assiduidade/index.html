@@ -4480,7 +4480,7 @@
             let currentStatusFilter = 'TODOS';
             let currentSearchFilter = '';
 
-            // Tentar buscar registros diretamente de tb_jornada_almoco no Supabase
+            // Buscar registros EXCLUSIVAMENTE de tb_jornada_almoco no Supabase
             let dbJornadaRecords = [];
             try {
                 const { data: dbData } = await window.supabase
@@ -4490,27 +4490,19 @@
                     dbJornadaRecords = dbData;
                 }
             } catch (e) {
-                console.warn('tb_jornada_almoco ainda não populada ou inacessível, usando checkins brutos.');
+                console.warn('Aguardando registros na tabela tb_jornada_almoco:', e);
             }
 
             function parseLunchEvents(targetDateStr) {
-                // Combina check-ins brutos e registros de tb_jornada_almoco
-                const allRaw = [
-                    ...(globalRawCheckins || []),
-                    ...dbJornadaRecords.map(r => ({
-                        history_id: r.history_id || r.created_at || (r.date + ' ' + (r.time || '12:00:00')),
-                        created_at: r.created_at || r.date,
-                        task_id: r.task_id || r.event_type || 'INTERVALO',
-                        client_id: r.client_id || (r.collaborator_name + ';' + (r.event_type || 'INTERVALO')),
-                        activity_id: r.activity_id || (r.time || '12:00')
-                    }))
-                ];
-
-                // Filtra os check-ins brutos correspondentes à data selecionada
-                const filteredCheckins = allRaw.filter(c => {
-                    const timestampStr = c.history_id || c.created_at;
+                // Filtra EXCLUSIVAMENTE os registros da tabela tb_jornada_almoco correspondentes à data selecionada
+                const filteredRecords = (dbJornadaRecords || []).filter(r => {
+                    const rDate = r.date || (r.history_id ? String(r.history_id).split(' ')[0] : '');
+                    if (rDate && rDate === targetDateStr) return true;
+                    
+                    const timestampStr = r.history_id || r.created_at;
+                    if (!timestampStr) return false;
                     let eventDate = new Date(timestampStr);
-                    if (isNaN(eventDate.getTime())) eventDate = new Date(c.created_at);
+                    if (isNaN(eventDate.getTime())) eventDate = new Date(r.created_at);
                     return getLocalDateString(eventDate) === targetDateStr;
                 });
 
@@ -4521,73 +4513,75 @@
                 // Mapeia eventos de cada colaborador
                 const collaboratorEvents = {};
 
-                filteredCheckins.forEach(c => {
-                    const rawClient = String(c.client_id || '').trim();
-                    const rawTask = String(c.task_id || '').trim();
-                    const rawActivity = String(c.activity_id || '').trim();
-                    const rawHistory = String(c.history_id || c.created_at || '').trim();
+                filteredRecords.forEach(c => {
+                    let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
 
-                    // Tentar identificar o colaborador
-                    let name = '';
+                    const rawClient = String(c.client_id || '').trim();
+                    const rawActivity = String(c.activity_id || '').trim();
                     const clientParts = rawClient.split(';');
                     const activityParts = rawActivity.split(';');
 
-                    if (c.collaborator_name && staffMap.has(c.collaborator_name.toUpperCase())) {
-                        name = c.collaborator_name.toUpperCase();
-                    } else if (clientParts[0] && staffMap.has(clientParts[0].trim().toUpperCase())) {
+                    if (!name && clientParts[0] && !clientParts[0].includes(':')) {
                         name = clientParts[0].trim().toUpperCase();
-                    } else if (activityParts[0] && staffMap.has(activityParts[0].trim().toUpperCase())) {
+                    } else if (!name && activityParts[0] && !activityParts[0].includes(':')) {
                         name = activityParts[0].trim().toUpperCase();
-                    } else {
-                        // Tenta encontrar aproximação com nome na staffList (evitando lojas)
-                        const foundPerson = staffList.find(s => {
+                    }
+
+                    // Tenta casar com a staffList por nome exato ou aproximação
+                    if (name) {
+                        const found = staffList.find(s => {
                             const sName = s.name.toUpperCase();
-                            return clientParts[0]?.trim().toUpperCase() === sName ||
-                                   activityParts[0]?.trim().toUpperCase() === sName;
+                            return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
                         });
-                        if (foundPerson) name = foundPerson.name.toUpperCase();
+                        if (found) name = found.name.toUpperCase();
                     }
 
-                    // Se NÃO for um colaborador oficial cadastrado (ex: é nome de loja como ATACADÃO, ASSAÍ, MUNDIAL), ignora!
-                    if (!name || !staffMap.has(name)) return;
-
-                    const combined = `${rawClient} ${rawTask} ${rawActivity}`.toUpperCase();
-                    const isStart = combined.includes('SAIDA') || combined.includes('SAÍDA') || combined.includes('INICIO') || combined.includes('PARADA') || combined.includes('JORNADA DE TRABALHO');
-                    const isEnd = combined.includes('RETORNO') || combined.includes('VOLTA') || combined.includes('FIM') || combined.includes('CHEGADA');
-
-                    let eventDate = new Date(rawHistory);
-                    if (isNaN(eventDate.getTime())) eventDate = new Date(c.created_at);
-
-                    let timeStr = '';
-                    if (activityParts[0] && /^\d{1,2}:\d{2}/.test(activityParts[0].trim())) {
-                        timeStr = activityParts[0].trim();
-                    } else if (!isNaN(eventDate.getTime())) {
-                        timeStr = `${String(eventDate.getHours()).padStart(2, '0')}:${String(eventDate.getMinutes()).padStart(2, '0')}`;
+                    // Ignorar nomes de loja
+                    if (name) {
+                        const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
+                        if (isStore) return;
                     }
 
-                    if (!collaboratorEvents[name]) collaboratorEvents[name] = [];
+                    if (!name) return;
 
-                    collaboratorEvents[name].push({
-                        isStart,
-                        isEnd,
-                        eventDate,
-                        timeStr,
-                        rawClient,
-                        rawTask,
-                        rawActivity
-                    });
-                });
+                    let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '';
+                    let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '';
+                    let status = c.status || 'EM_INTERVALO';
+                    let durationMin = c.duration_minutes || 0;
 
-                // Ordenar eventos por horário para cada colaborador
-                Object.keys(collaboratorEvents).forEach(name => {
-                    collaboratorEvents[name].sort((a, b) => a.eventDate.getTime() - b.eventDate.getTime());
+                    if (!startTimeStr && c.time) {
+                        startTimeStr = String(c.time).substring(0, 5);
+                    }
+
+                    if (!collaboratorEvents[name]) {
+                        collaboratorEvents[name] = {
+                            name,
+                            startTimeStr: startTimeStr || '--:--',
+                            endTimeStr: endTimeStr || '--:--',
+                            status: status === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS',
+                            durationMin,
+                            hasRecord: true
+                        };
+                    } else {
+                        if (startTimeStr && collaboratorEvents[name].startTimeStr === '--:--') {
+                            collaboratorEvents[name].startTimeStr = startTimeStr;
+                        }
+                        if (endTimeStr && endTimeStr !== '--:--') {
+                            collaboratorEvents[name].endTimeStr = endTimeStr;
+                            collaboratorEvents[name].status = 'COMPLETED';
+                            collaboratorEvents[name].durationMin = durationMin;
+                        }
+                    }
                 });
 
                 const now = new Date();
                 const isToday = targetDateStr === getLocalDateString(now);
 
-                // Montar lista com APENAS colaboradores da base (staffList)
-                const allCollaboratorNames = staffList.map(s => s.name.toUpperCase());
+                // Montar lista completa com a base (staffList) + colaboradores em tb_jornada_almoco
+                const allCollaboratorNames = Array.from(new Set([
+                    ...staffList.map(s => s.name.toUpperCase()),
+                    ...Object.keys(collaboratorEvents)
+                ]));
 
                 const results = [];
 
@@ -4596,31 +4590,26 @@
                     const proj = person ? person.project : 'GERAL';
                     const eq = person ? person.equipe : 'GERAL';
 
-                    const events = collaboratorEvents[name] || [];
+                    const rec = collaboratorEvents[name];
 
-                    // Identificar evento de Saída (Início de Almoço) e Retorno
-                    let startEv = events.find(e => e.isStart || !e.isEnd);
-                    let endEv = events.find(e => e.isEnd && (!startEv || e.eventDate.getTime() > startEv.eventDate.getTime()));
-
-                    let status = 'NOT_STARTED'; // ⚪ Não Iniciou
+                    let status = 'NOT_STARTED';
                     let startTimeStr = '--:--';
                     let endTimeStr = '--:--';
                     let durationMin = 0;
 
-                    if (startEv) {
-                        startTimeStr = startEv.timeStr;
-                        if (endEv) {
-                            status = 'COMPLETED'; // ✅ Retornou
-                            endTimeStr = endEv.timeStr;
-                            const diffMs = endEv.eventDate.getTime() - startEv.eventDate.getTime();
-                            durationMin = Math.max(0, Math.floor(diffMs / (1000 * 60)));
-                        } else {
-                            status = 'IN_PROGRESS'; // ⏳ Em Intervalo
-                            if (isToday) {
-                                const diffMs = now.getTime() - startEv.eventDate.getTime();
-                                durationMin = Math.max(0, Math.floor(diffMs / (1000 * 60)));
-                            } else {
-                                durationMin = 60; // Padrão se for dia anterior sem retorno fechado
+                    if (rec && rec.hasRecord) {
+                        startTimeStr = rec.startTimeStr || '--:--';
+                        endTimeStr = rec.endTimeStr || '--:--';
+                        status = rec.status;
+                        durationMin = rec.durationMin || 0;
+
+                        // Se em progresso hoje, calcula minutos em tempo real
+                        if (status === 'IN_PROGRESS' && startTimeStr !== '--:--' && isToday) {
+                            const parts = startTimeStr.split(':');
+                            if (parts.length === 2) {
+                                const startMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                const nowMin = now.getHours() * 60 + now.getMinutes();
+                                durationMin = Math.max(0, nowMin - startMin);
                             }
                         }
                     }
@@ -4636,7 +4625,7 @@
                         endTimeStr,
                         durationMin,
                         isExceeded,
-                        hasEvents: events.length > 0
+                        hasEvents: !!rec
                     });
                 });
 
