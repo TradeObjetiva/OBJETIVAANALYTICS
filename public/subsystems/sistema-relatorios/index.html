@@ -19,6 +19,9 @@
   <!-- ExcelJS (Substituindo XLSX para Suporte Nativo a Imagens na Exportação) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
+  <!-- SheetJS para Leitura de Arquivos Excel (.xlsx, .xls) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <!-- JSZip para exportação em Lote -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -37,7 +40,7 @@
       <div class="hero-text">
         <h1>Sistema de Relatórios</h1>
         <p class="subtitle">
-          Transforme rapidamente dados brutos do <strong>Relatório Umov.me</strong> no padrão dinâmico do
+          Transforme rapidamente dados brutos do <strong>Relatório Umov.me / Deluc</strong> no padrão dinâmico do
           <strong>Relatório de Trade Marketing</strong>. Limpa colunas vazias, trata a acentuação e gera uma formatação limpa de Excel
           nativo.
         </p>
@@ -58,15 +61,17 @@
 
     <div class="upload-section">
       <div class="dropzone" id="dropzone">
-        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none"
-          stroke-linecap="round" stroke-linejoin="round" class="drop-icon">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
-        </svg>
-        <h3>Arraste e solte o seu arquivo CSV aqui</h3>
-        <p>Ou clique para procurar em seu computador (Funciona offline)</p>
-        <input type="file" id="fileInput" accept=".csv" multiple />
+        <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" multiple class="hidden-input" />
+        <div class="dropzone-content">
+          <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none"
+            stroke-linecap="round" stroke-linejoin="round" class="dropzone-icon">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <h3>Arraste seus arquivos CSV ou Excel (.xlsx, .xls)</h3>
+          <p>ou <span class="browse-btn">clique aqui para navegar</span></p>
+        </div>
       </div>
     </div>
 

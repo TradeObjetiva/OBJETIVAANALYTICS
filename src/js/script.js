@@ -2352,9 +2352,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.exportStaffBaseList = async () => {
         try {
+            const { value: filterChoice } = await Swal.fire({
+                title: 'Exportar Lista de Colaboradores',
+                text: 'Selecione o filtro dos colaboradores para a exportação:',
+                icon: 'question',
+                input: 'radio',
+                inputOptions: {
+                    'todos': 'Todos os Colaboradores (Ativos e Inativos)',
+                    'ativos': 'Apenas Colaboradores Ativos',
+                    'inativos': 'Apenas Colaboradores Inativos (Demitidos)'
+                },
+                inputValue: 'todos',
+                showCancelButton: true,
+                confirmButtonText: 'Exportar Excel',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#f07f27',
+                background: 'var(--bg-card)',
+                color: 'var(--text-main)',
+                customClass: {
+                    popup: 'swal2-dark-custom'
+                }
+            });
+
+            if (!filterChoice) return; // Cancelou
+
             const { data, error } = await window.supabase
                 .from('tb_colaboradores')
-                .select('nome, cargo, projeto, equipe, seg, ter, qua, qui, sex, sab, dom')
+                .select('nome, cargo, projeto, equipe, ativo, data_admissao, data_desativacao, seg, ter, qua, qui, sex, sab, dom')
                 .order('nome', { ascending: true });
 
             if (error) throw error;
@@ -2364,30 +2388,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Filtrar conforme escolha do usuário
+            let filteredData = data;
+            if (filterChoice === 'ativos') {
+                filteredData = data.filter(s => s.ativo !== false);
+            } else if (filterChoice === 'inativos') {
+                filteredData = data.filter(s => s.ativo === false);
+            }
+
+            if (filteredData.length === 0) {
+                Swal.fire('Aviso', `Nenhum colaborador encontrado para o filtro "${filterChoice.toUpperCase()}".`, 'info');
+                return;
+            }
+
+            // Função segura para formatar data ISO (YYYY-MM-DD) para BR (DD/MM/YYYY)
+            const formatDateSafe = (dateStr) => {
+                if (!dateStr) return '';
+                const parts = dateStr.split('T')[0].split('-');
+                if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                return dateStr;
+            };
+
             // Mapear para um formato amigável para Excel
-            const exportData = data.map(s => ({
-                'NOME': s.nome,
-                'FUNCAO': s.cargo || '',
-                'PROJETO': s.projeto || '',
-                'EQUIPE': s.equipe || '',
-                'SEG': s.seg ? 'SIM' : 'NÃO',
-                'TER': s.ter ? 'SIM' : 'NÃO',
-                'QUA': s.qua ? 'SIM' : 'NÃO',
-                'QUI': s.qui ? 'SIM' : 'NÃO',
-                'SEX': s.sex ? 'SIM' : 'NÃO',
-                'SAB': s.sab ? 'SIM' : 'NÃO',
-                'DOM': s.dom ? 'SIM' : 'NÃO'
-            }));
+            const exportData = filteredData.map(s => {
+                const isAtivo = s.ativo !== false;
+                return {
+                    'NOME': s.nome,
+                    'FUNÇÃO': s.cargo || '',
+                    'PROJETO': s.projeto || '',
+                    'EQUIPE': s.equipe || '',
+                    'STATUS': isAtivo ? 'ATIVO' : 'INATIVO',
+                    'DATA ADMISSÃO': formatDateSafe(s.data_admissao),
+                    'DATA DEMISSÃO': formatDateSafe(s.data_desativacao),
+                    'SEG': s.seg ? 'SIM' : 'NÃO',
+                    'TER': s.ter ? 'SIM' : 'NÃO',
+                    'QUA': s.qua ? 'SIM' : 'NÃO',
+                    'QUI': s.qui ? 'SIM' : 'NÃO',
+                    'SEX': s.sex ? 'SIM' : 'NÃO',
+                    'SAB': s.sab ? 'SIM' : 'NÃO',
+                    'DOM': s.dom ? 'SIM' : 'NÃO'
+                };
+            });
 
             const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Colaboradores");
+
+            let sheetName = "Colaboradores";
+            if (filterChoice === 'ativos') sheetName = "Ativos";
+            else if (filterChoice === 'inativos') sheetName = "Inativos";
+
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
             // Gerar nome do arquivo com data
             const date = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, `lista_colaboradores_${date}.xlsx`);
+            const fileName = `lista_colaboradores_${filterChoice}_${date}.xlsx`;
+            XLSX.writeFile(wb, fileName);
 
-            showToast('Lista exportada com sucesso!', 'success');
+            showToast(`Lista de colaboradores (${filterChoice}) exportada com sucesso!`, 'success');
         } catch (err) {
             console.error('Erro ao exportar:', err);
             Swal.fire('Erro!', 'Falha ao exportar lista: ' + err.message, 'error');

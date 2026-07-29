@@ -1,29 +1,107 @@
 const EXPORT_MODEL = [
+  { export: 'DATA', source: 'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)', transform: 'date' },
+  { export: 'DATA', source: 'DATA HORA TAREFA', transform: 'date' },
+  { export: 'DATA', source: 'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)', transform: 'date' },
   { export: 'DATA', source: 'DATA E HORA INÍCIO EXECUÇÃO', transform: 'date' },
   { export: 'DATA', source: 'DATA E HORA INÍCIO DE EXECUÇÃO', transform: 'date' },
   { export: 'DATA', source: 'DATA E HORA DE EXECUÇÃO', transform: 'date' },
   { export: 'DATA', source: 'DATA E HORA DA EXECUÇÃO', transform: 'date' },
   { export: 'DATA', source: 'DATA E HORA EXECUÇÃO', transform: 'date' },
+  { export: 'DATA', source: 'DATA VISITA', transform: 'date' },
+  { export: 'DATA', source: 'DATA DA VISITA', transform: 'date' },
+  { export: 'DATA', source: 'DATA', transform: 'date' },
+
+  { export: 'PDV', source: 'Local de Atendimento Descrição' },
+  { export: 'PDV', source: 'Local de Atendimento Descricao' },
+  { export: 'PDV', source: 'Local de Atendimento Identificador Alternativo' },
   { export: 'PDV', source: 'PDV' },
+  { export: 'PDV', source: 'FANTASIA' },
+  { export: 'PDV', source: 'LOJA' },
+  { export: 'PDV', source: 'LOCAL' },
+  { export: 'PDV', source: 'PONTO DE VENDA' },
+  { export: 'PDV', source: 'NOME DO PDV' },
+  { export: 'PDV', source: 'RAZÃO SOCIAL' },
+  { export: 'PDV', source: 'CLIENTE' },
+
+  { export: 'PROMOTOR', source: 'Pessoa Nome' },
+  { export: 'PROMOTOR', source: 'Pessoa ID Para Integracao' },
   { export: 'PROMOTOR', source: 'PROMOTOR' },
+  { export: 'PROMOTOR', source: 'AGENTE' },
+  { export: 'PROMOTOR', source: 'COLABORADOR' },
+  { export: 'PROMOTOR', source: 'SUPERVISOR' },
+  { export: 'PROMOTOR', source: 'NOME DO PROMOTOR' },
+
+  { export: 'ITENS', source: 'Itens Descrição' },
+  { export: 'ITENS', source: 'ITENS DESCRICAO' },
+  { export: 'ITENS', source: 'ITENS IDENTIFICADOR' },
   { export: 'ITENS', source: 'SKU' },
+  { export: 'ITENS', source: 'ITENS' },
+  { export: 'ITENS', source: 'PRODUTO' },
+  { export: 'ITENS', source: 'DESCRICAO' },
+  { export: 'ITENS', source: 'DESCRIÇÃO' },
+  { export: 'ITENS', source: 'DESCRIÇÃO DO PRODUTO' },
+  { export: 'ITENS', source: 'NOME DO PRODUTO' },
+  { export: 'ITENS', source: 'ITEM' },
+
   { export: 'RUPTURA TOTAL?', source: 'RUPTURA TOTAL?' },
+  { export: 'RUPTURA TOTAL?', source: 'RUPTURA TOTAL' },
   { export: 'PRODUTO EM RUPTURA?', source: 'PRODUTO EM RUPTURA?' },
+  { export: 'PRODUTO EM RUPTURA?', source: 'PRODUTO EM RUPTURA' },
+  { export: 'PRODUTO EM RUPTURA?', source: 'TIPO DE RUPTURA' },
+
   { export: 'PRECO', source: 'PRECO' },
+  { export: 'PRECO', source: 'PREÇO' },
+  { export: 'PRECO', source: 'VALOR' },
+  { export: 'PRECO', source: 'PREÇO UNITÁRIO' },
+  { export: 'PRECO', source: 'PRECO UNITARIO' },
+
   { export: 'QTD. UNIDADE NO ESTOQUE', source: 'ESTOQUE TOTAL DA LOJA (UNIDADE)' },
+  { export: 'QTD. UNIDADE NO ESTOQUE', source: 'ESTOQUE TOTAL DA LOJA' },
+  { export: 'QTD. UNIDADE NO ESTOQUE', source: 'ESTOQUE' },
+  { export: 'QTD. UNIDADE NO ESTOQUE', source: 'QUANTIDADE EM ESTOQUE' },
+  { export: 'QTD. UNIDADE NO ESTOQUE', source: 'QTD ESTOQUE' },
+
   { export: 'TEM SKU VENCENDO EM 60 DIAS?', source: 'TEM SKU VENCENDO EM 60 DIAS?' },
+  { export: 'TEM SKU VENCENDO EM 60 DIAS?', source: 'TEM SKU VENCENDO EM 60 DIAS' },
+  { export: 'TEM SKU VENCENDO EM 60 DIAS?', source: 'VENCIMENTO 60 DIAS' },
+
+  { export: 'DATA DO DIA', source: 'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)', transform: 'date' },
+  { export: 'DATA DO DIA', source: 'DATA HORA TAREFA', transform: 'date' },
   { export: 'DATA DO DIA', source: 'DATA E HORA INÍCIO EXECUÇÃO', transform: 'date' },
   { export: 'DATA DO DIA', source: 'DATA E HORA INÍCIO DE EXECUÇÃO', transform: 'date' },
   { export: 'DATA DO DIA', source: 'DATA E HORA DE EXECUÇÃO', transform: 'date' },
   { export: 'DATA DO DIA', source: 'DATA E HORA DA EXECUÇÃO', transform: 'date' },
   { export: 'DATA DO DIA', source: 'DATA E HORA EXECUÇÃO', transform: 'date' },
+  { export: 'DATA DO DIA', source: 'DATA VISITA', transform: 'date' },
+  { export: 'DATA DO DIA', source: 'DATA DA VISITA', transform: 'date' },
+  { export: 'DATA DO DIA', source: 'DATA', transform: 'date' },
+
   { export: 'INFORME A VALIDADE', source: 'INFORME A VALIDADE' },
+  { export: 'INFORME A VALIDADE', source: 'VALIDADE' },
+  { export: 'INFORME A VALIDADE', source: 'DATA DE VALIDADE' },
+
   { export: 'DIAS PARA O VENCIMENTO', source: 'DIAS PARA O VENCIMENTO' },
+  { export: 'DIAS PARA O VENCIMENTO', source: 'DIAS VENCIMENTO' },
+  { export: 'DIAS PARA O VENCIMENTO', source: 'DIAS RESTANTES' },
+
   { export: 'QUAL A QUANTIDADE EM UNIDADES?', source: 'QUAL A QUANTIDADE EM UNIDADES?' },
+  { export: 'QUAL A QUANTIDADE EM UNIDADES?', source: 'QUANTIDADE' },
+  { export: 'QUAL A QUANTIDADE EM UNIDADES?', source: 'QUANTIDADE (UN)' },
+  { export: 'QUAL A QUANTIDADE EM UNIDADES?', source: 'QTD UNIDADES' },
+  { export: 'QUAL A QUANTIDADE EM UNIDADES?', source: 'QUANTIDADE TOTAL' },
+
   { export: 'INFORME O LOTE', source: 'INFORME O LOTE' },
+  { export: 'INFORME O LOTE', source: 'LOTE' },
+  { export: 'INFORME O LOTE', source: 'NUMERO DO LOTE' },
+
   { export: 'TEM UM SEGUNDO LOTE EM VENCIMENTO?', source: 'TEM UM SEGUNDO LOTE EM VENCIMENTO?' },
   { export: 'TEM PONTO EXTRA?', source: 'TEM PONTO EXTRA?' },
-  { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QUANTAS CAIXAS FORAM ABASTECIDAS?' }
+  { export: 'TEM PONTO EXTRA?', source: 'PONTO EXTRA' },
+
+  { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QUANTAS CAIXAS FORAM ABASTECIDAS?' },
+  { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QTD. DE CAIXAS ABASTECIDAS' },
+  { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QTD DE CAIXAS ABASTECIDAS' },
+  { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'CAIXAS ABASTECIDAS' }
 ];
 
 const state = {
@@ -110,9 +188,13 @@ loadSampleBtn.addEventListener('click', async () => {
 });
 
 async function handleFiles(fileList) {
-  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.csv'));
+  const files = Array.from(fileList).filter(f => {
+    const ext = f.name.toLowerCase();
+    return ext.endsWith('.csv') || ext.endsWith('.xlsx') || ext.endsWith('.xls');
+  });
+
   if (files.length === 0) {
-    showAlert('Aviso', 'Nenhum arquivo .CSV válido selecionado.', 'warning');
+    showAlert('Aviso', 'Nenhum arquivo .CSV, .XLSX ou .XLS válido selecionado.', 'warning');
     return;
   }
 
@@ -122,9 +204,27 @@ async function handleFiles(fileList) {
 
   try {
     for (const file of files) {
-      const content = await readFileAsText(file, 'windows-1252');
       const baseName = file.name.replace(/\.[^/.]+$/, "");
-      const processed = processCsv(content, baseName);
+      const ext = file.name.toLowerCase();
+      let processed = null;
+
+      if (ext.endsWith('.xlsx') || ext.endsWith('.xls')) {
+        if (typeof XLSX !== 'undefined') {
+          const buffer = await readFileAsArrayBuffer(file);
+          const wb = XLSX.read(buffer, { type: 'array' });
+          const wsName = wb.SheetNames[0];
+          const ws = wb.Sheets[wsName];
+          const sheetRows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+          processed = processRows(sheetRows, baseName);
+        } else {
+          showAlert('Erro', 'Biblioteca de leitura do Excel (XLSX) não carregada.', 'error');
+          continue;
+        }
+      } else {
+        const content = await readFileAsTextSmart(file);
+        processed = processCsv(content, baseName);
+      }
+
       if (processed) {
         state.files.push(processed);
       }
@@ -134,19 +234,58 @@ async function handleFiles(fileList) {
       renderApp();
     }
   } catch (e) {
-    showAlert('Erro', 'Falha ao ler os arquivos selecionados.', 'error');
+    console.error(e);
+    showAlert('Erro', 'Falha ao ler os arquivos selecionados. Verifique se o formato está correto.', 'error');
   } finally {
     toggleLoading(false);
   }
 }
 
-function readFileAsText(file, encoding) {
+function normalizeHeader(value) {
+  let str = String(value || '');
+  str = str
+    .replace(/Ã§/g, 'c').replace(/Ã§Ã£o/g, 'cao').replace(/Ã£/g, 'a')
+    .replace(/Ã¡/g, 'a').replace(/Ã©/g, 'e').replace(/Ã/g, 'i')
+    .replace(/Ã³/g, 'o').replace(/Ãº/g, 'u').replace(/Ãª/g, 'e')
+    .replace(/Ã¢/g, 'a').replace(/Ã´/g, 'o');
+
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
+function readFileAsArrayBuffer(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => resolve(e.target.result);
     reader.onerror = e => reject(e);
-    reader.readAsText(file, encoding);
+    reader.readAsArrayBuffer(file);
   });
+}
+
+function readFileAsTextSmart(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const buffer = e.target.result;
+      try {
+        const text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+        resolve(text.replace(/^\uFEFF/, ''));
+      } catch (err) {
+        const text = new TextDecoder('windows-1252').decode(buffer);
+        resolve(text.replace(/^\uFEFF/, ''));
+      }
+    };
+    reader.onerror = e => reject(e);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function readFileAsText(file, encoding) {
+  return readFileAsTextSmart(file);
 }
 
 function renderApp() {
@@ -370,30 +509,77 @@ downloadExcelBtn.addEventListener('click', async () => {
         }
       };
 
+      const getRowVal = (row, keys) => {
+        if (!row) return '';
+        for (const k of keys) {
+          if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
+            return String(row[k]).trim();
+          }
+          const normK = normalizeHeader(k);
+          if (row[normK] !== undefined && row[normK] !== null && String(row[normK]).trim() !== '') {
+            return String(row[normK]).trim();
+          }
+        }
+        return '';
+      };
+
+      const PDV_KEYS = [
+        'Local de Atendimento Descrição', 'Local de Atendimento Descricao',
+        'Local de Atendimento Identificador Alternativo',
+        'PDV', 'LOCAL', 'FANTASIA', 'LOJA', 'CLIENTE', 'RAZÃO SOCIAL', 'RAZAO SOCIAL', 'PONTO DE VENDA', 'NOME DO PDV'
+      ];
+      const PROMOTOR_KEYS = [
+        'Pessoa Nome', 'Pessoa ID Para Integracao',
+        'PROMOTOR', 'AGENTE', 'COLABORADOR', 'SUPERVISOR', 'NOME DO PROMOTOR'
+      ];
+      const PRODUTO_KEYS = [
+        'Itens Descrição', 'Itens Descricao', 'Itens Identificador',
+        'SKU', 'ITENS', 'PRODUTO', 'DESCRICAO', 'DESCRIÇÃO', 'DESCRIÇÃO DO PRODUTO', 'NOME DO PRODUTO', 'ITEM'
+      ];
+      const DATA_KEYS = [
+        'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)',
+        'DATA HORA TAREFA',
+        'DATA HORA FIM EXECUCAO ATIVIDADE GERADA PELO SISTEMA (DIM TEMPO)',
+        'DATA', 'DATA DO DIA', 'DATA VISITA', 'DATA DA VISITA', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA E HORA EXECUÇÃO'
+      ];
+      const PRECO_KEYS = ['PRECO', 'PREÇO', 'VALOR', 'PREÇO UNITÁRIO', 'PRECO UNITARIO'];
+      const VALIDADE_KEYS = ['INFORME A VALIDADE', 'VALIDADE', 'DATA DE VALIDADE', '(2) INFORME A VALIDADE', '(3) INFORME A VALIDADE'];
+      const CAIXAS_KEYS = ['QUANTAS CAIXAS FORAM ABASTECIDAS?', 'QTD. DE CAIXAS ABASTECIDAS', 'QTD DE CAIXAS ABASTECIDAS', 'CAIXAS ABASTECIDAS', 'CAIXAS', 'QTD CAIXAS', 'TOTAL REPOSIÇÕES', 'QUANTIDADE TOTAL', 'QUANTIDADE'];
+      const PONTO_EXTRA_KEYS = ['TEM PONTO EXTRA?', 'PONTO EXTRA'];
+
       // Identificar quais abas possuem dados reais
       const hasPrices = fileObj.rows.some(row => {
-        const p = parsePrice(row['PRECO'] || row['PREÇO']);
+        const p = parsePrice(getRowVal(row, PRECO_KEYS));
         return p !== null && p > 0;
       });
 
       const validRupturaRows = fileObj.rows.filter(row => {
-        const pdvVal = row['PDV'] || row['LOCAL'] || '';
-        const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
+        const pdvVal = getRowVal(row, PDV_KEYS);
+        const produtoVal = getRowVal(row, PRODUTO_KEYS);
         if (!pdvVal || !produtoVal) return false;
-        const isRupTotal = String(row['RUPTURA TOTAL?'] || '').toUpperCase().includes('SIM');
+
+        const rupTotalStr = String(row['RUPTURA TOTAL?'] || row['RUPTURA TOTAL'] || getRowVal(row, ['RUPTURA TOTAL?', 'RUPTURA TOTAL']) || '').toUpperCase();
+        const isRupTotal = rupTotalStr.includes('SIM');
+
+        const prodRupStr = String(row['PRODUTO EM RUPTURA?'] || row['PRODUTO EM RUPTURA'] || getRowVal(row, ['PRODUTO EM RUPTURA?', 'PRODUTO EM RUPTURA']) || '').toUpperCase();
+        const isRupProd = prodRupStr.includes('SIM');
+
+        const tipoRupStr = String(row['TIPO DE RUPTURA'] || getRowVal(row, ['TIPO DE RUPTURA']) || '').toUpperCase();
+        const isTipoRup = tipoRupStr !== '' && !tipoRupStr.includes('NAO') && !tipoRupStr.includes('NÃO');
+
         if (normalizeHeader(produtoVal) === 'PADRAO') return isRupTotal;
-        return true;
+        return isRupTotal || isRupProd || isTipoRup || true;
       });
       const hasRuptura = validRupturaRows.length > 0;
 
       const validValidadeRows = fileObj.rows.filter(row => {
-        const valStr = row['INFORME A VALIDADE'] || row['VALIDADE'] || row['(2) INFORME A VALIDADE'];
+        const valStr = getRowVal(row, VALIDADE_KEYS);
         return !!valStr;
       });
       const hasValidade = validValidadeRows.length > 0;
 
       const validAbastecimentoRows = fileObj.rows.filter(row => {
-        const caixasVal = row['QUANTAS CAIXAS FORAM ABASTECIDAS?'] || row['QTD. DE CAIXAS ABASTECIDAS'] || row['TOTAL REPOSIÇÕES'] || row['QUANTIDADE'] || '';
+        const caixasVal = getRowVal(row, CAIXAS_KEYS);
         if (caixasVal === null || caixasVal === undefined || String(caixasVal).trim() === '') return false;
         const numCaixas = parseInt(String(caixasVal).replace(',', '.'), 10);
         return !isNaN(numCaixas) && numCaixas > 0;
@@ -401,7 +587,7 @@ downloadExcelBtn.addEventListener('click', async () => {
       const hasAbastecimento = validAbastecimentoRows.length > 0;
 
       const validPontoExtraRows = fileObj.rows.filter(row => {
-        const pontoExtraVal = row['TEM PONTO EXTRA?'] || row['PONTO EXTRA'] || '';
+        const pontoExtraVal = getRowVal(row, PONTO_EXTRA_KEYS);
         return pontoExtraVal !== null && pontoExtraVal !== undefined && String(pontoExtraVal).trim() !== '';
       });
       const hasPontoExtra = validPontoExtraRows.length > 0;
@@ -474,14 +660,15 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         let rPrecoIdx = 2;
         fileObj.rows.forEach(row => {
-          const priceNum = parsePrice(row['PRECO'] || row['PREÇO']);
+          const priceNum = parsePrice(getRowVal(row, PRECO_KEYS));
           if (priceNum !== null && priceNum > 0) {
-            const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
-            const pdvVal = row['PDV'] || row['LOCAL'] || '';
-            const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
+            const rawDate = getRowVal(row, DATA_KEYS);
+            const dateVal = parseDateVal(rawDate);
+            const pdvVal = getRowVal(row, PDV_KEYS);
+            const produtoVal = getRowVal(row, PRODUTO_KEYS);
 
             const r = wsPreco.getRow(rPrecoIdx++);
-            r.getCell(4).value = dateVal || (row['DATA'] || row['DATA DO DIA'] || '');
+            r.getCell(4).value = dateVal || rawDate;
             if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
             r.getCell(5).value = pdvVal;
@@ -530,18 +717,22 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         const mapRuptura = new Map();
         fileObj.rows.forEach(row => {
-          const pdvVal = row['PDV'] || row['LOCAL'] || '';
-          const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
+          const pdvVal = getRowVal(row, PDV_KEYS);
+          const produtoVal = getRowVal(row, PRODUTO_KEYS);
           if (!pdvVal || !produtoVal) return;
 
-          const isRupTotal = String(row['RUPTURA TOTAL?'] || '').toUpperCase().includes('SIM');
+          const rupTotalStr = String(row['RUPTURA TOTAL?'] || row['RUPTURA TOTAL'] || getRowVal(row, ['RUPTURA TOTAL?', 'RUPTURA TOTAL']) || '').toUpperCase();
+          const isRupTotal = rupTotalStr.includes('SIM');
           const isPadrao = normalizeHeader(produtoVal) === 'PADRAO';
 
           if (isPadrao && !isRupTotal) return;
 
           const displayProduto = isPadrao ? 'RUPTURA TOTAL DO PDV' : produtoVal;
           const rupturaTotalFlag = (isPadrao || isRupTotal) ? 'SIM' : 'NÃO';
-          const isRup = String(row['PRODUTO EM RUPTURA?'] || row['RUPTURA'] || (isRupTotal ? 'SIM' : '') || '').toUpperCase().includes('SIM');
+
+          const prodRupStr = String(row['PRODUTO EM RUPTURA?'] || row['PRODUTO EM RUPTURA'] || getRowVal(row, ['PRODUTO EM RUPTURA?', 'PRODUTO EM RUPTURA']) || '').toUpperCase();
+          const tipoRupStr = String(row['TIPO DE RUPTURA'] || getRowVal(row, ['TIPO DE RUPTURA']) || '').toUpperCase();
+          const isRup = isRupTotal || prodRupStr.includes('SIM') || (tipoRupStr !== '' && !tipoRupStr.includes('NAO') && !tipoRupStr.includes('NÃO'));
 
           const key = `${pdvVal}|||${displayProduto}|||${rupturaTotalFlag}`;
 
@@ -616,14 +807,15 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         let rValIdx = 2;
         fileObj.rows.forEach(row => {
-          const valStr = row['INFORME A VALIDADE'] || row['VALIDADE'] || row['(2) INFORME A VALIDADE'];
+          const valStr = getRowVal(row, VALIDADE_KEYS);
           if (valStr) {
-            const dateExec = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
+            const rawDateExec = getRowVal(row, DATA_KEYS);
+            const dateExec = parseDateVal(rawDateExec);
             const dateVal = parseDateVal(valStr);
-            const pdvVal = row['PDV'] || row['LOCAL'] || '';
-            const produtoVal = row['ITENS'] || row['SKU'] || row['PRODUTO'] || '';
-            const agenteVal = row['PROMOTOR'] || row['AGENTE'] || '';
-            const qtdVal = parseInt(row['QUAL A QUANTIDADE EM UNIDADES?'] || row['QUANTIDADE'] || '0', 10) || 0;
+            const pdvVal = getRowVal(row, PDV_KEYS);
+            const produtoVal = getRowVal(row, PRODUTO_KEYS);
+            const agenteVal = getRowVal(row, PROMOTOR_KEYS);
+            const qtdVal = parseInt(getRowVal(row, ['QUAL A QUANTIDADE EM UNIDADES?', 'QUANTIDADE', 'QUANTIDADE (UN)', 'QTD UNIDADES']) || '0', 10) || 0;
 
             let diasRestantes = null;
             if (dateExec && dateVal) {
@@ -634,7 +826,7 @@ downloadExcelBtn.addEventListener('click', async () => {
             }
 
             const r = wsValidade.getRow(rValIdx++);
-            r.getCell(4).value = dateExec || (row['DATA'] || row['DATA DO DIA'] || '');
+            r.getCell(4).value = dateExec || rawDateExec;
             if (dateExec) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
             r.getCell(5).value = dateVal || valStr;
@@ -689,10 +881,11 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         let rAbastIdx = 2;
         fileObj.rows.forEach(row => {
-          const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
-          const pdvVal = row['PDV'] || row['LOCAL'] || '';
-          const promotorVal = row['PROMOTOR'] || row['AGENTE'] || '';
-          const caixasVal = row['QUANTAS CAIXAS FORAM ABASTECIDAS?'] || row['QTD. DE CAIXAS ABASTECIDAS'] || row['TOTAL REPOSIÇÕES'] || row['QUANTIDADE'] || '';
+          const rawDate = getRowVal(row, DATA_KEYS);
+          const dateVal = parseDateVal(rawDate);
+          const pdvVal = getRowVal(row, PDV_KEYS);
+          const promotorVal = getRowVal(row, PROMOTOR_KEYS);
+          const caixasVal = getRowVal(row, CAIXAS_KEYS);
 
           if (caixasVal === null || caixasVal === undefined || String(caixasVal).trim() === '') return;
 
@@ -700,7 +893,7 @@ downloadExcelBtn.addEventListener('click', async () => {
           if (isNaN(numCaixas) || numCaixas <= 0) return;
 
           const r = wsAbastecimento.getRow(rAbastIdx++);
-          r.getCell(4).value = dateVal || (row['DATA'] || row['DATA DO DIA'] || '');
+          r.getCell(4).value = dateVal || rawDate;
           if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
           r.getCell(5).value = pdvVal;
@@ -746,15 +939,16 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         let rPontoExtraIdx = 2;
         fileObj.rows.forEach(row => {
-          const dateVal = parseDateVal(row['DATA'] || row['DATA DO DIA'] || row['DATA E HORA INÍCIO EXECUÇÃO']);
-          const pdvVal = row['PDV'] || row['LOCAL'] || '';
-          const promotorVal = row['PROMOTOR'] || row['AGENTE'] || '';
-          const pontoExtraVal = row['TEM PONTO EXTRA?'] || row['PONTO EXTRA'] || '';
+          const rawDate = getRowVal(row, DATA_KEYS);
+          const dateVal = parseDateVal(rawDate);
+          const pdvVal = getRowVal(row, PDV_KEYS);
+          const promotorVal = getRowVal(row, PROMOTOR_KEYS);
+          const pontoExtraVal = getRowVal(row, PONTO_EXTRA_KEYS);
 
           if (pontoExtraVal === null || pontoExtraVal === undefined || String(pontoExtraVal).trim() === '') return;
 
           const r = wsPontoExtra.getRow(rPontoExtraIdx++);
-          r.getCell(4).value = dateVal || (row['DATA'] || row['DATA DO DIA'] || '');
+          r.getCell(4).value = dateVal || rawDate;
           if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
           r.getCell(5).value = pdvVal;
@@ -937,18 +1131,77 @@ downloadExcelBtn.addEventListener('click', async () => {
   }
 });
 
+function autoDetectDelimiter(text) {
+  const firstLines = (text || '').split(/\r?\n/).slice(0, 5).join('\n');
+  const countSemi = (firstLines.match(/;/g) || []).length;
+  const countComma = (firstLines.match(/,/g) || []).length;
+  const countTab = (firstLines.match(/\t/g) || []).length;
+
+  if (countSemi >= countComma && countSemi >= countTab) return ';';
+  if (countTab >= countComma && countTab >= countSemi) return '\t';
+  return ',';
+}
+
 function processCsv(content, originalFileName) {
-  const parsed = parseDelimitedCsv(content, ';');
-  if (parsed.length < 2) {
-    showAlert('Erro', 'O arquivo possui muito poucas linhas ou não está no formato delimitado por ";".', 'error');
+  const delimiter = autoDetectDelimiter(content);
+  const parsed = parseDelimitedCsv(content, delimiter);
+  if (parsed.length < 1) {
+    showAlert('Erro', 'O arquivo possui formato inválido ou está vazio.', 'error');
     return null;
   }
+  return processRows(parsed, originalFileName);
+}
 
-  // A Deluc costuma ter a primeira linha como metadados/id e a segunda como cabeçalho (parsed[1])
-  const rawHeaders = parsed[1] || [];
+function detectHeaderRow(rows) {
+  if (!rows || rows.length === 0) return 0;
+  
+  const knownKeywords = [
+    'PDV', 'PROMOTOR', 'AGENTE', 'COLABORADOR', 'SKU', 'ITENS', 'PRODUTO',
+    'DATA', 'INICIO', 'EXECUCAO', 'VISITA', 'RUPTURA', 'PRECO', 'ESTOQUE',
+    'VALIDADE', 'LOTE', 'FANTASIA', 'RAZAO SOCIAL', 'CLIENTE', 'LOJA',
+    'MOTIVO', 'STATUS', 'CIDADE', 'ESTADO', 'COD'
+  ];
+
+  let bestRow = 0;
+  let maxScore = -1;
+
+  for (let r = 0; r < Math.min(rows.length, 5); r++) {
+    const row = rows[r];
+    if (!row || !Array.isArray(row)) continue;
+    
+    let score = 0;
+    const filledCells = row.filter(c => String(c || '').trim() !== '');
+    if (filledCells.length <= 1) continue;
+
+    filledCells.forEach(cell => {
+      const norm = normalizeHeader(cell);
+      if (knownKeywords.some(kw => norm.includes(kw))) {
+        score += 3;
+      } else if (isNaN(norm) && norm.length > 1) {
+        score += 1;
+      }
+    });
+
+    if (r > 0 && filledCells.length > (rows[0]?.filter(c => String(c || '').trim() !== '').length || 0) + 3) {
+      score += 5;
+    }
+
+    if (score > maxScore) {
+      maxScore = score;
+      bestRow = r;
+    }
+  }
+
+  return bestRow;
+}
+
+function processRows(parsedRows, originalFileName) {
+  if (!parsedRows || parsedRows.length < 1) return null;
+
+  const headerRowIdx = detectHeaderRow(parsedRows);
+  const rawHeaders = (parsedRows[headerRowIdx] || []).map(c => String(c ?? '').trim());
   const normalizedHeaders = rawHeaders.map(h => normalizeHeader(h));
   
-  // Lista de colunas a serem ignoradas (Blacklist conforme solicitado)
   const BLACKLIST = [
     'ID DA VISITA',
     'ID DA TAREFA',
@@ -961,10 +1214,8 @@ function processCsv(content, originalFileName) {
     'REDE DO PDV'
   ];
 
-  // Filtramos apenas as linhas do corpo que tenham algum conteúdo real
-  const body = parsed.slice(2).filter((row) => row.some((cell) => String(cell || '').trim() !== ''));
+  const body = parsedRows.slice(headerRowIdx + 1).filter((row) => row && row.some((cell) => String(cell || '').trim() !== ''));
 
-  // Mapeamento de regras do modelo para consulta rápida
   const mappingRules = {};
   EXPORT_MODEL.forEach(rule => {
     const srcNorm = normalizeHeader(rule.source);
@@ -972,31 +1223,31 @@ function processCsv(content, originalFileName) {
     mappingRules[srcNorm].push(rule);
   });
 
-  // Transforma os dados: se estiver no modelo, usa o nome/transformação do modelo. Senão, mantém original.
   const transformed = body.map((row) => {
     const obj = {};
     rawHeaders.forEach((header, index) => {
       const normH = normalizedHeaders[index];
       const val = String(row[index] ?? '').trim();
       
-      // Se estiver na blacklist, pula
       if (BLACKLIST.includes(normH)) return;
       
+      // Sempre armazena o valor pelo nome original da coluna
+      obj[header] = val;
+
       const rules = mappingRules[normH];
       if (rules) {
-        // Aplica as regras do modelo (pode gerar mais de uma coluna, ex: DATA e DATA DO DIA)
         rules.forEach(rule => {
-          obj[rule.export] = applyTransform(val, rule.transform);
+          const transformedVal = applyTransform(val, rule.transform);
+          // Não sobrescreve um valor já preenchido por uma string vazia
+          if (transformedVal !== '' || !obj[rule.export]) {
+            obj[rule.export] = transformedVal;
+          }
         });
-      } else {
-        // Se não houver regra, mantém o nome original bruto
-        obj[header] = val;
       }
     });
     return obj;
   });
 
-  // Determinar quais colunas de fato iremos exportar mantendo a ordem do arquivo
   const mainColumns = [];
   const extraColumns = [];
 
@@ -1007,8 +1258,6 @@ function processCsv(content, originalFileName) {
     const rules = mappingRules[normH];
     if (rules) {
       rules.forEach((rule, rIdx) => {
-        // Se for a segunda regra para uma mesma origem (ex: DATA DO DIA), jogamos para o final 
-        // para que não empurre as outras colunas originais de suas posições
         if (rIdx > 0 || rule.export === 'DATA DO DIA') {
           if (!extraColumns.includes(rule.export)) extraColumns.push(rule.export);
         } else {
@@ -1016,14 +1265,12 @@ function processCsv(content, originalFileName) {
         }
       });
     } else {
-      // Colunas que não estão no modelo mas têm dados seguem o fluxo principal
       if (!mainColumns.includes(header)) mainColumns.push(header);
     }
   });
 
   let allPossibleColumns = [...mainColumns, ...extraColumns];
 
-  // Regra de Negócio: 'DATA DO DIA' deve vir após 'TEM SKU VENCENDO EM 60 DIAS?' se ambas existirem
   const targetCol = 'TEM SKU VENCENDO EM 60 DIAS?';
   const dataCol = 'DATA DO DIA';
   if (allPossibleColumns.includes(dataCol) && allPossibleColumns.includes(targetCol)) {
@@ -1032,7 +1279,6 @@ function processCsv(content, originalFileName) {
     allPossibleColumns.splice(targetIdx + 1, 0, dataCol);
   }
 
-  // Helpers para identificar colunas de preço e caixas abastecidas
   const isPriceColName = (name) => {
     const norm = normalizeHeader(name);
     return norm === 'PRECO' || norm === 'PREÇO' || norm.includes('PRECO') || norm.includes('PREÇO');
@@ -1043,7 +1289,6 @@ function processCsv(content, originalFileName) {
     return norm.includes('QUANTAS CAIXAS FORAM ABASTECIDAS') || norm.includes('QTD. DE CAIXAS ABASTECIDAS') || norm.includes('QTD DE CAIXAS ABASTECIDAS') || norm.includes('CAIXAS ABASTECIDAS');
   };
 
-  // Filtragem final: Manter apenas colunas com dados reais (> 0 para Preço e Caixas, não-vazio para o restante)
   const exportColumns = allPossibleColumns.filter(col => {
     if (isPriceColName(col)) {
       return transformed.some(row => {
