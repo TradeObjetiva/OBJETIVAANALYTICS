@@ -7,6 +7,8 @@
     <title>Controle de Assiduidade - Objetiva Analytics</title>
     <link rel="stylesheet" href="../../style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../js/supabase-config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -1085,7 +1087,7 @@
                         stroke-width="2.5">
                         <path d="M18 20V10M12 20V4M6 20v-6"></path>
                     </svg>
-                    Dashboard de Produtividade
+                    🍱 Controle de Almoço
                 </button>
 
                 <button class="sync-btn" id="btn-detect-empty"
@@ -4471,213 +4473,312 @@
         async function showProductivityDashboard() {
             const theme = getSwalTheme();
             const projects = [...new Set(staffList.map(s => s.project))].sort();
+            
+            // Estado do Modal de Controle de Almoço
+            let currentDateTarget = getLocalDateString(new Date()); // Default: Hoje
+            let currentProjectFilter = 'TODOS';
+            let currentStatusFilter = 'TODOS';
+            let currentSearchFilter = '';
 
-            function computeStats(selectedProject = 'TODOS') {
-                let totalVisits = 0;
-                let completedVisits = 0;
-                let openVisits = 0;
-                let shortVisits = 0;
-                let totalDurationMin = 0;
+            // Tentar buscar registros diretamente de tb_jornada_almoco no Supabase
+            let dbJornadaRecords = [];
+            try {
+                const { data: dbData } = await window.supabase
+                    .from('tb_jornada_almoco')
+                    .select('*');
+                if (dbData && dbData.length > 0) {
+                    dbJornadaRecords = dbData;
+                }
+            } catch (e) {
+                console.warn('tb_jornada_almoco ainda não populada ou inacessível, usando checkins brutos.');
+            }
 
-                const brandMap = {};
-                const promoterMap = {};
+            function parseLunchEvents(targetDateStr) {
+                // Combina check-ins brutos e registros de tb_jornada_almoco
+                const allRaw = [
+                    ...(globalRawCheckins || []),
+                    ...dbJornadaRecords.map(r => ({
+                        history_id: r.history_id || r.created_at || (r.date + ' ' + (r.time || '12:00:00')),
+                        created_at: r.created_at || r.date,
+                        task_id: r.task_id || r.event_type || 'INTERVALO',
+                        client_id: r.client_id || (r.collaborator_name + ';' + (r.event_type || 'INTERVALO')),
+                        activity_id: r.activity_id || (r.time || '12:00')
+                    }))
+                ];
 
-                Object.keys(globalProcessedVisits).forEach(key => {
-                    const lastIdx = key.lastIndexOf('_');
-                    const name = key.substring(0, lastIdx);
+                // Filtra os check-ins brutos correspondentes à data selecionada
+                const filteredCheckins = allRaw.filter(c => {
+                    const timestampStr = c.history_id || c.created_at;
+                    let eventDate = new Date(timestampStr);
+                    if (isNaN(eventDate.getTime())) eventDate = new Date(c.created_at);
+                    return getLocalDateString(eventDate) === targetDateStr;
+                });
 
-                    const person = staffList.find(s => s.name === name);
-                    const proj = person ? person.project : 'GERAL';
-                    const eq = person ? person.equipe : 'GERAL';
+                // Mapeia colaboradores válidos da equipe (staffList)
+                const staffMap = new Map();
+                staffList.forEach(s => staffMap.set(s.name.toUpperCase(), s));
 
-                    if (selectedProject !== 'TODOS' && proj !== selectedProject) return;
+                // Mapeia eventos de cada colaborador
+                const collaboratorEvents = {};
 
-                    const sessions = globalProcessedVisits[key] || [];
-                    sessions.forEach(sess => {
-                        totalVisits++;
-                        if (sess.isOpen) {
-                            openVisits++;
-                        } else {
-                            completedVisits++;
-                            totalDurationMin += (sess.durationMin || 0);
-                            if (sess.isShort) shortVisits++;
-                        }
+                filteredCheckins.forEach(c => {
+                    const rawClient = String(c.client_id || '').trim();
+                    const rawTask = String(c.task_id || '').trim();
+                    const rawActivity = String(c.activity_id || '').trim();
+                    const rawHistory = String(c.history_id || c.created_at || '').trim();
 
-                        const rawStore = sess.clientId || 'LOJA DESCONHECIDA';
-                        const storeParts = rawStore.split(' ');
-                        const brandName = storeParts.length > 1 ? `${storeParts[0]} ${storeParts[1]}` : storeParts[0];
+                    // Tentar identificar o colaborador
+                    let name = '';
+                    const clientParts = rawClient.split(';');
+                    const activityParts = rawActivity.split(';');
 
-                        if (!brandMap[brandName]) {
-                            brandMap[brandName] = {
-                                brand: brandName,
-                                totalVisits: 0,
-                                completedVisits: 0,
-                                totalDurationMin: 0,
-                                shortVisits: 0,
-                                openVisits: 0,
-                                storesSet: new Set()
-                            };
-                        }
-                        brandMap[brandName].totalVisits++;
-                        brandMap[brandName].storesSet.add(rawStore);
-                        if (sess.isOpen) {
-                            brandMap[brandName].openVisits++;
-                        } else {
-                            brandMap[brandName].completedVisits++;
-                            brandMap[brandName].totalDurationMin += (sess.durationMin || 0);
-                            if (sess.isShort) brandMap[brandName].shortVisits++;
-                        }
+                    if (c.collaborator_name && staffMap.has(c.collaborator_name.toUpperCase())) {
+                        name = c.collaborator_name.toUpperCase();
+                    } else if (clientParts[0] && staffMap.has(clientParts[0].trim().toUpperCase())) {
+                        name = clientParts[0].trim().toUpperCase();
+                    } else if (activityParts[0] && staffMap.has(activityParts[0].trim().toUpperCase())) {
+                        name = activityParts[0].trim().toUpperCase();
+                    } else {
+                        // Tenta encontrar aproximação com nome na staffList (evitando lojas)
+                        const foundPerson = staffList.find(s => {
+                            const sName = s.name.toUpperCase();
+                            return clientParts[0]?.trim().toUpperCase() === sName ||
+                                   activityParts[0]?.trim().toUpperCase() === sName;
+                        });
+                        if (foundPerson) name = foundPerson.name.toUpperCase();
+                    }
 
-                        if (!promoterMap[name]) {
-                            promoterMap[name] = {
-                                name: name,
-                                project: proj,
-                                equipe: eq,
-                                visitsCount: 0,
-                                completedCount: 0,
-                                totalDurationMin: 0,
-                                shortCount: 0,
-                                openCount: 0
-                            };
-                        }
-                        promoterMap[name].visitsCount++;
-                        if (sess.isOpen) {
-                            promoterMap[name].openCount++;
-                        } else {
-                            promoterMap[name].completedCount++;
-                            promoterMap[name].totalDurationMin += (sess.durationMin || 0);
-                            if (sess.isShort) promoterMap[name].shortCount++;
-                        }
+                    // Se NÃO for um colaborador oficial cadastrado (ex: é nome de loja como ATACADÃO, ASSAÍ, MUNDIAL), ignora!
+                    if (!name || !staffMap.has(name)) return;
+
+                    const combined = `${rawClient} ${rawTask} ${rawActivity}`.toUpperCase();
+                    const isStart = combined.includes('SAIDA') || combined.includes('SAÍDA') || combined.includes('INICIO') || combined.includes('PARADA') || combined.includes('JORNADA DE TRABALHO');
+                    const isEnd = combined.includes('RETORNO') || combined.includes('VOLTA') || combined.includes('FIM') || combined.includes('CHEGADA');
+
+                    let eventDate = new Date(rawHistory);
+                    if (isNaN(eventDate.getTime())) eventDate = new Date(c.created_at);
+
+                    let timeStr = '';
+                    if (activityParts[0] && /^\d{1,2}:\d{2}/.test(activityParts[0].trim())) {
+                        timeStr = activityParts[0].trim();
+                    } else if (!isNaN(eventDate.getTime())) {
+                        timeStr = `${String(eventDate.getHours()).padStart(2, '0')}:${String(eventDate.getMinutes()).padStart(2, '0')}`;
+                    }
+
+                    if (!collaboratorEvents[name]) collaboratorEvents[name] = [];
+
+                    collaboratorEvents[name].push({
+                        isStart,
+                        isEnd,
+                        eventDate,
+                        timeStr,
+                        rawClient,
+                        rawTask,
+                        rawActivity
                     });
                 });
 
-                const avgMinPerVisit = completedVisits > 0 ? Math.round(totalDurationMin / completedVisits) : 0;
-                const totalHoursEff = (totalDurationMin / 60).toFixed(1);
+                // Ordenar eventos por horário para cada colaborador
+                Object.keys(collaboratorEvents).forEach(name => {
+                    collaboratorEvents[name].sort((a, b) => a.eventDate.getTime() - b.eventDate.getTime());
+                });
 
-                return {
-                    totalVisits,
-                    completedVisits,
-                    openVisits,
-                    shortVisits,
-                    totalDurationMin,
-                    avgMinPerVisit,
-                    totalHoursEff,
-                    brands: Object.values(brandMap).sort((a, b) => b.totalVisits - a.totalVisits),
-                    promoters: Object.values(promoterMap).sort((a, b) => b.totalDurationMin - a.totalDurationMin)
-                };
+                const now = new Date();
+                const isToday = targetDateStr === getLocalDateString(now);
+
+                // Montar lista com APENAS colaboradores da base (staffList)
+                const allCollaboratorNames = staffList.map(s => s.name.toUpperCase());
+
+                const results = [];
+
+                allCollaboratorNames.forEach(name => {
+                    const person = staffMap.get(name);
+                    const proj = person ? person.project : 'GERAL';
+                    const eq = person ? person.equipe : 'GERAL';
+
+                    const events = collaboratorEvents[name] || [];
+
+                    // Identificar evento de Saída (Início de Almoço) e Retorno
+                    let startEv = events.find(e => e.isStart || !e.isEnd);
+                    let endEv = events.find(e => e.isEnd && (!startEv || e.eventDate.getTime() > startEv.eventDate.getTime()));
+
+                    let status = 'NOT_STARTED'; // ⚪ Não Iniciou
+                    let startTimeStr = '--:--';
+                    let endTimeStr = '--:--';
+                    let durationMin = 0;
+
+                    if (startEv) {
+                        startTimeStr = startEv.timeStr;
+                        if (endEv) {
+                            status = 'COMPLETED'; // ✅ Retornou
+                            endTimeStr = endEv.timeStr;
+                            const diffMs = endEv.eventDate.getTime() - startEv.eventDate.getTime();
+                            durationMin = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+                        } else {
+                            status = 'IN_PROGRESS'; // ⏳ Em Intervalo
+                            if (isToday) {
+                                const diffMs = now.getTime() - startEv.eventDate.getTime();
+                                durationMin = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+                            } else {
+                                durationMin = 60; // Padrão se for dia anterior sem retorno fechado
+                            }
+                        }
+                    }
+
+                    const isExceeded = (status === 'IN_PROGRESS' || status === 'COMPLETED') && durationMin > 60;
+
+                    results.push({
+                        name: person ? person.name : name,
+                        project: proj,
+                        equipe: eq,
+                        status,
+                        startTimeStr,
+                        endTimeStr,
+                        durationMin,
+                        isExceeded,
+                        hasEvents: events.length > 0
+                    });
+                });
+
+                return results;
             }
 
-            function formatMinToHoursText(min) {
-                if (!min || min <= 0) return '0min';
+            function formatDurationText(min) {
+                if (!min || min <= 0) return '0 min';
                 const h = Math.floor(min / 60);
                 const m = min % 60;
-                return h > 0 ? `${h}h ${m}min` : `${m}min`;
+                return h > 0 ? `${h}h ${m}min` : `${m} min`;
             }
 
-            function renderModalContent(proj = 'TODOS') {
-                const stats = computeStats(proj);
+            function renderModalHTML() {
+                const rawData = parseLunchEvents(currentDateTarget);
+
+                // Aplicar Filtros
+                const filteredData = rawData.filter(item => {
+                    if (currentProjectFilter !== 'TODOS' && item.project !== currentProjectFilter) return false;
+                    if (currentSearchFilter && !item.name.toLowerCase().includes(currentSearchFilter.toLowerCase())) return false;
+                    if (currentStatusFilter === 'IN_PROGRESS' && item.status !== 'IN_PROGRESS') return false;
+                    if (currentStatusFilter === 'COMPLETED' && item.status !== 'COMPLETED') return false;
+                    if (currentStatusFilter === 'EXCEEDED' && !item.isExceeded) return false;
+                    if (currentStatusFilter === 'NOT_STARTED' && item.status !== 'NOT_STARTED') return false;
+                    return true;
+                });
+
+                // Métricas KPI
+                const inProgressCount = rawData.filter(r => r.status === 'IN_PROGRESS').length;
+                const completedCount = rawData.filter(r => r.status === 'COMPLETED').length;
+                const exceededCount = rawData.filter(r => r.isExceeded).length;
+                const activeLunches = rawData.filter(r => r.status === 'COMPLETED' || r.status === 'IN_PROGRESS');
+                const avgMin = activeLunches.length > 0 
+                    ? Math.round(activeLunches.reduce((acc, r) => acc + r.durationMin, 0) / activeLunches.length) 
+                    : 0;
+
+                const todayStr = getLocalDateString(new Date());
+                const yesterdayObj = new Date();
+                yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+                const yesterdayStr = getLocalDateString(yesterdayObj);
 
                 return `
-                <div style="text-align: left; font-family: 'Inter', sans-serif;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: rgba(99, 102, 241, 0.05); padding: 14px 18px; border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.15);">
-                        <div>
-                            <span style="font-size: 11px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.5px;">FILTRAR POR PROJETO:</span>
-                            <select id="prod-proj-select" style="display: block; margin-top: 4px; padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 13px; font-weight: 600;">
-                                <option value="TODOS" ${proj === 'TODOS' ? 'selected' : ''}>TODOS OS PROJETOS</option>
-                                ${projects.map(p => `<option value="${p}" ${proj === p ? 'selected' : ''}>${p}</option>`).join('')}
-                            </select>
+                <div style="text-align: left; font-family: 'Inter', sans-serif; max-height: 80vh; overflow-y: auto; padding-right: 4px;">
+                    <!-- Cabeçalho de Navegação e Filtros de Data -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: rgba(99, 102, 241, 0.06); padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.18);">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.5px;">DATA DO CONTROLE:</span>
+                            <button id="btn-date-today" style="padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); ${currentDateTarget === todayStr ? 'background: #6366f1; color: white;' : `background: ${theme.inputBg}; color: ${theme.color};`} transition: all 0.2s;">📅 Hoje</button>
+                            <button id="btn-date-yesterday" style="padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); ${currentDateTarget === yesterdayStr ? 'background: #6366f1; color: white;' : `background: ${theme.inputBg}; color: ${theme.color};`} transition: all 0.2s;">🔙 Ontem</button>
+                            <input type="date" id="lunch-date-picker" value="${currentDateTarget}" style="padding: 6px 10px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600; cursor: pointer;">
                         </div>
-                        <div style="text-align: right;">
-                            <span style="font-size: 12px; color: var(--text-dim);">Ciclo Visível:</span>
-                            <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">${formatDateBR(getLocalDateString(currentDate))} até a data atual</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button id="btn-export-lunch-excel" style="padding: 8px 16px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                                Exportar Excel
+                            </button>
                         </div>
                     </div>
 
                     <!-- Cards de KPI -->
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
                         <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
-                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Total Visitas</div>
-                            <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-top: 4px;">${stats.totalVisits}</div>
-                            <div style="font-size: 11px; color: #10b981; margin-top: 2px;">${stats.completedVisits} concluídas</div>
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">⏳ Em Pausa Agora</div>
+                            <div style="font-size: 24px; font-weight: 800; color: #f59e0b; margin-top: 4px;">${inProgressCount}</div>
+                            <div style="font-size: 11px; color: #f59e0b; margin-top: 2px;">atualmente no intervalo</div>
                         </div>
                         <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
-                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Média em Loja</div>
-                            <div style="font-size: 22px; font-weight: 800; color: #6366f1; margin-top: 4px;">${formatMinToHoursText(stats.avgMinPerVisit)}</div>
-                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">por visita finalizada</div>
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">✅ Retornaram</div>
+                            <div style="font-size: 24px; font-weight: 800; color: #10b981; margin-top: 4px;">${completedCount}</div>
+                            <div style="font-size: 11px; color: #10b981; margin-top: 2px;">intervalo concluído</div>
                         </div>
                         <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
-                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Horas em Loja</div>
-                            <div style="font-size: 22px; font-weight: 800; color: #10b981; margin-top: 4px;">${stats.totalHoursEff}h</div>
-                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">tempo total acumulado</div>
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">⏱️ Média de Almoço</div>
+                            <div style="font-size: 24px; font-weight: 800; color: #6366f1; margin-top: 4px;">${formatDurationText(avgMin)}</div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 2px;">tempo médio por pausa</div>
                         </div>
                         <div style="background: ${theme.inputBg}; padding: 14px; border-radius: 12px; border: 1px solid ${theme.inputBorder};">
-                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Alertas</div>
-                            <div style="font-size: 22px; font-weight: 800; color: #ef4444; margin-top: 4px;">${stats.shortVisits + stats.openVisits}</div>
-                            <div style="font-size: 11px; color: #ef4444; margin-top: 2px;">${stats.shortVisits} curtas | ${stats.openVisits} abertas</div>
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">⚠️ Alertas (> 1 hora)</div>
+                            <div style="font-size: 24px; font-weight: 800; color: #ef4444; margin-top: 4px;">${exceededCount}</div>
+                            <div style="font-size: 11px; color: #ef4444; margin-top: 2px;">excederam 60 minutos</div>
                         </div>
                     </div>
 
-                    <!-- Tabela de Desempenho por Rede -->
-                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-                        <span>🏬 Tempo Médio e Permanência por Rede / Cliente</span>
-                    </h4>
-                    <div style="max-height: 220px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; background: ${theme.inputBg}; margin-bottom: 24px;">
+                    <!-- Filtros Rápidos de Busca, Projeto e Status -->
+                    <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <input type="text" id="lunch-search-input" value="${currentSearchFilter}" placeholder="🔍 Buscar colaborador..." style="padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600;">
+                        <select id="lunch-proj-select" style="padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600;">
+                            <option value="TODOS" ${currentProjectFilter === 'TODOS' ? 'selected' : ''}>TODOS OS PROJETOS</option>
+                            ${projects.map(p => `<option value="${p}" ${currentProjectFilter === p ? 'selected' : ''}>${p}</option>`).join('')}
+                        </select>
+                        <select id="lunch-status-select" style="padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600;">
+                            <option value="TODOS" ${currentStatusFilter === 'TODOS' ? 'selected' : ''}>TODOS OS STATUS</option>
+                            <option value="IN_PROGRESS" ${currentStatusFilter === 'IN_PROGRESS' ? 'selected' : ''}>⏳ Em Pausa Agora</option>
+                            <option value="COMPLETED" ${currentStatusFilter === 'COMPLETED' ? 'selected' : ''}>✅ Retornaram</option>
+                            <option value="EXCEEDED" ${currentStatusFilter === 'EXCEEDED' ? 'selected' : ''}>⚠️ Excederam 1h</option>
+                            <option value="NOT_STARTED" ${currentStatusFilter === 'NOT_STARTED' ? 'selected' : ''}>⚪ Não Iniciaram</option>
+                        </select>
+                    </div>
+
+                    <!-- Tabela de Controle de Jornada de Almoço -->
+                    <div style="max-height: 340px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; background: ${theme.inputBg};">
                         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
                             <thead>
-                                <tr style="border-bottom: 1px solid ${theme.inputBorder}; font-weight: 700; color: var(--text-dim); background: rgba(0,0,0,0.03);">
-                                    <th style="padding: 10px;">Rede / Cliente</th>
-                                    <th style="padding: 10px; text-align: center;">Total Visitas</th>
-                                    <th style="padding: 10px; text-align: center;">Média em Loja</th>
-                                    <th style="padding: 10px; text-align: center;">Tempo Total</th>
-                                    <th style="padding: 10px; text-align: center;">Alertas</th>
+                                <tr style="border-bottom: 1px solid ${theme.inputBorder}; font-weight: 700; color: var(--text-dim); background: rgba(0,0,0,0.03); position: sticky; top: 0; background: ${theme.inputBg}; z-index: 10;">
+                                    <th style="padding: 12px 14px;">Colaborador</th>
+                                    <th style="padding: 12px 14px;">Projeto / Equipe</th>
+                                    <th style="padding: 12px 14px; text-align: center;">Início Almoço</th>
+                                    <th style="padding: 12px 14px; text-align: center;">Retorno Almoço</th>
+                                    <th style="padding: 12px 14px; text-align: center;">Tempo no Intervalo</th>
+                                    <th style="padding: 12px 14px; text-align: center;">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${stats.brands.length === 0 ? `<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-dim);">Nenhum registro de visita encontrado para o filtro.</td></tr>` : 
-                                stats.brands.map(b => {
-                                    const avg = b.completedVisits > 0 ? Math.round(b.totalDurationMin / b.completedVisits) : 0;
+                                ${filteredData.length === 0 ? `<tr><td colspan="6" style="text-align:center; padding: 25px; color: var(--text-dim);">Nenhum colaborador encontrado para os filtros selecionados.</td></tr>` :
+                                filteredData.map(item => {
+                                    let statusBadge = '<span style="background: rgba(156, 163, 175, 0.15); color: #9ca3af; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 11px;">⚪ Não Iniciou</span>';
+                                    let rowBg = 'transparent';
+
+                                    if (item.status === 'IN_PROGRESS') {
+                                        statusBadge = '<span style="background: rgba(245, 158, 11, 0.18); color: #f59e0b; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; border: 1px solid rgba(245, 158, 11, 0.3);">⏳ Em Intervalo</span>';
+                                        rowBg = 'rgba(245, 158, 11, 0.05)';
+                                    } else if (item.status === 'COMPLETED') {
+                                        statusBadge = '<span style="background: rgba(16, 185, 129, 0.18); color: #10b981; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; border: 1px solid rgba(16, 185, 129, 0.3);">✅ Retornou</span>';
+                                    }
+
+                                    if (item.isExceeded) {
+                                        statusBadge += ' <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 8px; border-radius: 8px; font-weight: 800; font-size: 10px; border: 1px solid rgba(239, 68, 68, 0.3);">⚠️ > 1h</span>';
+                                        rowBg = 'rgba(239, 68, 68, 0.06)';
+                                    }
+
+                                    const durationColor = item.isExceeded ? '#ef4444' : item.status === 'IN_PROGRESS' ? '#f59e0b' : item.status === 'COMPLETED' ? '#10b981' : 'var(--text-dim)';
+
                                     return `
-                                    <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
-                                        <td style="padding: 10px; font-weight: 700; color: var(--text-main);">${b.brand} <span style="font-size: 11px; font-weight:400; color: var(--text-dim);">(${b.storesSet.size} lojas)</span></td>
-                                        <td style="padding: 10px; text-align: center; font-weight: 600;">${b.totalVisits}</td>
-                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #6366f1;">${formatMinToHoursText(avg)}</td>
-                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #10b981;">${formatMinToHoursText(b.totalDurationMin)}</td>
-                                        <td style="padding: 10px; text-align: center;">
-                                            ${b.shortVisits > 0 ? `<span style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700;">⚠️ ${b.shortVisits} curtas</span>` : '<span style="color: var(--text-dim);">-</span>'}
+                                    <tr style="border-bottom: 1px solid rgba(128,128,128,0.06); background: ${rowBg};">
+                                        <td style="padding: 10px 14px; font-weight: 700; color: var(--text-main);">${item.name}</td>
+                                        <td style="padding: 10px 14px; color: var(--text-dim); font-size: 11px;">${item.project} / ${item.equipe}</td>
+                                        <td style="padding: 10px 14px; text-align: center; font-weight: 700; color: ${item.startTimeStr !== '--:--' ? '#6366f1' : 'var(--text-dim)'};">${item.startTimeStr}</td>
+                                        <td style="padding: 10px 14px; text-align: center; font-weight: 700; color: ${item.endTimeStr !== '--:--' ? '#10b981' : 'var(--text-dim)'};">${item.endTimeStr}</td>
+                                        <td style="padding: 10px 14px; text-align: center; font-weight: 800; color: ${durationColor}; font-size: 13px;">
+                                            ${item.status !== 'NOT_STARTED' ? formatDurationText(item.durationMin) : '--'}
                                         </td>
-                                    </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Tabela de Ranking por Promotor -->
-                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-                        <span>👤 Carga Horária Efetiva por Promotor</span>
-                    </h4>
-                    <div style="max-height: 240px; overflow-y: auto; border: 1px solid ${theme.inputBorder}; border-radius: 12px; background: ${theme.inputBg};">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid ${theme.inputBorder}; font-weight: 700; color: var(--text-dim); background: rgba(0,0,0,0.03);">
-                                    <th style="padding: 10px;">Promotor</th>
-                                    <th style="padding: 10px;">Projeto / Equipe</th>
-                                    <th style="padding: 10px; text-align: center;">Lojas Visitadas</th>
-                                    <th style="padding: 10px; text-align: center;">Média / Loja</th>
-                                    <th style="padding: 10px; text-align: center;">Total em Loja</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${stats.promoters.length === 0 ? `<tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-dim);">Nenhum promotor com visitas registradas no filtro.</td></tr>` :
-                                stats.promoters.map(p => {
-                                    const avg = p.completedCount > 0 ? Math.round(p.totalDurationMin / p.completedCount) : 0;
-                                    return `
-                                    <tr style="border-bottom: 1px solid rgba(128,128,128,0.05);">
-                                        <td style="padding: 10px; font-weight: 700; color: var(--text-main);">${p.name}</td>
-                                        <td style="padding: 10px; color: var(--text-dim); font-size: 11px;">${p.project} / ${p.equipe}</td>
-                                        <td style="padding: 10px; text-align: center; font-weight: 600;">${p.visitsCount}</td>
-                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #6366f1;">${formatMinToHoursText(avg)}</td>
-                                        <td style="padding: 10px; text-align: center; font-weight: 700; color: #10b981;">${formatMinToHoursText(p.totalDurationMin)}</td>
+                                        <td style="padding: 10px 14px; text-align: center;">${statusBadge}</td>
                                     </tr>
                                     `;
                                 }).join('')}
@@ -4688,29 +4789,114 @@
                 `;
             }
 
+            function exportLunchExcel() {
+                const dataToExport = parseLunchEvents(currentDateTarget);
+                if (dataToExport.length === 0) {
+                    Swal.fire('Aviso', 'Nenhum dado para exportar na data selecionada.', 'info');
+                    return;
+                }
+
+                const rows = dataToExport.map(item => ({
+                    'COLABORADOR': item.name,
+                    'PROJETO': item.project,
+                    'EQUIPE': item.equipe,
+                    'DATA': currentDateTarget,
+                    'INÍCIO DO ALMOÇO': item.startTimeStr,
+                    'RETORNO DO ALMOÇO': item.endTimeStr,
+                    'TEMPO NO INTERVALO (MIN)': item.durationMin,
+                    'TEMPO FORMATADO': formatDurationText(item.durationMin),
+                    'STATUS': item.status === 'COMPLETED' ? 'RETORNOU' : item.status === 'IN_PROGRESS' ? 'EM INTERVALO' : 'NÃO INICIOU',
+                    'ALERTA (> 1H)': item.isExceeded ? 'EXCEDEU 1H' : 'NORMAL'
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(rows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Controle_Almoco");
+                XLSX.writeFile(wb, `controle_jornada_almoco_${currentDateTarget}.xlsx`);
+            }
+
+            function attachModalEvents(popup) {
+                const datePicker = popup.querySelector('#lunch-date-picker');
+                const btnToday = popup.querySelector('#btn-date-today');
+                const btnYesterday = popup.querySelector('#btn-date-yesterday');
+                const projSelect = popup.querySelector('#lunch-proj-select');
+                const statusSelect = popup.querySelector('#lunch-status-select');
+                const searchInput = popup.querySelector('#lunch-search-input');
+                const btnExport = popup.querySelector('#btn-export-lunch-excel');
+
+                const updateView = () => {
+                    const container = Swal.getHtmlContainer();
+                    if (container) {
+                        container.innerHTML = renderModalHTML();
+                        attachModalEvents(Swal.getPopup());
+                    }
+                };
+
+                if (datePicker) {
+                    datePicker.onchange = (e) => {
+                        currentDateTarget = e.target.value;
+                        updateView();
+                    };
+                }
+
+                if (btnToday) {
+                    btnToday.onclick = () => {
+                        currentDateTarget = getLocalDateString(new Date());
+                        updateView();
+                    };
+                }
+
+                if (btnYesterday) {
+                    btnYesterday.onclick = () => {
+                        const yest = new Date();
+                        yest.setDate(yest.getDate() - 1);
+                        currentDateTarget = getLocalDateString(yest);
+                        updateView();
+                    };
+                }
+
+                if (projSelect) {
+                    projSelect.onchange = (e) => {
+                        currentProjectFilter = e.target.value;
+                        updateView();
+                    };
+                }
+
+                if (statusSelect) {
+                    statusSelect.onchange = (e) => {
+                        currentStatusFilter = e.target.value;
+                        updateView();
+                    };
+                }
+
+                if (searchInput) {
+                    searchInput.oninput = (e) => {
+                        currentSearchFilter = e.target.value;
+                        // Debounced re-render
+                        clearTimeout(popup._searchTimer);
+                        popup._searchTimer = setTimeout(() => {
+                            updateView();
+                        }, 250);
+                    };
+                }
+
+                if (btnExport) {
+                    btnExport.onclick = () => {
+                        exportLunchExcel();
+                    };
+                }
+            }
+
             await Swal.fire({
-                title: '📊 Dashboard de Produtividade & Permanência em Loja',
-                html: renderModalContent('TODOS'),
-                width: '850px',
+                title: '🍱 Controle de Jornada de Almoço & Intervalos',
+                html: renderModalHTML(),
+                width: '950px',
                 showConfirmButton: false,
                 showCloseButton: true,
                 background: theme.background,
                 color: theme.color,
                 didOpen: () => {
-                    const select = document.getElementById('prod-proj-select');
-                    if (select) {
-                        select.onchange = (e) => {
-                            const newProj = e.target.value;
-                            const container = Swal.getHtmlContainer();
-                            if (container) {
-                                container.innerHTML = renderModalContent(newProj);
-                                const newSelect = document.getElementById('prod-proj-select');
-                                if (newSelect) {
-                                    newSelect.onchange = select.onchange;
-                                }
-                            }
-                        };
-                    }
+                    attachModalEvents(Swal.getPopup());
                 }
             });
         }

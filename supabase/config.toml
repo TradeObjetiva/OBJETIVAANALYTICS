@@ -1,5 +1,8 @@
 [functions.webhook-checkin]
 verify_jwt = false
 
+[functions.webhook-jornada-almoco]
+verify_jwt = false
+
 [functions.laivon-proxy]
 verify_jwt = false
