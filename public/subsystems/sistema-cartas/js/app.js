@@ -51,15 +51,73 @@ document.addEventListener("DOMContentLoaded", () => {
     // ─── Multi-Select Filtros ────────────────────────────────────────────────
     // Estado dos filtros como conjuntos
     const selectedAgentes = new Set();
+    const selectedRedes = new Set();
     const selectedLocais = new Set();
 
     function getFilteredGroups() {
         if (!state.grouped || !state.grouped.length) return [];
         return state.grouped.filter(g => {
             const matchAgente = selectedAgentes.size === 0 || selectedAgentes.has(g.agente);
+            const matchRede = selectedRedes.size === 0 || selectedRedes.has(g.rede);
             const matchLocal = selectedLocais.size === 0 || selectedLocais.has(g.local);
-            return matchAgente && matchLocal;
+            return matchAgente && matchRede && matchLocal;
         });
+    }
+
+    function syncCascadingFilters(changedSource) {
+        if (!state.grouped || !state.grouped.length) return;
+
+        // Opções válidas por dimensão dependendo dos filtros ativos nas demais dimensões
+        const validAgentes = new Set(
+            state.grouped
+                .filter(g => (selectedRedes.size === 0 || selectedRedes.has(g.rede)) && (selectedLocais.size === 0 || selectedLocais.has(g.local)))
+                .map(g => g.agente)
+                .filter(Boolean)
+        );
+
+        const validRedes = new Set(
+            state.grouped
+                .filter(g => (selectedAgentes.size === 0 || selectedAgentes.has(g.agente)) && (selectedLocais.size === 0 || selectedLocais.has(g.local)))
+                .map(g => g.rede)
+                .filter(Boolean)
+        );
+
+        const validLocais = new Set(
+            state.grouped
+                .filter(g => (selectedAgentes.size === 0 || selectedAgentes.has(g.agente)) && (selectedRedes.size === 0 || selectedRedes.has(g.rede)))
+                .map(g => g.local)
+                .filter(Boolean)
+        );
+
+        // Remover seleções que deixaram de ser válidas devido ao filtro alterado
+        if (changedSource !== 'agente') {
+            for (const ag of [...selectedAgentes]) {
+                if (!validAgentes.has(ag)) selectedAgentes.delete(ag);
+            }
+        }
+        if (changedSource !== 'rede') {
+            for (const rd of [...selectedRedes]) {
+                if (!validRedes.has(rd)) selectedRedes.delete(rd);
+            }
+        }
+        if (changedSource !== 'local') {
+            for (const lc of [...selectedLocais]) {
+                if (!validLocais.has(lc)) selectedLocais.delete(lc);
+            }
+        }
+
+        // Reconstruir os dropdowns que não foram o alvo direto para manter o menu aberto e focado
+        if (changedSource !== 'agente') {
+            buildMultiSelectDropdown("filterAgenteContainer", [...validAgentes].sort(), selectedAgentes, () => syncCascadingFilters('agente'));
+        }
+        if (changedSource !== 'rede') {
+            buildMultiSelectDropdown("filterRedeContainer", [...validRedes].sort(), selectedRedes, () => syncCascadingFilters('rede'));
+        }
+        if (changedSource !== 'local') {
+            buildMultiSelectDropdown("filterLocalContainer", [...validLocais].sort(), selectedLocais, () => syncCascadingFilters('local'));
+        }
+
+        updateFilterCount();
     }
 
     function buildMultiSelectDropdown(containerId, items, selectedSet, onChange) {
@@ -171,10 +229,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!state.grouped || !state.grouped.length) return;
 
         const agentes = [...new Set(state.grouped.map(g => g.agente).filter(Boolean))].sort();
+        const redes = [...new Set(state.grouped.map(g => g.rede).filter(Boolean))].sort();
         const locais = [...new Set(state.grouped.map(g => g.local).filter(Boolean))].sort();
 
-        buildMultiSelectDropdown("filterAgenteContainer", agentes, selectedAgentes, updateFilterCount);
-        buildMultiSelectDropdown("filterLocalContainer", locais, selectedLocais, updateFilterCount);
+        buildMultiSelectDropdown("filterAgenteContainer", agentes, selectedAgentes, () => syncCascadingFilters('agente'));
+        buildMultiSelectDropdown("filterRedeContainer", redes, selectedRedes, () => syncCascadingFilters('rede'));
+        buildMultiSelectDropdown("filterLocalContainer", locais, selectedLocais, () => syncCascadingFilters('local'));
 
         if (filterSection) filterSection.style.display = "block";
         updateFilterCount();
@@ -195,10 +255,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (previewTitle) {
             const hasAgente = selectedAgentes.size > 0;
+            const hasRede = selectedRedes.size > 0;
             const hasLocal = selectedLocais.size > 0;
-            if (hasAgente || hasLocal) {
+            if (hasAgente || hasRede || hasLocal) {
                 const parts = [];
                 if (hasAgente) parts.push(`${selectedAgentes.size} agente${selectedAgentes.size > 1 ? 's' : ''}`);
+                if (hasRede) parts.push(`${selectedRedes.size} rede${selectedRedes.size > 1 ? 's' : ''}`);
                 if (hasLocal) parts.push(`${selectedLocais.size} local${selectedLocais.size > 1 ? 'is' : ''}`);
                 previewTitle.textContent = `Prévia — ${parts.join(", ")} filtrado${parts.length > 1 ? 's' : ''} (${count} carta${count !== 1 ? 's' : ''})`;
             } else {
@@ -209,8 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     clearFiltersBtn?.addEventListener("click", () => {
         selectedAgentes.clear();
+        selectedRedes.clear();
         selectedLocais.clear();
-        // Rebuild dropdowns
         if (state.grouped && state.grouped.length) {
             populateFilterSelects();
         }

@@ -101,7 +101,66 @@ const EXPORT_MODEL = [
   { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QUANTAS CAIXAS FORAM ABASTECIDAS?' },
   { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QTD. DE CAIXAS ABASTECIDAS' },
   { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QTD DE CAIXAS ABASTECIDAS' },
-  { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'CAIXAS ABASTECIDAS' }
+  { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'CAIXAS ABASTECIDAS' },
+
+  { export: 'FOI RETIRADO PRODUTO DO PDV PARA AVARIA?', source: 'FOI RETIRADO PRODUTO DO PDV PARA AVARIA?' },
+  { export: 'FOI RETIRADO PRODUTO DO PDV PARA AVARIA?', source: 'FOI RETIRADO PRODUTO DO PDV PARA AVARIA' },
+  { export: 'QUAL MOTIVO DA AVARIA?', source: 'QUAL MOTIVO DA AVARIA?' },
+  { export: 'QUAL MOTIVO DA AVARIA?', source: 'QUAL MOTIVO DA AVARIA' },
+  { export: 'QUAL MOTIVO DA AVARIA?', source: 'MOTIVO DA AVARIA' },
+  { export: 'QUAL MOTIVO DA AVARIA?', source: 'MOTIVO AVARIA' },
+  { export: 'CITE O PESO DO PRODUTO', source: 'CITE O PESO DO PRODUTO' },
+  { export: 'CITE O PESO DO PRODUTO', source: 'PESO DO PRODUTO' },
+  { export: 'FOTO DO PRODUTO NA BALANÇA', source: 'FOTO DO PRODUTO NA BALANÇA' },
+  { export: 'FOTO DO PRODUTO NA BALANÇA', source: 'FOTO DO PRODUTO NA BALANCA' },
+  { export: 'CITE O LOTE DO PRODUTO', source: 'CITE O LOTE DO PRODUTO' },
+  { export: 'CITE O LOTE DO PRODUTO', source: 'LOTE DO PRODUTO' },
+  { export: 'COLOQUE O VALOR DA NOTA', source: 'COLOQUE O VALOR DA NOTA' },
+  { export: 'COLOQUE O VALOR DA NOTA', source: 'VALOR DA NOTA' },
+  { export: 'FOTO DA MESA', source: 'FOTO DA MESA' },
+
+  { export: 'DATA E HORA INICIO EXECUCAO', source: 'DATA E HORA INICIO EXECUCAO', transform: 'datetime' },
+  { export: 'DATA E HORA INICIO EXECUCAO', source: 'DATA E HORA INÍCIO EXECUÇÃO', transform: 'datetime' },
+  { export: 'DATA E HORA INICIO EXECUCAO', source: 'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)', transform: 'datetime' },
+  { export: 'SEÇAO', source: 'SEÇAO' },
+  { export: 'SEÇAO', source: 'SEÇÃO' },
+  { export: 'SEÇAO', source: 'SECAO' },
+  { export: 'VISITOU O ALMOXARIFADO?', source: 'VISITOU O ALMOXARIFADO?' },
+  { export: 'VISITOU O ALMOXARIFADO?', source: 'VISITOU ALMOXARIFADO?' },
+  { export: 'OBSERVAÇÃO ALMOXARIFADO', source: 'OBSERVAÇÃO ALMOXARIFADO' },
+  { export: 'OBSERVAÇÃO ALMOXARIFADO', source: 'OBSERVAÇÃO ALMOXARIFADO?' },
+  { export: 'OBSERVAÇÃO ALMOXARIFADO', source: 'OBSERVACOES ALMOXARIFADO' },
+  { export: 'VISITOU A COZINHA?', source: 'VISITOU A COZINHA?' },
+  { export: 'VISITOU A COZINHA?', source: 'VISITOU COZINHA?' },
+  { export: 'OBSERVAÇÃO COZINHA', source: 'OBSERVAÇÃO COZINHA' },
+  { export: 'OBSERVAÇÃO COZINHA', source: 'OBSERVACOES COZINHA' },
+  { export: 'VISITOU O AÇOUGUE?', source: 'VISITOU O AÇOUGUE?' },
+  { export: 'VISITOU O AÇOUGUE?', source: 'VISITOU ACOUGUE?' },
+  { export: 'OBSERVAÇÃO AÇOUGUE', source: 'OBSERVAÇÃO AÇOUGUE' },
+  { export: 'OBSERVAÇÃO AÇOUGUE', source: 'OBSERVACOES ACOUGUE' },
+  { export: 'VISITOU O SALGADO?', source: 'VISITOU O SALGADO?' },
+  { export: 'VISITOU O SALGADO?', source: 'VISITOU SALGADO?' },
+  { export: 'OBSERVAÇÃO SALGADO', source: 'OBSERVAÇÃO SALGADO' },
+  { export: 'OBSERVAÇÃO SALGADO', source: 'OBSERVACOES SALGADO' },
+  { export: 'VISITOU O LATICÍNIOS?', source: 'VISITOU O LATICÍNIOS?' },
+  { export: 'VISITOU O LATICÍNIOS?', source: 'VISITOU LATICINIOS?' },
+  { export: 'OBSERVAÇÃO LATICÍNIOS', source: 'OBSERVAÇÃO LATICÍNIOS' },
+  { export: 'OBSERVAÇÃO LATICÍNIOS', source: 'OBSERVACOES LATICINIOS' },
+  { export: 'VISITOU O FLV?', source: 'VISITOU O FLV?' },
+  { export: 'VISITOU O FLV?', source: 'VISITOU FLV?' },
+  { export: 'OBSERVAÇÃO FLV', source: 'OBSERVAÇÃO FLV' },
+  { export: 'OBSERVAÇÃO FLV', source: 'OBSERVACOES FLV' },
+  { export: 'VISITOU A LIXEIRA?', source: 'VISITOU A LIXEIRA?' },
+  { export: 'VISITOU A LIXEIRA?', source: 'VISITOU LIXEIRA?' },
+  { export: 'OBSERVAÇÃO LIXEIRA', source: 'OBSERVAÇÃO LIXEIRA' },
+  { export: 'OBSERVAÇÃO LIXEIRA', source: 'OBSERVACOES LIXEIRA' },
+  { export: 'RELATÓRIO ASSINADO PELO GERENTE?', source: 'RELATÓRIO ASSINADO PELO GERENTE?' },
+  { export: 'RELATÓRIO ASSINADO PELO GERENTE?', source: 'RELATORIO ASSINADO PELO GERENTE?' },
+  { export: 'FOTO DA ASSINATURA DO GERENTE', source: 'FOTO DA ASSINATURA DO GERENTE' },
+  { export: 'FOTO DA ASSINATURA DO GERENTE', source: 'FOTO ASSINATURA DO GERENTE' },
+  { export: 'NOME DO GERENTE', source: 'NOME DO GERENTE' },
+  { export: 'OBSERVAÇÕES SOBRE A LOJA', source: 'OBSERVAÇÕES SOBRE A LOJA' },
+  { export: 'OBSERVAÇÕES SOBRE A LOJA', source: 'OBSERVACOES SOBRE A LOJA' }
 ];
 
 const state = {
@@ -540,12 +599,64 @@ downloadExcelBtn.addEventListener('click', async () => {
         'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)',
         'DATA HORA TAREFA',
         'DATA HORA FIM EXECUCAO ATIVIDADE GERADA PELO SISTEMA (DIM TEMPO)',
-        'DATA', 'DATA DO DIA', 'DATA VISITA', 'DATA DA VISITA', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA E HORA EXECUÇÃO'
+        'DATA', 'DATA DO DIA', 'DATA VISITA', 'DATA DA VISITA', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA E HORA INICIO EXECUCAO', 'DATA E HORA EXECUÇÃO'
       ];
       const PRECO_KEYS = ['PRECO', 'PREÇO', 'VALOR', 'PREÇO UNITÁRIO', 'PRECO UNITARIO'];
       const VALIDADE_KEYS = ['INFORME A VALIDADE', 'VALIDADE', 'DATA DE VALIDADE', '(2) INFORME A VALIDADE', '(3) INFORME A VALIDADE'];
       const CAIXAS_KEYS = ['QUANTAS CAIXAS FORAM ABASTECIDAS?', 'QTD. DE CAIXAS ABASTECIDAS', 'QTD DE CAIXAS ABASTECIDAS', 'CAIXAS ABASTECIDAS', 'CAIXAS', 'QTD CAIXAS', 'TOTAL REPOSIÇÕES', 'QUANTIDADE TOTAL', 'QUANTIDADE'];
       const PONTO_EXTRA_KEYS = ['TEM PONTO EXTRA?', 'PONTO EXTRA'];
+      const AVARIA_KEYS = [
+        'FOI RETIRADO PRODUTO DO PDV PARA AVARIA?',
+        'FOI RETIRADO PRODUTO DO PDV PARA AVARIA',
+        'QUAL MOTIVO DA AVARIA?',
+        'QUAL MOTIVO DA AVARIA',
+        'MOTIVO DA AVARIA',
+        'MOTIVO AVARIA',
+        'CITE O PESO DO PRODUTO',
+        'PESO DO PRODUTO',
+        'FOTO DO PRODUTO NA BALANÇA',
+        'FOTO DO PRODUTO NA BALANCA',
+        'CITE O LOTE DO PRODUTO',
+        'LOTE DO PRODUTO',
+        'COLOQUE O VALOR DA NOTA',
+        'VALOR DA NOTA',
+        'FOTO DA MESA'
+      ];
+      const TECNICO_KEYS = [
+        'VISITOU O ALMOXARIFADO?',
+        'VISITOU ALMOXARIFADO?',
+        'VISITOU A COZINHA?',
+        'VISITOU COZINHA?',
+        'VISITOU O AÇOUGUE?',
+        'VISITOU ACOUGUE?',
+        'VISITOU O SALGADO?',
+        'VISITOU SALGADO?',
+        'VISITOU O LATICÍNIOS?',
+        'VISITOU LATICINIOS?',
+        'VISITOU O FLV?',
+        'VISITOU FLV?',
+        'VISITOU A LIXEIRA?',
+        'VISITOU LIXEIRA?',
+        'RELATÓRIO ASSINADO PELO GERENTE?',
+        'RELATORIO ASSINADO PELO GERENTE?',
+        'RELATORIO TECNICO FINALIZADO?',
+        'RELATÓRIO TÉCNICO FINALIZADO?',
+        'CHECK LIST TÉCNICO',
+        'CHECK LIST TECNICO',
+        'PESQUISA START - TÉCNICO',
+        'PESQUISA START - TECNICO',
+        'VISITOU CLIENTE?',
+        'VISITOU CLIENTE (CHECKOUT)?',
+        'VISITOU CLIENTE (FOTO)?',
+        'FOTO ENTRADA COM BIO',
+        'TEM FOTO DA ENTRADA?',
+        'CHECKIN COM GEOLOCALIZACAO FORA DE RAIO',
+        'CHECKIN COM GEOLOCALIZAÇÃO FORA DE RAIO',
+        'FOTO MOSTRANDO CONFORME CHECK-OUT',
+        'TEM FOTO NO CHECKOUT?',
+        'FOTO DAS VALIDADES E RUPTURAS',
+        'TEM FOTO DE VALIDADE E RUPTURAS?'
+      ];
 
       // Identificar quais abas possuem dados reais
       const hasPrices = fileObj.rows.some(row => {
@@ -568,7 +679,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         const isTipoRup = tipoRupStr !== '' && !tipoRupStr.includes('NAO') && !tipoRupStr.includes('NÃO');
 
         if (normalizeHeader(produtoVal) === 'PADRAO') return isRupTotal;
-        return isRupTotal || isRupProd || isTipoRup || true;
+        return isRupTotal || isRupProd || isTipoRup;
       });
       const hasRuptura = validRupturaRows.length > 0;
 
@@ -592,9 +703,30 @@ downloadExcelBtn.addEventListener('click', async () => {
       });
       const hasPontoExtra = validPontoExtraRows.length > 0;
 
+      const validAvariaRows = fileObj.rows.filter(row => {
+        const avariaVal = getRowVal(row, AVARIA_KEYS);
+        if (avariaVal === null || avariaVal === undefined || String(avariaVal).trim() === '') return false;
+        const foiRetirado = String(getRowVal(row, ['FOI RETIRADO PRODUTO DO PDV PARA AVARIA?', 'FOI RETIRADO PRODUTO DO PDV PARA AVARIA']) || '').trim().toUpperCase();
+        if (foiRetirado === 'NÃO' || foiRetirado === 'NAO' || foiRetirado.startsWith('NÃO') || foiRetirado.startsWith('NAO')) return false;
+        return true;
+      });
+      const hasAvaria = validAvariaRows.length > 0;
+
+      const validTecnicoRows = fileObj.rows.filter(row => {
+        const tecVal = getRowVal(row, TECNICO_KEYS);
+        if (tecVal !== null && tecVal !== undefined && String(tecVal).trim() !== '') return true;
+        const secaoVal = String(
+          row['SEÇAO'] || row['SEÇÃO'] || row['SECAO'] ||
+          row['Atividades Descrição'] || row['ATIVIDADES DESCRICAO'] ||
+          row['Atividade Descricao'] || row['ATIVIDADE DESCRICAO'] || ''
+        ).toUpperCase();
+        return secaoVal.includes('TECNICO') || secaoVal.includes('TÉCNICO');
+      });
+      const hasTecnico = validTecnicoRows.length > 0;
+
       // Lista dinâmica de abas ativas
       const activeTabDefs = [];
-      if (hasPrices) {
+      if (hasPrices && !hasTecnico) {
         activeTabDefs.push({
           key: 'PRECO',
           sheetName: 'PREÇO',
@@ -603,7 +735,7 @@ downloadExcelBtn.addEventListener('click', async () => {
           target: "#'PREÇO'!A1"
         });
       }
-      if (hasRuptura || activeTabDefs.length === 0) {
+      if (!hasTecnico && (hasRuptura || activeTabDefs.length === 0)) {
         activeTabDefs.push({
           key: 'RUPTURA',
           sheetName: 'RUPTURA ',
@@ -639,11 +771,31 @@ downloadExcelBtn.addEventListener('click', async () => {
           target: "#'PONTO EXTRA'!A1"
         });
       }
+      if (hasAvaria) {
+        activeTabDefs.push({
+          key: 'AVARIA',
+          sheetName: 'AVARIA',
+          buttonLabel: 'AVARIA',
+          buttonDisplay: 'AVARIA',
+          target: "#'AVARIA'!A1"
+        });
+      }
+      if (hasTecnico) {
+        // Se for Relatório Técnico, a planilha conterá SOMENTE a aba TÉCNICO
+        activeTabDefs.length = 0;
+        activeTabDefs.push({
+          key: 'TECNICO',
+          sheetName: 'TÉCNICO',
+          buttonLabel: 'TECNICO',
+          buttonDisplay: 'TÉCNICO',
+          target: "#'TÉCNICO'!A1"
+        });
+      }
 
       // ==========================================
       // ABA 1: PREÇO (se houver preços)
       // ==========================================
-      if (hasPrices) {
+      if (hasPrices && !hasTecnico) {
         const wsPreco = wb.addWorksheet('PREÇO', { views: [{ showGridLines: true }] });
         wsPreco.getRow(1).height = 24;
 
@@ -700,7 +852,7 @@ downloadExcelBtn.addEventListener('click', async () => {
       // ==========================================
       // ABA 2: RUPTURA (se houver dados)
       // ==========================================
-      if (hasRuptura || activeTabDefs.some(t => t.key === 'RUPTURA')) {
+      if (!hasTecnico && (hasRuptura || activeTabDefs.some(t => t.key === 'RUPTURA'))) {
         const wsRuptura = wb.addWorksheet('RUPTURA ', { views: [{ showGridLines: true }] });
         wsRuptura.getRow(1).height = 24;
 
@@ -790,7 +942,7 @@ downloadExcelBtn.addEventListener('click', async () => {
       // ==========================================
       // ABA 3: VALIDADE (se houver dados)
       // ==========================================
-      if (hasValidade) {
+      if (hasValidade && !hasTecnico) {
         const wsValidade = wb.addWorksheet('VALIDADE', { views: [{ showGridLines: true }] });
         wsValidade.getRow(1).height = 24;
 
@@ -865,7 +1017,7 @@ downloadExcelBtn.addEventListener('click', async () => {
       // ==========================================
       // ABA 4: ABASTECIMENTO (se houver dados)
       // ==========================================
-      if (hasAbastecimento) {
+      if (hasAbastecimento && !hasTecnico) {
         const wsAbastecimento = wb.addWorksheet('ABASTECIMENTO', { views: [{ showGridLines: true }] });
         wsAbastecimento.getRow(1).height = 24;
 
@@ -923,7 +1075,7 @@ downloadExcelBtn.addEventListener('click', async () => {
       // ==========================================
       // ABA 5: PONTO EXTRA (se houver dados)
       // ==========================================
-      if (hasPontoExtra) {
+      if (hasPontoExtra && !hasTecnico) {
         const wsPontoExtra = wb.addWorksheet('PONTO EXTRA', { views: [{ showGridLines: true }] });
         wsPontoExtra.getRow(1).height = 24;
 
@@ -973,6 +1125,240 @@ downloadExcelBtn.addEventListener('click', async () => {
         wsPontoExtra.getColumn(5).width = 46;  // PDV
         wsPontoExtra.getColumn(6).width = 32;  // PROMOTOR
         wsPontoExtra.getColumn(7).width = 24;  // TEM PONTO EXTRA?
+      }
+
+      // ==========================================
+      // ABA 6: AVARIA (se houver dados)
+      // ==========================================
+      if (hasAvaria && !hasTecnico) {
+        const wsAvaria = wb.addWorksheet('AVARIA', { views: [{ showGridLines: true }] });
+        wsAvaria.getRow(1).height = 24;
+
+        const headersAvaria = [
+          'DATA E HORA INICIO EXECUCAO',
+          'PDV',
+          'PROMOTOR',
+          'SKU',
+          'FOI RETIRADO PRODUTO DO PDV PARA AVARIA?',
+          'QUAL MOTIVO DA AVARIA?',
+          'CITE O PESO DO PRODUTO',
+          'FOTO DO PRODUTO NA BALANÇA',
+          'CITE O LOTE DO PRODUTO',
+          'COLOQUE O VALOR DA NOTA',
+          'FOTO DA MESA'
+        ];
+        const rowHeaderAvaria = wsAvaria.getRow(1);
+        headersAvaria.forEach((h, idx) => {
+          const cell = rowHeaderAvaria.getCell(idx + 4);
+          cell.value = h;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
+          cell.font = HEADER_FONT;
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
+
+        let rAvariaIdx = 2;
+        fileObj.rows.forEach(row => {
+          const avariaVal = getRowVal(row, AVARIA_KEYS);
+          if (avariaVal === null || avariaVal === undefined || String(avariaVal).trim() === '') return;
+
+          const foiRetirado = getRowVal(row, ['FOI RETIRADO PRODUTO DO PDV PARA AVARIA?', 'FOI RETIRADO PRODUTO DO PDV PARA AVARIA']);
+          const foiRetiradoNorm = String(foiRetirado || '').trim().toUpperCase();
+          if (foiRetiradoNorm === 'NÃO' || foiRetiradoNorm === 'NAO' || foiRetiradoNorm.startsWith('NÃO') || foiRetiradoNorm.startsWith('NAO')) {
+            return;
+          }
+
+          const rawDate = getRowVal(row, DATA_KEYS);
+          const dateVal = parseDateVal(rawDate);
+          const pdvVal = getRowVal(row, PDV_KEYS);
+          const promotorVal = getRowVal(row, PROMOTOR_KEYS);
+          const skuVal = getRowVal(row, PRODUTO_KEYS);
+
+          const motivoAvaria = getRowVal(row, ['QUAL MOTIVO DA AVARIA?', 'QUAL MOTIVO DA AVARIA', 'MOTIVO DA AVARIA', 'MOTIVO AVARIA']);
+          const pesoProduto = getRowVal(row, ['CITE O PESO DO PRODUTO', 'PESO DO PRODUTO', 'PESO']);
+          const fotoBalanca = getRowVal(row, ['FOTO DO PRODUTO NA BALANÇA', 'FOTO DO PRODUTO NA BALANCA', 'FOTO BALANCA', 'FOTO BALANÇA']);
+          const loteProduto = getRowVal(row, ['CITE O LOTE DO PRODUTO', 'LOTE DO PRODUTO', 'LOTE']);
+          const valorNota = getRowVal(row, ['COLOQUE O VALOR DA NOTA', 'VALOR DA NOTA', 'VALOR DA NOTA FISCAL']);
+          const fotoMesa = getRowVal(row, ['FOTO DA MESA']);
+
+          const r = wsAvaria.getRow(rAvariaIdx++);
+          r.getCell(4).value = dateVal || rawDate;
+          if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy hh:mm';
+
+          r.getCell(5).value = pdvVal;
+          r.getCell(6).value = promotorVal;
+          r.getCell(7).value = skuVal;
+          r.getCell(8).value = foiRetirado;
+          r.getCell(9).value = motivoAvaria;
+          r.getCell(10).value = pesoProduto;
+          r.getCell(11).value = fotoBalanca;
+          r.getCell(12).value = loteProduto;
+          r.getCell(13).value = valorNota;
+          r.getCell(14).value = fotoMesa;
+
+          for (let i = 4; i <= 14; i++) {
+            r.getCell(i).font = DATA_FONT;
+            r.getCell(i).border = ORANGE_BORDER;
+            r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+        });
+
+        addSidebarToSheet(wsAvaria, 'AVARIA', rAvariaIdx);
+
+        wsAvaria.autoFilter = {
+          from: { row: 1, column: 4 },
+          to: { row: Math.max(rAvariaIdx - 1, 1), column: 14 }
+        };
+
+        wsAvaria.getColumn(4).width = 24;  // DATA E HORA INICIO EXECUCAO
+        wsAvaria.getColumn(5).width = 46;  // PDV
+        wsAvaria.getColumn(6).width = 32;  // PROMOTOR
+        wsAvaria.getColumn(7).width = 35;  // SKU
+        wsAvaria.getColumn(8).width = 35;  // FOI RETIRADO...
+        wsAvaria.getColumn(9).width = 30;  // QUAL MOTIVO...
+        wsAvaria.getColumn(10).width = 22; // PESO
+        wsAvaria.getColumn(11).width = 30; // FOTO BALANÇA
+        wsAvaria.getColumn(12).width = 22; // LOTE
+        wsAvaria.getColumn(13).width = 22; // VALOR NOTA
+        wsAvaria.getColumn(14).width = 30; // FOTO MESA
+      }
+
+      // ==========================================
+      // ABA 7: TÉCNICO (se for relatório técnico)
+      // ==========================================
+      if (hasTecnico) {
+        const wsTecnico = wb.addWorksheet('TÉCNICO', { views: [{ showGridLines: true }] });
+        wsTecnico.getRow(1).height = 24;
+
+        const headersTecnico = [
+          'DATA E HORA INICIO EXECUCAO',
+          'PDV',
+          'PROMOTOR',
+          'SEÇAO',
+          'VISITOU O ALMOXARIFADO?',
+          'OBSERVAÇÃO ALMOXARIFADO',
+          'VISITOU A COZINHA?',
+          'OBSERVAÇÃO COZINHA',
+          'VISITOU O AÇOUGUE?',
+          'OBSERVAÇÃO AÇOUGUE',
+          'VISITOU O SALGADO?',
+          'OBSERVAÇÃO SALGADO',
+          'VISITOU O LATICÍNIOS?',
+          'OBSERVAÇÃO LATICÍNIOS',
+          'VISITOU O FLV?',
+          'OBSERVAÇÃO FLV',
+          'VISITOU A LIXEIRA?',
+          'OBSERVAÇÃO LIXEIRA',
+          'RELATÓRIO ASSINADO PELO GERENTE?',
+          'FOTO DA ASSINATURA DO GERENTE',
+          'NOME DO GERENTE',
+          'OBSERVAÇÕES SOBRE A LOJA'
+        ];
+
+        const rowHeaderTecnico = wsTecnico.getRow(1);
+        headersTecnico.forEach((h, idx) => {
+          const cell = rowHeaderTecnico.getCell(idx + 4);
+          cell.value = h;
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_COLOR } };
+          cell.font = HEADER_FONT;
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
+
+        let rTecnicoIdx = 2;
+        fileObj.rows.forEach(row => {
+          const rawDate = getRowVal(row, ['DATA E HORA INICIO EXECUCAO', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA HORA DA TAREFA', ...DATA_KEYS]);
+          const dateVal = parseDateVal(rawDate);
+          const pdvVal = getRowVal(row, PDV_KEYS);
+          const promotorVal = getRowVal(row, ['PROMOTOR', 'NOME PROMOTOR', ...PROMOTOR_KEYS]);
+          const secaoVal = getRowVal(row, ['SEÇAO', 'SEÇÃO', 'SECAO']);
+
+          const visitouAlmoxarifado = getRowVal(row, ['VISITOU O ALMOXARIFADO?', 'VISITOU ALMOXARIFADO?']);
+          const obsAlmoxarifado = getRowVal(row, ['OBSERVAÇÃO ALMOXARIFADO', 'OBSERVAÇÃO ALMOXARIFADO?', 'OBSERVACOES ALMOXARIFADO']);
+
+          const visitouCozinha = getRowVal(row, ['VISITOU A COZINHA?', 'VISITOU COZINHA?']);
+          const obsCozinha = getRowVal(row, ['OBSERVAÇÃO COZINHA', 'OBSERVACOES COZINHA']);
+
+          const visitouAcougue = getRowVal(row, ['VISITOU O AÇOUGUE?', 'VISITOU ACOUGUE?']);
+          const obsAcougue = getRowVal(row, ['OBSERVAÇÃO AÇOUGUE', 'OBSERVACOES ACOUGUE']);
+
+          const visitouSalgado = getRowVal(row, ['VISITOU O SALGADO?', 'VISITOU SALGADO?']);
+          const obsSalgado = getRowVal(row, ['OBSERVAÇÃO SALGADO', 'OBSERVACOES SALGADO']);
+
+          const visitouLaticinios = getRowVal(row, ['VISITOU O LATICÍNIOS?', 'VISITOU LATICINIOS?']);
+          const obsLaticinios = getRowVal(row, ['OBSERVAÇÃO LATICÍNIOS', 'OBSERVACOES LATICINIOS']);
+
+          const visitouFlv = getRowVal(row, ['VISITOU O FLV?', 'VISITOU FLV?']);
+          const obsFlv = getRowVal(row, ['OBSERVAÇÃO FLV', 'OBSERVACOES FLV']);
+
+          const visitouLixeira = getRowVal(row, ['VISITOU A LIXEIRA?', 'VISITOU LIXEIRA?']);
+          const obsLixeira = getRowVal(row, ['OBSERVAÇÃO LIXEIRA', 'OBSERVACOES LIXEIRA']);
+
+          const relatorioAssinado = getRowVal(row, ['RELATÓRIO ASSINADO PELO GERENTE?', 'RELATORIO ASSINADO PELO GERENTE?']);
+          const fotoAssinatura = getRowVal(row, ['FOTO DA ASSINATURA DO GERENTE', 'FOTO ASSINATURA DO GERENTE']);
+          const nomeGerente = getRowVal(row, ['NOME DO GERENTE']);
+          const obsLoja = getRowVal(row, ['OBSERVAÇÕES SOBRE A LOJA', 'OBSERVACOES SOBRE A LOJA']);
+
+          const r = wsTecnico.getRow(rTecnicoIdx++);
+          r.getCell(4).value = dateVal || rawDate;
+          if (dateVal) r.getCell(4).numFmt = 'dd/mm/yyyy hh:mm';
+
+          r.getCell(5).value = pdvVal;
+          r.getCell(6).value = promotorVal;
+          r.getCell(7).value = secaoVal;
+          r.getCell(8).value = visitouAlmoxarifado;
+          r.getCell(9).value = obsAlmoxarifado;
+          r.getCell(10).value = visitouCozinha;
+          r.getCell(11).value = obsCozinha;
+          r.getCell(12).value = visitouAcougue;
+          r.getCell(13).value = obsAcougue;
+          r.getCell(14).value = visitouSalgado;
+          r.getCell(15).value = obsSalgado;
+          r.getCell(16).value = visitouLaticinios;
+          r.getCell(17).value = obsLaticinios;
+          r.getCell(18).value = visitouFlv;
+          r.getCell(19).value = obsFlv;
+          r.getCell(20).value = visitouLixeira;
+          r.getCell(21).value = obsLixeira;
+          r.getCell(22).value = relatorioAssinado;
+          r.getCell(23).value = fotoAssinatura;
+          r.getCell(24).value = nomeGerente;
+          r.getCell(25).value = obsLoja;
+
+          for (let i = 4; i <= 25; i++) {
+            r.getCell(i).font = DATA_FONT;
+            r.getCell(i).border = ORANGE_BORDER;
+            r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+        });
+
+        addSidebarToSheet(wsTecnico, 'TÉCNICO', rTecnicoIdx);
+
+        wsTecnico.autoFilter = {
+          from: { row: 1, column: 4 },
+          to: { row: Math.max(rTecnicoIdx - 1, 1), column: 25 }
+        };
+
+        wsTecnico.getColumn(4).width = 24;  // DATA E HORA INICIO EXECUCAO
+        wsTecnico.getColumn(5).width = 46;  // PDV
+        wsTecnico.getColumn(6).width = 32;  // PROMOTOR
+        wsTecnico.getColumn(7).width = 24;  // SEÇAO
+        wsTecnico.getColumn(8).width = 26;  // VISITOU O ALMOXARIFADO?
+        wsTecnico.getColumn(9).width = 30;  // OBSERVAÇÃO ALMOXARIFADO
+        wsTecnico.getColumn(10).width = 24; // VISITOU A COZINHA?
+        wsTecnico.getColumn(11).width = 30; // OBSERVAÇÃO COZINHA
+        wsTecnico.getColumn(12).width = 24; // VISITOU O AÇOUGUE?
+        wsTecnico.getColumn(13).width = 30; // OBSERVAÇÃO AÇOUGUE
+        wsTecnico.getColumn(14).width = 24; // VISITOU O SALGADO?
+        wsTecnico.getColumn(15).width = 30; // OBSERVAÇÃO SALGADO
+        wsTecnico.getColumn(16).width = 24; // VISITOU O LATICÍNIOS?
+        wsTecnico.getColumn(17).width = 30; // OBSERVAÇÃO LATICÍNIOS
+        wsTecnico.getColumn(18).width = 20; // VISITOU O FLV?
+        wsTecnico.getColumn(19).width = 30; // OBSERVAÇÃO FLV
+        wsTecnico.getColumn(20).width = 22; // VISITOU A LIXEIRA?
+        wsTecnico.getColumn(21).width = 30; // OBSERVAÇÃO LIXEIRA
+        wsTecnico.getColumn(22).width = 32; // RELATÓRIO ASSINADO PELO GERENTE?
+        wsTecnico.getColumn(23).width = 32; // FOTO DA ASSINATURA DO GERENTE
+        wsTecnico.getColumn(24).width = 26; // NOME DO GERENTE
+        wsTecnico.getColumn(25).width = 35; // OBSERVAÇÕES SOBRE A LOJA
       }
 
       const buffer = await wb.xlsx.writeBuffer();
@@ -1159,7 +1545,9 @@ function detectHeaderRow(rows) {
     'PDV', 'PROMOTOR', 'AGENTE', 'COLABORADOR', 'SKU', 'ITENS', 'PRODUTO',
     'DATA', 'INICIO', 'EXECUCAO', 'VISITA', 'RUPTURA', 'PRECO', 'ESTOQUE',
     'VALIDADE', 'LOTE', 'FANTASIA', 'RAZAO SOCIAL', 'CLIENTE', 'LOJA',
-    'MOTIVO', 'STATUS', 'CIDADE', 'ESTADO', 'COD'
+    'MOTIVO', 'STATUS', 'CIDADE', 'ESTADO', 'COD', 'AVARIA', 'RETIRADO', 'PESO', 'BALANCA', 'NOTA', 'MESA',
+    'TECNICO', 'CHECKIN', 'CHECKOUT', 'BIO', 'FACHADA', 'GEOLOCALIZACAO',
+    'ALMOXARIFADO', 'COZINHA', 'ACOUGUE', 'AÇOUGUE', 'SALGADO', 'LATICINIOS', 'LATICÍNIOS', 'FLV', 'LIXEIRA', 'GERENTE'
   ];
 
   let bestRow = 0;
