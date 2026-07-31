@@ -1005,314 +1005,432 @@
 
 <body>
     <div class="assiduidade-container">
-        <div id="missing-staff-alert"
-            style="display: none; background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 14px 20px; border-radius: 14px; margin-bottom: 24px; font-size: 14px; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    style="color: #d97706;">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
-                    </path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <span>Nomes detectados no check-in fora da lista: <strong id="missing-names-list"
-                        style="color: #d97706;">...</strong></span>
-            </div>
-            <button id="btn-add-missing"
-                style="background: #d97706; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; transition: var(--transition);">INSERIR
-                NA LISTA</button>
-        </div>
-
-        <div class="header-actions">
-            <div class="header-title">
-                <h1>Controle de Assiduidade</h1>
-                <p>Monitoramento em tempo real e gestão administrativa.</p>
-            </div>
-
-            <div class="controls-group">
-                <div class="month-selector">
-                    <button class="month-btn" id="prev-month">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="15 18 9 12 15 6"></polyline>
-                        </svg>
-                    </button>
-                    <div class="current-month" id="month-display">...</div>
-                    <button class="month-btn" id="next-month">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="month-selector" style="padding: 0; border: none; background: none; box-shadow: none;">
-                    <div class="multi-select-container" id="project-multi-select">
-                        <div class="multi-select-header">
-                            <span class="selected-text">TODOS PROJETOS</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                        <div class="multi-select-dropdown" id="project-dropdown"></div>
-                    </div>
-                </div>
-
-                <div class="month-selector" style="padding: 0; border: none; background: none; box-shadow: none;">
-                    <div class="multi-select-container" id="equipe-multi-select">
-                        <div class="multi-select-header">
-                            <span class="selected-text">TODAS EQUIPES</span>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                        <div class="multi-select-dropdown" id="equipe-dropdown"></div>
-                    </div>
-                </div>
-
-                <button class="sync-btn" id="btn-export-grid"
-                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
-                    </svg>
-                    Exportar Grade
-                </button>
-
-                <button class="sync-btn" id="btn-productivity-dashboard" onclick="showProductivityDashboard()"
-                    style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: #6366f1; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; font-weight: 700;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    Controle de Almoço
-                </button>
-
-                <button class="sync-btn" id="btn-detect-empty"
-                    style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    Identificar Células Vazias
-                </button>
-
-                <button class="sync-btn" id="btn-insert-holiday" onclick="setHolidayForAll()"
-                    style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path
-                            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41">
-                        </path>
-                    </svg>
-                    Inserir Feriado
-                </button>
-
-                <button class="sync-btn" id="btn-manage-staff"
-                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <line x1="20" y1="8" x2="20" y2="14"></line>
-                        <line x1="23" y1="11" x2="17" y2="11"></line>
-                    </svg>
-                    Gerenciar Equipe
-                </button>
-
-                <button class="sync-btn" id="btn-manage-legends"
-                    style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path
-                            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41">
-                        </path>
-                    </svg>
-                    Gerenciar Legendas
-                </button>
-            </div>
-        </div>
-
-        <!-- Summary Cards -->
-        <div id="summary-cards"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
-            <div class="summary-kpi">
-                <div
-                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                        Equipe Ativa</div>
-                    <div id="kpi-staff-count"
-                        style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">--</div>
-                </div>
-            </div>
-            <div class="summary-kpi">
-                <div
-                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                        Taxa de Presença</div>
-                    <div id="kpi-presence-rate"
-                        style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">--%</div>
-                </div>
-            </div>
-            <div class="summary-kpi">
-                <div
-                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                        Total de Faltas</div>
-                    <div id="kpi-absence-count"
-                        style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">--</div>
-                </div>
-            </div>
-            <div class="summary-kpi">
-                <div
-                    style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                        Atestados</div>
-                    <div id="kpi-certificate-count"
-                        style="font-size: 22px; font-weight: 800; color: #f59e0b; line-height: 1.2;">--</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="table-wrapper">
-            <table id="assiduidade-table">
-                <thead>
-                    <tr id="header-row">
-                        <th class="sticky-col" onclick="toggleGridSearch()" style="cursor: pointer;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                Colaborador
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" id="grid-search-icon">
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                </svg>
-                            </div>
-                        </th>
-                        <!-- Equipe e Projeto ocultos na UI, mas mantidos no objeto de dados -->
-                        <!-- Days will be injected here -->
-                        <th class="summary-col" title="Presença">P</th>
-                        <th class="summary-col" title="Falta">F</th>
-                        <th class="summary-col" title="Atestado (ATT + ATH)">A</th>
-                        <th class="summary-col" title="Abonada">FA</th>
-                    </tr>
-                </thead>
-                <tbody id="attendance-body">
-                    <tr>
-                        <td colspan="40" style="text-align: center; padding: 60px; color: var(--text-dim);">
-                            <div class="loader" style="margin: 0 auto 16px;"></div>
-                            <span style="font-weight: 500;">Carregando registros de assiduidade...</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="legend-container" id="main-legend-container">
-            <!-- Legendas serão injetadas dinamicamente -->
-        </div>
-
-        <div id="obs-section" style="margin-top: 32px; padding-bottom: 50px;">
-            <div class="obs-header"
-                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+        <!-- View 1: Main Attendance Grid View -->
+        <div id="assiduidade-grid-view">
+            <div id="missing-staff-alert"
+                style="display: none; background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 14px 20px; border-radius: 14px; margin-bottom: 24px; font-size: 14px; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        style="color: var(--primary);">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        style="color: #d97706;">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                        </path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-                    Resumo de Observações e Afastamentos
-                </h3>
-                <div class="obs-filters" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                    <div class="filter-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span
-                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Buscar:</span>
-                        <input type="text" id="obs-staff-search" placeholder="Nome do colaborador..."
-                            style="padding: 5px 10px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 160px; font-size: 12px;"
-                            oninput="renderObservations()">
+                    <span>Nomes detectados no check-in fora da lista: <strong id="missing-names-list"
+                            style="color: #d97706;">...</strong></span>
+                </div>
+                <button id="btn-add-missing"
+                    style="background: #d97706; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; transition: var(--transition);">INSERIR
+                    NA LISTA</button>
+            </div>
 
-                        <span
-                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Projeto:</span>
-                        <div class="multi-select-container" id="obs-project-multi-select" style="min-width: 140px;">
-                            <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
-                                <span class="selected-text">TODOS</span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                            <div class="multi-select-dropdown" id="obs-project-dropdown"></div>
-                        </div>
+            <div class="header-actions">
+                <div class="header-title">
+                    <h1>Controle de Assiduidade</h1>
+                    <p>Monitoramento em tempo real e gestão administrativa.</p>
+                </div>
 
-                        <span
-                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Equipe:</span>
-                        <div class="multi-select-container" id="obs-equipe-multi-select" style="min-width: 140px;">
-                            <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
-                                <span class="selected-text">TODAS</span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
-                            </div>
-                            <div class="multi-select-dropdown" id="obs-equipe-dropdown"></div>
-                        </div>
-
-                        <span
-                            style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
-                        <input type="date" id="obs-filter-start" class="date-input"
-                            style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
-                        <span style="font-size: 12px; color: var(--text-dim);">até</span>
-                        <input type="date" id="obs-filter-end" class="date-input"
-                            style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
-                        <button onclick="renderObservations()"
-                            style="background: var(--primary); color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; cursor: pointer;">Filtrar</button>
+                <div class="controls-group">
+                    <div class="month-selector">
+                        <button class="month-btn" id="prev-month">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <div class="current-month" id="month-display">...</div>
+                        <button class="month-btn" id="next-month">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
                     </div>
-                    <button onclick="exportObservations()"
-                        style="background: #10b981; color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+
+                    <div class="month-selector" style="padding: 0; border: none; background: none; box-shadow: none;">
+                        <div class="multi-select-container" id="project-multi-select">
+                            <div class="multi-select-header">
+                                <span class="selected-text">TODOS PROJETOS</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="multi-select-dropdown" id="project-dropdown"></div>
+                        </div>
+                    </div>
+
+                    <div class="month-selector" style="padding: 0; border: none; background: none; box-shadow: none;">
+                        <div class="multi-select-container" id="equipe-multi-select">
+                            <div class="multi-select-header">
+                                <span class="selected-text">TODAS EQUIPES</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="multi-select-dropdown" id="equipe-dropdown"></div>
+                        </div>
+                    </div>
+
+                    <button class="sync-btn" id="btn-export-grid"
+                        style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                        </svg>
+                        Exportar Grade
+                    </button>
+
+                    <button class="sync-btn" id="btn-productivity-dashboard" onclick="showProductivityDashboard()"
+                        style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: #6366f1; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; font-weight: 700;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Controle de Almoço
+                    </button>
+
+                    <button class="sync-btn" id="btn-detect-empty"
+                        style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Identificar Células Vazias
+                    </button>
+
+                    <button class="sync-btn" id="btn-insert-holiday" onclick="setHolidayForAll()"
+                        style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path
+                                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41">
+                            </path>
+                        </svg>
+                        Inserir Feriado
+                    </button>
+
+                    <button class="sync-btn" id="btn-manage-staff"
+                        style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                        Gerenciar Equipe
+                    </button>
+
+                    <button class="sync-btn" id="btn-manage-legends"
+                        style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path
+                                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41">
+                            </path>
+                        </svg>
+                        Gerenciar Legendas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div id="summary-cards"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                <div class="summary-kpi">
+                    <div
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div
+                            style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Equipe Ativa</div>
+                        <div id="kpi-staff-count"
+                            style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">--</div>
+                    </div>
+                </div>
+                <div class="summary-kpi">
+                    <div
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <div
+                            style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Taxa de Presença</div>
+                        <div id="kpi-presence-rate"
+                            style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">--%</div>
+                    </div>
+                </div>
+                <div class="summary-kpi">
+                    <div
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <div
+                            style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Total de Faltas</div>
+                        <div id="kpi-absence-count"
+                            style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">--</div>
+                    </div>
+                </div>
+                <div class="summary-kpi">
+                    <div
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <div
+                            style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Atestados</div>
+                        <div id="kpi-certificate-count"
+                            style="font-size: 22px; font-weight: 800; color: #f59e0b; line-height: 1.2;">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="assiduidade-table">
+                    <thead>
+                        <tr id="header-row">
+                            <th class="sticky-col" onclick="toggleGridSearch()" style="cursor: pointer;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    Colaborador
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" id="grid-search-icon">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                </div>
+                            </th>
+                            <!-- Equipe e Projeto ocultos na UI, mas mantidos no objeto de dados -->
+                            <!-- Days will be injected here -->
+                            <th class="summary-col" title="Presença">P</th>
+                            <th class="summary-col" title="Falta">F</th>
+                            <th class="summary-col" title="Atestado (ATT + ATH)">A</th>
+                            <th class="summary-col" title="Abonada">FA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-body">
+                        <tr>
+                            <td colspan="40" style="text-align: center; padding: 60px; color: var(--text-dim);">
+                                <div class="loader" style="margin: 0 auto 16px;"></div>
+                                <span style="font-weight: 500;">Carregando registros de assiduidade...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="legend-container" id="main-legend-container">
+                <!-- Legendas serão injetadas dinamicamente -->
+            </div>
+
+            <div id="obs-section" style="margin-top: 32px; padding-bottom: 50px;">
+                <div class="obs-header"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            style="color: var(--primary);">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Resumo de Observações e Afastamentos
+                    </h3>
+                    <div class="obs-filters" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                        <div class="filter-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span
+                                style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Buscar:</span>
+                            <input type="text" id="obs-staff-search" placeholder="Nome do colaborador..."
+                                style="padding: 5px 10px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); width: 160px; font-size: 12px;"
+                                oninput="renderObservations()">
+
+                            <span
+                                style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Projeto:</span>
+                            <div class="multi-select-container" id="obs-project-multi-select" style="min-width: 140px;">
+                                <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
+                                    <span class="selected-text">TODOS</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="multi-select-dropdown" id="obs-project-dropdown"></div>
+                            </div>
+
+                            <span
+                                style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Equipe:</span>
+                            <div class="multi-select-container" id="obs-equipe-multi-select" style="min-width: 140px;">
+                                <div class="multi-select-header" style="height: 32px; font-size: 12px; border-radius: 8px;">
+                                    <span class="selected-text">TODAS</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="multi-select-dropdown" id="obs-equipe-dropdown"></div>
+                            </div>
+
+                            <span
+                                style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
+                            <input type="date" id="obs-filter-start" class="date-input"
+                                style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+                            <span style="font-size: 12px; color: var(--text-dim);">até</span>
+                            <input type="date" id="obs-filter-end" class="date-input"
+                                style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
+                            <button onclick="renderObservations()"
+                                style="background: var(--primary); color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; cursor: pointer;">Filtrar</button>
+                        </div>
+                        <button onclick="exportObservations()"
+                            style="background: #10b981; color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+                            </svg>
+                            Exportar Excel
+                        </button>
+                    </div>
+                </div>
+                <div id="observations-list" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                    <div
+                        style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
+                        Nenhuma observação ou afastamento registrado para este período.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Full Page Lunch Control View -->
+        <div id="lunch-control-full-view" style="display: none;">
+            <div class="header-actions" style="margin-bottom: 24px;">
+                <div class="header-title">
+                    <h1 style="display: flex; align-items: center; gap: 10px;">
+                        <span>🍱 Controle de Jornada de Almoço</span>
+                    </h1>
+                    <p>Monitoramento em tempo real dos horários de pausa e retorno de almoço dos colaboradores.</p>
+                </div>
+                <div class="controls-group">
+                    <button class="sync-btn" id="btn-export-lunch-excel-page" onclick="exportLunchExcel()"
+                        style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
                         </svg>
                         Exportar Excel
                     </button>
                 </div>
             </div>
-            <div id="observations-list" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
-                <div
-                    style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
-                    Nenhuma observação ou afastamento registrado para este período.
+
+            <!-- Card de Filtros de Período e Seletores -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px; background: rgba(99, 102, 241, 0.06); padding: 16px 22px; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.18);">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <span style="font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.5px;">PERÍODO:</span>
+                    <button id="btn-lunch-date-today" onclick="setLunchDateFilter('today')" style="padding: 7px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); transition: all 0.2s;">📅 Hoje</button>
+                    <button id="btn-lunch-date-yesterday" onclick="setLunchDateFilter('yesterday')" style="padding: 7px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); transition: all 0.2s;">🔙 Ontem</button>
+
+                    <div style="display: flex; align-items: center; gap: 8px; background: var(--bg-card); padding: 6px 14px; border-radius: 10px; border: 1px solid var(--border); margin-left: 4px;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-dim);">De:</span>
+                        <input type="date" id="lunch-date-start-input" onchange="onLunchDateInputChange()" style="border: none; background: transparent; color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; outline: none;">
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-dim); margin-left: 6px;">Até:</span>
+                        <input type="date" id="lunch-date-end-input" onchange="onLunchDateInputChange()" style="border: none; background: transparent; color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; outline: none;">
+                    </div>
                 </div>
+            </div>
+
+            <!-- Grade de Filtros Avançados -->
+            <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <input type="text" id="lunch-search-page-input" oninput="onLunchFilterChange()" placeholder="🔍 Buscar colaborador..." style="padding: 10px 14px; border-radius: 10px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-size: 12px; font-weight: 600;">
+                <select id="lunch-proj-page-select" onchange="onLunchFilterChange()" style="padding: 10px 14px; border-radius: 10px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-size: 12px; font-weight: 600;">
+                    <option value="TODOS">TODOS OS PROJETOS</option>
+                </select>
+                <select id="lunch-equipe-page-select" onchange="onLunchFilterChange()" style="padding: 10px 14px; border-radius: 10px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-size: 12px; font-weight: 600;">
+                    <option value="TODOS">TODAS AS EQUIPES</option>
+                </select>
+                <select id="lunch-status-page-select" onchange="onLunchFilterChange()" style="padding: 10px 14px; border-radius: 10px; background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); font-size: 12px; font-weight: 600;">
+                    <option value="TODOS">TODOS OS STATUS</option>
+                    <option value="IN_PROGRESS">⏳ Em Intervalo Agora</option>
+                    <option value="COMPLETED">✅ Retornaram</option>
+                    <option value="EXCEEDED">⚠️ Excederam 1h</option>
+                    <option value="NOT_STARTED">⚪ Não Iniciaram</option>
+                </select>
+            </div>
+
+            <!-- Cards de KPI da Jornada de Almoço -->
+            <div id="lunch-kpi-cards" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
+                <div class="summary-kpi">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Ativos</div>
+                        <div id="lunch-kpi-total" style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">0</div>
+                    </div>
+                </div>
+                <div class="summary-kpi">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Retornaram</div>
+                        <div id="lunch-kpi-returned" style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">0</div>
+                    </div>
+                </div>
+                <div class="summary-kpi">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Em Intervalo</div>
+                        <div id="lunch-kpi-in-progress" style="font-size: 22px; font-weight: 800; color: #f59e0b; line-height: 1.2;">0</div>
+                    </div>
+                </div>
+                <div class="summary-kpi">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Excederam 1h</div>
+                        <div id="lunch-kpi-exceeded" style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela Principal do Controle de Almoço em Tela Cheia -->
+            <div class="table-wrapper" style="max-height: calc(100vh - 360px); overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border); font-weight: 700; color: var(--text-dim); background: var(--bg-card); position: sticky; top: 0; z-index: 10;">
+                            <th style="padding: 14px; min-width: 180px;">Colaborador</th>
+                            <th style="padding: 14px; text-align: center; min-width: 90px;">Data</th>
+                            <th style="padding: 14px; min-width: 140px;">Equipe</th>
+                            <th style="padding: 14px; text-align: center; min-width: 100px;">Início Almoço</th>
+                            <th style="padding: 14px; text-align: center; min-width: 100px;">Retorno Almoço</th>
+                            <th style="padding: 14px; text-align: center; min-width: 120px;">Tempo no Intervalo</th>
+                            <th style="padding: 14px 18px; text-align: center; min-width: 160px; white-space: nowrap;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lunch-control-table-body">
+                        <tr><td colspan="7" style="text-align:center; padding: 40px; color: var(--text-dim);">Carregando dados de almoço...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -4470,205 +4588,151 @@
             });
         }
 
-        async function showProductivityDashboard() {
-            const theme = getSwalTheme();
-            const projects = [...new Set(staffList.map(s => s.project).filter(Boolean))].sort();
-            const equipes = [...new Set(staffList.map(s => s.equipe).filter(Boolean))].sort();
-            
-            const todayDefault = getLocalDateString(new Date());
-            let currentStartDateTarget = todayDefault;
-            let currentEndDateTarget = todayDefault;
-            let currentProjectFilter = 'TODOS';
-            let currentEquipeFilter = 'TODOS';
-            let currentStatusFilter = 'TODOS';
-            let currentSearchFilter = '';
+        let lunchState = {
+            startDate: getLocalDateString(new Date()),
+            endDate: getLocalDateString(new Date()),
+            projectFilter: 'TODOS',
+            equipeFilter: 'TODOS',
+            statusFilter: 'TODOS',
+            searchFilter: '',
+            dbRecords: [],
+            loaded: false
+        };
 
-            let dbJornadaRecords = [];
+        async function fetchLunchControlData() {
             try {
                 const { data: dbData } = await window.supabase
                     .from('tb_jornada_almoco')
                     .select('*');
                 if (dbData && dbData.length > 0) {
-                    dbJornadaRecords = dbData;
+                    lunchState.dbRecords = dbData;
                 }
             } catch (e) {
                 console.warn('Aguardando registros na tabela tb_jornada_almoco:', e);
             }
+            lunchState.loaded = true;
+            renderLunchControlPage();
+        }
 
-            const formatDateBR = (dateStr) => {
-                if (!dateStr) return '--/--/----';
-                const parts = String(dateStr).split('-');
-                return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
-            };
+        function parseLunchEventsPage(startDateStr, endDateStr) {
+            const isSingleDay = startDateStr === endDateStr;
 
-            function parseLunchEvents(startDateStr, endDateStr) {
-                const isSingleDay = startDateStr === endDateStr;
+            const filteredRecords = (lunchState.dbRecords || []).filter(r => {
+                const rDate = r.date || (r.history_id ? String(r.history_id).split(' ')[0] : '');
+                if (rDate) {
+                    return rDate >= startDateStr && rDate <= endDateStr;
+                }
+                const timestampStr = r.history_id || r.created_at;
+                if (!timestampStr) return false;
+                let eventDate = new Date(timestampStr);
+                if (isNaN(eventDate.getTime())) eventDate = new Date(r.created_at);
+                const localD = getLocalDateString(eventDate);
+                return localD >= startDateStr && localD <= endDateStr;
+            });
 
-                const filteredRecords = (dbJornadaRecords || []).filter(r => {
-                    const rDate = r.date || (r.history_id ? String(r.history_id).split(' ')[0] : '');
-                    if (rDate) {
-                        return rDate >= startDateStr && rDate <= endDateStr;
+            const staffMap = new Map();
+            staffList.forEach(s => staffMap.set(s.name.toUpperCase(), s));
+
+            const activeStaff = staffList.filter(s => {
+                if (s.data_admissao && s.data_admissao > endDateStr) return false;
+                if (!s.ativo && (!s.data_desativacao || s.data_desativacao < startDateStr)) return false;
+                return true;
+            });
+
+            const now = new Date();
+            const todayStr = getLocalDateString(now);
+
+            if (isSingleDay) {
+                const collaboratorEvents = {};
+
+                filteredRecords.forEach(c => {
+                    let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
+                    const rawClient = String(c.client_id || '').trim();
+                    const rawActivity = String(c.activity_id || '').trim();
+                    const clientParts = rawClient.split(';');
+                    const activityParts = rawActivity.split(';');
+
+                    if (!name && clientParts[0] && !clientParts[0].includes(':')) {
+                        name = clientParts[0].trim().toUpperCase();
+                    } else if (!name && activityParts[0] && !activityParts[0].includes(':')) {
+                        name = activityParts[0].trim().toUpperCase();
                     }
-                    
-                    const timestampStr = r.history_id || r.created_at;
-                    if (!timestampStr) return false;
-                    let eventDate = new Date(timestampStr);
-                    if (isNaN(eventDate.getTime())) eventDate = new Date(r.created_at);
-                    const localD = getLocalDateString(eventDate);
-                    return localD >= startDateStr && localD <= endDateStr;
+
+                    if (name) {
+                        const found = staffList.find(s => {
+                            const sName = s.name.toUpperCase();
+                            return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
+                        });
+                        if (found) {
+                            if (found.data_admissao && found.data_admissao > endDateStr) return;
+                            if (!found.ativo && (!found.data_desativacao || found.data_desativacao < startDateStr)) return;
+                            name = found.name.toUpperCase();
+                        }
+                    }
+
+                    if (name) {
+                        const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
+                        if (isStore) return;
+                    }
+
+                    if (!name) return;
+
+                    let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '';
+                    let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '';
+                    let status = c.status || 'EM_INTERVALO';
+                    let durationMin = c.duration_minutes || 0;
+
+                    if (!startTimeStr && c.time) {
+                        startTimeStr = String(c.time).substring(0, 5);
+                    }
+
+                    if (!collaboratorEvents[name]) {
+                        collaboratorEvents[name] = {
+                            name,
+                            startTimeStr: startTimeStr || '--:--',
+                            endTimeStr: endTimeStr || '--:--',
+                            status: status === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS',
+                            durationMin,
+                            hasRecord: true
+                        };
+                    } else {
+                        if (startTimeStr && collaboratorEvents[name].startTimeStr === '--:--') {
+                            collaboratorEvents[name].startTimeStr = startTimeStr;
+                        }
+                        if (endTimeStr && endTimeStr !== '--:--') {
+                            collaboratorEvents[name].endTimeStr = endTimeStr;
+                            collaboratorEvents[name].status = 'COMPLETED';
+                            collaboratorEvents[name].durationMin = durationMin;
+                        }
+                    }
                 });
 
-                const staffMap = new Map();
-                staffList.forEach(s => staffMap.set(s.name.toUpperCase(), s));
+                const isToday = startDateStr === todayStr;
 
-                const now = new Date();
-                const todayStr = getLocalDateString(now);
+                const allCollaboratorNames = Array.from(new Set([
+                    ...activeStaff.map(s => s.name.toUpperCase()),
+                    ...Object.keys(collaboratorEvents)
+                ]));
 
-                if (isSingleDay) {
-                    const collaboratorEvents = {};
+                const results = [];
 
-                    filteredRecords.forEach(c => {
-                        let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
-                        const rawClient = String(c.client_id || '').trim();
-                        const rawActivity = String(c.activity_id || '').trim();
-                        const clientParts = rawClient.split(';');
-                        const activityParts = rawActivity.split(';');
+                allCollaboratorNames.forEach(name => {
+                    const person = staffMap.get(name);
+                    const proj = person ? person.project : 'GERAL';
+                    const eq = person ? person.equipe : 'GERAL';
+                    const rec = collaboratorEvents[name];
 
-                        if (!name && clientParts[0] && !clientParts[0].includes(':')) {
-                            name = clientParts[0].trim().toUpperCase();
-                        } else if (!name && activityParts[0] && !activityParts[0].includes(':')) {
-                            name = activityParts[0].trim().toUpperCase();
-                        }
+                    let status = 'NOT_STARTED';
+                    let startTimeStr = '--:--';
+                    let endTimeStr = '--:--';
+                    let durationMin = 0;
 
-                        if (name) {
-                            const found = staffList.find(s => {
-                                const sName = s.name.toUpperCase();
-                                return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
-                            });
-                            if (found) name = found.name.toUpperCase();
-                        }
+                    if (rec && rec.hasRecord) {
+                        startTimeStr = rec.startTimeStr || '--:--';
+                        endTimeStr = rec.endTimeStr || '--:--';
+                        status = rec.status;
+                        durationMin = rec.durationMin || 0;
 
-                        if (name) {
-                            const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
-                            if (isStore) return;
-                        }
-
-                        if (!name) return;
-
-                        let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '';
-                        let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '';
-                        let status = c.status || 'EM_INTERVALO';
-                        let durationMin = c.duration_minutes || 0;
-
-                        if (!startTimeStr && c.time) {
-                            startTimeStr = String(c.time).substring(0, 5);
-                        }
-
-                        if (!collaboratorEvents[name]) {
-                            collaboratorEvents[name] = {
-                                name,
-                                startTimeStr: startTimeStr || '--:--',
-                                endTimeStr: endTimeStr || '--:--',
-                                status: status === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS',
-                                durationMin,
-                                hasRecord: true
-                            };
-                        } else {
-                            if (startTimeStr && collaboratorEvents[name].startTimeStr === '--:--') {
-                                collaboratorEvents[name].startTimeStr = startTimeStr;
-                            }
-                            if (endTimeStr && endTimeStr !== '--:--') {
-                                collaboratorEvents[name].endTimeStr = endTimeStr;
-                                collaboratorEvents[name].status = 'COMPLETED';
-                                collaboratorEvents[name].durationMin = durationMin;
-                            }
-                        }
-                    });
-
-                    const isToday = startDateStr === todayStr;
-
-                    const allCollaboratorNames = Array.from(new Set([
-                        ...staffList.map(s => s.name.toUpperCase()),
-                        ...Object.keys(collaboratorEvents)
-                    ]));
-
-                    const results = [];
-
-                    allCollaboratorNames.forEach(name => {
-                        const person = staffMap.get(name);
-                        const proj = person ? person.project : 'GERAL';
-                        const eq = person ? person.equipe : 'GERAL';
-                        const rec = collaboratorEvents[name];
-
-                        let status = 'NOT_STARTED';
-                        let startTimeStr = '--:--';
-                        let endTimeStr = '--:--';
-                        let durationMin = 0;
-
-                        if (rec && rec.hasRecord) {
-                            startTimeStr = rec.startTimeStr || '--:--';
-                            endTimeStr = rec.endTimeStr || '--:--';
-                            status = rec.status;
-                            durationMin = rec.durationMin || 0;
-
-                            if (status === 'IN_PROGRESS' && startTimeStr !== '--:--' && isToday) {
-                                const parts = startTimeStr.split(':');
-                                if (parts.length === 2) {
-                                    const startMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                                    const nowMin = now.getHours() * 60 + now.getMinutes();
-                                    durationMin = Math.max(0, nowMin - startMin);
-                                }
-                            }
-                        }
-
-                        const isExceeded = (status === 'IN_PROGRESS' || status === 'COMPLETED') && durationMin > 60;
-
-                        results.push({
-                            name: person ? person.name : name,
-                            date: startDateStr,
-                            dateBR: formatDateBR(startDateStr),
-                            project: proj,
-                            equipe: eq,
-                            status,
-                            startTimeStr,
-                            endTimeStr,
-                            durationMin,
-                            isExceeded,
-                            hasEvents: !!rec
-                        });
-                    });
-
-                    return results;
-                } else {
-                    const results = [];
-
-                    filteredRecords.forEach(c => {
-                        let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
-                        if (name) {
-                            const found = staffList.find(s => {
-                                const sName = s.name.toUpperCase();
-                                return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
-                            });
-                            if (found) name = found.name.toUpperCase();
-                        }
-                        if (name) {
-                            const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
-                            if (isStore) return;
-                        }
-                        if (!name) return;
-
-                        const recDate = c.date || (c.history_id ? String(c.history_id).split(' ')[0] : startDateStr);
-                        let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '--:--';
-                        let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '--:--';
-                        let statusRaw = c.status || 'EM_INTERVALO';
-                        let durationMin = c.duration_minutes || 0;
-                        let status = statusRaw === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS';
-
-                        const person = staffMap.get(name);
-                        const proj = person ? person.project : 'GERAL';
-                        const eq = person ? person.equipe : 'GERAL';
-
-                        const isToday = recDate === todayStr;
                         if (status === 'IN_PROGRESS' && startTimeStr !== '--:--' && isToday) {
                             const parts = startTimeStr.split(':');
                             if (parts.length === 2) {
@@ -4677,296 +4741,306 @@
                                 durationMin = Math.max(0, nowMin - startMin);
                             }
                         }
-
-                        const isExceeded = (status === 'IN_PROGRESS' || status === 'COMPLETED') && durationMin > 60;
-
-                        results.push({
-                            name: person ? person.name : name,
-                            date: recDate,
-                            dateBR: formatDateBR(recDate),
-                            project: proj,
-                            equipe: eq,
-                            status,
-                            startTimeStr,
-                            endTimeStr,
-                            durationMin,
-                            isExceeded,
-                            hasEvents: true
-                        });
-                    });
-
-                    results.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
-                    return results;
-                }
-            }
-
-            function formatDurationText(min) {
-                if (!min || min <= 0) return '0 min';
-                const h = Math.floor(min / 60);
-                const m = min % 60;
-                return h > 0 ? `${h}h ${m}min` : `${m} min`;
-            }
-
-            function renderModalHTML() {
-                const rawData = parseLunchEvents(currentStartDateTarget, currentEndDateTarget);
-
-                const filteredData = rawData.filter(item => {
-                    if (currentSearchFilter) {
-                        const term = currentSearchFilter.toUpperCase().trim();
-                        const matchName = item.name.toUpperCase().includes(term);
-                        const matchProj = item.project.toUpperCase().includes(term);
-                        const matchEq = item.equipe.toUpperCase().includes(term);
-                        if (!matchName && !matchProj && !matchEq) return false;
                     }
-                    if (currentProjectFilter !== 'TODOS' && item.project !== currentProjectFilter) return false;
-                    if (currentEquipeFilter !== 'TODOS' && item.equipe !== currentEquipeFilter) return false;
-                    if (currentStatusFilter === 'IN_PROGRESS' && item.status !== 'IN_PROGRESS') return false;
-                    if (currentStatusFilter === 'COMPLETED' && item.status !== 'COMPLETED') return false;
-                    if (currentStatusFilter === 'EXCEEDED' && !item.isExceeded) return false;
-                    if (currentStatusFilter === 'NOT_STARTED' && item.status !== 'NOT_STARTED') return false;
-                    return true;
+
+                    const isExceeded = (status === 'IN_PROGRESS' || status === 'COMPLETED') && durationMin > 60;
+
+                    results.push({
+                        name: person ? person.name : name,
+                        date: startDateStr,
+                        dateBR: formatDateBR(startDateStr),
+                        project: proj,
+                        equipe: eq,
+                        status,
+                        startTimeStr,
+                        endTimeStr,
+                        durationMin,
+                        isExceeded,
+                        hasEvents: !!rec
+                    });
                 });
 
-                const todayStr = getLocalDateString(new Date());
-                const yesterdayObj = new Date();
-                yesterdayObj.setDate(yesterdayObj.getDate() - 1);
-                const yesterdayStr = getLocalDateString(yesterdayObj);
+                return results;
+            } else {
+                const results = [];
 
-                const isTodayActive = currentStartDateTarget === todayStr && currentEndDateTarget === todayStr;
-                const isYesterdayActive = currentStartDateTarget === yesterdayStr && currentEndDateTarget === yesterdayStr;
-
-                return `
-                <div style="text-align: left; font-family: 'Inter', sans-serif; max-height: 80vh; overflow-y: auto; padding-right: 4px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; background: rgba(99, 102, 241, 0.06); padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(99, 102, 241, 0.18);">
-                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                            <span style="font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.5px;">PERÍODO:</span>
-                            <button id="btn-date-today" style="padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); ${isTodayActive ? 'background: #6366f1; color: white;' : `background: ${theme.inputBg}; color: ${theme.color};`} transition: all 0.2s;">📅 Hoje</button>
-                            <button id="btn-date-yesterday" style="padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); ${isYesterdayActive ? 'background: #6366f1; color: white;' : `background: ${theme.inputBg}; color: ${theme.color};`} transition: all 0.2s;">🔙 Ontem</button>
-
-                            <div style="display: flex; align-items: center; gap: 6px; background: ${theme.inputBg}; padding: 4px 10px; border-radius: 8px; border: 1px solid ${theme.inputBorder}; margin-left: 4px;">
-                                <span style="font-size: 11px; font-weight: 700; color: var(--text-dim);">De:</span>
-                                <input type="date" id="lunch-date-picker-start" value="${currentStartDateTarget}" style="border: none; background: transparent; color: ${theme.color}; font-size: 12px; font-weight: 600; cursor: pointer; outline: none;">
-                                <span style="font-size: 11px; font-weight: 700; color: var(--text-dim); margin-left: 4px;">Até:</span>
-                                <input type="date" id="lunch-date-picker-end" value="${currentEndDateTarget}" style="border: none; background: transparent; color: ${theme.color}; font-size: 12px; font-weight: 600; cursor: pointer; outline: none;">
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button id="btn-export-lunch-excel" style="padding: 8px 16px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
-                                Exportar Excel
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-                        <input type="text" id="lunch-search-input" value="${currentSearchFilter}" placeholder="🔍 Buscar colaborador..." style="padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600;">
-                        <select id="lunch-proj-select" style="padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600;">
-                            <option value="TODOS" ${currentProjectFilter === 'TODOS' ? 'selected' : ''}>TODOS OS PROJETOS</option>
-                            ${projects.map(p => `<option value="${p}" ${currentProjectFilter === p ? 'selected' : ''}>${p}</option>`).join('')}
-                        </select>
-                        <select id="lunch-equipe-select" style="padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600;">
-                            <option value="TODOS" ${currentEquipeFilter === 'TODOS' ? 'selected' : ''}>TODAS AS EQUIPES</option>
-                            ${equipes.map(eq => `<option value="${eq}" ${currentEquipeFilter === eq ? 'selected' : ''}>${eq}</option>`).join('')}
-                        </select>
-                        <select id="lunch-status-select" style="padding: 8px 12px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 12px; font-weight: 600;">
-                            <option value="TODOS" ${currentStatusFilter === 'TODOS' ? 'selected' : ''}>TODOS OS STATUS</option>
-                            <option value="IN_PROGRESS" ${currentStatusFilter === 'IN_PROGRESS' ? 'selected' : ''}>⏳ Em Pausa Agora</option>
-                            <option value="COMPLETED" ${currentStatusFilter === 'COMPLETED' ? 'selected' : ''}>✅ Retornaram</option>
-                            <option value="EXCEEDED" ${currentStatusFilter === 'EXCEEDED' ? 'selected' : ''}>⚠️ Excederam 1h</option>
-                            <option value="NOT_STARTED" ${currentStatusFilter === 'NOT_STARTED' ? 'selected' : ''}>⚪ Não Iniciaram</option>
-                        </select>
-                    </div>
-
-                    <div style="max-height: 380px; overflow-y: auto; overflow-x: hidden; border: 1px solid ${theme.inputBorder}; border-radius: 12px; background: ${theme.inputBg}; padding-right: 2px;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; table-layout: auto;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid ${theme.inputBorder}; font-weight: 700; color: var(--text-dim); background: rgba(0,0,0,0.03); position: sticky; top: 0; background: ${theme.inputBg}; z-index: 10;">
-                                    <th style="padding: 12px 14px; min-width: 180px;">Colaborador</th>
-                                    <th style="padding: 12px 14px; text-align: center; min-width: 90px;">Data</th>
-                                    <th style="padding: 12px 14px; min-width: 140px;">Equipe</th>
-                                    <th style="padding: 12px 14px; text-align: center; min-width: 95px;">Início Almoço</th>
-                                    <th style="padding: 12px 14px; text-align: center; min-width: 95px;">Retorno Almoço</th>
-                                    <th style="padding: 12px 14px; text-align: center; min-width: 110px;">Tempo no Intervalo</th>
-                                    <th style="padding: 12px 18px 12px 14px; text-align: center; min-width: 150px; white-space: nowrap;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${filteredData.length === 0 ? `<tr><td colspan="7" style="text-align:center; padding: 25px; color: var(--text-dim);">Nenhum colaborador encontrado para o período/filtros selecionados.</td></tr>` :
-                                filteredData.map(item => {
-                                    let statusBadge = '<span style="background: rgba(156, 163, 175, 0.15); color: #9ca3af; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block;">⚪ Não Iniciou</span>';
-                                    let rowBg = 'transparent';
-
-                                    if (item.status === 'IN_PROGRESS') {
-                                        statusBadge = '<span style="background: rgba(245, 158, 11, 0.18); color: #f59e0b; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap; display: inline-block;">⏳ Em Intervalo</span>';
-                                        rowBg = 'rgba(245, 158, 11, 0.05)';
-                                    } else if (item.status === 'COMPLETED') {
-                                        statusBadge = '<span style="background: rgba(16, 185, 129, 0.18); color: #10b981; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap; display: inline-block;">✅ Retornou</span>';
-                                    }
-
-                                    if (item.isExceeded) {
-                                        statusBadge += ' <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 8px; border-radius: 8px; font-weight: 800; font-size: 10px; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap; display: inline-block;">⚠️ > 1h</span>';
-                                        rowBg = 'rgba(239, 68, 68, 0.06)';
-                                    }
-
-                                    const durationColor = item.isExceeded ? '#ef4444' : item.status === 'IN_PROGRESS' ? '#f59e0b' : item.status === 'COMPLETED' ? '#10b981' : 'var(--text-dim)';
-
-                                    return `
-                                    <tr style="border-bottom: 1px solid rgba(128,128,128,0.06); background: ${rowBg};">
-                                        <td style="padding: 10px 14px; font-weight: 700; color: var(--text-main);">${item.name}</td>
-                                        <td style="padding: 10px 14px; text-align: center; font-weight: 600; color: var(--text-dim); font-size: 11px;">${item.dateBR}</td>
-                                        <td style="padding: 10px 14px; color: var(--text-dim); font-size: 11px;">${item.equipe}</td>
-                                        <td style="padding: 10px 14px; text-align: center; font-weight: 700; color: ${item.startTimeStr !== '--:--' ? '#6366f1' : 'var(--text-dim)'};">${item.startTimeStr}</td>
-                                        <td style="padding: 10px 14px; text-align: center; font-weight: 700; color: ${item.endTimeStr !== '--:--' ? '#10b981' : 'var(--text-dim)'};">${item.endTimeStr}</td>
-                                        <td style="padding: 10px 14px; text-align: center; font-weight: 800; color: ${durationColor}; font-size: 13px;">
-                                            ${item.status !== 'NOT_STARTED' ? formatDurationText(item.durationMin) : '--'}
-                                        </td>
-                                        <td style="padding: 10px 18px 10px 14px; text-align: center; white-space: nowrap; min-width: 150px;">${statusBadge}</td>
-                                    </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                `;
-            }
-
-            function exportLunchExcel() {
-                const dataToExport = parseLunchEvents(currentStartDateTarget, currentEndDateTarget);
-                if (dataToExport.length === 0) {
-                    Swal.fire('Aviso', 'Nenhum dado para exportar no período selecionado.', 'info');
-                    return;
-                }
-
-                const rows = dataToExport.map(item => ({
-                    'COLABORADOR': item.name,
-                    'DATA': item.dateBR,
-                    'PROJETO': item.project,
-                    'EQUIPE': item.equipe,
-                    'INÍCIO DO ALMOÇO': item.startTimeStr,
-                    'RETORNO DO ALMOÇO': item.endTimeStr,
-                    'TEMPO NO INTERVALO (MIN)': item.durationMin,
-                    'TEMPO FORMATADO': formatDurationText(item.durationMin),
-                    'STATUS': item.status === 'COMPLETED' ? 'RETORNOU' : item.status === 'IN_PROGRESS' ? 'EM INTERVALO' : 'NÃO INICIOU',
-                    'ALERTA (> 1H)': item.isExceeded ? 'EXCEDEU 1H' : 'NORMAL'
-                }));
-
-                const ws = XLSX.utils.json_to_sheet(rows);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Controle_Almoco");
-                const labelDate = currentStartDateTarget === currentEndDateTarget ? currentStartDateTarget : `${currentStartDateTarget}_ate_${currentEndDateTarget}`;
-                XLSX.writeFile(wb, `controle_jornada_almoco_${labelDate}.xlsx`);
-            }
-
-            function attachModalEvents(popup) {
-                const startDatePicker = popup.querySelector('#lunch-date-picker-start');
-                const endDatePicker = popup.querySelector('#lunch-date-picker-end');
-                const btnToday = popup.querySelector('#btn-date-today');
-                const btnYesterday = popup.querySelector('#btn-date-yesterday');
-                const projSelect = popup.querySelector('#lunch-proj-select');
-                const equipeSelect = popup.querySelector('#lunch-equipe-select');
-                const statusSelect = popup.querySelector('#lunch-status-select');
-                const searchInput = popup.querySelector('#lunch-search-input');
-                const btnExport = popup.querySelector('#btn-export-lunch-excel');
-
-                const updateView = () => {
-                    const container = Swal.getHtmlContainer();
-                    if (container) {
-                        container.innerHTML = renderModalHTML();
-                        attachModalEvents(Swal.getPopup());
+                filteredRecords.forEach(c => {
+                    let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
+                    const recDate = c.date || (c.history_id ? String(c.history_id).split(' ')[0] : startDateStr);
+                    if (name) {
+                        const found = staffList.find(s => {
+                            const sName = s.name.toUpperCase();
+                            return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
+                        });
+                        if (found) {
+                            if (found.data_admissao && found.data_admissao > recDate) return;
+                            if (!found.ativo && (!found.data_desativacao || found.data_desativacao < recDate)) return;
+                            name = found.name.toUpperCase();
+                        }
                     }
-                };
+                    if (name) {
+                        const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
+                        if (isStore) return;
+                    }
+                    if (!name) return;
 
-                if (startDatePicker) {
-                    startDatePicker.onchange = (e) => {
-                        currentStartDateTarget = e.target.value;
-                        if (currentEndDateTarget < currentStartDateTarget) {
-                            currentEndDateTarget = currentStartDateTarget;
+                    let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '--:--';
+                    let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '--:--';
+                    let statusRaw = c.status || 'EM_INTERVALO';
+                    let durationMin = c.duration_minutes || 0;
+                    let status = statusRaw === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS';
+
+                    const person = staffMap.get(name);
+                    const proj = person ? person.project : 'GERAL';
+                    const eq = person ? person.equipe : 'GERAL';
+
+                    const isToday = recDate === todayStr;
+                    if (status === 'IN_PROGRESS' && startTimeStr !== '--:--' && isToday) {
+                        const parts = startTimeStr.split(':');
+                        if (parts.length === 2) {
+                            const startMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                            const nowMin = now.getHours() * 60 + now.getMinutes();
+                            durationMin = Math.max(0, nowMin - startMin);
                         }
-                        updateView();
-                    };
-                }
+                    }
 
-                if (endDatePicker) {
-                    endDatePicker.onchange = (e) => {
-                        currentEndDateTarget = e.target.value;
-                        if (currentStartDateTarget > currentEndDateTarget) {
-                            currentStartDateTarget = currentEndDateTarget;
-                        }
-                        updateView();
-                    };
-                }
+                    const isExceeded = (status === 'IN_PROGRESS' || status === 'COMPLETED') && durationMin > 60;
 
-                if (btnToday) {
-                    btnToday.onclick = () => {
-                        const t = getLocalDateString(new Date());
-                        currentStartDateTarget = t;
-                        currentEndDateTarget = t;
-                        updateView();
-                    };
-                }
+                    results.push({
+                        name: person ? person.name : name,
+                        date: recDate,
+                        dateBR: formatDateBR(recDate),
+                        project: proj,
+                        equipe: eq,
+                        status,
+                        startTimeStr,
+                        endTimeStr,
+                        durationMin,
+                        isExceeded,
+                        hasEvents: true
+                    });
+                });
 
-                if (btnYesterday) {
-                    btnYesterday.onclick = () => {
-                        const yest = new Date();
-                        yest.setDate(yest.getDate() - 1);
-                        const y = getLocalDateString(yest);
-                        currentStartDateTarget = y;
-                        currentEndDateTarget = y;
-                        updateView();
-                    };
-                }
+                results.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
+                return results;
+            }
+        }
 
-                if (projSelect) {
-                    projSelect.onchange = (e) => {
-                        currentProjectFilter = e.target.value;
-                        updateView();
-                    };
-                }
+        function formatDurationText(min) {
+            if (!min || min <= 0) return '0 min';
+            const h = Math.floor(min / 60);
+            const m = min % 60;
+            return h > 0 ? `${h}h ${m}min` : `${m} min`;
+        }
 
-                if (equipeSelect) {
-                    equipeSelect.onchange = (e) => {
-                        currentEquipeFilter = e.target.value;
-                        updateView();
-                    };
-                }
+        function populateLunchDropdowns() {
+            const activeStaffList = staffList.filter(s => s.ativo !== false);
+            const projects = [...new Set(activeStaffList.map(s => s.project).filter(Boolean))].sort();
+            const equipes = [...new Set(activeStaffList.map(s => s.equipe).filter(Boolean))].sort();
 
-                if (statusSelect) {
-                    statusSelect.onchange = (e) => {
-                        currentStatusFilter = e.target.value;
-                        updateView();
-                    };
-                }
+            const projSelect = document.getElementById('lunch-proj-page-select');
+            const equipeSelect = document.getElementById('lunch-equipe-page-select');
 
-                if (searchInput) {
-                    searchInput.oninput = (e) => {
-                        currentSearchFilter = e.target.value;
-                        clearTimeout(popup._searchTimer);
-                        popup._searchTimer = setTimeout(() => {
-                            updateView();
-                        }, 250);
-                    };
-                }
+            if (projSelect) {
+                const currentVal = lunchState.projectFilter;
+                projSelect.innerHTML = `<option value="TODOS">TODOS OS PROJETOS</option>` +
+                    projects.map(p => `<option value="${p}" ${currentVal === p ? 'selected' : ''}>${p}</option>`).join('');
+            }
+            if (equipeSelect) {
+                const currentVal = lunchState.equipeFilter;
+                equipeSelect.innerHTML = `<option value="TODOS">TODAS AS EQUIPES</option>` +
+                    equipes.map(eq => `<option value="${eq}" ${currentVal === eq ? 'selected' : ''}>${eq}</option>`).join('');
+            }
+        }
 
-                if (btnExport) {
-                    btnExport.onclick = () => {
-                        exportLunchExcel();
-                    };
-                }
+        function renderLunchControlPage() {
+            populateLunchDropdowns();
+
+            const startInput = document.getElementById('lunch-date-start-input');
+            const endInput = document.getElementById('lunch-date-end-input');
+            if (startInput) startInput.value = lunchState.startDate;
+            if (endInput) endInput.value = lunchState.endDate;
+
+            const todayStr = getLocalDateString(new Date());
+            const yesterdayObj = new Date();
+            yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+            const yesterdayStr = getLocalDateString(yesterdayObj);
+
+            const btnToday = document.getElementById('btn-lunch-date-today');
+            const btnYesterday = document.getElementById('btn-lunch-date-yesterday');
+
+            const isToday = lunchState.startDate === todayStr && lunchState.endDate === todayStr;
+            const isYesterday = lunchState.startDate === yesterdayStr && lunchState.endDate === yesterdayStr;
+
+            if (btnToday) {
+                btnToday.style.background = isToday ? '#6366f1' : 'var(--bg-card)';
+                btnToday.style.color = isToday ? '#ffffff' : 'var(--text-main)';
+            }
+            if (btnYesterday) {
+                btnYesterday.style.background = isYesterday ? '#6366f1' : 'var(--bg-card)';
+                btnYesterday.style.color = isYesterday ? '#ffffff' : 'var(--text-main)';
             }
 
-            await Swal.fire({
-                title: '🍱 Controle de Jornada de Almoço',
-                html: renderModalHTML(),
-                width: '1240px',
-                showConfirmButton: false,
-                showCloseButton: true,
-                background: theme.background,
-                color: theme.color,
-                didOpen: () => {
-                    attachModalEvents(Swal.getPopup());
+            const rawData = parseLunchEventsPage(lunchState.startDate, lunchState.endDate);
+
+            const filteredData = rawData.filter(item => {
+                if (lunchState.searchFilter) {
+                    const term = lunchState.searchFilter.toUpperCase().trim();
+                    const matchName = item.name.toUpperCase().includes(term);
+                    const matchProj = item.project.toUpperCase().includes(term);
+                    const matchEq = item.equipe.toUpperCase().includes(term);
+                    if (!matchName && !matchProj && !matchEq) return false;
                 }
+                if (lunchState.projectFilter !== 'TODOS' && item.project !== lunchState.projectFilter) return false;
+                if (lunchState.equipeFilter !== 'TODOS' && item.equipe !== lunchState.equipeFilter) return false;
+                if (lunchState.statusFilter === 'IN_PROGRESS' && item.status !== 'IN_PROGRESS') return false;
+                if (lunchState.statusFilter === 'COMPLETED' && item.status !== 'COMPLETED') return false;
+                if (lunchState.statusFilter === 'EXCEEDED' && !item.isExceeded) return false;
+                if (lunchState.statusFilter === 'NOT_STARTED' && item.status !== 'NOT_STARTED') return false;
+                return true;
             });
+
+            // Calculate KPIs
+            const totalCount = filteredData.length;
+            const returnedCount = filteredData.filter(i => i.status === 'COMPLETED').length;
+            const inProgressCount = filteredData.filter(i => i.status === 'IN_PROGRESS').length;
+            const exceededCount = filteredData.filter(i => i.isExceeded).length;
+
+            const kpiTotalEl = document.getElementById('lunch-kpi-total');
+            const kpiReturnedEl = document.getElementById('lunch-kpi-returned');
+            const kpiInProgressEl = document.getElementById('lunch-kpi-in-progress');
+            const kpiExceededEl = document.getElementById('lunch-kpi-exceeded');
+
+            if (kpiTotalEl) kpiTotalEl.textContent = totalCount;
+            if (kpiReturnedEl) kpiReturnedEl.textContent = returnedCount;
+            if (kpiInProgressEl) kpiInProgressEl.textContent = inProgressCount;
+            if (kpiExceededEl) kpiExceededEl.textContent = exceededCount;
+
+            const tbody = document.getElementById('lunch-control-table-body');
+            if (tbody) {
+                if (filteredData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 40px; color: var(--text-dim);">Nenhum colaborador encontrado para o período/filtros selecionados.</td></tr>`;
+                } else {
+                    tbody.innerHTML = filteredData.map(item => {
+                        let statusBadge = '<span style="background: rgba(156, 163, 175, 0.15); color: #9ca3af; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 11px; white-space: nowrap; display: inline-block;">⚪ Não Iniciou</span>';
+                        let rowBg = 'transparent';
+
+                        if (item.status === 'IN_PROGRESS') {
+                            statusBadge = '<span style="background: rgba(245, 158, 11, 0.18); color: #f59e0b; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; border: 1px solid rgba(245, 158, 11, 0.3); white-space: nowrap; display: inline-block;">⏳ Em Intervalo</span>';
+                            rowBg = 'rgba(245, 158, 11, 0.05)';
+                        } else if (item.status === 'COMPLETED') {
+                            statusBadge = '<span style="background: rgba(16, 185, 129, 0.18); color: #10b981; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 11px; border: 1px solid rgba(16, 185, 129, 0.3); white-space: nowrap; display: inline-block;">✅ Retornou</span>';
+                        }
+
+                        if (item.isExceeded) {
+                            statusBadge += ' <span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 4px 8px; border-radius: 8px; font-weight: 800; font-size: 10px; border: 1px solid rgba(239, 68, 68, 0.3); white-space: nowrap; display: inline-block;">⚠️ > 1h</span>';
+                            rowBg = 'rgba(239, 68, 68, 0.06)';
+                        }
+
+                        const durationColor = item.isExceeded ? '#ef4444' : item.status === 'IN_PROGRESS' ? '#f59e0b' : item.status === 'COMPLETED' ? '#10b981' : 'var(--text-dim)';
+
+                        return `
+                        <tr style="border-bottom: 1px solid rgba(128,128,128,0.06); background: ${rowBg};">
+                            <td style="padding: 12px 14px; font-weight: 700; color: var(--text-main);">${item.name}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 600; color: var(--text-dim); font-size: 11px;">${item.dateBR}</td>
+                            <td style="padding: 12px 14px; color: var(--text-dim); font-size: 11px;">${item.equipe}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: ${item.startTimeStr !== '--:--' ? '#6366f1' : 'var(--text-dim)'};">${item.startTimeStr}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 700; color: ${item.endTimeStr !== '--:--' ? '#10b981' : 'var(--text-dim)'};">${item.endTimeStr}</td>
+                            <td style="padding: 12px 14px; text-align: center; font-weight: 800; color: ${durationColor}; font-size: 13px;">
+                                ${item.status !== 'NOT_STARTED' ? formatDurationText(item.durationMin) : '--'}
+                            </td>
+                            <td style="padding: 12px 18px 12px 14px; text-align: center; white-space: nowrap; min-width: 150px;">${statusBadge}</td>
+                        </tr>
+                        `;
+                    }).join('');
+                }
+            }
+        }
+
+        function setLunchDateFilter(type) {
+            if (type === 'today') {
+                const t = getLocalDateString(new Date());
+                lunchState.startDate = t;
+                lunchState.endDate = t;
+            } else if (type === 'yesterday') {
+                const yest = new Date();
+                yest.setDate(yest.getDate() - 1);
+                const y = getLocalDateString(yest);
+                lunchState.startDate = y;
+                lunchState.endDate = y;
+            }
+            renderLunchControlPage();
+        }
+
+        function onLunchDateInputChange() {
+            const startInput = document.getElementById('lunch-date-start-input');
+            const endInput = document.getElementById('lunch-date-end-input');
+            if (startInput) lunchState.startDate = startInput.value;
+            if (endInput) lunchState.endDate = endInput.value;
+            if (lunchState.endDate < lunchState.startDate) {
+                lunchState.endDate = lunchState.startDate;
+            }
+            renderLunchControlPage();
+        }
+
+        function onLunchFilterChange() {
+            const searchInput = document.getElementById('lunch-search-page-input');
+            const projSelect = document.getElementById('lunch-proj-page-select');
+            const equipeSelect = document.getElementById('lunch-equipe-page-select');
+            const statusSelect = document.getElementById('lunch-status-page-select');
+
+            if (searchInput) lunchState.searchFilter = searchInput.value;
+            if (projSelect) lunchState.projectFilter = projSelect.value;
+            if (equipeSelect) lunchState.equipeFilter = equipeSelect.value;
+            if (statusSelect) lunchState.statusFilter = statusSelect.value;
+
+            renderLunchControlPage();
+        }
+
+        function exportLunchExcel() {
+            const dataToExport = parseLunchEventsPage(lunchState.startDate, lunchState.endDate);
+            if (dataToExport.length === 0) {
+                Swal.fire('Aviso', 'Nenhum dado para exportar no período selecionado.', 'info');
+                return;
+            }
+
+            const rows = dataToExport.map(item => ({
+                'COLABORADOR': item.name,
+                'DATA': item.dateBR,
+                'PROJETO': item.project,
+                'EQUIPE': item.equipe,
+                'INÍCIO DO ALMOÇO': item.startTimeStr,
+                'RETORNO DO ALMOÇO': item.endTimeStr,
+                'TEMPO NO INTERVALO (MIN)': item.durationMin,
+                'TEMPO FORMATADO': formatDurationText(item.durationMin),
+                'STATUS': item.status === 'COMPLETED' ? 'RETORNOU' : item.status === 'IN_PROGRESS' ? 'EM INTERVALO' : 'NÃO INICIOU',
+                'ALERTA (> 1H)': item.isExceeded ? 'EXCEDEU 1H' : 'NORMAL'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Controle_Almoco");
+            const labelDate = lunchState.startDate === lunchState.endDate ? lunchState.startDate : `${lunchState.startDate}_ate_${lunchState.endDate}`;
+            XLSX.writeFile(wb, `controle_jornada_almoco_${labelDate}.xlsx`);
+        }
+
+        function showAssiduidadeGridView() {
+            const gridView = document.getElementById('assiduidade-grid-view');
+            const lunchView = document.getElementById('lunch-control-full-view');
+            if (gridView) gridView.style.display = 'block';
+            if (lunchView) lunchView.style.display = 'none';
+        }
+
+        function showLunchControlFullView() {
+            const gridView = document.getElementById('assiduidade-grid-view');
+            const lunchView = document.getElementById('lunch-control-full-view');
+            if (gridView) gridView.style.display = 'none';
+            if (lunchView) lunchView.style.display = 'block';
+            fetchLunchControlData();
+        }
+
+        function showProductivityDashboard() {
+            showLunchControlFullView();
         }
 
         async function exportFullGrid() {
@@ -5229,6 +5303,25 @@
             };
             reader.readAsArrayBuffer(file);
         });
+        }
+
+        // Expor para integração com iframe pai
+        window.showAssiduidadeGridView = showAssiduidadeGridView;
+        window.showLunchControlFullView = showLunchControlFullView;
+        window.showProductivityDashboard = showLunchControlFullView;
+
+        window.addEventListener('message', (e) => {
+            if (e.data) {
+                if (e.data === 'OPEN_LUNCH_CONTROL' || e.data.type === 'OPEN_LUNCH_CONTROL' || e.data === 'SHOW_LUNCH_VIEW' || e.data.type === 'SHOW_LUNCH_VIEW') {
+                    showLunchControlFullView();
+                } else if (e.data === 'OPEN_GRID_VIEW' || e.data.type === 'OPEN_GRID_VIEW' || e.data === 'SHOW_GRID_VIEW' || e.data.type === 'SHOW_GRID_VIEW') {
+                    showAssiduidadeGridView();
+                }
+            }
+        });
+
+        if (window.location.hash === '#almoco') {
+            setTimeout(showLunchControlFullView, 400);
         }
     </script>
 </body>

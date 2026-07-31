@@ -328,6 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Tab Switching
     const analyticsSubItems = ['analytics', 'relatorio', 'cartas', 'roteiro'];
+    const assiduidadeSubItems = ['assiduidade', 'almoco'];
 
     const switchTab = (targetId, save = true) => {
         // Update all tab buttons
@@ -341,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.toggle('active', item.getAttribute('data-target') === targetId);
         });
 
-        // Manage accordion state
+        // Manage Analytics accordion state
         const accordion = document.getElementById('analytics-accordion');
         const isAnalyticsSubItem = analyticsSubItems.includes(targetId);
         if (accordion) {
@@ -351,20 +352,57 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Manage Assiduidade accordion state
+        const assiduidadeAccordion = document.getElementById('assiduidade-accordion');
+        const isAssiduidadeSubItem = assiduidadeSubItems.includes(targetId);
+        if (assiduidadeAccordion) {
+            assiduidadeAccordion.classList.toggle('has-active', isAssiduidadeSubItem);
+            if (isAssiduidadeSubItem) {
+                assiduidadeAccordion.classList.add('open');
+            }
+        }
+
         // Update Mobile Buttons
         mobileBtns.forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-target') === targetId);
         });
 
+        // Determine effective view ID
+        const effectiveViewId = targetId === 'almoco' ? 'assiduidade' : targetId;
+
         // Update Views
         views.forEach(view => {
-            view.classList.toggle('active', view.id === targetId);
+            view.classList.toggle('active', view.id === effectiveViewId);
         });
 
         if (save) {
             state.activeTab = targetId;
             localStorage.setItem('activeTab', targetId);
             window.location.hash = targetId;
+        }
+
+        // Dispatch view toggle to Assiduidade iframe
+        if (targetId === 'assiduidade' || targetId === 'almoco') {
+            const toggleAssiduidadeSubView = () => {
+                const iframe = document.querySelector('#assiduidade iframe');
+                if (iframe && iframe.contentWindow) {
+                    if (targetId === 'almoco') {
+                        if (typeof iframe.contentWindow.showLunchControlFullView === 'function') {
+                            iframe.contentWindow.showLunchControlFullView();
+                        } else {
+                            iframe.contentWindow.postMessage({ type: 'SHOW_LUNCH_VIEW' }, '*');
+                        }
+                    } else {
+                        if (typeof iframe.contentWindow.showAssiduidadeGridView === 'function') {
+                            iframe.contentWindow.showAssiduidadeGridView();
+                        } else {
+                            iframe.contentWindow.postMessage({ type: 'SHOW_GRID_VIEW' }, '*');
+                        }
+                    }
+                }
+            };
+            setTimeout(toggleAssiduidadeSubView, 100);
+            setTimeout(toggleAssiduidadeSubView, 400);
         }
 
         // Auto-load data based on tab
@@ -390,6 +428,18 @@ document.addEventListener('DOMContentLoaded', () => {
         accordionBtn.addEventListener('click', (e) => {
             e.preventDefault();
             const accordion = document.getElementById('analytics-accordion');
+            if (accordion) {
+                accordion.classList.toggle('open');
+            }
+        });
+    }
+
+    // Accordion Toggle for Assiduidade
+    const assiduidadeAccordionBtn = document.getElementById('assiduidade-accordion-btn');
+    if (assiduidadeAccordionBtn) {
+        assiduidadeAccordionBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const accordion = document.getElementById('assiduidade-accordion');
             if (accordion) {
                 accordion.classList.toggle('open');
             }
@@ -595,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Skip if clicking inside import dropdown
         if (e.target.closest('#import-dropdown')) return;
         // Skip accordion toggle (handled by its own listener)
-        if (e.target.closest('#analytics-accordion-btn')) return;
+        if (e.target.closest('#analytics-accordion-btn') || e.target.closest('#assiduidade-accordion-btn')) return;
 
         const btn = e.target.closest('.tab-btn[data-target], .sub-item[data-target]');
         if (btn) {

@@ -123,14 +123,40 @@
                     </div>
                 </div>
 
-                <a class="tab-btn" data-target="assiduidade" href="#assiduidade" title="Assiduidade">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <polyline points="17 11 19 13 23 9"></polyline>
-                    </svg>
-                    <span>Assiduidade</span>
-                </a>
+                <!-- Assiduidade Accordion Parent -->
+                <div class="nav-accordion" id="assiduidade-accordion">
+                    <button class="tab-btn accordion-toggle" id="assiduidade-accordion-btn" type="button">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <polyline points="17 11 19 13 23 9"></polyline>
+                        </svg>
+                        <span>Assiduidade</span>
+                        <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:auto">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+
+                    <!-- Accordion Sub-items -->
+                    <div class="accordion-sub" id="assiduidade-sub-items">
+                        <a class="tab-btn sub-item" data-target="assiduidade" href="#assiduidade">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>Grade de Assiduidade</span>
+                        </a>
+                        <a class="tab-btn sub-item" id="nav-btn-almoco" data-target="almoco" href="#almoco">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>Controle de Almoço</span>
+                        </a>
+                    </div>
+                </div>
 
                 <a class="tab-btn" data-target="colaboradores-base" id="nav-colaboradores" href="#colaboradores-base" title="Colaboradores">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">

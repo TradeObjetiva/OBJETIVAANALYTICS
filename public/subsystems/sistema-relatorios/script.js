@@ -33,7 +33,7 @@ const EXPORT_MODEL = [
 
   { export: 'ITENS', source: 'Itens Descrição' },
   { export: 'ITENS', source: 'ITENS DESCRICAO' },
-  { export: 'ITENS', source: 'ITENS IDENTIFICADOR' },
+  { export: 'CÓDIGO ITEM', source: 'ITENS IDENTIFICADOR' },
   { export: 'ITENS', source: 'SKU' },
   { export: 'ITENS', source: 'ITENS' },
   { export: 'ITENS', source: 'PRODUTO' },
@@ -95,8 +95,62 @@ const EXPORT_MODEL = [
   { export: 'INFORME O LOTE', source: 'NUMERO DO LOTE' },
 
   { export: 'TEM UM SEGUNDO LOTE EM VENCIMENTO?', source: 'TEM UM SEGUNDO LOTE EM VENCIMENTO?' },
+  { export: 'TEM UM SEGUNDO LOTE EM VENCIMENTO?', source: 'TEM_UM_SEGUNDO_LOTE_EM_VENCIMENTO' },
+
+  // Lote 2
+  { export: '(2) INFORME A VALIDADE', source: '(2) INFORME A VALIDADE' },
+  { export: '(2) INFORME A VALIDADE', source: '_2_INFORME_A_VALIDADE' },
+  { export: '(2) DIAS PARA O VENCIMENTO', source: '(2) DIAS PARA O VENCIMENTO' },
+  { export: '(2) DIAS PARA O VENCIMENTO', source: '_2_DIAS_PARA_O_VENCIMENTO' },
+  { export: '(2) QUAL A QUANTIDADE EM UNIDADES?', source: '(2) QUAL A QUANTIDADE EM UNIDADES?' },
+  { export: '(2) QUAL A QUANTIDADE EM UNIDADES?', source: '(2) QUAL A QUANTIDADE EM UNIDADES' },
+  { export: '(2) QUAL A QUANTIDADE EM UNIDADES?', source: '_2_QUAL_A_QUANTIDADE_EM_UNIDADES' },
+  { export: '(2) INFORME O LOTE', source: '(2) INFORME O LOTE' },
+  { export: '(2) INFORME O LOTE', source: '_2_INFORME_O_LOTE' },
+  { export: '(2) ACAO TOMADA', source: '(2) ACAO TOMADA' },
+  { export: '(2) ACAO TOMADA', source: '_2_ACAO_TOMADA' },
+  { export: '(2) FOTO DO SKU PRECIFICADO', source: '(2) FOTO DO SKU PRECIFICADO' },
+  { export: '(2) FOTO DO SKU PRECIFICADO', source: '_2_FOTO_DO_SKU_PRECIFICADO' },
+
+  // Lote 3
+  { export: 'TEM UM TERCEIRO LOTE EM VENCIMENTO?', source: 'TEM UM TERCEIRO LOTE EM VENCIMENTO?' },
+  { export: 'TEM UM TERCEIRO LOTE EM VENCIMENTO?', source: 'TEM_UM_TERCEIRO_LOTE_EM_VENCIMENTO' },
+  { export: '(3) INFORME A VALIDADE', source: '(3) INFORME A VALIDADE' },
+  { export: '(3) INFORME A VALIDADE', source: '_3_INFORME_A_VALIDADE' },
+  { export: '(3) DIAS PARA O VENCIMENTO', source: '(3) DIAS PARA O VENCIMENTO' },
+  { export: '(3) DIAS PARA O VENCIMENTO', source: '_3_DIAS_PARA_O_VENCIMENTO' },
+  { export: '(3) QUAL A QUANTIDADE EM UNIDADES?', source: '(3) QUAL A QUANTIDADE EM UNIDADES?' },
+  { export: '(3) QUAL A QUANTIDADE EM UNIDADES?', source: '(3) QUAL A QUANTIDADE EM UNIDADES' },
+  { export: '(3) QUAL A QUANTIDADE EM UNIDADES?', source: '_3_QUAL_A_QUANTIDADE_EM_UNIDADES' },
+  { export: '(3) INFORME O LOTE', source: '(3) INFORME O LOTE' },
+  { export: '(3) INFORME O LOTE', source: '_3_INFORME_O_LOTE' },
+  { export: '(3) ACAO TOMADA', source: '(3) ACAO TOMADA' },
+  { export: '(3) ACAO TOMADA', source: '_3_ACAO_TOMADA' },
+  { export: '(3) FOTO DO SKU PRECIFICADO', source: '(3) FOTO DO SKU PRECIFICADO' },
+  { export: '(3) FOTO DO SKU PRECIFICADO', source: '_3_FOTO_DO_SKU_PRECIFICADO' },
+
   { export: 'TEM PONTO EXTRA?', source: 'TEM PONTO EXTRA?' },
   { export: 'TEM PONTO EXTRA?', source: 'PONTO EXTRA' },
+  { export: 'TEM PONTO EXTRA?', source: 'TEM_PONTO_EXTRA' },
+
+  // Fotos Adicionais Ponto Extra & Mix
+  { export: 'FOTO DO PONTO EXTRA 01', source: 'FOTO_DO_PONTO_EXTRA_01' },
+  { export: 'FOTO DO PONTO EXTRA 02', source: 'FOTO_DO_PONTO_EXTRA_02' },
+  { export: 'FOTO DO PONTO EXTRA 03', source: 'FOTO_DO_PONTO_EXTRA_03' },
+  { export: 'FOTO DO PONTO EXTRA 04', source: 'FOTO_DO_PONTO_EXTRA_04' },
+  { export: 'FOTO DO PONTO EXTRA 05', source: 'FOTO_DO_PONTO_EXTRA_05' },
+  { export: 'FOTO DO MIX 01', source: 'FOTO_DO_MIX_01' },
+  { export: 'FOTO DO MIX 02', source: 'FOTO_DO_MIX_02' },
+  { export: 'DISTÂNCIA DO PDV', source: 'DISTÂNCIA DO PDV' },
+  { export: 'DISTÂNCIA DO PDV', source: 'DISTANCIA_DO_PDV' },
+  { export: 'PRODUTO NA AREA DE VENDAS?', source: 'PRODUTO NA AREA DE VENDAS?' },
+  { export: 'PRODUTO NA AREA DE VENDAS?', source: 'PRODUTO_NA_AREA_DE_VENDAS' },
+  { export: 'PRODUTO EM ESTOQUE?', source: 'PRODUTO EM ESTOQUE?' },
+  { export: 'PRODUTO EM ESTOQUE?', source: 'PRODUTO_EM_ESTOQUE' },
+  { export: 'ACAO TOMADA', source: 'ACAO TOMADA' },
+  { export: 'ACAO TOMADA', source: 'ACAO_TOMADA' },
+  { export: 'FOTO DO SKU PRECIFICADO', source: 'FOTO DO SKU PRECIFICADO' },
+  { export: 'FOTO DO SKU PRECIFICADO', source: 'FOTO_DO_SKU_PRECIFICADO' },
 
   { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QUANTAS CAIXAS FORAM ABASTECIDAS?' },
   { export: 'QUANTAS CAIXAS FORAM ABASTECIDAS?', source: 'QTD. DE CAIXAS ABASTECIDAS' },
@@ -308,12 +362,14 @@ function normalizeHeader(value) {
     .replace(/Ã³/g, 'o').replace(/Ãº/g, 'u').replace(/Ãª/g, 'e')
     .replace(/Ã¢/g, 'a').replace(/Ã´/g, 'o');
 
-  return str
+  str = str
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toUpperCase();
+    .replace(/[\u0300-\u036f]/g, '');
+
+  str = str.replace(/^_2_/i, '(2) ').replace(/^_3_/i, '(3) ');
+  str = str.replace(/_/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase();
+
+  return str;
 }
 
 function readFileAsArrayBuffer(file) {
@@ -592,8 +648,9 @@ downloadExcelBtn.addEventListener('click', async () => {
         'PROMOTOR', 'AGENTE', 'COLABORADOR', 'SUPERVISOR', 'NOME DO PROMOTOR'
       ];
       const PRODUTO_KEYS = [
-        'Itens Descrição', 'Itens Descricao', 'Itens Identificador',
-        'SKU', 'ITENS', 'PRODUTO', 'DESCRICAO', 'DESCRIÇÃO', 'DESCRIÇÃO DO PRODUTO', 'NOME DO PRODUTO', 'ITEM'
+        'SKU', 'Itens Descrição', 'Itens Descricao', 'ITENS', 'PRODUTO',
+        'DESCRICAO', 'DESCRIÇÃO', 'DESCRIÇÃO DO PRODUTO', 'NOME DO PRODUTO', 'ITEM',
+        'Itens Identificador'
       ];
       const DATA_KEYS = [
         'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)',
@@ -602,7 +659,11 @@ downloadExcelBtn.addEventListener('click', async () => {
         'DATA', 'DATA DO DIA', 'DATA VISITA', 'DATA DA VISITA', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA E HORA INICIO EXECUCAO', 'DATA E HORA EXECUÇÃO'
       ];
       const PRECO_KEYS = ['PRECO', 'PREÇO', 'VALOR', 'PREÇO UNITÁRIO', 'PRECO UNITARIO'];
-      const VALIDADE_KEYS = ['INFORME A VALIDADE', 'VALIDADE', 'DATA DE VALIDADE', '(2) INFORME A VALIDADE', '(3) INFORME A VALIDADE'];
+      const VALIDADE_KEYS = [
+        'INFORME A VALIDADE', 'VALIDADE', 'DATA DE VALIDADE', 'INFORME_A_VALIDADE',
+        '(2) INFORME A VALIDADE', '_2_INFORME_A_VALIDADE', '(2) VALIDADE',
+        '(3) INFORME A VALIDADE', '_3_INFORME_A_VALIDADE', '(3) VALIDADE'
+      ];
       const CAIXAS_KEYS = ['QUANTAS CAIXAS FORAM ABASTECIDAS?', 'QTD. DE CAIXAS ABASTECIDAS', 'QTD DE CAIXAS ABASTECIDAS', 'CAIXAS ABASTECIDAS', 'CAIXAS', 'QTD CAIXAS', 'TOTAL REPOSIÇÕES', 'QUANTIDADE TOTAL', 'QUANTIDADE'];
       const PONTO_EXTRA_KEYS = ['TEM PONTO EXTRA?', 'PONTO EXTRA'];
       const AVARIA_KEYS = [
@@ -959,43 +1020,64 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         let rValIdx = 2;
         fileObj.rows.forEach(row => {
-          const valStr = getRowVal(row, VALIDADE_KEYS);
-          if (valStr) {
-            const rawDateExec = getRowVal(row, DATA_KEYS);
-            const dateExec = parseDateVal(rawDateExec);
-            const dateVal = parseDateVal(valStr);
-            const pdvVal = getRowVal(row, PDV_KEYS);
-            const produtoVal = getRowVal(row, PRODUTO_KEYS);
-            const agenteVal = getRowVal(row, PROMOTOR_KEYS);
-            const qtdVal = parseInt(getRowVal(row, ['QUAL A QUANTIDADE EM UNIDADES?', 'QUANTIDADE', 'QUANTIDADE (UN)', 'QTD UNIDADES']) || '0', 10) || 0;
+          const rawDateExec = getRowVal(row, DATA_KEYS);
+          const dateExec = parseDateVal(rawDateExec);
+          const pdvVal = getRowVal(row, PDV_KEYS);
+          const produtoVal = getRowVal(row, PRODUTO_KEYS);
+          const agenteVal = getRowVal(row, PROMOTOR_KEYS);
 
-            let diasRestantes = null;
-            if (dateExec && dateVal) {
-              const diffMs = dateVal.getTime() - dateExec.getTime();
-              diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-            } else {
-              diasRestantes = parseInt(row['DIAS PARA O VENCIMENTO'] || '0', 10) || 0;
+          const lotesDef = [
+            {
+              valKey: ['INFORME A VALIDADE', 'VALIDADE', 'DATA DE VALIDADE', 'INFORME_A_VALIDADE'],
+              qtdKey: ['QUAL A QUANTIDADE EM UNIDADES?', 'QUANTIDADE', 'QUANTIDADE (UN)', 'QTD UNIDADES', 'QUAL_A_QUANTIDADE_EM_UNIDADES'],
+              diasKey: ['DIAS PARA O VENCIMENTO', 'DIAS_PARA_O_VENCIMENTO', 'DIAS RESTANTES']
+            },
+            {
+              valKey: ['(2) INFORME A VALIDADE', '_2_INFORME_A_VALIDADE', '(2) VALIDADE'],
+              qtdKey: ['(2) QUAL A QUANTIDADE EM UNIDADES?', '(2) QUAL A QUANTIDADE EM UNIDADES', '_2_QUAL_A_QUANTIDADE_EM_UNIDADES'],
+              diasKey: ['(2) DIAS PARA O VENCIMENTO', '_2_DIAS_PARA_O_VENCIMENTO']
+            },
+            {
+              valKey: ['(3) INFORME A VALIDADE', '_3_INFORME_A_VALIDADE', '(3) VALIDADE'],
+              qtdKey: ['(3) QUAL A QUANTIDADE EM UNIDADES?', '(3) QUAL A QUANTIDADE EM UNIDADES', '_3_QUAL_A_QUANTIDADE_EM_UNIDADES'],
+              diasKey: ['(3) DIAS PARA O VENCIMENTO', '_3_DIAS_PARA_O_VENCIMENTO']
             }
+          ];
 
-            const r = wsValidade.getRow(rValIdx++);
-            r.getCell(4).value = dateExec || rawDateExec;
-            if (dateExec) r.getCell(4).numFmt = 'dd/mm/yyyy';
+          lotesDef.forEach(lote => {
+            const valStr = getRowVal(row, lote.valKey);
+            if (valStr) {
+              const dateVal = parseDateVal(valStr);
+              const qtdVal = parseInt(getRowVal(row, lote.qtdKey) || '0', 10) || 0;
 
-            r.getCell(5).value = dateVal || valStr;
-            if (dateVal) r.getCell(5).numFmt = 'dd/mm/yyyy';
+              let diasRestantes = null;
+              if (dateExec && dateVal) {
+                const diffMs = dateVal.getTime() - dateExec.getTime();
+                diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+              } else {
+                diasRestantes = parseInt(getRowVal(row, lote.diasKey) || '0', 10) || 0;
+              }
 
-            r.getCell(6).value = qtdVal;
-            r.getCell(7).value = pdvVal;
-            r.getCell(8).value = produtoVal;
-            r.getCell(9).value = agenteVal;
-            r.getCell(10).value = diasRestantes;
+              const r = wsValidade.getRow(rValIdx++);
+              r.getCell(4).value = dateExec || rawDateExec;
+              if (dateExec) r.getCell(4).numFmt = 'dd/mm/yyyy';
 
-            for (let i = 4; i <= 10; i++) {
-              r.getCell(i).font = DATA_FONT;
-              r.getCell(i).border = ORANGE_BORDER;
-              r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+              r.getCell(5).value = dateVal || valStr;
+              if (dateVal) r.getCell(5).numFmt = 'dd/mm/yyyy';
+
+              r.getCell(6).value = qtdVal;
+              r.getCell(7).value = pdvVal;
+              r.getCell(8).value = produtoVal;
+              r.getCell(9).value = agenteVal;
+              r.getCell(10).value = diasRestantes;
+
+              for (let i = 4; i <= 10; i++) {
+                r.getCell(i).font = DATA_FONT;
+                r.getCell(i).border = ORANGE_BORDER;
+                r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+              }
             }
-          }
+          });
         });
 
         addSidebarToSheet(wsValidade, 'VALIDADE', rValIdx);
@@ -1599,7 +1681,11 @@ function processRows(parsedRows, originalFileName) {
     'O QUE SE RESOLVEU COM O GERENTE?',
     'POSICAO ATUAL',
     'REDE',
-    'REDE DO PDV'
+    'REDE DO PDV',
+    'TEM ALGUMA OBSERVACAO SOBRE O PDV',
+    'TEM_ALGUMA_OBSERVACAO_SOBRE_O_PDV',
+    'OBSERVACAO DO PDV',
+    'OBSERVACAO_DO_PDV'
   ];
 
   const body = parsedRows.slice(headerRowIdx + 1).filter((row) => row && row.some((cell) => String(cell || '').trim() !== ''));
@@ -1708,12 +1794,13 @@ function parsePrice(val) {
 }
 
 function normalizeHeader(value) {
-  return String(value || '')
+  let str = String(value || '')
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toUpperCase();
+    .replace(/[\u0300-\u036f]/g, '');
+
+  str = str.replace(/^_2_/i, '(2) ').replace(/^_3_/i, '(3) ');
+  str = str.replace(/_/g, ' ').replace(/\s+/g, ' ').trim().toUpperCase();
+  return str;
 }
 
 function applyTransform(value, transform) {
