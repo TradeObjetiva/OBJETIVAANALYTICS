@@ -20,7 +20,6 @@ const EXPORT_MODEL = [
   { export: 'PDV', source: 'LOCAL' },
   { export: 'PDV', source: 'PONTO DE VENDA' },
   { export: 'PDV', source: 'NOME DO PDV' },
-  { export: 'PDV', source: 'RAZÃO SOCIAL' },
   { export: 'PDV', source: 'CLIENTE' },
 
   { export: 'PROMOTOR', source: 'Pessoa Nome' },
@@ -641,7 +640,7 @@ downloadExcelBtn.addEventListener('click', async () => {
       const PDV_KEYS = [
         'Local de Atendimento Descrição', 'Local de Atendimento Descricao',
         'Local de Atendimento Identificador Alternativo',
-        'PDV', 'LOCAL', 'FANTASIA', 'LOJA', 'CLIENTE', 'RAZÃO SOCIAL', 'RAZAO SOCIAL', 'PONTO DE VENDA', 'NOME DO PDV'
+        'PDV', 'LOCAL', 'FANTASIA', 'LOJA', 'CLIENTE', 'PONTO DE VENDA', 'NOME DO PDV'
       ];
       const PROMOTOR_KEYS = [
         'Pessoa Nome', 'Pessoa ID Para Integracao',
