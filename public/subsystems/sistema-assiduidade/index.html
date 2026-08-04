@@ -1292,10 +1292,10 @@
 
                             <span
                                 style="font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-left: 8px;">Período:</span>
-                            <input type="date" id="obs-filter-start" class="date-input"
+                            <input type="date" id="obs-filter-start" class="date-input" onchange="renderObservations()"
                                 style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
                             <span style="font-size: 12px; color: var(--text-dim);">até</span>
-                            <input type="date" id="obs-filter-end" class="date-input"
+                            <input type="date" id="obs-filter-end" class="date-input" onchange="renderObservations()"
                                 style="padding: 5px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);">
                             <button onclick="renderObservations()"
                                 style="background: var(--primary); color: white; border: none; padding: 0 16px; height: 36px; border-radius: 8px; cursor: pointer;">Filtrar</button>
@@ -1577,6 +1577,7 @@
         function initMultiSelect(containerId, options, filterKey, onUpdate) {
             const dropdown = document.querySelector(`#${containerId} .multi-select-dropdown`);
             const header = document.querySelector(`#${containerId} .multi-select-header`);
+            if (!dropdown || !header) return;
 
             header.onclick = (e) => { e.stopPropagation(); toggleMultiSelect(containerId); };
 
@@ -1587,8 +1588,9 @@
 
             options.forEach(opt => {
                 const isChecked = activeFilters[filterKey].includes(opt);
+                const safeOpt = opt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 html += `<div class="multi-select-option" onclick="event.stopPropagation()">
-                    <input type="checkbox" class="opt-check" value="${opt}" ${isChecked ? 'checked' : ''} onchange="updateFilter('${containerId}', '${filterKey}', '${opt}', this.checked, ${onUpdate.name})">
+                    <input type="checkbox" class="opt-check" value="${opt}" ${isChecked ? 'checked' : ''} onchange="updateFilter('${containerId}', '${filterKey}', '${safeOpt}', this.checked, ${onUpdate.name})">
                     <label style="cursor:pointer;">${opt}</label>
                 </div>`;
             });
@@ -1615,7 +1617,8 @@
                 if (!activeFilters[filterKey].includes(value)) activeFilters[filterKey].push(value);
             } else {
                 activeFilters[filterKey] = activeFilters[filterKey].filter(v => v !== value);
-                document.getElementById(`all-${containerId}`).checked = false;
+                const allCheck = document.getElementById(`all-${containerId}`);
+                if (allCheck) allCheck.checked = false;
             }
             updateSelectedText(containerId, filterKey);
             if (callback) callback();
@@ -1623,11 +1626,14 @@
 
         function updateSelectedText(containerId, filterKey) {
             const span = document.querySelector(`#${containerId} .selected-text`);
+            if (!span) return;
             const count = activeFilters[filterKey].length;
             const total = document.querySelectorAll(`#${containerId} .opt-check`).length;
 
-            if (count === 0) span.textContent = 'SELECIONE...';
-            else if (count === total && total > 0) span.textContent = 'TODOS';
+            const isEquipe = containerId.toLowerCase().includes('equipe');
+            const defaultLabel = isEquipe ? 'TODAS' : 'TODOS';
+
+            if (count === 0 || (count === total && total > 0)) span.textContent = defaultLabel;
             else if (count === 1) span.textContent = activeFilters[filterKey][0];
             else span.textContent = `${count} SELECIONADOS`;
         }
@@ -2652,18 +2658,15 @@
             if (!startInput.value) startInput.value = firstDay;
             if (!endInput.value) endInput.value = lastDay;
 
-            const filterStart = startInput.value;
-            const filterEnd = endInput.value;
+            let filterStart = startInput.value;
+            let filterEnd = endInput.value;
 
-            // Cálculo seguro de datas (+/- 30 dias) usando o meio do dia para evitar problemas de fuso
-            const getOffsetDate = (baseStr, days) => {
-                const d = new Date(baseStr + 'T12:00:00');
-                d.setDate(d.getDate() + days);
-                return d.toISOString().split('T')[0];
-            };
+            if (filterStart > filterEnd) {
+                filterEnd = filterStart;
+                endInput.value = filterEnd;
+            }
 
-            const wideStart = getOffsetDate(filterStart, -30);
-            const wideEnd = getOffsetDate(filterEnd, 30);
+            const searchVal = (staffSearchInput?.value || '').trim().toLowerCase();
 
             let data = [];
             let fromO = 0, stepO = 999, hasMoreO = true;
@@ -2674,8 +2677,8 @@
                     let query = window.supabase
                         .from('tb_assiduidade')
                         .select('*')
-                        .gte('date', wideStart)
-                        .lte('date', wideEnd)
+                        .gte('date', filterStart)
+                        .lte('date', filterEnd)
                         .not('status', 'eq', 'P')
                         .not('status', 'is', null)
                         .not('observation', 'eq', 'Feriado Geral');
@@ -2705,7 +2708,27 @@
 
             const error = queryError;
 
-            if (error || !data || data.length === 0) {
+            // Filtragem estrita em memória (busca por nome, projeto e equipe)
+            let filteredData = (data || []).filter(rec => {
+                if (searchVal && !rec.collaborator_name.toLowerCase().includes(searchVal)) {
+                    return false;
+                }
+
+                const person = staffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
+                const proj = person ? person.project : 'GERAL';
+                const eq = person ? person.equipe : 'GERAL';
+
+                if (activeFilters.obsProjects.length > 0 && !activeFilters.obsProjects.includes(proj)) {
+                    return false;
+                }
+                if (activeFilters.obsEquipes.length > 0 && !activeFilters.obsEquipes.includes(eq)) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            if (error || filteredData.length === 0) {
                 currentObsGroups = [];
                 observationsList.innerHTML = `
                     <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
@@ -2716,14 +2739,13 @@
             }
 
             observationsList.innerHTML = '';
-            data.sort((a, b) => a.collaborator_name.localeCompare(b.collaborator_name) || a.date.localeCompare(b.date));
+            filteredData.sort((a, b) => a.collaborator_name.localeCompare(b.collaborator_name) || a.date.localeCompare(b.date));
 
             const groups = [];
-            data.forEach(rec => {
+            filteredData.forEach(rec => {
                 const last = groups[groups.length - 1];
-                const dateObj = new Date(rec.date + 'T12:00:00');
-                const dateFmt = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                const isWithinFilter = rec.date >= filterStart && rec.date <= filterEnd;
+                const dateParts = rec.date.split('-');
+                const dateFmt = (dateParts.length === 3) ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : rec.date;
 
                 // Verificar se a data é consecutiva (dia seguinte ao último do grupo)
                 let isConsecutive = false;
@@ -2743,14 +2765,13 @@
                     last.count++;
                     last.ids.push(rec.id);
                     last._lastRawDate = rec.date;
-                    if (isWithinFilter) last.hasInFilterRecord = true;
                 } else {
-                    const person = staffList.find(s => s.name === rec.collaborator_name);
+                    const person = staffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
                     groups.push({
                         ids: [rec.id],
                         collaborator_name: rec.collaborator_name,
-                        project: person ? person.project : 'N/A',
-                        equipe: person ? person.equipe : 'N/A',
+                        project: person ? person.project : 'GERAL',
+                        equipe: person ? person.equipe : 'GERAL',
                         status: rec.status,
                         statusName: getStatusName(rec.status),
                         observation: rec.observation || 'Sem observação',
@@ -2758,26 +2779,14 @@
                         startDate: dateFmt,
                         endDate: dateFmt,
                         count: 1,
-                        hasInFilterRecord: isWithinFilter,
                         _lastRawDate: rec.date
                     });
                 }
             });
 
-            // Filtra para mostrar apenas grupos que tocam o período selecionado
-            const filteredGroups = groups.filter(g => g.hasInFilterRecord);
-            currentObsGroups = filteredGroups;
+            currentObsGroups = groups;
 
-            if (filteredGroups.length === 0) {
-                observationsList.innerHTML = `
-                    <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed var(--border); color: var(--text-dim);">
-                        Nenhuma observação ou afastamento registrado para este período específico.
-                    </div>
-                `;
-                return;
-            }
-
-            filteredGroups.forEach(row => {
+            groups.forEach(row => {
                 const rangeStr = row.count > 1 ? `${row.startDate} - ${row.endDate}` : row.startDate;
                 const statusName = row.statusName;
                 const div = document.createElement('div');
