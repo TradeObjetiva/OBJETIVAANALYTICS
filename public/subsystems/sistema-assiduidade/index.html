@@ -4624,8 +4624,6 @@
         }
 
         function parseLunchEventsPage(startDateStr, endDateStr) {
-            const isSingleDay = startDateStr === endDateStr;
-
             const filteredRecords = (lunchState.dbRecords || []).filter(r => {
                 const rDate = r.date || (r.history_id ? String(r.history_id).split(' ')[0] : '');
                 if (rDate) {
@@ -4642,94 +4640,117 @@
             const staffMap = new Map();
             staffList.forEach(s => staffMap.set(s.name.toUpperCase(), s));
 
-            const activeStaff = staffList.filter(s => {
-                if (s.data_admissao && s.data_admissao > endDateStr) return false;
-                if (!s.ativo && (!s.data_desativacao || s.data_desativacao < startDateStr)) return false;
-                return true;
-            });
-
             const now = new Date();
             const todayStr = getLocalDateString(now);
 
-            if (isSingleDay) {
-                const collaboratorEvents = {};
+            // Gerar lista de datas no intervalo (do startDateStr até min(endDateStr, todayStr))
+            const datesList = [];
+            let curr = new Date(startDateStr + 'T00:00:00');
+            const endLimitStr = endDateStr > todayStr ? todayStr : endDateStr;
+            const last = new Date(endLimitStr + 'T00:00:00');
 
-                filteredRecords.forEach(c => {
-                    let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
-                    const rawClient = String(c.client_id || '').trim();
-                    const rawActivity = String(c.activity_id || '').trim();
-                    const clientParts = rawClient.split(';');
-                    const activityParts = rawActivity.split(';');
+            if (isNaN(curr.getTime()) || isNaN(last.getTime())) {
+                datesList.push(startDateStr);
+            } else {
+                while (curr <= last) {
+                    datesList.push(getLocalDateString(curr));
+                    curr.setDate(curr.getDate() + 1);
+                }
+            }
 
-                    if (!name && clientParts[0] && !clientParts[0].includes(':')) {
-                        name = clientParts[0].trim().toUpperCase();
-                    } else if (!name && activityParts[0] && !activityParts[0].includes(':')) {
-                        name = activityParts[0].trim().toUpperCase();
+            // Agrupar registros por data -> nome do colaborador
+            const recordsByDate = {};
+
+            filteredRecords.forEach(c => {
+                let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
+                const rawClient = String(c.client_id || '').trim();
+                const rawActivity = String(c.activity_id || '').trim();
+                const clientParts = rawClient.split(';');
+                const activityParts = rawActivity.split(';');
+
+                if (!name && clientParts[0] && !clientParts[0].includes(':')) {
+                    name = clientParts[0].trim().toUpperCase();
+                } else if (!name && activityParts[0] && !activityParts[0].includes(':')) {
+                    name = activityParts[0].trim().toUpperCase();
+                }
+
+                const recDate = c.date || (c.history_id ? String(c.history_id).split(' ')[0] : startDateStr);
+
+                if (name) {
+                    const found = staffList.find(s => {
+                        const sName = s.name.toUpperCase();
+                        return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
+                    });
+                    if (found) {
+                        if (found.data_admissao && found.data_admissao > recDate) return;
+                        if (!found.ativo && (!found.data_desativacao || found.data_desativacao < recDate)) return;
+                        name = found.name.toUpperCase();
                     }
+                }
 
-                    if (name) {
-                        const found = staffList.find(s => {
-                            const sName = s.name.toUpperCase();
-                            return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
-                        });
-                        if (found) {
-                            if (found.data_admissao && found.data_admissao > endDateStr) return;
-                            if (!found.ativo && (!found.data_desativacao || found.data_desativacao < startDateStr)) return;
-                            name = found.name.toUpperCase();
-                        }
+                if (name) {
+                    const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
+                    if (isStore) return;
+                }
+
+                if (!name) return;
+
+                if (!recordsByDate[recDate]) {
+                    recordsByDate[recDate] = {};
+                }
+
+                let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '';
+                let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '';
+                let status = c.status || 'EM_INTERVALO';
+                let durationMin = c.duration_minutes || 0;
+
+                if (!startTimeStr && c.time) {
+                    startTimeStr = String(c.time).substring(0, 5);
+                }
+
+                if (!recordsByDate[recDate][name]) {
+                    recordsByDate[recDate][name] = {
+                        name,
+                        startTimeStr: startTimeStr || '--:--',
+                        endTimeStr: endTimeStr || '--:--',
+                        status: status === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS',
+                        durationMin,
+                        hasRecord: true
+                    };
+                } else {
+                    if (startTimeStr && recordsByDate[recDate][name].startTimeStr === '--:--') {
+                        recordsByDate[recDate][name].startTimeStr = startTimeStr;
                     }
-
-                    if (name) {
-                        const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
-                        if (isStore) return;
+                    if (endTimeStr && endTimeStr !== '--:--') {
+                        recordsByDate[recDate][name].endTimeStr = endTimeStr;
+                        recordsByDate[recDate][name].status = 'COMPLETED';
+                        recordsByDate[recDate][name].durationMin = durationMin;
                     }
+                }
+            });
 
-                    if (!name) return;
+            const results = [];
 
-                    let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '';
-                    let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '';
-                    let status = c.status || 'EM_INTERVALO';
-                    let durationMin = c.duration_minutes || 0;
-
-                    if (!startTimeStr && c.time) {
-                        startTimeStr = String(c.time).substring(0, 5);
-                    }
-
-                    if (!collaboratorEvents[name]) {
-                        collaboratorEvents[name] = {
-                            name,
-                            startTimeStr: startTimeStr || '--:--',
-                            endTimeStr: endTimeStr || '--:--',
-                            status: status === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS',
-                            durationMin,
-                            hasRecord: true
-                        };
-                    } else {
-                        if (startTimeStr && collaboratorEvents[name].startTimeStr === '--:--') {
-                            collaboratorEvents[name].startTimeStr = startTimeStr;
-                        }
-                        if (endTimeStr && endTimeStr !== '--:--') {
-                            collaboratorEvents[name].endTimeStr = endTimeStr;
-                            collaboratorEvents[name].status = 'COMPLETED';
-                            collaboratorEvents[name].durationMin = durationMin;
-                        }
-                    }
+            // Para cada data no período, montar a lista de todos os colaboradores ativos
+            datesList.forEach(dateStr => {
+                const activeStaffForDate = staffList.filter(s => {
+                    if (s.data_admissao && s.data_admissao > dateStr) return false;
+                    if (!s.ativo && (!s.data_desativacao || s.data_desativacao < dateStr)) return false;
+                    return true;
                 });
 
-                const isToday = startDateStr === todayStr;
+                const dateEvents = recordsByDate[dateStr] || {};
 
                 const allCollaboratorNames = Array.from(new Set([
-                    ...activeStaff.map(s => s.name.toUpperCase()),
-                    ...Object.keys(collaboratorEvents)
+                    ...activeStaffForDate.map(s => s.name.toUpperCase()),
+                    ...Object.keys(dateEvents)
                 ]));
-
-                const results = [];
 
                 allCollaboratorNames.forEach(name => {
                     const person = staffMap.get(name);
                     const proj = person ? person.project : 'GERAL';
                     const eq = person ? person.equipe : 'GERAL';
-                    const rec = collaboratorEvents[name];
+                    const rec = dateEvents[name];
 
                     let status = 'NOT_STARTED';
                     let startTimeStr = '--:--';
@@ -4742,7 +4763,7 @@
                         status = rec.status;
                         durationMin = rec.durationMin || 0;
 
-                        if (status === 'IN_PROGRESS' && startTimeStr !== '--:--' && isToday) {
+                        if (status === 'IN_PROGRESS' && startTimeStr !== '--:--' && dateStr === todayStr) {
                             const parts = startTimeStr.split(':');
                             if (parts.length === 2) {
                                 const startMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
@@ -4756,8 +4777,8 @@
 
                     results.push({
                         name: person ? person.name : name,
-                        date: startDateStr,
-                        dateBR: formatDateBR(startDateStr),
+                        date: dateStr,
+                        dateBR: formatDateBR(dateStr),
                         project: proj,
                         equipe: eq,
                         status,
@@ -4768,71 +4789,10 @@
                         hasEvents: !!rec
                     });
                 });
+            });
 
-                return results;
-            } else {
-                const results = [];
-
-                filteredRecords.forEach(c => {
-                    let name = c.collaborator_name ? c.collaborator_name.toUpperCase().trim() : '';
-                    const recDate = c.date || (c.history_id ? String(c.history_id).split(' ')[0] : startDateStr);
-                    if (name) {
-                        const found = staffList.find(s => {
-                            const sName = s.name.toUpperCase();
-                            return sName === name || sName.startsWith(name) || name.startsWith(sName) || sName.includes(name);
-                        });
-                        if (found) {
-                            if (found.data_admissao && found.data_admissao > recDate) return;
-                            if (!found.ativo && (!found.data_desativacao || found.data_desativacao < recDate)) return;
-                            name = found.name.toUpperCase();
-                        }
-                    }
-                    if (name) {
-                        const isStore = /ATACAD|ASSAI|ASSAÍ|MUNDIAL|DISCAPEL|LOJA|SUPERMERCADO|HIPER|STORE|LTDA/i.test(name);
-                        if (isStore) return;
-                    }
-                    if (!name) return;
-
-                    let startTimeStr = c.start_time ? String(c.start_time).substring(0, 5) : '--:--';
-                    let endTimeStr = c.end_time ? String(c.end_time).substring(0, 5) : '--:--';
-                    let statusRaw = c.status || 'EM_INTERVALO';
-                    let durationMin = c.duration_minutes || 0;
-                    let status = statusRaw === 'CONCLUIDO' ? 'COMPLETED' : 'IN_PROGRESS';
-
-                    const person = staffMap.get(name);
-                    const proj = person ? person.project : 'GERAL';
-                    const eq = person ? person.equipe : 'GERAL';
-
-                    const isToday = recDate === todayStr;
-                    if (status === 'IN_PROGRESS' && startTimeStr !== '--:--' && isToday) {
-                        const parts = startTimeStr.split(':');
-                        if (parts.length === 2) {
-                            const startMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                            const nowMin = now.getHours() * 60 + now.getMinutes();
-                            durationMin = Math.max(0, nowMin - startMin);
-                        }
-                    }
-
-                    const isExceeded = (status === 'IN_PROGRESS' || status === 'COMPLETED') && durationMin > 60;
-
-                    results.push({
-                        name: person ? person.name : name,
-                        date: recDate,
-                        dateBR: formatDateBR(recDate),
-                        project: proj,
-                        equipe: eq,
-                        status,
-                        startTimeStr,
-                        endTimeStr,
-                        durationMin,
-                        isExceeded,
-                        hasEvents: true
-                    });
-                });
-
-                results.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
-                return results;
-            }
+            results.sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
+            return results;
         }
 
         function formatDurationText(min) {
