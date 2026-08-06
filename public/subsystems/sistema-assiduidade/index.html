@@ -1668,6 +1668,7 @@
 
         let selectedCell = null;
         let staffList = [];
+        let fullStaffList = [];
         let legendasList = [
             { codigo: 'P', nome: 'Presença', cor: '#10b981' },
             { codigo: 'ATT', nome: 'Atestado', cor: '#3b82f6' },
@@ -1780,6 +1781,8 @@
                         }
                     };
                 });
+
+                fullStaffList = mappedStaff;
 
                 // Apply Project Restriction
                 if (!isMaster && allowedProjects.length > 0) {
@@ -2683,7 +2686,19 @@
                         .not('status', 'is', null)
                         .not('observation', 'eq', 'Feriado Geral');
 
-                    if (activeFilters.obsProjects.length > 0 || activeFilters.obsEquipes.length > 0) {
+                    // Se o usuário possui restrição de projeto ou se há filtros ativos
+                    if (!isMaster && allowedProjects.length > 0) {
+                        let filteredNames = staffList;
+                        if (activeFilters.obsProjects.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsProjects.includes(s.project));
+                        if (activeFilters.obsEquipes.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsEquipes.includes(s.equipe));
+
+                        const names = filteredNames.map(s => s.name);
+                        if (names.length > 0) {
+                            query = query.in('collaborator_name', names);
+                        } else {
+                            query = query.eq('collaborator_name', 'FORCE_EMPTY_RESULT_STRING_NON_EXISTENT');
+                        }
+                    } else if (activeFilters.obsProjects.length > 0 || activeFilters.obsEquipes.length > 0) {
                         let filteredNames = staffList;
                         if (activeFilters.obsProjects.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsProjects.includes(s.project));
                         if (activeFilters.obsEquipes.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsEquipes.includes(s.equipe));
@@ -2714,7 +2729,14 @@
                     return false;
                 }
 
-                const person = staffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
+                const personInUserStaff = staffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
+
+                // Se o usuário possui restrição de projeto, o colaborador DEVE estar na lista permitida dele
+                if (!isMaster && allowedProjects.length > 0 && !personInUserStaff) {
+                    return false;
+                }
+
+                const person = personInUserStaff || fullStaffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
                 const proj = person ? person.project : 'GERAL';
                 const eq = person ? person.equipe : 'GERAL';
 
@@ -2766,7 +2788,7 @@
                     last.ids.push(rec.id);
                     last._lastRawDate = rec.date;
                 } else {
-                    const person = staffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
+                    const person = staffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase()) || fullStaffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
                     groups.push({
                         ids: [rec.id],
                         collaborator_name: rec.collaborator_name,
