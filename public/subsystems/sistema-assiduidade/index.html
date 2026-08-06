@@ -5007,24 +5007,52 @@
         }
 
         function exportLunchExcel() {
-            const dataToExport = parseLunchEventsPage(lunchState.startDate, lunchState.endDate);
+            const rawData = parseLunchEventsPage(lunchState.startDate, lunchState.endDate);
+            const dataToExport = rawData.filter(item => {
+                if (lunchState.searchFilter) {
+                    const term = lunchState.searchFilter.toUpperCase().trim();
+                    const matchName = item.name.toUpperCase().includes(term);
+                    const matchProj = item.project.toUpperCase().includes(term);
+                    const matchEq = item.equipe.toUpperCase().includes(term);
+                    if (!matchName && !matchProj && !matchEq) return false;
+                }
+                if (lunchState.projectFilter !== 'TODOS' && item.project !== lunchState.projectFilter) return false;
+                if (lunchState.equipeFilter !== 'TODOS' && item.equipe !== lunchState.equipeFilter) return false;
+                if (lunchState.statusFilter === 'IN_PROGRESS' && item.status !== 'IN_PROGRESS') return false;
+                if (lunchState.statusFilter === 'COMPLETED' && item.status !== 'COMPLETED') return false;
+                if (lunchState.statusFilter === 'EXCEEDED' && !item.isExceeded) return false;
+                if (lunchState.statusFilter === 'NOT_STARTED' && item.status !== 'NOT_STARTED') return false;
+                return true;
+            });
+
             if (dataToExport.length === 0) {
-                Swal.fire('Aviso', 'Nenhum dado para exportar no período selecionado.', 'info');
+                Swal.fire('Aviso', 'Nenhum dado para exportar no período/filtros selecionados.', 'info');
                 return;
             }
 
-            const rows = dataToExport.map(item => ({
-                'COLABORADOR': item.name,
-                'DATA': item.dateBR,
-                'PROJETO': item.project,
-                'EQUIPE': item.equipe,
-                'INÍCIO DO ALMOÇO': item.startTimeStr,
-                'RETORNO DO ALMOÇO': item.endTimeStr,
-                'TEMPO NO INTERVALO (MIN)': item.durationMin,
-                'TEMPO FORMATADO': formatDurationText(item.durationMin),
-                'STATUS': item.status === 'COMPLETED' ? 'RETORNOU' : item.status === 'IN_PROGRESS' ? 'EM INTERVALO' : 'NÃO INICIOU',
-                'ALERTA (> 1H)': item.isExceeded ? 'EXCEDEU 1H' : 'NORMAL'
-            }));
+            const rows = dataToExport.map(item => {
+                let statusText = 'NÃO INICIOU';
+                if (item.isExceeded) {
+                    statusText = 'EXCEDEU 1H';
+                } else if (item.status === 'COMPLETED') {
+                    statusText = 'RETORNOU';
+                } else if (item.status === 'IN_PROGRESS') {
+                    statusText = 'EM INTERVALO';
+                }
+
+                return {
+                    'COLABORADOR': item.name,
+                    'DATA': item.dateBR,
+                    'PROJETO': item.project,
+                    'EQUIPE': item.equipe,
+                    'INÍCIO DO ALMOÇO': item.startTimeStr,
+                    'RETORNO DO ALMOÇO': item.endTimeStr,
+                    'TEMPO NO INTERVALO (MIN)': item.durationMin,
+                    'TEMPO FORMATADO': item.status !== 'NOT_STARTED' ? formatDurationText(item.durationMin) : '--',
+                    'STATUS': statusText,
+                    'ALERTA (> 1H)': item.isExceeded ? 'EXCEDEU 1H' : 'NORMAL'
+                };
+            });
 
             const ws = XLSX.utils.json_to_sheet(rows);
             const wb = XLSX.utils.book_new();
