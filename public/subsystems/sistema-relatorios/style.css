@@ -471,3 +471,184 @@ tbody tr:hover {
   border-color: var(--primary-hover);
   box-shadow: var(--shadow-sm);
 }
+
+/* Filtro de Rede Comercial - Lista Suspensa (Estilo Imagem 1: Clean Light Dropdown) */
+#redeFilterSection {
+  overflow: visible !important;
+  position: relative;
+  z-index: 50;
+}
+
+.rede-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.rede-filter-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rede-filter-title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.custom-dropdown-container {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  z-index: 100;
+}
+
+.custom-dropdown-trigger {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  padding: 11px 16px;
+  border-radius: 12px;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.custom-dropdown-trigger:hover {
+  border-color: #4f46e5;
+  background: #f8fafc;
+}
+
+.custom-dropdown-container.open .custom-dropdown-trigger {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.custom-dropdown-trigger .dropdown-chevron {
+  transition: transform 0.2s ease;
+  color: #334155;
+  flex-shrink: 0;
+}
+
+.custom-dropdown-container.open .dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  border: 1.5px solid #64748b;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  z-index: 9999;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.custom-dropdown-menu.hidden {
+  display: none !important;
+}
+
+.custom-dropdown-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.custom-dropdown-actions .btn-small {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease !important;
+}
+
+.custom-dropdown-actions .btn-small:hover {
+  background: #f1f5f9 !important;
+  border-color: #4f46e5 !important;
+  color: #4f46e5 !important;
+}
+
+.custom-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.custom-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: background 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+
+.custom-dropdown-item:hover {
+  background: #f1f5f9;
+}
+
+.custom-dropdown-item.selected {
+  background: #eef2ff;
+  border-left: 3px solid #4f46e5;
+}
+
+.custom-dropdown-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4f46e5;
+  cursor: pointer;
+}
+
+.rede-name-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-dropdown-item.selected .rede-name-label {
+  color: #312e81;
+}
+
+.rede-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.custom-dropdown-item.selected .rede-count-badge {
+  background: #c7d2fe;
+  color: #3730a3;
+}

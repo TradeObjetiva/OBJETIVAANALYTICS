@@ -219,7 +219,9 @@ const EXPORT_MODEL = [
 
 const state = {
   files: [],
-  activeIndex: 0
+  activeIndex: 0,
+  selectedRedes: new Set(),
+  availableRedes: []
 };
 
 // DOM Elements
@@ -228,6 +230,14 @@ const dropzone = document.getElementById('dropzone');
 const loadSampleBtn = document.getElementById('loadSampleBtn');
 const mappingSection = document.getElementById('mappingSection');
 const previewSection = document.getElementById('previewSection');
+const redeFilterSection = document.getElementById('redeFilterSection');
+const redeCheckboxesContainer = document.getElementById('redeCheckboxesContainer');
+const redeDropdownContainer = document.getElementById('redeDropdownContainer');
+const redeDropdownTrigger = document.getElementById('redeDropdownTrigger');
+const redeDropdownMenu = document.getElementById('redeDropdownMenu');
+const redeDropdownSelectedText = document.getElementById('redeDropdownSelectedText');
+const selectAllRedesBtn = document.getElementById('selectAllRedesBtn');
+const deselectAllRedesBtn = document.getElementById('deselectAllRedesBtn');
 const mappingTableBody = document.getElementById('mappingTableBody');
 const previewWrap = document.getElementById('previewWrap');
 const countRows = document.getElementById('countRows');
@@ -403,19 +413,351 @@ function readFileAsText(file, encoding) {
   return readFileAsTextSmart(file);
 }
 
+const REDE_KEYS = [
+  'REDE', 'REDE DO PDV', 'REDE_DO_PDV', 'NOME DA REDE', 'BANDEIRA',
+  'REDE / BANDEIRA', 'REDE/BANDEIRA', 'REDE DE SUPERMERCADOS',
+  'REDE SUPERMERCADOS', 'REDE COMERCIAL', 'NOME REDE', 'NOME DA BANDEIRA'
+];
+
+const PDV_KEYS = [
+  'Local de Atendimento Descrição', 'Local de Atendimento Descricao',
+  'Local de Atendimento Identificador Alternativo',
+  'PDV', 'LOCAL', 'FANTASIA', 'LOJA', 'CLIENTE', 'PONTO DE VENDA', 'NOME DO PDV'
+];
+
+const PROMOTOR_KEYS = [
+  'Pessoa Nome', 'Pessoa ID Para Integracao',
+  'PROMOTOR', 'AGENTE', 'COLABORADOR', 'SUPERVISOR', 'NOME DO PROMOTOR'
+];
+
+const PRODUTO_KEYS = [
+  'SKU', 'Itens Descrição', 'Itens Descricao', 'ITENS', 'PRODUTO',
+  'DESCRICAO', 'DESCRIÇÃO', 'DESCRIÇÃO DO PRODUTO', 'NOME DO PRODUTO', 'ITEM',
+  'Itens Identificador'
+];
+
+const DATA_KEYS = [
+  'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)',
+  'DATA HORA TAREFA',
+  'DATA HORA FIM EXECUCAO ATIVIDADE GERADA PELO SISTEMA (DIM TEMPO)',
+  'DATA', 'DATA DO DIA', 'DATA VISITA', 'DATA DA VISITA', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA E HORA INICIO EXECUCAO', 'DATA E HORA EXECUÇÃO'
+];
+
+const PRECO_KEYS = ['PRECO', 'PREÇO', 'VALOR', 'PREÇO UNITÁRIO', 'PRECO UNITARIO'];
+
+const VALIDADE_KEYS = [
+  'INFORME A VALIDADE', 'VALIDADE', 'DATA DE VALIDADE', 'INFORME_A_VALIDADE',
+  '(2) INFORME A VALIDADE', '_2_INFORME_A_VALIDADE', '(2) VALIDADE',
+  '(3) INFORME A VALIDADE', '_3_INFORME_A_VALIDADE', '(3) VALIDADE'
+];
+
+const CAIXAS_KEYS = ['QUANTAS CAIXAS FORAM ABASTECIDAS?', 'QTD. DE CAIXAS ABASTECIDAS', 'QTD DE CAIXAS ABASTECIDAS', 'CAIXAS ABASTECIDAS', 'CAIXAS', 'QTD CAIXAS', 'TOTAL REPOSIÇÕES', 'QUANTIDADE TOTAL', 'QUANTIDADE'];
+
+const PONTO_EXTRA_KEYS = ['TEM PONTO EXTRA?', 'PONTO EXTRA'];
+
+const AVARIA_KEYS = [
+  'FOI RETIRADO PRODUTO DO PDV PARA AVARIA?',
+  'FOI RETIRADO PRODUTO DO PDV PARA AVARIA',
+  'QUAL MOTIVO DA AVARIA?',
+  'QUAL MOTIVO DA AVARIA',
+  'MOTIVO DA AVARIA',
+  'MOTIVO AVARIA',
+  'CITE O PESO DO PRODUTO',
+  'PESO DO PRODUTO',
+  'FOTO DO PRODUTO NA BALANÇA',
+  'FOTO DO PRODUTO NA BALANCA',
+  'CITE O LOTE DO PRODUTO',
+  'LOTE DO PRODUTO',
+  'COLOQUE O VALOR DA NOTA',
+  'VALOR DA NOTA',
+  'FOTO DA MESA'
+];
+
+const TECNICO_KEYS = [
+  'VISITOU O ALMOXARIFADO?',
+  'VISITOU ALMOXARIFADO?',
+  'VISITOU A COZINHA?',
+  'VISITOU COZINHA?',
+  'VISITOU O AÇOUGUE?',
+  'VISITOU ACOUGUE?',
+  'VISITOU O SALGADO?',
+  'VISITOU SALGADO?',
+  'VISITOU O LATICÍNIOS?',
+  'VISITOU LATICINIOS?',
+  'VISITOU O FLV?',
+  'VISITOU FLV?',
+  'VISITOU A LIXEIRA?',
+  'VISITOU LIXEIRA?',
+  'RELATÓRIO ASSINADO PELO GERENTE?',
+  'RELATORIO ASSINADO PELO GERENTE?',
+  'RELATORIO TECNICO FINALIZADO?',
+  'RELATÓRIO TÉCNICO FINALIZADO?',
+  'CHECK LIST TÉCNICO',
+  'CHECK LIST TECNICO',
+  'PESQUISA START - TÉCNICO',
+  'PESQUISA START - TECNICO',
+  'VISITOU CLIENTE?',
+  'VISITOU CLIENTE (CHECKOUT)?',
+  'VISITOU CLIENTE (FOTO)?',
+  'FOTO ENTRADA COM BIO',
+  'TEM FOTO DA ENTRADA?',
+  'CHECKIN COM GEOLOCALIZACAO FORA DE RAIO',
+  'CHECKIN COM GEOLOCALIZAÇÃO FORA DE RAIO',
+  'FOTO MOSTRANDO CONFORME CHECK-OUT',
+  'TEM FOTO NO CHECKOUT?',
+  'FOTO DAS VALIDADES E RUPTURAS',
+  'TEM FOTO DE VALIDADE E RUPTURAS?'
+];
+
+const extractRede = (localStr) => {
+  if (!localStr) return 'OUTROS';
+  const str = String(localStr).trim();
+  const knownMap = [
+    { key: 'REDE MARKET', match: ['REDE MARKET', 'MARKET'] },
+    { key: 'CARLÃO SUPERMERCADOS', match: ['CARLÃO', 'CARLAO'] },
+    { key: 'ASSAÍ', match: ['ASSAÍ', 'ASSAI'] },
+    { key: 'ATACADÃO', match: ['ATACADÃO', 'ATACADAO'] },
+    { key: 'PREZUNIC', match: ['PREZUNIC'] },
+    { key: 'HORTIFRUTI', match: ['HORTIFRUTI'] },
+    { key: 'CARREFOUR', match: ['CARREFOUR'] },
+    { key: 'GUANABARA', match: ['GUANABARA'] },
+    { key: 'ROYAL', match: ['ROYAL'] },
+    { key: 'MUNDIAL', match: ['MUNDIAL'] },
+    { key: 'ZONA SUL', match: ['ZONASUL', 'ZONA SUL'] },
+    { key: 'SPOLETO', match: ['SPOLETO'] },
+    { key: 'ARAMAR', match: ['ARAMAR'] },
+    { key: 'BIG', match: ['BIG'] },
+    { key: 'BOMPREÇO', match: ['BOMPREÇO', 'BOMPRECO'] }
+  ];
+
+  const upperStr = str.toUpperCase();
+  for (const item of knownMap) {
+    if (item.match.some(m => upperStr.includes(m))) {
+      return item.key;
+    }
+  }
+  const parts = str.split(/[-–—]/);
+  return parts[0].trim().toUpperCase();
+};
+
+const getRowVal = (row, keys) => {
+  if (!row) return '';
+  for (const k of keys) {
+    if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
+      return String(row[k]).trim();
+    }
+    const normK = normalizeHeader(k);
+    if (row[normK] !== undefined && row[normK] !== null && String(row[normK]).trim() !== '') {
+      return String(row[normK]).trim();
+    }
+  }
+  return '';
+};
+
+function getRowRede(row) {
+  if (!row) return '(SEM REDE / VAZIO)';
+  const explicit = String(
+    row['REDE'] || row['REDE DO PDV'] || row['REDE_DO_PDV'] ||
+    row['NOME DA REDE'] || row['BANDEIRA'] ||
+    getRowVal(row, REDE_KEYS) || ''
+  ).trim();
+
+  if (explicit && explicit.toUpperCase() !== 'OUTROS') {
+    return explicit.toUpperCase();
+  }
+
+  const pdvVal = getRowVal(row, PDV_KEYS);
+  if (pdvVal) {
+    const extracted = extractRede(pdvVal);
+    if (extracted && extracted !== 'OUTROS') {
+      return extracted.toUpperCase();
+    }
+  }
+
+  return '(SEM REDE / VAZIO)';
+}
+
+function getFilteredRows(fileObj) {
+  if (!fileObj || !fileObj.rows) return [];
+  if (!state.selectedRedes || state.selectedRedes.size === 0) return [];
+  return fileObj.rows.filter(row => {
+    const rede = getRowRede(row);
+    return state.selectedRedes.has(rede);
+  });
+}
+
+function updateAvailableRedes() {
+  if (!state.files || state.files.length === 0) {
+    state.availableRedes = [];
+    state.selectedRedes.clear();
+    return;
+  }
+
+  const countsMap = new Map();
+  state.files.forEach(file => {
+    (file.rows || []).forEach(row => {
+      const rede = getRowRede(row);
+      countsMap.set(rede, (countsMap.get(rede) || 0) + 1);
+    });
+  });
+
+  const redesList = Array.from(countsMap.entries()).map(([name, count]) => ({ name, count }));
+
+  redesList.sort((a, b) => {
+    if (a.name === '(SEM REDE / VAZIO)') return 1;
+    if (b.name === '(SEM REDE / VAZIO)') return -1;
+    return a.name.localeCompare(b.name);
+  });
+
+  state.availableRedes = redesList;
+
+  if (state.selectedRedes.size === 0) {
+    redesList.forEach(r => state.selectedRedes.add(r.name));
+  } else {
+    const currentNames = new Set(redesList.map(r => r.name));
+    for (const name of state.selectedRedes) {
+      if (!currentNames.has(name)) {
+        state.selectedRedes.delete(name);
+      }
+    }
+    if (state.selectedRedes.size === 0) {
+      redesList.forEach(r => state.selectedRedes.add(r.name));
+    }
+  }
+
+  renderRedeFilter();
+}
+
+function updateDropdownTriggerText() {
+  if (!redeDropdownSelectedText) return;
+  const total = state.availableRedes ? state.availableRedes.length : 0;
+  const selected = state.selectedRedes ? state.selectedRedes.size : 0;
+
+  if (total === 0 || selected === 0) {
+    redeDropdownSelectedText.textContent = 'Nenhuma rede selecionada';
+  } else if (selected === total) {
+    redeDropdownSelectedText.textContent = `Todas as redes selecionadas (${total})`;
+  } else if (selected === 1) {
+    const singleName = Array.from(state.selectedRedes)[0];
+    redeDropdownSelectedText.textContent = singleName;
+  } else {
+    redeDropdownSelectedText.textContent = `${selected} redes selecionadas de ${total}`;
+  }
+}
+
+if (redeDropdownTrigger && redeDropdownMenu && redeDropdownContainer) {
+  redeDropdownTrigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = !redeDropdownMenu.classList.contains('hidden');
+    if (isOpen) {
+      redeDropdownMenu.classList.add('hidden');
+      redeDropdownContainer.classList.remove('open');
+    } else {
+      redeDropdownMenu.classList.remove('hidden');
+      redeDropdownContainer.classList.add('open');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (redeDropdownContainer && !redeDropdownContainer.contains(e.target)) {
+      if (redeDropdownMenu) redeDropdownMenu.classList.add('hidden');
+      if (redeDropdownContainer) redeDropdownContainer.classList.remove('open');
+    }
+  });
+}
+
+function renderRedeFilter() {
+  if (!redeCheckboxesContainer) return;
+  redeCheckboxesContainer.innerHTML = '';
+
+  if (!state.availableRedes || state.availableRedes.length === 0) {
+    if (redeFilterSection) redeFilterSection.classList.add('hidden');
+    updateDropdownTriggerText();
+    return;
+  }
+
+  if (redeFilterSection) redeFilterSection.classList.remove('hidden');
+
+  state.availableRedes.forEach(item => {
+    const isChecked = state.selectedRedes.has(item.name);
+    const card = document.createElement('label');
+    card.className = `custom-dropdown-item ${isChecked ? 'selected' : ''}`;
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = item.name;
+    cb.checked = isChecked;
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'rede-name-label';
+    labelSpan.textContent = item.name;
+
+    const countSpan = document.createElement('span');
+    countSpan.className = 'rede-count-badge';
+    countSpan.textContent = `${item.count} ${item.count === 1 ? 'linha' : 'linhas'}`;
+
+    cb.addEventListener('change', () => {
+      if (cb.checked) {
+        state.selectedRedes.add(item.name);
+        card.classList.add('selected');
+      } else {
+        state.selectedRedes.delete(item.name);
+        card.classList.remove('selected');
+      }
+      updateDropdownTriggerText();
+      applyRedeFilter();
+    });
+
+    card.appendChild(cb);
+    card.appendChild(labelSpan);
+    card.appendChild(countSpan);
+    redeCheckboxesContainer.appendChild(card);
+  });
+
+  updateDropdownTriggerText();
+}
+
+function applyRedeFilter() {
+  if (!state.files.length) return;
+  const activeFile = state.files[state.activeIndex];
+  const filteredRows = getFilteredRows(activeFile);
+
+  renderPreview(activeFile.columns, filteredRows);
+  if (countRows) countRows.textContent = filteredRows.length;
+}
+
+if (selectAllRedesBtn) {
+  selectAllRedesBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.availableRedes.forEach(item => state.selectedRedes.add(item.name));
+    renderRedeFilter();
+    applyRedeFilter();
+  });
+}
+
+if (deselectAllRedesBtn) {
+  deselectAllRedesBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.selectedRedes.clear();
+    renderRedeFilter();
+    applyRedeFilter();
+  });
+}
+
 function renderApp() {
   if (state.files.length === 0) return;
   const activeFile = state.files[state.activeIndex];
 
+  updateAvailableRedes();
   renderTabs();
-  renderMapping(activeFile.columns);
-  renderPreview(activeFile.columns, activeFile.rows);
+  if (mappingTableBody) renderMapping(activeFile.columns);
+  
+  applyRedeFilter();
 
-  countRows.textContent = activeFile.rows.length;
-  countColumns.textContent = activeFile.columns.length;
+  if (countColumns) countColumns.textContent = activeFile.columns.length;
 
-  mappingSection.classList.remove('hidden');
-  previewSection.classList.remove('hidden');
+  if (mappingSection) mappingSection.classList.remove('hidden');
+  if (previewSection) previewSection.classList.remove('hidden');
 }
 
 function renderTabs() {
@@ -442,14 +784,23 @@ downloadCsvBtn.addEventListener('click', async () => {
 
   if (state.files.length === 1) {
     const activeFile = state.files[0];
-    const csv = buildCsv(activeFile.columns, activeFile.rows);
-    downloadFile(csv, `${activeFile.originalFileName}_final.csv`, 'text/csv;charset=utf-8;');
+    const filteredRows = getFilteredRows(activeFile);
+    const csv = buildCsv(activeFile.columns, filteredRows);
+
+    let fileNameExtra = '';
+    if (state.selectedRedes.size === 1) {
+      const selectedName = Array.from(state.selectedRedes)[0].replace(/[^a-zA-Z0-9_-]/g, '_');
+      fileNameExtra = `_${selectedName}`;
+    }
+
+    downloadFile(csv, `${activeFile.originalFileName}${fileNameExtra}_final.csv`, 'text/csv;charset=utf-8;');
   } else {
     toggleLoading(true);
     try {
       const zip = new JSZip();
       for (const file of state.files) {
-        const csv = buildCsv(file.columns, file.rows);
+        const filteredRows = getFilteredRows(file);
+        const csv = buildCsv(file.columns, filteredRows);
         zip.file(`${file.originalFileName}_final.csv`, csv);
       }
       const zipContent = await zip.generateAsync({ type: 'blob' });
@@ -560,17 +911,6 @@ downloadExcelBtn.addEventListener('click', async () => {
         left: { style: 'thin', color: { argb: "FFE26B0A" } }
       };
 
-      const extractRede = (localStr) => {
-        if (!localStr) return 'OUTROS';
-        const str = String(localStr).trim();
-        const known = ['ASSAÍ', 'ATACADÃO', 'PREZUNIC', 'HORTIFRUTI', 'CARREFOUR', 'GUANABARA', 'ROYAL', 'MUNDIAL', 'ZONASUL', 'SPOLETO', 'ARAMAR', 'BIG', 'BOMPREÇO'];
-        for (const k of known) {
-          if (str.toUpperCase().includes(k)) return k;
-        }
-        const parts = str.split(/[-–—]/);
-        return parts[0].trim().toUpperCase();
-      };
-
       const parseDateVal = (val) => {
         if (!val) return null;
         if (val instanceof Date) return val;
@@ -624,108 +964,15 @@ downloadExcelBtn.addEventListener('click', async () => {
         }
       };
 
-      const getRowVal = (row, keys) => {
-        if (!row) return '';
-        for (const k of keys) {
-          if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') {
-            return String(row[k]).trim();
-          }
-          const normK = normalizeHeader(k);
-          if (row[normK] !== undefined && row[normK] !== null && String(row[normK]).trim() !== '') {
-            return String(row[normK]).trim();
-          }
-        }
-        return '';
-      };
-
-      const PDV_KEYS = [
-        'Local de Atendimento Descrição', 'Local de Atendimento Descricao',
-        'Local de Atendimento Identificador Alternativo',
-        'PDV', 'LOCAL', 'FANTASIA', 'LOJA', 'CLIENTE', 'PONTO DE VENDA', 'NOME DO PDV'
-      ];
-      const PROMOTOR_KEYS = [
-        'Pessoa Nome', 'Pessoa ID Para Integracao',
-        'PROMOTOR', 'AGENTE', 'COLABORADOR', 'SUPERVISOR', 'NOME DO PROMOTOR'
-      ];
-      const PRODUTO_KEYS = [
-        'SKU', 'Itens Descrição', 'Itens Descricao', 'ITENS', 'PRODUTO',
-        'DESCRICAO', 'DESCRIÇÃO', 'DESCRIÇÃO DO PRODUTO', 'NOME DO PRODUTO', 'ITEM',
-        'Itens Identificador'
-      ];
-      const DATA_KEYS = [
-        'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)',
-        'DATA HORA TAREFA',
-        'DATA HORA FIM EXECUCAO ATIVIDADE GERADA PELO SISTEMA (DIM TEMPO)',
-        'DATA', 'DATA DO DIA', 'DATA VISITA', 'DATA DA VISITA', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA E HORA INICIO EXECUCAO', 'DATA E HORA EXECUÇÃO'
-      ];
-      const PRECO_KEYS = ['PRECO', 'PREÇO', 'VALOR', 'PREÇO UNITÁRIO', 'PRECO UNITARIO'];
-      const VALIDADE_KEYS = [
-        'INFORME A VALIDADE', 'VALIDADE', 'DATA DE VALIDADE', 'INFORME_A_VALIDADE',
-        '(2) INFORME A VALIDADE', '_2_INFORME_A_VALIDADE', '(2) VALIDADE',
-        '(3) INFORME A VALIDADE', '_3_INFORME_A_VALIDADE', '(3) VALIDADE'
-      ];
-      const CAIXAS_KEYS = ['QUANTAS CAIXAS FORAM ABASTECIDAS?', 'QTD. DE CAIXAS ABASTECIDAS', 'QTD DE CAIXAS ABASTECIDAS', 'CAIXAS ABASTECIDAS', 'CAIXAS', 'QTD CAIXAS', 'TOTAL REPOSIÇÕES', 'QUANTIDADE TOTAL', 'QUANTIDADE'];
-      const PONTO_EXTRA_KEYS = ['TEM PONTO EXTRA?', 'PONTO EXTRA'];
-      const AVARIA_KEYS = [
-        'FOI RETIRADO PRODUTO DO PDV PARA AVARIA?',
-        'FOI RETIRADO PRODUTO DO PDV PARA AVARIA',
-        'QUAL MOTIVO DA AVARIA?',
-        'QUAL MOTIVO DA AVARIA',
-        'MOTIVO DA AVARIA',
-        'MOTIVO AVARIA',
-        'CITE O PESO DO PRODUTO',
-        'PESO DO PRODUTO',
-        'FOTO DO PRODUTO NA BALANÇA',
-        'FOTO DO PRODUTO NA BALANCA',
-        'CITE O LOTE DO PRODUTO',
-        'LOTE DO PRODUTO',
-        'COLOQUE O VALOR DA NOTA',
-        'VALOR DA NOTA',
-        'FOTO DA MESA'
-      ];
-      const TECNICO_KEYS = [
-        'VISITOU O ALMOXARIFADO?',
-        'VISITOU ALMOXARIFADO?',
-        'VISITOU A COZINHA?',
-        'VISITOU COZINHA?',
-        'VISITOU O AÇOUGUE?',
-        'VISITOU ACOUGUE?',
-        'VISITOU O SALGADO?',
-        'VISITOU SALGADO?',
-        'VISITOU O LATICÍNIOS?',
-        'VISITOU LATICINIOS?',
-        'VISITOU O FLV?',
-        'VISITOU FLV?',
-        'VISITOU A LIXEIRA?',
-        'VISITOU LIXEIRA?',
-        'RELATÓRIO ASSINADO PELO GERENTE?',
-        'RELATORIO ASSINADO PELO GERENTE?',
-        'RELATORIO TECNICO FINALIZADO?',
-        'RELATÓRIO TÉCNICO FINALIZADO?',
-        'CHECK LIST TÉCNICO',
-        'CHECK LIST TECNICO',
-        'PESQUISA START - TÉCNICO',
-        'PESQUISA START - TECNICO',
-        'VISITOU CLIENTE?',
-        'VISITOU CLIENTE (CHECKOUT)?',
-        'VISITOU CLIENTE (FOTO)?',
-        'FOTO ENTRADA COM BIO',
-        'TEM FOTO DA ENTRADA?',
-        'CHECKIN COM GEOLOCALIZACAO FORA DE RAIO',
-        'CHECKIN COM GEOLOCALIZAÇÃO FORA DE RAIO',
-        'FOTO MOSTRANDO CONFORME CHECK-OUT',
-        'TEM FOTO NO CHECKOUT?',
-        'FOTO DAS VALIDADES E RUPTURAS',
-        'TEM FOTO DE VALIDADE E RUPTURAS?'
-      ];
+      const activeRows = getFilteredRows(fileObj);
 
       // Identificar quais abas possuem dados reais
-      const hasPrices = fileObj.rows.some(row => {
+      const hasPrices = activeRows.some(row => {
         const p = parsePrice(getRowVal(row, PRECO_KEYS));
         return p !== null && p > 0;
       });
 
-      const validRupturaRows = fileObj.rows.filter(row => {
+      const validRupturaRows = activeRows.filter(row => {
         const pdvVal = getRowVal(row, PDV_KEYS);
         const produtoVal = getRowVal(row, PRODUTO_KEYS);
         if (!pdvVal || !produtoVal) return false;
@@ -744,13 +991,13 @@ downloadExcelBtn.addEventListener('click', async () => {
       });
       const hasRuptura = validRupturaRows.length > 0;
 
-      const validValidadeRows = fileObj.rows.filter(row => {
+      const validValidadeRows = activeRows.filter(row => {
         const valStr = getRowVal(row, VALIDADE_KEYS);
         return !!valStr;
       });
       const hasValidade = validValidadeRows.length > 0;
 
-      const validAbastecimentoRows = fileObj.rows.filter(row => {
+      const validAbastecimentoRows = activeRows.filter(row => {
         const caixasVal = getRowVal(row, CAIXAS_KEYS);
         if (caixasVal === null || caixasVal === undefined || String(caixasVal).trim() === '') return false;
         const numCaixas = parseInt(String(caixasVal).replace(',', '.'), 10);
@@ -758,13 +1005,13 @@ downloadExcelBtn.addEventListener('click', async () => {
       });
       const hasAbastecimento = validAbastecimentoRows.length > 0;
 
-      const validPontoExtraRows = fileObj.rows.filter(row => {
+      const validPontoExtraRows = activeRows.filter(row => {
         const pontoExtraVal = getRowVal(row, PONTO_EXTRA_KEYS);
         return pontoExtraVal !== null && pontoExtraVal !== undefined && String(pontoExtraVal).trim() !== '';
       });
       const hasPontoExtra = validPontoExtraRows.length > 0;
 
-      const validAvariaRows = fileObj.rows.filter(row => {
+      const validAvariaRows = activeRows.filter(row => {
         const avariaVal = getRowVal(row, AVARIA_KEYS);
         if (avariaVal === null || avariaVal === undefined || String(avariaVal).trim() === '') return false;
         const foiRetirado = String(getRowVal(row, ['FOI RETIRADO PRODUTO DO PDV PARA AVARIA?', 'FOI RETIRADO PRODUTO DO PDV PARA AVARIA']) || '').trim().toUpperCase();
@@ -773,7 +1020,7 @@ downloadExcelBtn.addEventListener('click', async () => {
       });
       const hasAvaria = validAvariaRows.length > 0;
 
-      const validTecnicoRows = fileObj.rows.filter(row => {
+      const validTecnicoRows = activeRows.filter(row => {
         const tecVal = getRowVal(row, TECNICO_KEYS);
         if (tecVal !== null && tecVal !== undefined && String(tecVal).trim() !== '') return true;
         const secaoVal = String(
@@ -872,7 +1119,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         });
 
         let rPrecoIdx = 2;
-        fileObj.rows.forEach(row => {
+        activeRows.forEach(row => {
           const priceNum = parsePrice(getRowVal(row, PRECO_KEYS));
           if (priceNum !== null && priceNum > 0) {
             const rawDate = getRowVal(row, DATA_KEYS);
@@ -940,7 +1187,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         });
 
         const mapRuptura = new Map();
-        fileObj.rows.forEach(row => {
+        activeRows.forEach(row => {
           const pdvVal = getRowVal(row, PDV_KEYS);
           const produtoVal = getRowVal(row, PRODUTO_KEYS);
           if (!pdvVal || !produtoVal) return;
@@ -1070,7 +1317,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         });
 
         let rValIdx = 2;
-        fileObj.rows.forEach(row => {
+        activeRows.forEach(row => {
           const rawDateExec = getRowVal(row, DATA_KEYS);
           const dateExec = parseDateVal(rawDateExec);
           const pdvVal = getRowVal(row, PDV_KEYS);
@@ -1165,7 +1412,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         });
 
         let rAbastIdx = 2;
-        fileObj.rows.forEach(row => {
+        activeRows.forEach(row => {
           const rawDate = getRowVal(row, DATA_KEYS);
           const dateVal = parseDateVal(rawDate);
           const pdvVal = getRowVal(row, PDV_KEYS);
@@ -1223,7 +1470,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         });
 
         let rPontoExtraIdx = 2;
-        fileObj.rows.forEach(row => {
+        activeRows.forEach(row => {
           const rawDate = getRowVal(row, DATA_KEYS);
           const dateVal = parseDateVal(rawDate);
           const pdvVal = getRowVal(row, PDV_KEYS);
@@ -1290,7 +1537,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         });
 
         let rAvariaIdx = 2;
-        fileObj.rows.forEach(row => {
+        activeRows.forEach(row => {
           const avariaVal = getRowVal(row, AVARIA_KEYS);
           if (avariaVal === null || avariaVal === undefined || String(avariaVal).trim() === '') return;
 
@@ -1397,7 +1644,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         });
 
         let rTecnicoIdx = 2;
-        fileObj.rows.forEach(row => {
+        activeRows.forEach(row => {
           const rawDate = getRowVal(row, ['DATA E HORA INICIO EXECUCAO', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA HORA DA TAREFA', ...DATA_KEYS]);
           const dateVal = parseDateVal(rawDate);
           const pdvVal = getRowVal(row, PDV_KEYS);
@@ -1731,8 +1978,6 @@ function processRows(parsedRows, originalFileName) {
     'FOTO DO MIX',
     'O QUE SE RESOLVEU COM O GERENTE?',
     'POSICAO ATUAL',
-    'REDE',
-    'REDE DO PDV',
     'TEM ALGUMA OBSERVACAO SOBRE O PDV',
     'TEM_ALGUMA_OBSERVACAO_SOBRE_O_PDV',
     'OBSERVACAO DO PDV',
@@ -1914,6 +2159,7 @@ function parseDelimitedCsv(text, delimiter) {
 }
 
 function renderMapping(exportColumns) {
+  if (!mappingTableBody) return;
   mappingTableBody.innerHTML = '';
   
   exportColumns.forEach(colName => {
