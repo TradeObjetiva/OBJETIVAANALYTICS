@@ -46,7 +46,8 @@ const EXPORT_MODEL = [
   { export: 'RUPTURA TOTAL?', source: 'RUPTURA TOTAL' },
   { export: 'PRODUTO EM RUPTURA?', source: 'PRODUTO EM RUPTURA?' },
   { export: 'PRODUTO EM RUPTURA?', source: 'PRODUTO EM RUPTURA' },
-  { export: 'PRODUTO EM RUPTURA?', source: 'TIPO DE RUPTURA' },
+  { export: 'TIPO DE RUPTURA', source: 'TIPO DE RUPTURA' },
+  { export: 'TIPO DE RUPTURA', source: 'TIPO_DE_RUPTURA' },
 
   { export: 'PRECO', source: 'PRECO' },
   { export: 'PRECO', source: 'PREÇO' },
@@ -916,7 +917,18 @@ downloadExcelBtn.addEventListener('click', async () => {
         const wsRuptura = wb.addWorksheet('RUPTURA ', { views: [{ showGridLines: true }] });
         wsRuptura.getRow(1).height = 24;
 
-        const headersRuptura = ['Local', 'Produto', 'Ruptura Total?', 'Total de Visitas', 'Visitas com Ruptura', 'Rupturas / Total de Visitas', 'Percentual Ruptura'];
+        const headersRuptura = [
+          'Local',
+          'Produto',
+          'Tipo de Ruptura',
+          'Total de Visitas',
+          'Visitas Ruptura Total',
+          'Visitas Ruptura Parcial',
+          'Total Visitas com Ruptura',
+          '% Ruptura Total',
+          '% Ruptura Parcial',
+          '% Ruptura Geral'
+        ];
         
         const rowHeaderRuptura = wsRuptura.getRow(1);
         headersRuptura.forEach((h, idx) => {
@@ -934,52 +946,89 @@ downloadExcelBtn.addEventListener('click', async () => {
           if (!pdvVal || !produtoVal) return;
 
           const rupTotalStr = String(row['RUPTURA TOTAL?'] || row['RUPTURA TOTAL'] || getRowVal(row, ['RUPTURA TOTAL?', 'RUPTURA TOTAL']) || '').toUpperCase();
-          const isRupTotal = rupTotalStr.includes('SIM');
+          const isRupTotalFlag = rupTotalStr.includes('SIM');
           const isPadrao = normalizeHeader(produtoVal) === 'PADRAO';
 
-          if (isPadrao && !isRupTotal) return;
+          if (isPadrao && !isRupTotalFlag) return;
 
           const displayProduto = isPadrao ? 'RUPTURA TOTAL DO PDV' : produtoVal;
-          const rupturaTotalFlag = (isPadrao || isRupTotal) ? 'SIM' : 'NÃO';
 
           const prodRupStr = String(row['PRODUTO EM RUPTURA?'] || row['PRODUTO EM RUPTURA'] || getRowVal(row, ['PRODUTO EM RUPTURA?', 'PRODUTO EM RUPTURA']) || '').toUpperCase();
           const tipoRupStr = String(row['TIPO DE RUPTURA'] || getRowVal(row, ['TIPO DE RUPTURA']) || '').toUpperCase();
-          const isRup = isRupTotal || prodRupStr.includes('SIM') || (tipoRupStr !== '' && !tipoRupStr.includes('NAO') && !tipoRupStr.includes('NÃO'));
 
-          const key = `${pdvVal}|||${displayProduto}|||${rupturaTotalFlag}`;
+          const isRupTotal = isPadrao || isRupTotalFlag || tipoRupStr.includes('TOTAL');
+          const isRupParcial = !isRupTotal && (tipoRupStr.includes('PARCIAL'));
+          const isRupGeneric = !isRupTotal && !isRupParcial && (prodRupStr.includes('SIM') || (tipoRupStr !== '' && !tipoRupStr.includes('NAO') && !tipoRupStr.includes('NÃO')));
+
+          const key = `${pdvVal}|||${displayProduto}`;
 
           if (!mapRuptura.has(key)) {
             mapRuptura.set(key, {
               local: pdvVal,
               produto: displayProduto,
-              isRupturaTotal: rupturaTotalFlag,
               totalVisitas: 0,
-              rupturas: 0
+              rupturasTotais: 0,
+              rupturasParciais: 0
             });
           }
           const item = mapRuptura.get(key);
           item.totalVisitas++;
-          if (isRup) item.rupturas++;
+          if (isRupTotal) {
+            item.rupturasTotais++;
+          } else if (isRupParcial) {
+            item.rupturasParciais++;
+          } else if (isRupGeneric) {
+            item.rupturasTotais++;
+          }
         });
 
         let rRupIdx = 2;
         mapRuptura.forEach(item => {
+          const totalRupturas = item.rupturasTotais + item.rupturasParciais;
+
+          let tipoRupText = 'NENHUMA';
+          if (item.rupturasTotais > 0 && item.rupturasParciais > 0) {
+            tipoRupText = 'RUPTURA TOTAL / RUPTURA PARCIAL';
+          } else if (item.rupturasTotais > 0) {
+            tipoRupText = 'RUPTURA TOTAL';
+          } else if (item.rupturasParciais > 0) {
+            tipoRupText = 'RUPTURA PARCIAL';
+          }
+
           const r = wsRuptura.getRow(rRupIdx++);
           r.getCell(4).value = item.local;
           r.getCell(5).value = item.produto;
-          r.getCell(6).value = item.isRupturaTotal;
+          r.getCell(6).value = tipoRupText;
           r.getCell(7).value = item.totalVisitas;
-          r.getCell(8).value = item.rupturas;
-          r.getCell(9).value = `${item.rupturas}/${item.totalVisitas}`;
+          r.getCell(8).value = item.rupturasTotais;
+          r.getCell(9).value = item.rupturasParciais;
+          r.getCell(10).value = `${totalRupturas}/${item.totalVisitas}`;
 
-          const pct = item.totalVisitas > 0 ? (item.rupturas / item.totalVisitas) : 0;
-          r.getCell(10).value = pct;
-          r.getCell(10).numFmt = '0.0%';
+          const pctTotal = item.totalVisitas > 0 ? (item.rupturasTotais / item.totalVisitas) : 0;
+          const pctParcial = item.totalVisitas > 0 ? (item.rupturasParciais / item.totalVisitas) : 0;
+          const pctGeral = item.totalVisitas > 0 ? (totalRupturas / item.totalVisitas) : 0;
 
-          for (let i = 4; i <= 10; i++) {
+          r.getCell(11).value = pctTotal;
+          r.getCell(11).numFmt = '0.0%';
+
+          r.getCell(12).value = pctParcial;
+          r.getCell(12).numFmt = '0.0%';
+
+          r.getCell(13).value = pctGeral;
+          r.getCell(13).numFmt = '0.0%';
+
+          for (let i = 4; i <= 13; i++) {
             r.getCell(i).font = DATA_FONT;
             r.getCell(i).border = ORANGE_BORDER;
             r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+
+          if (tipoRupText === 'RUPTURA TOTAL') {
+            r.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDEDEC' } };
+          } else if (tipoRupText === 'RUPTURA PARCIAL') {
+            r.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEEFDB' } };
+          } else if (tipoRupText === 'RUPTURA TOTAL / RUPTURA PARCIAL') {
+            r.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5EEF8' } };
           }
         });
 
@@ -987,16 +1036,19 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         wsRuptura.autoFilter = {
           from: { row: 1, column: 4 },
-          to: { row: Math.max(rRupIdx - 1, 1), column: 10 }
+          to: { row: Math.max(rRupIdx - 1, 1), column: 13 }
         };
 
         wsRuptura.getColumn(4).width = 46;  // Local
         wsRuptura.getColumn(5).width = 46;  // Produto
-        wsRuptura.getColumn(6).width = 18;  // Ruptura Total?
-        wsRuptura.getColumn(7).width = 18;  // Total de Visitas
-        wsRuptura.getColumn(8).width = 20;  // Visitas com Ruptura
-        wsRuptura.getColumn(9).width = 26;  // Rupturas / Total de Visitas
-        wsRuptura.getColumn(10).width = 20; // Percentual Ruptura
+        wsRuptura.getColumn(6).width = 34;  // Tipo de Ruptura
+        wsRuptura.getColumn(7).width = 16;  // Total de Visitas
+        wsRuptura.getColumn(8).width = 20;  // Visitas Ruptura Total
+        wsRuptura.getColumn(9).width = 20;  // Visitas Ruptura Parcial
+        wsRuptura.getColumn(10).width = 24; // Total Visitas com Ruptura
+        wsRuptura.getColumn(11).width = 16; // % Ruptura Total
+        wsRuptura.getColumn(12).width = 16; // % Ruptura Parcial
+        wsRuptura.getColumn(13).width = 16; // % Ruptura Geral
       }
 
       // ==========================================

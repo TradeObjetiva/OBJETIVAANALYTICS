@@ -1045,13 +1045,21 @@ function renderLaivonRuptures(ruptures, prices, localMap) {
         html += ruptures.slice(0, 15).map(r => {
             const local = localMap.get(r.local_id) || {};
             const storeName = local.name || `Loja #${r.local_id}`;
+            const tipoStr = String(r.tipo_ruptura || r.tipo || r.type || r.description || '').toUpperCase();
+            const isParcial = tipoStr.includes('PARCIAL');
+            const badgeClass = isParcial ? 'badge-warning' : 'badge-danger';
+            const badgeStyle = isParcial 
+                ? 'background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;' 
+                : 'padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;';
+            const badgeLabel = isParcial ? 'RUPTURA PARCIAL' : 'RUPTURA TOTAL';
+
             return `
                 <div class="laivon-rupture-card">
                     <div>
                         <strong style="font-size: 12px; color: #f8fafc;">Produto ID: #${r.product_id}</strong>
                         <span style="display: block; font-size: 10px; color: #94a3b8;">📍 ${storeName}</span>
                     </div>
-                    <span class="badge badge-danger" style="padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">RUPTURA</span>
+                    <span class="badge ${badgeClass}" style="${badgeStyle}">${badgeLabel}</span>
                 </div>
             `;
         }).join('');
