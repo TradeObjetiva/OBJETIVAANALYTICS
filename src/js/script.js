@@ -264,10 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const pwaBanner = document.getElementById('pwa-install-banner');
 
     // Mobile Sidebar Elements
-    const mobileSidebar = document.getElementById('mobile-sidebar');
-    const sidebarOverlay = document.getElementById('mobile-sidebar-overlay');
-    const logoTrigger = document.getElementById('mobile-logo-trigger');
+    const sidebarEl = document.getElementById('sidebar-nav') || document.querySelector('.sidebar-nav');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const closeSidebarBtn = document.getElementById('close-sidebar');
+    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
 
     let deferredPrompt;
 
@@ -446,21 +447,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Mobile Sidebar Logic
+    // Mobile Sidebar Logic (Drawer)
     const openSidebar = () => {
-        if (mobileSidebar && sidebarOverlay) {
-            mobileSidebar.classList.add('open');
-            sidebarOverlay.classList.add('open');
-            document.body.style.overflow = 'hidden'; // Prevent background scroll
-        }
+        if (sidebarEl) sidebarEl.classList.add('open');
+        if (sidebarOverlay) sidebarOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
     };
 
     const closeSidebar = () => {
-        if (mobileSidebar && sidebarOverlay) {
-            mobileSidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('open');
-            document.body.style.overflow = ''; // Restore scroll
-        }
+        if (sidebarEl) sidebarEl.classList.remove('open');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('open');
+        document.body.style.overflow = ''; // Restore scroll
     };
 
     // Expose for Global Access (used by shortcut cards)
@@ -664,9 +661,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Mobile Sidebar Triggers
-    if (logoTrigger) logoTrigger.addEventListener('click', openSidebar);
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openSidebar);
     if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
     if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
+    if (mobileThemeToggle) {
+        mobileThemeToggle.addEventListener('click', () => {
+            applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+        });
+    }
 
     document.querySelectorAll('iframe').forEach(iframe => {
         iframe.onload = syncIframeStyles;

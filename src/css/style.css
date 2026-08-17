@@ -279,21 +279,13 @@ body {
 /* --- Content Area --- */
 .content-area {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 40px;
+    overflow: hidden;
     min-height: 0;
     background-image: radial-gradient(circle at 0% 0%, rgba(79,70,229,0.05) 0%, transparent 40%),
                       radial-gradient(circle at 100% 100%, rgba(6,182,212,0.05) 0%, transparent 40%);
-    transition: padding 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    .content-area { padding: 20px; }
-}
-@media (max-width: 480px) {
-    .content-area { padding: 15px; }
 }
 
 .view-container {
@@ -302,8 +294,20 @@ body {
     transform: translateY(10px);
     transition: var(--transition);
     display: none;
-    height: 100%;
+    flex: 1;
     min-height: 0;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .view-container { padding: 20px; }
+}
+@media (max-width: 480px) {
+    .view-container { padding: 15px; }
 }
 
 .view-container.active {
@@ -311,19 +315,25 @@ body {
     visibility: visible;
     transform: translateY(0);
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
+}
+
+/* Iframe subsystems — tela cheia sem padding */
+#relatorio,
+#cartas,
+#analytics,
+#roteiro,
+#assiduidade {
+    padding: 0;
+    overflow: hidden;
 }
 
 /* Iframe modules fill the full container */
 .view-container > iframe {
     width: 100%;
+    height: 100%;
     flex: 1;
     border: none;
     background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
     min-height: 0;
 }
 
@@ -974,192 +984,160 @@ body {
     }
 }
 
+/* Elementos Mobile escondidos no Desktop */
+.mobile-topbar,
+.sidebar-overlay,
+.close-sidebar-btn {
+    display: none !important;
+}
+
 /* ============================================
    RESPONSIVIDADE MOBILE — max-width: 768px
    ============================================ */
 @media (max-width: 768px) {
 
-    /* Body: habilita scroll vertical no mobile */
-    body {
-        overflow: auto;
-        height: auto;
-        min-height: 100vh;
-    }
-
-    .app-container {
-        height: auto;
-        min-height: 100vh;
-    }
-
-    /* Top nav compacto e robusto */
-    .top-nav {
-        padding: 0 12px;
-        height: 60px;
-        min-height: 60px;
-        padding-top: max(8px, env(safe-area-inset-top));
-        padding-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        background: var(--bg-card); /* Garante fundo sólido no standalone */
-    }
-
-    /* Esconde as abas de desktop no mobile */
-    .tabs { display: none !important; }
-
-    .nav-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-    }
-
-    .logo-area { 
-        display: flex; 
-        align-items: center; 
-        gap: 8px; 
-        flex: 1; 
-        min-width: 0; 
-    }
-
-    .logo-area h1 { 
-        font-size: 14px; 
-        letter-spacing: -0.3px; 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-        max-width: 140px; /* Limita largura do texto para não bater nos ícones */
-    }
-    
-    .logo-icon { width: 32px; height: 32px; font-size: 16px; flex-shrink: 0; }
-
-    .action-btn { width: 34px; height: 34px; flex-shrink: 0; }
-    
-    /* Esconde ABSOLUTAMENTE tudo que não for o avatar no mobile */
-    .user-profile .user-info, 
-    .user-profile .user-name, 
-    .user-profile .badge, 
-    .user-profile .logout-btn { 
-        display: none !important; 
-        width: 0 !important;
-        height: 0 !important;
+    /* Layout Base no Mobile */
+    body, html {
         overflow: hidden !important;
-        visibility: hidden !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        position: fixed !important;
         margin: 0 !important;
         padding: 0 !important;
     }
-    
-    .user-profile { 
-        padding: 0 !important; 
-        background: transparent !important; 
-        border: none !important;
-        flex-shrink: 0 !important;
+
+    .app-container {
         display: flex !important;
-        align-items: center !important;
-        width: 32px !important;
-        max-width: 32px !important;
+        flex-direction: column !important;
+        width: 100vw !important;
+        height: 100vh !important;
         overflow: hidden !important;
     }
 
-    .user-profile .avatar { 
-        width: 32px !important; 
-        height: 32px !important; 
-        font-size: 11px !important; 
-        border: 1.5px solid var(--primary-soft) !important;
-        margin: 0 !important;
-    }
-
-    /* Install button menor */
-    .install-btn { padding: 8px 12px; font-size: 11px; }
-
-    /* Content area com padding e espaço para bottom nav */
-    .content-area {
-        padding: 16px;
-        padding-bottom: 90px;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    /* View containers scroll mobile */
-    .view-container {
-        height: auto;
-    }
-    .view-container.active {
-        height: auto;
-        min-height: calc(100vh - 60px - 70px);
-    }
-
-    /* Iframes com altura fixa mas usável no mobile */
-    .view-container > iframe {
-        min-height: 85vh;
-        border-radius: 12px;
-    }
-
-    /* Dashboard: coluna única */
-    .dashboard-grid { grid-template-columns: 1fr; gap: 16px; }
-
-    /* Hero menor */
-    .welcome-hero { padding: 24px; }
-    .welcome-hero h2 { font-size: 24px; letter-spacing: -0.5px; }
-    .welcome-hero p { font-size: 14px; margin-bottom: 24px; }
-
-    /* Métricas: 2 colunas no mobile */
-    .metrics-strip { 
-        grid-template-columns: 1fr 1fr; 
-        gap: 12px; 
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .metric-card { padding: 12px; min-width: 0; }
-    .metric-card .value { font-size: 24px; gap: 6px; }
-    .metric-card .label { font-size: 9px; letter-spacing: 0.5px; margin-bottom: 8px; }
-
-    /* Shortcuts: 2 colunas */
-    .shortcuts-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .shortcut-card { padding: 14px; }
-
-    /* Gestão de usuários */
-    .management-grid { grid-template-columns: 1fr !important; }
-
-    /* Login card ocupa mais da tela */
-    .login-card { padding: 32px 24px; margin: 16px; max-width: 100%; }
-
-    /* Tabela de dados scroll horizontal */
-    .mgmt-card { padding: 16px; overflow-x: auto; }
-    .data-table { min-width: 500px; }
-
-    /* Mobile Sidebar Navigation */
-    .mobile-sidebar {
-        position: fixed;
-        top: 0;
-        left: -280px; /* Hidden by default */
-        width: 280px;
-        height: 100vh;
+    /* Top Bar no Mobile */
+    .mobile-topbar {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        height: 56px;
+        min-height: 56px;
+        padding: 0 16px;
         background: var(--bg-card);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-right: 1px solid var(--border);
-        z-index: 2000;
+        border-bottom: 1px solid var(--border);
+        z-index: 1000;
+        flex-shrink: 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .mobile-topbar .logo-area {
         display: flex;
-        flex-direction: column;
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.3);
+        align-items: center;
+        gap: 10px;
     }
 
-    .mobile-sidebar.open {
-        transform: translateX(280px);
+    .mobile-topbar .logo-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 15px;
+        border-radius: 8px;
     }
 
+    .mobile-topbar .logo-area h1 {
+        font-size: 15px;
+        font-weight: 800;
+        margin: 0;
+    }
+
+    .mobile-menu-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-accent);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: var(--transition);
+        padding: 0;
+    }
+
+    .mobile-menu-btn:active {
+        transform: scale(0.95);
+        background: var(--primary-soft);
+    }
+
+    .mobile-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Sidebar Gaveta (Off-Canvas Drawer no Mobile) */
+    .sidebar-nav {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 290px !important;
+        max-width: 85vw !important;
+        height: 100vh !important;
+        z-index: 3000 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.5) !important;
+        background: var(--bg-card) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 20px 16px !important;
+        border-right: 1px solid var(--border) !important;
+    }
+
+    .sidebar-nav.open {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-nav .sidebar-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        margin-bottom: 20px !important;
+        padding: 0 4px !important;
+    }
+
+    .close-sidebar-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-accent);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 700;
+        transition: var(--transition);
+    }
+
+    .close-sidebar-btn:active {
+        color: var(--text-main);
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Overlay Escuro com Blur */
     .sidebar-overlay {
+        display: block !important;
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.65);
         backdrop-filter: blur(4px);
-        z-index: 1999;
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 2999;
         opacity: 0;
         visibility: hidden;
         transition: all 0.3s ease;
@@ -1170,76 +1148,97 @@ body {
         visibility: visible;
     }
 
-    .sidebar-header {
-        padding: 24px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    /* Abas Visíveis dentro da Gaveta no Mobile */
+    .tabs {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        flex: 1 !important;
+        overflow-y: auto !important;
     }
 
-    .close-sidebar-btn {
-        background: var(--bg-accent);
-        border: none;
-        color: var(--text-muted);
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
+    .tab-btn {
+        padding: 12px 14px !important;
+        font-size: 13px !important;
     }
 
-    .sidebar-content {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        overflow-y: auto;
+    /* Área de Conteúdo no Mobile */
+    .content-area {
+        flex: 1 !important;
+        width: 100% !important;
+        height: calc(100vh - 56px) !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 0 !important;
     }
 
-    .sidebar-divider {
-        height: 1px;
-        background: var(--border);
-        margin: 8px 16px;
+    .view-container {
+        padding: 16px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        flex: 1 !important;
+        min-height: 100% !important;
     }
 
-    .sidebar-footer {
-        padding: 24px;
-        border-top: 1px solid var(--border);
-        color: var(--text-dim);
-        font-size: 11px;
-        text-align: center;
+    /* Subsistemas Iframe ocupam 100% no mobile sem bordas */
+    #relatorio, #cartas, #analytics, #roteiro, #assiduidade {
+        padding: 0 !important;
+        overflow: hidden !important;
+        height: 100% !important;
+        min-height: 100% !important;
     }
 
-    .nav-tab-mobile {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        color: var(--text-muted);
-        font-size: 14px;
-        font-weight: 600;
-        background: none;
-        border: none;
-        padding: 14px 16px;
-        border-radius: 12px;
-        transition: var(--transition);
-        cursor: pointer;
-        width: 100%;
-        text-align: left;
+    .view-container > iframe {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        border: none !important;
+        border-radius: 0 !important;
     }
 
-    .nav-tab-mobile.active {
-        color: var(--primary);
-        background: var(--primary-soft);
+    /* Dashboard: coluna única no mobile */
+    .dashboard-grid { 
+        grid-template-columns: 1fr !important; 
+        gap: 16px !important; 
     }
 
-    .nav-tab-mobile svg {
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0;
+    .welcome-hero { 
+        padding: 16px !important; 
+    }
+
+    .welcome-hero h2 { 
+        font-size: 18px !important; 
+    }
+
+    .welcome-hero p { 
+        font-size: 12px !important; 
+    }
+
+    /* Cards de KPI no mobile: 2 colunas */
+    .welcome-hero > div[style*="grid-template-columns: repeat(4, 1fr)"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    /* Gestão de usuários e perfil: 1 coluna */
+    .management-grid { 
+        grid-template-columns: 1fr !important; 
+    }
+
+    .login-card { 
+        padding: 24px 18px !important; 
+        margin: 12px !important; 
+        max-width: 100% !important; 
+    }
+
+    .mgmt-card { 
+        padding: 16px !important; 
+        overflow-x: auto !important; 
+    }
+
+    .data-table { 
+        min-width: 450px !important; 
     }
 
     #mobile-logo-trigger {
@@ -1311,10 +1310,11 @@ body {
 @media (max-width: 480px) {
     .metrics-strip { grid-template-columns: 1fr; }
     .shortcuts-grid { grid-template-columns: 1fr 1fr; }
-    .content-area { padding: 12px; padding-bottom: 88px; }
-    .welcome-hero h2 { font-size: 20px; }
-    .welcome-hero { padding: 20px; }
-    .top-nav { padding: 0 12px; }
+    .content-area { padding: 0 !important; }
+    .view-container { padding: 12px; }
+    #relatorio, #cartas, #analytics, #roteiro, #assiduidade { padding: 0 !important; }
+    .welcome-hero h2 { font-size: 17px; }
+    .welcome-hero { padding: 14px; }
 }
 
 .bottom-nav {

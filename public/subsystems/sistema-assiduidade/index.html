@@ -60,6 +60,29 @@
             background: transparent;
         }
 
+        .summary-kpi {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            user-select: none;
+        }
+
+        .summary-kpi:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .summary-kpi:active {
+            transform: translateY(0);
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -1189,12 +1212,12 @@
                 </div>
             </div>
 
-            <!-- Summary Cards -->
+            <!-- Summary Cards (Interativos) -->
             <div id="summary-cards"
-                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px;">
-                <div class="summary-kpi">
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                <div class="summary-kpi" onclick="openStaffDetailsModal()" title="Clique para ver a lista completa de colaboradores ativos">
                     <div
-                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center;">
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(99, 102, 241, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="8.5" cy="7" r="4"></circle>
@@ -1210,9 +1233,9 @@
                             style="font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2;">--</div>
                     </div>
                 </div>
-                <div class="summary-kpi">
+                <div class="summary-kpi" onclick="openPresenceRateModal()" title="Clique para ver o detalhamento analítico da taxa de presença">
                     <div
-                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;">
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
@@ -1225,9 +1248,9 @@
                             style="font-size: 22px; font-weight: 800; color: #10b981; line-height: 1.2;">--%</div>
                     </div>
                 </div>
-                <div class="summary-kpi">
+                <div class="summary-kpi" onclick="openAbsenceDetailsModal()" title="Clique para ver a lista de colaboradores com falta">
                     <div
-                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;">
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1241,9 +1264,9 @@
                             style="font-size: 22px; font-weight: 800; color: #ef4444; line-height: 1.2;">--</div>
                     </div>
                 </div>
-                <div class="summary-kpi">
+                <div class="summary-kpi" onclick="openCertificatesDetailsModal()" title="Clique para ver a lista de colaboradores com atestados">
                     <div
-                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center;">
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(245, 158, 11, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
@@ -1255,6 +1278,29 @@
                             Atestados</div>
                         <div id="kpi-certificate-count"
                             style="font-size: 22px; font-weight: 800; color: #f59e0b; line-height: 1.2;">--</div>
+                    </div>
+                </div>
+                <div class="summary-kpi" onclick="openVacationDetailsModal()" title="Clique para ver promotores em férias e contagem regressiva de dias">
+                    <div
+                        style="width: 42px; height: 42px; border-radius: 12px; background: rgba(6, 182, 212, 0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <div
+                            style="font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Férias</div>
+                        <div id="kpi-vacation-count"
+                            style="font-size: 22px; font-weight: 800; color: #06b6d4; line-height: 1.2;">--</div>
                     </div>
                 </div>
             </div>
@@ -2331,8 +2377,8 @@
                 tableBody.appendChild(tr);
             });
 
-            // Atualiza os cards de resumo
-            updateSummaryCards(filteredStaff, attendanceMap, days);
+            // Atualiza os cards de resumo (com férias completas entre ciclos e agrupamento de atestados)
+            await updateSummaryCards(filteredStaff, attendanceMap, days, records);
 
             // Salva dados globais para detecção de células vazias
             lastFilteredStaff = filteredStaff;
@@ -2342,45 +2388,369 @@
             console.log('Grade de assiduidade renderizada com sucesso.');
         }
 
-        function updateSummaryCards(staff, attendanceMap, days) {
+        // Helper seguro de tema para SweetAlert
+        function getSwalTheme() {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            return {
+                background: isLight ? '#ffffff' : '#121216',
+                color: isLight ? '#0f172a' : '#ffffff',
+                cardBg: isLight ? '#f8fafc' : '#1c1c24',
+                border: isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)',
+                inputBg: isLight ? '#f1f5f9' : '#1c1c24',
+                inputBorder: isLight ? '#cbd5e1' : 'rgba(255,255,255,0.1)'
+            };
+        }
+
+        function formatISOToBR(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('T')[0].split('-');
+            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            return dateStr;
+        }
+
+        // Armazenamento de dados analíticos para os modais interativos
+        let kpiModalData = {
+            staff: [],
+            presence: { totalP: 0, totalEntries: 0, rate: 0, byEquipe: [] },
+            absences: [],
+            certificates: [],
+            vacations: []
+        };
+
+        async function updateSummaryCards(staff, attendanceMap, days, rawRecords = []) {
             let totalP = 0, totalFT = 0, totalATT = 0, totalFE = 0, totalEntries = 0;
+            const today = getLocalDateString(new Date());
+
+            const equipeStats = {};
+            const promoterAbsencesMap = {};
+            const promoterVacationsMap = {};
+
+            // 1. Consulta todas as marcações de férias (FR) no Supabase num intervalo amplo (+- 60 dias)
+            // para que períodos de férias que cruzam múltiplos ciclos de corte não fiquem truncados na data de corte!
+            const allFRDatesByPerson = {};
+            try {
+                const todayObj = new Date();
+                const pastDate = new Date(todayObj);
+                pastDate.setDate(pastDate.getDate() - 60);
+                const futureDate = new Date(todayObj);
+                futureDate.setDate(futureDate.getDate() + 90);
+
+                const { data: frDb } = await window.supabase
+                    .from('tb_assiduidade')
+                    .select('collaborator_name, date, status')
+                    .eq('status', 'FR')
+                    .gte('date', pastDate.toISOString().split('T')[0])
+                    .lte('date', futureDate.toISOString().split('T')[0]);
+
+                if (frDb && frDb.length > 0) {
+                    frDb.forEach(r => {
+                        const name = r.collaborator_name;
+                        if (!allFRDatesByPerson[name]) allFRDatesByPerson[name] = new Set();
+                        allFRDatesByPerson[name].add(r.date);
+                    });
+                }
+            } catch (err) {
+                console.warn('Erro ao consultar férias ampliadas:', err);
+            }
+
+            // Nomes dos colaboradores filtrados para rápida consulta
+            const staffNamesSet = new Set(staff.map(s => s.name.trim().toLowerCase()));
+            const staffMapByName = {};
+            staff.forEach(s => staffMapByName[s.name.trim().toLowerCase()] = s);
+
+            // 2. Processamento e agrupamento de ATESTADOS (ATT / ATH) em registros reais de eventos
+            const rawCerts = (rawRecords || []).filter(r => {
+                if (!r.collaborator_name) return false;
+                const isStaff = staffNamesSet.has(r.collaborator_name.trim().toLowerCase());
+                const isCert = (r.status === 'ATT' || r.status === 'ATH');
+                return isStaff && isCert;
+            }).sort((a, b) => a.collaborator_name.localeCompare(b.collaborator_name) || a.date.localeCompare(b.date));
+
+            const groupedCertificates = [];
+            rawCerts.forEach(rec => {
+                const last = groupedCertificates[groupedCertificates.length - 1];
+                const dateParts = rec.date.split('-');
+                const dateFmt = (dateParts.length === 3) ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : rec.date;
+
+                let isConsecutive = false;
+                if (last && last._lastRawDate) {
+                    const lastDateParts = last._lastRawDate.split('-');
+                    const lastDateObj = new Date(Number(lastDateParts[0]), Number(lastDateParts[1]) - 1, Number(lastDateParts[2]));
+                    lastDateObj.setDate(lastDateObj.getDate() + 1);
+                    const expectedNext = `${lastDateObj.getFullYear()}-${String(lastDateObj.getMonth() + 1).padStart(2, '0')}-${String(lastDateObj.getDate()).padStart(2, '0')}`;
+                    isConsecutive = (rec.date === expectedNext);
+                }
+
+                const sameCertificate = last && (last.certificate_url || '') === (rec.certificate_url || '');
+
+                if (last && last.collaborator_name === rec.collaborator_name && last.status === rec.status && last.observation === (rec.observation || 'Sem observação') && isConsecutive && sameCertificate) {
+                    last.endDate = dateFmt;
+                    last.daysCount++;
+                    last._lastRawDate = rec.date;
+                } else {
+                    const person = staffMapByName[rec.collaborator_name.trim().toLowerCase()];
+                    groupedCertificates.push({
+                        collaborator_name: rec.collaborator_name,
+                        projeto: person ? (person.projeto || person.project || 'GERAL') : 'GERAL',
+                        equipe: person ? (person.equipe || 'GERAL') : 'GERAL',
+                        cargo: person ? (person.cargo || 'PROMOTOR') : 'PROMOTOR',
+                        status: rec.status,
+                        type: rec.status === 'ATT' ? 'Atestado Médico (Dia)' : 'Atestado Horas',
+                        observation: rec.observation || 'Sem observação',
+                        certificate_url: rec.certificate_url || '',
+                        startDate: dateFmt,
+                        endDate: dateFmt,
+                        daysCount: 1,
+                        _lastRawDate: rec.date
+                    });
+                }
+            });
+
+            // Resumo de atestados por equipe
+            const certsByEquipeMap = {};
+            groupedCertificates.forEach(c => {
+                const eq = c.equipe || 'GERAL';
+                if (!certsByEquipeMap[eq]) {
+                    certsByEquipeMap[eq] = {
+                        equipe: eq,
+                        projeto: c.projeto,
+                        totalCerts: 0,
+                        totalDays: 0,
+                        collaborators: new Set()
+                    };
+                }
+                certsByEquipeMap[eq].totalCerts++;
+                certsByEquipeMap[eq].totalDays += c.daysCount;
+                certsByEquipeMap[eq].collaborators.add(c.collaborator_name);
+            });
+
+            const certsByEquipeList = Object.values(certsByEquipeMap).map(e => ({
+                equipe: e.equipe,
+                projeto: e.projeto,
+                totalCerts: e.totalCerts,
+                totalDays: e.totalDays,
+                promotersCount: e.collaborators.size
+            })).sort((a, b) => b.totalDays - a.totalDays || b.totalCerts - a.totalCerts);
+
+            const totalCertificateDays = groupedCertificates.reduce((acc, c) => acc + c.daysCount, 0);
+            const totalRegisteredCertificates = groupedCertificates.length;
 
             staff.forEach(person => {
+                const pEquipe = person.equipe || 'GERAL';
+                const pProj = person.projeto || 'GERAL';
+                if (!equipeStats[pEquipe]) equipeStats[pEquipe] = { name: pEquipe, projeto: pProj, pCount: 0, expected: 0, ftCount: 0 };
+
+                if (!allFRDatesByPerson[person.name]) allFRDatesByPerson[person.name] = new Set();
+
                 days.forEach(dayObj => {
                     const dateStr = getLocalDateString(dayObj);
+                    
+                    // Coleta todas as marcações de férias (FR) no ciclo
+                    const rawStatus = attendanceMap[person.name + '_' + dateStr] || '';
+                    if (rawStatus === 'FR') {
+                        allFRDatesByPerson[person.name].add(dateStr);
+                    }
+
                     // Ignora dias antes da admissão
                     if (person.data_admissao && dateStr < person.data_admissao) return;
 
                     // Ignora dias após desativação
                     if (!person.ativo && person.data_desativacao && dateStr > person.data_desativacao) return;
 
-                    // Só conta dias que já passaram (até hoje)
-                    const today = getLocalDateString(new Date());
+                    // Só conta dias que já passaram (até hoje) para presenças e faltas
                     if (dateStr > today) return;
 
-                    const status = attendanceMap[person.name + '_' + dateStr] || '';
+                    const status = rawStatus;
                     const isWorkingDay = person.schedule[dayObj.getDay()];
 
                     // Cálculo da Taxa: Apenas dias de trabalho que não sejam feriado
                     if (isWorkingDay && status !== 'FE') {
                         totalEntries++;
-                        if (status === 'P') totalP++;
+                        equipeStats[pEquipe].expected++;
+                        if (status === 'P') {
+                            totalP++;
+                            equipeStats[pEquipe].pCount++;
+                        }
                     }
 
                     // Contadores de apoio
-                    if (status === 'FT') totalFT++;
-                    if (status === 'ATT' || status === 'ATH') totalATT++;
+                    if (status === 'FT') {
+                        totalFT++;
+                        equipeStats[pEquipe].ftCount++;
+                        if (!promoterAbsencesMap[person.name]) {
+                            promoterAbsencesMap[person.name] = {
+                                name: person.name,
+                                cargo: person.cargo || 'PROMOTOR',
+                                projeto: pProj,
+                                equipe: pEquipe,
+                                dates: []
+                            };
+                        }
+                        promoterAbsencesMap[person.name].dates.push(dateStr);
+                    }
+
                     if (status === 'FE') totalFE++;
+                });
+
+                // Agrupamento de períodos contínuos de férias (FR) reais (não cortados pela grade de 30 dias)
+                const personFRDates = Array.from(allFRDatesByPerson[person.name] || []);
+                if (personFRDates.length > 0) {
+                    personFRDates.sort();
+                    const intervals = [];
+                    let currStart = personFRDates[0];
+                    let currEnd = personFRDates[0];
+
+                    for (let i = 1; i < personFRDates.length; i++) {
+                        const prev = new Date(currEnd + 'T00:00:00');
+                        const next = new Date(personFRDates[i] + 'T00:00:00');
+                        const diffDays = Math.round((next - prev) / (1000 * 60 * 60 * 24));
+                        if (diffDays === 1) {
+                            currEnd = personFRDates[i];
+                        } else {
+                            intervals.push({ start: currStart, end: currEnd });
+                            currStart = personFRDates[i];
+                            currEnd = personFRDates[i];
+                        }
+                    }
+                    intervals.push({ start: currStart, end: currEnd });
+
+                    intervals.forEach(inv => {
+                        const startObj = new Date(inv.start + 'T00:00:00');
+                        const endObj = new Date(inv.end + 'T00:00:00');
+                        const todayObj = new Date(today + 'T00:00:00');
+                        const totalDays = Math.round((endObj - startObj) / (1000 * 60 * 60 * 24)) + 1;
+
+                        let daysRemaining = 0;
+                        let statusLabel = '';
+                        let statusTag = '';
+                        let tagColor = '';
+
+                        // Próximo dia após término (dia exato do retorno ao trabalho)
+                        const returnDateObj = new Date(endObj);
+                        returnDateObj.setDate(returnDateObj.getDate() + 1);
+                        const returnDateFmt = formatISOToBR(returnDateObj.toISOString().split('T')[0]);
+
+                        if (todayObj < startObj) {
+                            const daysToStart = Math.ceil((startObj - todayObj) / (1000 * 60 * 60 * 24));
+                            statusLabel = `Inicia em ${daysToStart} dia(s)`;
+                            statusTag = 'Programada';
+                            tagColor = '#38bdf8';
+                            daysRemaining = totalDays;
+                        } else if (todayObj >= startObj && todayObj <= endObj) {
+                            // Dias restantes até o dia do retorno (dia seguinte ao último dia de férias)
+                            daysRemaining = Math.max(1, Math.round((returnDateObj - todayObj) / (1000 * 60 * 60 * 24)));
+                            
+                            if (daysRemaining === 1) {
+                                statusLabel = `Último dia de férias hoje! (Retorna amanhã ${returnDateFmt})`;
+                            } else {
+                                statusLabel = `Faltam ${daysRemaining} dia(s) para o retorno (${returnDateFmt})`;
+                            }
+                            statusTag = 'Em Andamento';
+                            tagColor = '#10b981';
+                        } else {
+                            daysRemaining = 0;
+                            statusLabel = 'Férias Concluídas';
+                            statusTag = 'Concluída';
+                            tagColor = '#6b7280';
+                        }
+
+                        promoterVacationsMap[person.name + '_' + inv.start] = {
+                            name: person.name,
+                            cargo: person.cargo || 'PROMOTOR',
+                            projeto: pProj,
+                            equipe: pEquipe,
+                            startDate: inv.start,
+                            endDate: inv.end,
+                            totalDays: totalDays,
+                            daysRemaining: daysRemaining,
+                            statusLabel: statusLabel,
+                            statusTag: statusTag,
+                            tagColor: tagColor,
+                            returnDateFmt: returnDateFmt,
+                            isActiveToday: todayObj >= startObj && todayObj <= endObj
+                        };
+                    });
+                }
+            });
+
+            // A taxa é baseada em (Presenças / Dias de Trabalho Esperados)
+            const rate = totalEntries > 0 ? ((totalP / totalEntries) * 100).toFixed(1) : 0;
+            const vacationsList = Object.values(promoterVacationsMap);
+            
+            // Análise avançada de faltas
+            const dayNamesFull = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            const absencesByDayOfWeek = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+
+            const absencesList = Object.values(promoterAbsencesMap).sort((a, b) => b.dates.length - a.dates.length);
+            const totalAbsencesCount = absencesList.reduce((acc, a) => acc + a.dates.length, 0);
+
+            absencesList.forEach(p => {
+                p.dates.sort();
+                p.dates.forEach(dStr => {
+                    const parts = dStr.split('-');
+                    if (parts.length === 3) {
+                        const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                        const dow = dObj.getDay();
+                        absencesByDayOfWeek[dow] = (absencesByDayOfWeek[dow] || 0) + 1;
+                    }
                 });
             });
 
-            // A taxa agora é baseada estritamente em (Presenças / Dias de Trabalho Esperados)
-            const rate = totalEntries > 0 ? ((totalP / totalEntries) * 100).toFixed(1) : 0;
+            let maxDow = 1;
+            let maxDowCount = 0;
+            for (let d = 0; d < 7; d++) {
+                if (absencesByDayOfWeek[d] > maxDowCount) {
+                    maxDowCount = absencesByDayOfWeek[d];
+                    maxDow = d;
+                }
+            }
+            const criticalDayLabel = maxDowCount > 0 ? `${dayNamesFull[maxDow]} (${maxDowCount} faltas)` : 'N/A';
+
+            const absencesByEquipeList = Object.values(equipeStats)
+                .filter(e => e.ftCount > 0)
+                .map(e => {
+                    const teamPromotersWithFt = absencesList.filter(a => a.equipe === e.name).length;
+                    const sharePct = totalAbsencesCount > 0 ? ((e.ftCount / totalAbsencesCount) * 100).toFixed(1) : '0.0';
+                    return {
+                        equipe: e.name,
+                        projeto: e.projeto,
+                        totalAbsences: e.ftCount,
+                        promotersCount: teamPromotersWithFt,
+                        sharePercent: sharePct
+                    };
+                })
+                .sort((a, b) => b.totalAbsences - a.totalAbsences);
+
+            kpiModalData = {
+                staff: staff,
+                presence: { totalP, totalEntries, rate, byEquipe: Object.values(equipeStats) },
+                absences: {
+                    totalAbsences: totalAbsencesCount,
+                    uniquePromoters: absencesList.length,
+                    recurrentCount: absencesList.filter(a => a.dates.length >= 3).length,
+                    criticalDay: criticalDayLabel,
+                    byDayOfWeek: absencesByDayOfWeek,
+                    byEquipe: absencesByEquipeList,
+                    list: absencesList
+                },
+                certificates: {
+                    totalRegistered: totalRegisteredCertificates,
+                    totalDays: totalCertificateDays,
+                    byEquipe: certsByEquipeList,
+                    list: groupedCertificates
+                },
+                vacations: vacationsList.sort((a, b) => {
+                    if (a.isActiveToday && !b.isActiveToday) return -1;
+                    if (!a.isActiveToday && b.isActiveToday) return 1;
+                    return a.startDate.localeCompare(b.startDate);
+                })
+            };
 
             const kpiStaff = document.getElementById('kpi-staff-count');
             const kpiRate = document.getElementById('kpi-presence-rate');
             const kpiAbsence = document.getElementById('kpi-absence-count');
             const kpiCert = document.getElementById('kpi-certificate-count');
+            const kpiVacation = document.getElementById('kpi-vacation-count');
 
             if (kpiStaff) kpiStaff.textContent = staff.length;
             if (kpiRate) {
@@ -2388,8 +2758,581 @@
                 kpiRate.style.color = rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444';
             }
             if (kpiAbsence) kpiAbsence.textContent = totalFT;
-            if (kpiCert) kpiCert.textContent = totalATT;
+            // Mostra a quantidade de atestados registrados (com tooltip de dias totais)
+            if (kpiCert) {
+                kpiCert.textContent = totalRegisteredCertificates;
+                const cardCert = kpiCert.closest('.summary-kpi');
+                if (cardCert) {
+                    cardCert.setAttribute('title', `${totalRegisteredCertificates} atestado(s) registrado(s) • Total de ${totalCertificateDays} dia(s) de afastamento. Clique para ver detalhes e equipes.`);
+                }
+            }
+            // Mostra apenas quem está de férias no período aberto
+            if (kpiVacation) kpiVacation.textContent = new Set(vacationsList.filter(v => v.isActiveToday).map(v => v.name)).size;
         }
+
+        // --- Modais Interativos dos Cards de Resumo ---
+
+        window.openVacationDetailsModal = function() {
+            const theme = getSwalTheme();
+            const allList = kpiModalData.vacations || [];
+            const activeList = allList.filter(v => v.isActiveToday);
+
+            // Se não houver ninguém em férias ativas
+            if (activeList.length === 0) {
+                Swal.fire({
+                    title: '🏖️ Férias dos Promotores',
+                    html: `
+                        <div style="padding: 24px; text-align: center; color: var(--text-dim);">
+                            <div style="font-size: 40px; margin-bottom: 12px;">🏖️</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Nenhum promotor em férias no período atual</div>
+                            <div style="font-size: 13px;">Não há colaboradores com período de férias aberto/em andamento na data de hoje.</div>
+                        </div>
+                    `,
+                    background: theme.background,
+                    color: theme.color,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#06b6d4'
+                });
+                return;
+            }
+
+            const renderVacationCard = (v) => {
+                const startBR = formatISOToBR(v.startDate);
+                const endBR = formatISOToBR(v.endDate);
+                const subText = (v.projeto && v.projeto !== 'GERAL') ? `${v.projeto} • ${v.equipe}` : (v.equipe || 'Equipe Geral');
+                
+                return `
+                    <div style="background: ${theme.cardBg}; border: 1.5px solid rgba(6, 182, 212, 0.4); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 16px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(6, 182, 212, 0.15); color: #06b6d4; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0;">
+                                ${v.name[0]}
+                            </div>
+                            <div style="min-width: 0; flex: 1;">
+                                <strong style="font-size: 13px; color: var(--text-main); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${v.name}">${v.name}</strong>
+                                <span style="font-size: 11px; color: var(--text-dim); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${subText}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: right; flex-shrink: 0;">
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 4px;">
+                                <span style="font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #10b981; text-transform: uppercase;">
+                                    ● EM ANDAMENTO
+                                </span>
+                                <span style="font-size: 12px; font-weight: 700; color: var(--text-main);">
+                                    ${startBR} até ${endBR} (${v.totalDays}d)
+                                </span>
+                            </div>
+                            <div style="font-size: 12px; font-weight: 800; color: #06b6d4;">
+                                ⏳ ${v.statusLabel}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const rowsHtml = activeList.map(v => renderVacationCard(v)).join('');
+
+            Swal.fire({
+                title: `<span style="display:flex; align-items:center; justify-content:center; gap:8px;">🏖️ Férias em Andamento (${activeList.length})</span>`,
+                html: `
+                    <div style="text-align: left; max-height: 480px; overflow-y: auto; padding: 6px 4px;">
+                        <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 14px;">
+                            Colaboradores atualmente em período de férias aberto e contagem regressiva de retorno:
+                        </div>
+                        ${rowsHtml}
+                    </div>
+                `,
+                width: '740px',
+                background: theme.background,
+                color: theme.color,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: '#06b6d4'
+            });
+        };
+
+        window.openStaffDetailsModal = function() {
+            const theme = getSwalTheme();
+            const staff = kpiModalData.staff || [];
+
+            const rowsHtml = staff.map(s => {
+                const days = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+                const scale = days.map((d, i) => `<span style="font-size: 9px; margin-right: 2px; font-weight: ${s.schedule[i] ? '800' : '400'}; color: ${s.schedule[i] ? '#6366f1' : 'var(--text-dim)'};">${d}</span>`).join('');
+                const sub = (s.project && s.project !== 'GERAL') ? s.project : '-';
+
+                return `
+                    <tr style="border-bottom: 1px solid ${theme.border};">
+                        <td style="padding: 10px 12px; font-weight: 700; color: var(--text-main);">${s.name}</td>
+                        <td style="padding: 10px 12px; color: var(--text-dim); font-size: 11px;">${s.role || 'PROMOTOR'}</td>
+                        <td style="padding: 10px 12px; font-size: 11px; font-weight: 600; color: #6366f1;">${sub}</td>
+                        <td style="padding: 10px 12px; font-size: 11px; color: var(--text-dim);">${s.equipe || 'GERAL'}</td>
+                        <td style="padding: 10px 12px; text-align: center;">${scale}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            Swal.fire({
+                title: `👥 Equipe Ativa (${staff.length} colaboradores)`,
+                html: `
+                    <div style="text-align: left; max-height: 480px; overflow-y: auto; padding: 4px;">
+                        <input type="text" id="swal-staff-search" placeholder="🔍 Filtrar colaborador ou equipe..." oninput="
+                            const q = this.value.toLowerCase();
+                            document.querySelectorAll('#swal-staff-tbody tr').forEach(r => {
+                                r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+                            });
+                        " style="width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 10px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; margin-bottom: 14px; font-size: 12px; outline: none;">
+                        
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid ${theme.border}; font-size: 11px; color: var(--text-dim); text-transform: uppercase;">
+                                    <th style="padding: 8px 12px;">Colaborador</th>
+                                    <th style="padding: 8px 12px;">Função</th>
+                                    <th style="padding: 8px 12px;">Projeto</th>
+                                    <th style="padding: 8px 12px;">Equipe</th>
+                                    <th style="padding: 8px 12px; text-align: center;">Escala</th>
+                                </tr>
+                            </thead>
+                            <tbody id="swal-staff-tbody">
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `,
+                width: '740px',
+                background: theme.background,
+                color: theme.color,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: '#6366f1'
+            });
+        };
+
+        window.openPresenceRateModal = function() {
+            const theme = getSwalTheme();
+            const p = kpiModalData.presence || { totalP: 0, totalEntries: 0, rate: 0, byEquipe: [] };
+            const equipeRows = (p.byEquipe || []).sort((a, b) => {
+                const rA = a.expected > 0 ? (a.pCount / a.expected) : 0;
+                const rB = b.expected > 0 ? (b.pCount / b.expected) : 0;
+                return rB - rA;
+            }).map(e => {
+                const eRate = e.expected > 0 ? ((e.pCount / e.expected) * 100).toFixed(1) : '0.0';
+                const color = eRate >= 80 ? '#10b981' : eRate >= 60 ? '#f59e0b' : '#ef4444';
+                return `
+                    <tr style="border-bottom: 1px solid ${theme.border};">
+                        <td style="padding: 10px 12px; font-weight: 700; color: var(--text-main);">${e.name}</td>
+                        <td style="padding: 10px 12px; color: var(--text-dim); font-size: 11px;">${e.projeto}</td>
+                        <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #10b981;">${e.pCount}</td>
+                        <td style="padding: 10px 12px; text-align: center; font-weight: 600; color: #ef4444;">${e.ftCount || 0}</td>
+                        <td style="padding: 10px 12px; text-align: center; font-weight: 800; color: ${color}; font-size: 13px;">${eRate}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            Swal.fire({
+                title: `📊 Taxa de Presença (${p.rate}%)`,
+                html: `
+                    <div style="text-align: left; max-height: 480px; overflow-y: auto; padding: 4px;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 12px; border-radius: 12px; text-align: center;">
+                                <span style="font-size: 11px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Total Presenças</span>
+                                <div style="font-size: 22px; font-weight: 800; color: #10b981; margin-top: 4px;">${p.totalP}</div>
+                            </div>
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 12px; border-radius: 12px; text-align: center;">
+                                <span style="font-size: 11px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Dias Esperados</span>
+                                <div style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-top: 4px;">${p.totalEntries}</div>
+                            </div>
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 12px; border-radius: 12px; text-align: center;">
+                                <span style="font-size: 11px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Taxa Geral</span>
+                                <div style="font-size: 22px; font-weight: 800; color: #10b981; margin-top: 4px;">${p.rate}%</div>
+                            </div>
+                        </div>
+
+                        <h4 style="font-size: 12px; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-bottom: 10px;">🏆 Ranking de Presença por Equipe</h4>
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid ${theme.border}; font-size: 11px; color: var(--text-dim); text-transform: uppercase;">
+                                    <th style="padding: 8px 12px;">Equipe</th>
+                                    <th style="padding: 8px 12px;">Projeto</th>
+                                    <th style="padding: 8px 12px; text-align: center;">Presenças</th>
+                                    <th style="padding: 8px 12px; text-align: center;">Faltas</th>
+                                    <th style="padding: 8px 12px; text-align: center;">Taxa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${equipeRows}
+                            </tbody>
+                        </table>
+                    </div>
+                `,
+                width: '680px',
+                background: theme.background,
+                color: theme.color,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: '#10b981'
+            });
+        };
+
+        window.openAbsenceDetailsModal = function() {
+            const theme = getSwalTheme();
+            const absData = kpiModalData.absences || { totalAbsences: 0, uniquePromoters: 0, recurrentCount: 0, criticalDay: 'N/A', byDayOfWeek: {}, byEquipe: [], list: [] };
+            const list = absData.list || [];
+
+            if (list.length === 0 || absData.totalAbsences === 0) {
+                Swal.fire({
+                    title: '❌ Relatório de Faltas',
+                    html: `<div style="padding: 30px; text-align: center; color: var(--text-dim);"><div style="font-size: 36px; margin-bottom: 10px;">🎉</div><div style="font-size: 15px; font-weight: 700; color: #10b981;">Nenhuma falta registrada no período!</div></div>`,
+                    background: theme.background,
+                    color: theme.color,
+                    confirmButtonColor: '#10b981'
+                });
+                return;
+            }
+
+            const totalStaff = (kpiModalData.staff || []).length;
+            const impactPct = totalStaff > 0 ? ((absData.uniquePromoters / totalStaff) * 100).toFixed(0) : 0;
+            const dayNamesShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const dayNamesFull = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            const equipesList = [...new Set(list.map(a => a.equipe))].sort();
+
+            // 1. Visão consolidada por equipe
+            const equipeRows = (absData.byEquipe || []).map(e => `
+                <tr style="border-bottom: 1px solid ${theme.border}; font-size: 11px;">
+                    <td style="padding: 6px 10px; font-weight: 700; color: var(--text-main);">${e.equipe}</td>
+                    <td style="padding: 6px 10px; color: var(--text-dim); font-size: 10px;">${e.projeto}</td>
+                    <td style="padding: 6px 10px; text-align: center; font-weight: 800; color: #ef4444;">${e.totalAbsences}</td>
+                    <td style="padding: 6px 10px; text-align: center; font-size: 11px; color: var(--text-dim);">${e.promotersCount}</td>
+                    <td style="padding: 6px 10px; text-align: center; font-weight: 700; color: #f59e0b;">${e.sharePercent}%</td>
+                </tr>
+            `).join('');
+
+            // 2. Distribuição por dia da semana
+            const dowHtml = [1, 2, 3, 4, 5, 6, 0].map(d => {
+                const count = (absData.byDayOfWeek && absData.byDayOfWeek[d]) ? absData.byDayOfWeek[d] : 0;
+                const maxVal = absData.byDayOfWeek ? Math.max(...Object.values(absData.byDayOfWeek)) : 0;
+                const isCritical = count > 0 && count === maxVal;
+                return `
+                    <div style="flex: 1; text-align: center; padding: 6px 4px; background: ${isCritical ? 'rgba(239, 68, 68, 0.15)' : theme.cardBg}; border: 1px solid ${isCritical ? 'rgba(239, 68, 68, 0.4)' : theme.border}; border-radius: 8px;">
+                        <span style="font-size: 10px; font-weight: 700; color: ${isCritical ? '#ef4444' : 'var(--text-dim)'};">${dayNamesShort[d]}</span>
+                        <div style="font-size: 13px; font-weight: 800; color: ${isCritical ? '#ef4444' : 'var(--text-main)'}; margin-top: 2px;">${count}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // 3. Renderiza linhas detalhadas por promotor
+            const rowsHtml = list.map(item => {
+                const sub = (item.projeto && item.projeto !== 'GERAL') ? `${item.projeto} • ${item.equipe}` : (item.equipe || 'Equipe Geral');
+                const count = item.dates.length;
+                
+                let severityTag = '';
+                if (count >= 5) {
+                    severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(239, 68, 68, 0.2); color: #ef4444; text-transform: uppercase;">🔴 Crítico (${count})</span>`;
+                } else if (count >= 3) {
+                    severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; text-transform: uppercase;">🟠 Alerta (${count})</span>`;
+                } else if (count === 2) {
+                    severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(234, 179, 8, 0.15); color: #eab308; text-transform: uppercase;">🟡 2 faltas</span>`;
+                } else {
+                    severityTag = `<span style="font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(148, 163, 184, 0.15); color: var(--text-dim); text-transform: uppercase;">1 falta</span>`;
+                }
+
+                const pillsHtml = item.dates.map(dStr => {
+                    const parts = dStr.split('-');
+                    const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                    const dFmt = (parts.length === 3) ? `${parts[2]}/${parts[1]}` : dStr;
+                    const dow = dayNamesShort[dObj.getDay()];
+                    return `<span style="display: inline-block; padding: 2px 6px; margin: 2px; border-radius: 6px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); font-size: 10px; font-weight: 700; color: var(--text-main);" title="${formatISOToBR(dStr)} (${dayNamesFull[dObj.getDay()]})">${dFmt} (${dow})</span>`;
+                }).join('');
+
+                return `
+                    <tr class="swal-absence-row" data-equipe="${item.equipe.toLowerCase()}" data-name="${item.name.toLowerCase()}" style="border-bottom: 1px solid ${theme.border};">
+                        <td style="padding: 8px 10px;">
+                            <strong style="font-size: 12px; color: var(--text-main); display: block;">${item.name}</strong>
+                            <span style="font-size: 10px; color: var(--text-dim);">${item.cargo || 'PROMOTOR'}</span>
+                        </td>
+                        <td style="padding: 8px 10px; color: var(--text-dim); font-size: 11px;">${sub}</td>
+                        <td style="padding: 8px 10px; text-align: center;">${severityTag}</td>
+                        <td style="padding: 8px 10px; font-size: 11px;">${pillsHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Função de exportação CSV
+            window._exportAbsencesCSV = function() {
+                let csvContent = 'data:text/csv;charset=utf-8,Colaborador;Cargo;Equipe;Projeto;Qtd Faltas;Datas das Faltas\n';
+                list.forEach(item => {
+                    const datesStr = item.dates.map(d => formatISOToBR(d)).join(' | ');
+                    csvContent += `"${item.name}";"${item.cargo || 'PROMOTOR'}";"${item.equipe}";"${item.projeto}";${item.dates.length};"${datesStr}"\n`;
+                });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement('a');
+                link.setAttribute('href', encodedUri);
+                link.setAttribute('download', `relatorio_faltas_${getLocalDateString(new Date())}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            Swal.fire({
+                title: `<span style="display:flex; align-items:center; justify-content:center; gap:8px;">❌ Central Analítica de Faltas (${absData.totalAbsences})</span>`,
+                html: `
+                    <div style="text-align: left; max-height: 540px; overflow-y: auto; padding: 4px;">
+                        <!-- 4 Mini Cards Analíticos -->
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
+                                <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Total Faltas</span>
+                                <div style="font-size: 18px; font-weight: 800; color: #ef4444; margin-top: 2px;">${absData.totalAbsences}</div>
+                            </div>
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
+                                <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Promotores</span>
+                                <div style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 2px;">${absData.uniquePromoters} <span style="font-size: 10px; color: var(--text-dim);">(${impactPct}%)</span></div>
+                            </div>
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
+                                <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Recorrentes (3+)</span>
+                                <div style="font-size: 18px; font-weight: 800; color: #f59e0b; margin-top: 2px;">${absData.recurrentCount}</div>
+                            </div>
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
+                                <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Dia Crítico</span>
+                                <div style="font-size: 12px; font-weight: 800; color: #ef4444; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${absData.criticalDay}">${absData.criticalDay}</div>
+                            </div>
+                        </div>
+
+                        <!-- Distribuição por Dia da Semana -->
+                        <div style="margin-bottom: 14px;">
+                            <span style="font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; display: block;">📅 Concentração por Dia da Semana:</span>
+                            <div style="display: flex; gap: 6px;">
+                                ${dowHtml}
+                            </div>
+                        </div>
+
+                        <!-- Resumo Consolidado por Equipe -->
+                        <div style="margin-bottom: 14px; border: 1px solid ${theme.border}; border-radius: 10px; padding: 10px; background: ${theme.cardBg};">
+                            <h4 style="font-size: 11px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                🏢 Ranking de Faltas por Equipe
+                            </h4>
+                            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid ${theme.border}; color: var(--text-dim); text-transform: uppercase; font-size: 10px;">
+                                        <th style="padding: 6px 10px;">Equipe</th>
+                                        <th style="padding: 6px 10px;">Projeto</th>
+                                        <th style="padding: 6px 10px; text-align: center;">Total Faltas</th>
+                                        <th style="padding: 6px 10px; text-align: center;">Promotores</th>
+                                        <th style="padding: 6px 10px; text-align: center;">Impacto (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${equipeRows}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Barra de Filtros e Exportação -->
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center;">
+                            <select id="swal-absence-filter-equipe" onchange="
+                                const eq = this.value.toLowerCase();
+                                const q = document.getElementById('swal-absence-search').value.toLowerCase();
+                                document.querySelectorAll('.swal-absence-row').forEach(r => {
+                                    const matchEq = !eq || r.getAttribute('data-equipe') === eq;
+                                    const matchName = !q || r.getAttribute('data-name').includes(q);
+                                    r.style.display = (matchEq && matchName) ? '' : 'none';
+                                });
+                            " style="flex: 1; min-width: 150px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
+                                <option value="">Todas as Equipes (${equipesList.length})</option>
+                                ${equipesList.map(e => `<option value="${e}">${e}</option>`).join('')}
+                            </select>
+
+                            <input type="text" id="swal-absence-search" placeholder="🔍 Filtrar promotor..." oninput="
+                                const q = this.value.toLowerCase();
+                                const eq = document.getElementById('swal-absence-filter-equipe').value.toLowerCase();
+                                document.querySelectorAll('.swal-absence-row').forEach(r => {
+                                    const matchEq = !eq || r.getAttribute('data-equipe') === eq;
+                                    const matchName = !q || r.getAttribute('data-name').includes(q);
+                                    r.style.display = (matchEq && matchName) ? '' : 'none';
+                                });
+                            " style="flex: 2; min-width: 170px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
+
+                            <button onclick="_exportAbsencesCSV()" style="padding: 8px 12px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-weight: 700; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                📥 CSV
+                            </button>
+                        </div>
+
+                        <!-- Tabela de Promotores -->
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid ${theme.border}; font-size: 10px; color: var(--text-dim); text-transform: uppercase;">
+                                    <th style="padding: 6px 10px;">Colaborador</th>
+                                    <th style="padding: 6px 10px;">Equipe</th>
+                                    <th style="padding: 6px 10px; text-align: center;">Severidade</th>
+                                    <th style="padding: 6px 10px;">Datas das Faltas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="swal-absence-tbody">
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                `,
+                width: '780px',
+                background: theme.background,
+                color: theme.color,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: '#ef4444'
+            });
+        };
+
+        window.openCertificatesDetailsModal = function() {
+            const theme = getSwalTheme();
+            const certData = kpiModalData.certificates || { totalRegistered: 0, totalDays: 0, byEquipe: [], list: [] };
+            const list = certData.list || [];
+
+            if (list.length === 0) {
+                Swal.fire({
+                    title: '📄 Atestados Médicos',
+                    html: `<div style="padding: 30px; text-align: center; color: var(--text-dim);"><div style="font-size: 36px; margin-bottom: 10px;">📋</div><div style="font-size: 15px; font-weight: 700; color: var(--text-main);">Nenhum atestado registrado no período.</div></div>`,
+                    background: theme.background,
+                    color: theme.color,
+                    confirmButtonColor: '#f59e0b'
+                });
+                return;
+            }
+
+            const uniquePromoters = new Set(list.map(c => c.collaborator_name)).size;
+            const equipesList = [...new Set(list.map(c => c.equipe))].sort();
+
+            // Renderiza tabela por equipe
+            const equipeRows = (certData.byEquipe || []).map(e => `
+                <tr style="border-bottom: 1px solid ${theme.border};">
+                    <td style="padding: 8px 12px; font-weight: 700; color: var(--text-main);">${e.equipe}</td>
+                    <td style="padding: 8px 12px; color: var(--text-dim); font-size: 11px;">${e.projeto}</td>
+                    <td style="padding: 8px 12px; text-align: center; font-weight: 800; color: #f59e0b;">${e.totalCerts}</td>
+                    <td style="padding: 8px 12px; text-align: center; font-weight: 800; color: #6366f1;">${e.totalDays} dia(s)</td>
+                    <td style="padding: 8px 12px; text-align: center; font-size: 11px; color: var(--text-dim);">${e.promotersCount}</td>
+                </tr>
+            `).join('');
+
+            // Renderiza cards de atestados
+            const cardsHtml = list.map(item => {
+                const rangeStr = item.daysCount > 1 ? `${item.startDate} até ${item.endDate}` : item.startDate;
+                const urls = item.certificate_url ? item.certificate_url.split(',').filter(u => u.trim()) : [];
+                
+                const linksHtml = urls.length > 0 ? `
+                    <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px;">
+                        ${urls.map((url, idx) => `
+                            <a href="${url.trim()}" target="_blank" style="color: #6366f1; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                📄 Atestado ${urls.length > 1 ? `#${idx + 1}` : ''}
+                            </a>
+                        `).join('')}
+                    </div>
+                ` : '';
+
+                const subText = (item.projeto && item.projeto !== 'GERAL') ? `${item.projeto} • ${item.equipe}` : (item.equipe || 'Equipe Geral');
+                return `
+                    <div class="swal-cert-card" data-equipe="${item.equipe.toLowerCase()}" data-name="${item.collaborator_name.toLowerCase()}" style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 12px; min-width: 200px;">
+                            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;">
+                                ${item.status}
+                            </div>
+                            <div>
+                                <strong style="font-size: 13px; color: var(--text-main); display: block;">${item.collaborator_name}</strong>
+                                <span style="font-size: 11px; color: var(--text-dim);">${subText}</span>
+                                ${item.observation && item.observation !== 'Sem observação' ? `<div style="font-size: 11px; font-style: italic; color: var(--text-muted); margin-top: 2px;">"${item.observation}"</div>` : ''}
+                            </div>
+                        </div>
+
+                        <div style="text-align: right; min-width: 180px;">
+                            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 4px;">
+                                <span style="font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; text-transform: uppercase;">
+                                    ${item.type}
+                                </span>
+                                <span style="font-size: 12px; font-weight: 800; color: #6366f1;">
+                                    📅 ${item.daysCount} dia(s)
+                                </span>
+                            </div>
+                            <div style="font-size: 11px; font-weight: 600; color: var(--text-dim);">
+                                ${rangeStr}
+                            </div>
+                            ${linksHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            Swal.fire({
+                title: `<span style="display:flex; align-items:center; justify-content:center; gap:8px;">📄 Resumo de Atestados (${certData.totalRegistered})</span>`,
+                html: `
+                    <div style="text-align: left; max-height: 520px; overflow-y: auto; padding: 4px;">
+                        <!-- Mini Cards de Indicadores Gerais -->
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 10px 12px; border-radius: 10px; text-align: center;">
+                                <span style="font-size: 10px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Atestados Registrados</span>
+                                <div style="font-size: 20px; font-weight: 800; color: #f59e0b; margin-top: 2px;">${certData.totalRegistered}</div>
+                            </div>
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 10px 12px; border-radius: 10px; text-align: center;">
+                                <span style="font-size: 10px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Total de Dias (Geral)</span>
+                                <div style="font-size: 20px; font-weight: 800; color: #6366f1; margin-top: 2px;">${certData.totalDays}d</div>
+                            </div>
+                            <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 10px 12px; border-radius: 10px; text-align: center;">
+                                <span style="font-size: 10px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Colaboradores</span>
+                                <div style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-top: 2px;">${uniquePromoters}</div>
+                            </div>
+                        </div>
+
+                        <!-- Resumo Consolidado por Equipe -->
+                        <div style="margin-bottom: 18px; border: 1px solid ${theme.border}; border-radius: 10px; padding: 10px; background: ${theme.cardBg};">
+                            <h4 style="font-size: 11px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                👥 Visão Consolidada por Equipe
+                            </h4>
+                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+                                <thead>
+                                    <tr style="border-bottom: 1px solid ${theme.border}; color: var(--text-dim); text-transform: uppercase; font-size: 10px;">
+                                        <th style="padding: 6px 12px;">Equipe</th>
+                                        <th style="padding: 6px 12px;">Projeto</th>
+                                        <th style="padding: 6px 12px; text-align: center;">Qtd Atestados</th>
+                                        <th style="padding: 6px 12px; text-align: center;">Total Dias</th>
+                                        <th style="padding: 6px 12px; text-align: center;">Promotores</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${equipeRows}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Filtros Rápidos -->
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                            <select id="swal-cert-filter-equipe" onchange="
+                                const eq = this.value.toLowerCase();
+                                const q = document.getElementById('swal-cert-filter-name').value.toLowerCase();
+                                document.querySelectorAll('.swal-cert-card').forEach(c => {
+                                    const matchEq = !eq || c.getAttribute('data-equipe') === eq;
+                                    const matchName = !q || c.getAttribute('data-name').includes(q);
+                                    c.style.display = (matchEq && matchName) ? '' : 'none';
+                                });
+                            " style="flex: 1; min-width: 160px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
+                                <option value="">Todas as Equipes (${equipesList.length})</option>
+                                ${equipesList.map(e => `<option value="${e}">${e}</option>`).join('')}
+                            </select>
+
+                            <input type="text" id="swal-cert-filter-name" placeholder="🔍 Filtrar promotor..." oninput="
+                                const q = this.value.toLowerCase();
+                                const eq = document.getElementById('swal-cert-filter-equipe').value.toLowerCase();
+                                document.querySelectorAll('.swal-cert-card').forEach(c => {
+                                    const matchEq = !eq || c.getAttribute('data-equipe') === eq;
+                                    const matchName = !q || c.getAttribute('data-name').includes(q);
+                                    c.style.display = (matchEq && matchName) ? '' : 'none';
+                                });
+                            " style="flex: 2; min-width: 180px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
+                        </div>
+
+                        <!-- Lista de Registros Detalhados -->
+                        <div id="swal-cert-list-container">
+                            ${cardsHtml}
+                        </div>
+                    </div>
+                `,
+                width: '740px',
+                background: theme.background,
+                color: theme.color,
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: '#f59e0b'
+            });
+        };
 
         async function showCollectivePresenceModal() {
             const theme = getSwalTheme();
