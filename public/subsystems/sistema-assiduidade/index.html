@@ -1425,6 +1425,13 @@
                     <p>Monitoramento em tempo real dos horários de pausa e retorno de almoço dos colaboradores.</p>
                 </div>
                 <div class="controls-group">
+                    <button class="sync-btn" id="btn-refresh-lunch" onclick="fetchLunchControlData(true)"
+                        style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #6366f1; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Atualizar
+                    </button>
                     <button class="sync-btn" id="btn-export-lunch-excel-page" onclick="exportLunchExcel()"
                         style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -5638,13 +5645,56 @@
             loaded: false
         };
 
-        async function fetchLunchControlData() {
+        async function fetchLunchControlData(showToast = false) {
             try {
-                const { data: dbData } = await window.supabase
-                    .from('tb_jornada_almoco')
-                    .select('*');
-                if (dbData && dbData.length > 0) {
-                    lunchState.dbRecords = dbData;
+                const sDate = lunchState.startDate;
+                const eDate = lunchState.endDate;
+
+                let allRecords = [];
+                let fromR = 0, stepR = 999, hasMoreR = true;
+
+                while (hasMoreR) {
+                    let query = window.supabase
+                        .from('tb_jornada_almoco')
+                        .select('*');
+
+                    if (sDate && eDate) {
+                        query = query
+                            .gte('date', sDate)
+                            .lte('date', eDate);
+                    }
+
+                    query = query
+                        .order('date', { ascending: false })
+                        .order('id', { ascending: false })
+                        .range(fromR, fromR + stepR);
+
+                    const { data: dbData, error } = await query;
+                    if (error) throw error;
+
+                    if (dbData && dbData.length > 0) {
+                        allRecords = allRecords.concat(dbData);
+                        fromR += stepR + 1;
+                    }
+                    if (!dbData || dbData.length <= stepR) {
+                        hasMoreR = false;
+                    }
+                }
+
+                lunchState.dbRecords = allRecords;
+
+                if (showToast && typeof Swal !== 'undefined') {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1800,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: `${allRecords.length} registros sincronizados!`
+                    });
                 }
             } catch (e) {
                 console.warn('Aguardando registros na tabela tb_jornada_almoco:', e);
@@ -5968,7 +6018,7 @@
                 lunchState.startDate = y;
                 lunchState.endDate = y;
             }
-            renderLunchControlPage();
+            fetchLunchControlData();
         }
 
         function onLunchDateInputChange() {
@@ -5979,7 +6029,7 @@
             if (lunchState.endDate < lunchState.startDate) {
                 lunchState.endDate = lunchState.startDate;
             }
-            renderLunchControlPage();
+            fetchLunchControlData();
         }
 
         function onLunchFilterChange() {
@@ -6346,6 +6396,23 @@
                 }
             }
         });
+
+        // Realtime Subscription para Atualizações de Almoço
+        if (window.supabase && typeof window.supabase.channel === 'function') {
+            try {
+                window.supabase
+                    .channel('realtime_jornada_almoco')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tb_jornada_almoco' }, () => {
+                        console.log('Realtime: Nova atualização em tb_jornada_almoco. Recarregando...');
+                        if (document.getElementById('lunch-control-full-view')?.style.display !== 'none') {
+                            fetchLunchControlData();
+                        }
+                    })
+                    .subscribe();
+            } catch (errSub) {
+                console.warn('Aviso ao iniciar canal Realtime:', errSub);
+            }
+        }
 
         if (window.location.hash === '#almoco') {
             setTimeout(showLunchControlFullView, 400);

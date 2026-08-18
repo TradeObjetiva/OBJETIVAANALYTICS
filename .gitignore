@@ -28,6 +28,9 @@ yarn-error.log*
 # Scratch / temp
 scratch/
 *.csv
+/*.pdf
+/*.mp4
+/*.xls
 
 # Temp excel
 *.xlsx
