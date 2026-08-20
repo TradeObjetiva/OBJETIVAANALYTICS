@@ -5642,6 +5642,7 @@
             statusFilter: 'TODOS',
             searchFilter: '',
             dbRecords: [],
+            vacationRecords: [],
             loaded: false
         };
 
@@ -5683,6 +5684,40 @@
 
                 lunchState.dbRecords = allRecords;
 
+                // Buscar registros de Férias (FR) em tb_assiduidade para o período selecionado
+                let allVacations = [];
+                let fromV = 0, stepV = 999, hasMoreV = true;
+
+                while (hasMoreV) {
+                    let vQuery = window.supabase
+                        .from('tb_assiduidade')
+                        .select('collaborator_name, date, status')
+                        .eq('status', 'FR');
+
+                    if (sDate && eDate) {
+                        vQuery = vQuery
+                            .gte('date', sDate)
+                            .lte('date', eDate);
+                    }
+
+                    vQuery = vQuery.range(fromV, fromV + stepV);
+                    const { data: vData, error: vError } = await vQuery;
+                    if (vError) {
+                        console.warn('Erro ao consultar férias para o controle de almoço:', vError);
+                        break;
+                    }
+
+                    if (vData && vData.length > 0) {
+                        allVacations = allVacations.concat(vData);
+                        fromV += stepV + 1;
+                    }
+                    if (!vData || vData.length <= stepV) {
+                        hasMoreV = false;
+                    }
+                }
+
+                lunchState.vacationRecords = allVacations;
+
                 if (showToast && typeof Swal !== 'undefined') {
                     const Toast = Swal.mixin({
                         toast: true,
@@ -5716,6 +5751,35 @@
                 const localD = getLocalDateString(eventDate);
                 return localD >= startDateStr && localD <= endDateStr;
             });
+
+            // Mapeamento rápido de férias (FR) por data e colaborador
+            const vacationMap = new Set();
+            const vacationNamesByDate = {};
+            (lunchState.vacationRecords || []).forEach(v => {
+                if (v.collaborator_name && v.date) {
+                    const normName = v.collaborator_name.trim().toUpperCase();
+                    vacationMap.add(`${normName}_${v.date}`);
+                    if (!vacationNamesByDate[v.date]) {
+                        vacationNamesByDate[v.date] = new Set();
+                    }
+                    vacationNamesByDate[v.date].add(normName);
+                }
+            });
+
+            function isPersonOnVacation(name, dateStr) {
+                if (!name || !dateStr) return false;
+                const upper = name.trim().toUpperCase();
+                if (vacationMap.has(`${upper}_${dateStr}`)) return true;
+                const dateSet = vacationNamesByDate[dateStr];
+                if (dateSet) {
+                    for (const vName of dateSet) {
+                        if (vName === upper || vName.includes(upper) || upper.includes(vName)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
 
             const staffMap = new Map();
             staffList.forEach(s => staffMap.set(s.name.toUpperCase(), s));
@@ -5816,6 +5880,8 @@
                 const activeStaffForDate = staffList.filter(s => {
                     if (s.data_admissao && s.data_admissao > dateStr) return false;
                     if (!s.ativo && (!s.data_desativacao || s.data_desativacao < dateStr)) return false;
+                    // Se estiver em período de férias nesta data, retira da lista esperada
+                    if (isPersonOnVacation(s.name, dateStr)) return false;
                     return true;
                 });
 
@@ -5831,6 +5897,11 @@
                     const proj = person ? person.project : 'GERAL';
                     const eq = person ? person.equipe : 'GERAL';
                     const rec = dateEvents[name];
+
+                    // Se estiver de férias nesta data e não possuir registro de almoço, não exibe
+                    if (isPersonOnVacation(name, dateStr) && (!rec || !rec.hasRecord || (rec.startTimeStr === '--:--' && rec.endTimeStr === '--:--'))) {
+                        return;
+                    }
 
                     let status = 'NOT_STARTED';
                     let startTimeStr = '--:--';
@@ -6397,13 +6468,19 @@
             }
         });
 
-        // Realtime Subscription para Atualizações de Almoço
+        // Realtime Subscription para Atualizações de Almoço e Férias
         if (window.supabase && typeof window.supabase.channel === 'function') {
             try {
                 window.supabase
                     .channel('realtime_jornada_almoco')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'tb_jornada_almoco' }, () => {
                         console.log('Realtime: Nova atualização em tb_jornada_almoco. Recarregando...');
+                        if (document.getElementById('lunch-control-full-view')?.style.display !== 'none') {
+                            fetchLunchControlData();
+                        }
+                    })
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'tb_assiduidade' }, () => {
+                        console.log('Realtime: Nova atualização em tb_assiduidade (Férias). Recarregando...');
                         if (document.getElementById('lunch-control-full-view')?.style.display !== 'none') {
                             fetchLunchControlData();
                         }
