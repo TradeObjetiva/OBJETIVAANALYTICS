@@ -36,3 +36,9 @@ scratch/
 *.xlsx
 xl/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+temp_*
+

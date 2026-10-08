@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campanha Objetiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Glow Effects -->
+  <div class="glow-bg glow-1"></div>
+  <div class="glow-bg glow-2"></div>
+  <div class="glow-bg glow-potencia"></div>
+
+  <div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-badge">
+          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="app-title-tag">SISTEMA INTEGRADO DE GESTÃO DE PERFORMANCE TRADE</div>
+          <h1 class="app-title">Campanha Objetiva</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnExportAudit" class="btn btn-secondary" disabled>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Auditoria Folha (.xlsx)
+        </button>
+        <button id="btnDownloadPdfCampanha" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+          Relatório Executivo (.pdf)
+        <button id="btnDownloadCampanha" class="btn btn-primary" disabled>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Baixar Campanha (.xlsx)
+        </button>
+        <button id="btnSalvarSupabase" class="btn btn-potencia" disabled style="background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span id="btnSalvarSupabaseText">Salvar no Supabase</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="nav-tabs-container">
+      <button class="nav-tab active" id="tabAssiduidade" data-target="viewAssiduidade">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>1 & 2. Assiduidade & Pontualidade</span>
+      </button>
+
+      <button class="nav-tab nav-tab-potencia" id="tabPontosExtras" data-target="viewPontosExtras">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span>4. Pontos Extras Conquistados (Curadoria)</span>
+        <span class="tab-badge" id="tabPeBadge">0 pendentes</span>
+      </button>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: ASSIDUIDADE & PONTUALIDADE         -->
+    <!-- ========================================== -->
+    <div class="view-panel active" id="viewAssiduidade">
+      <!-- Control & Parameters Section -->
+      <section class="config-panel">
+        <div class="card config-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="badge-dot pulse"></span>
+              <h3>Arquivos e Origem de Dados da Folha</h3>
+            </div>
+            <span class="text-muted text-sm">Diretório: Desktop/AUTOMAÇÃO PARA CAMPANHA</span>
+          </div>
+          <div class="files-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <div class="file-box">
+              <div class="file-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #818cf8;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div class="file-info">
+                <span class="file-label">Base de Colaboradores</span>
+                <span class="file-name" id="staffBaseStatus">Objetiva Analytics</span>
+                <span class="file-meta" id="staffBaseCount">Sincronizando com Supabase...</span>
+              </div>
+              <span class="file-status ready" id="staffBaseBadge">Conectando</span>
+            </div>
+
+            <div class="file-box">
+              <div class="file-icon-wrap file-camp">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+              </div>
+              <div class="file-info">
+                <span class="file-label">Planilha de Campanha</span>
+                <span class="file-name" title="CAMPANHA (1).xlsx">CAMPANHA (1).xlsx</span>
+                <span class="file-meta">99 Promotores • 5 Períodos</span>
+              </div>
+              <span class="file-status ready">Pronto</span>
+            </div>
+
+            <div class="file-box">
+              <div class="file-icon-wrap file-folha">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+              </div>
+              <div class="file-info">
+                <span class="file-label">Folha Conciliada</span>
+                <span class="file-name" title="folha_reconciliada_Setembro_2026.xlsx">folha_reconciliada_Setembro_2026.xlsx</span>
+                <span class="file-meta">130 Colaboradores • Espelho diário</span>
+              </div>
+              <span class="file-status ready">Pronto</span>
+            </div>
+          </div>
+
+          <!-- Rules & Parameters -->
+          <div class="params-row">
+            <div class="param-item">
+              <label for="mesReferenciaSelect">Mês de Referência (Campanha)</label>
+              <div class="input-with-unit" style="padding-right: 8px;">
+                <select id="mesReferenciaSelect" style="background: transparent; border: none; color: #fff; font-weight: 700; font-size: 0.92rem; width: 100%; outline: none; cursor: pointer;">
+                  <option value="Setembro/2026" selected style="background: #1e1e2d; color: #fff;">Setembro / 2026</option>
+                  <option value="Outubro/2026" style="background: #1e1e2d; color: #fff;">Outubro / 2026</option>
+                  <option value="Novembro/2026" style="background: #1e1e2d; color: #fff;">Novembro / 2026</option>
+                  <option value="Dezembro/2026" style="background: #1e1e2d; color: #fff;">Dezembro / 2026</option>
+                </select>
+              </div>
+              <small class="param-help">Ciclo de apuração para salvar no Supabase</small>
+            </div>
+
+            <div class="param-item">
+              <label for="toleranceInput">Tolerância de Horário (CLT)</label>
+              <div class="input-with-unit">
+                <input type="number" id="toleranceInput" value="10" min="0" max="60">
+                <span>minutos</span>
+              </div>
+              <small class="param-help">Entrada e Intervalo vs Planejado</small>
+            </div>
+
+            <div class="param-item">
+              <label for="bonusInput">Alvo 4 Períodos Seguidos 100%</label>
+              <div class="input-with-unit">
+                <input type="number" id="bonusInput" value="30" min="0" max="100">
+                <span>pts total</span>
+              </div>
+              <small class="param-help">Troca os pontos base para totalizar 30 pts</small>
+            </div>
+
+            <div class="param-item">
+              <label>Pontos por Falta Injustificada</label>
+              <div class="static-pill badge-danger">-50 pontos / falta</div>
+              <small class="param-help">Atestados e férias não descontam</small>
+            </div>
+
+            <div class="param-item">
+              <label>Pontos por Dia Pontual</label>
+              <div class="static-pill badge-success">+1 ponto / dia trabalhado</div>
+              <small class="param-help">Entrada e almoço dentro da tolerância</small>
+            </div>
+
+            <div class="param-action">
+              <button id="btnProcess" class="btn btn-primary btn-lg pulse-btn">
+                <svg class="spin-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span id="btnProcessText">Processar Pontuações</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Metrics Cards -->
+      <section class="metrics-grid" id="metricsSection">
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Promotores Analisados</span>
+            <div class="metric-icon metric-purple">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+          </div>
+          <div class="metric-val" id="valTotalProm">--</div>
+          <div class="metric-sub">100% vinculados à folha de ponto</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Total de Faltas Detectadas</span>
+            <div class="metric-icon metric-red">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            </div>
+          </div>
+          <div class="metric-val text-danger" id="valTotalFaltas">--</div>
+          <div class="metric-sub" id="valTotalAssidPts">-- pontos deduzidos no mês</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Total de Pontos de Pontualidade</span>
+            <div class="metric-icon metric-green">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+          </div>
+          <div class="metric-val text-success" id="valTotalPont">--</div>
+          <div class="metric-sub">Dias pontuais + ajuste de 4 semanas</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Promotores com 4 Semanas 100%</span>
+            <div class="metric-icon metric-gold">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+          </div>
+          <div class="metric-val text-gold" id="valPromBonus">--</div>
+          <div class="metric-sub">Totalizaram 30 pts acumulados nas 4 semanas</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Sem Contrato / Sem Jornada</span>
+            <div class="metric-icon metric-red">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </div>
+          </div>
+          <div class="metric-val text-danger" id="valSemContrato">--</div>
+          <div class="metric-sub">Usuário sem contrato / sem jornada na folha</div>
+        </div>
+      </section>
+
+      <!-- Main Results Table -->
+      <main class="table-container card">
+        <div class="table-toolbar">
+          <div class="toolbar-search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Filtrar promotor por nome, projeto ou equipe...">
+          </div>
+
+          <div class="toolbar-filters">
+            <select id="filterProjeto" class="select-filter">
+              <option value="">Todos os Projetos</option>
+              <option value="EXCLUSIVO">Exclusivo</option>
+              <option value="COMPARTILHADO">Compartilhado</option>
+            </select>
+
+            <select id="filterStatus" class="select-filter">
+              <option value="">Todos os Status</option>
+              <option value="faltas">Com Faltas (-50)</option>
+              <option value="sem_faltas">Sem Faltas (100% Assíduo)</option>
+              <option value="bonus">Com Super Bônus (30 pts)</option>
+              <option value="sem_contrato">⚠️ Sem Contrato na Folha</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-responsive">
+          <table class="data-table" id="promotorsTable">
+            <thead>
+              <tr>
+                <th>Promotor</th>
+                <th>Projeto / Equipe</th>
+                <th class="th-center" title="27/08 A 03/09">P1 (27/08-03/09)</th>
+                <th class="th-center" title="04/09 A 11/09">P2 (04/09-11/09)</th>
+                <th class="th-center" title="12/09 A 19/09">P3 (12/09-19/09)</th>
+                <th class="th-center" title="21/09 A 26/09">P4 (21/09-26/09)</th>
+                <th class="th-center" title="28/09 A 30/09">P5 (28/09-30/09)</th>
+                <th class="th-center">Bônus 4x</th>
+                <th class="th-action">Auditoria</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr class="empty-state">
+                <td colspan="9">
+                  <div class="empty-message">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <h4>Nenhum dado carregado</h4>
+                    <p>Clique em <strong>"Processar Pontuações"</strong> acima para cruzar as planilhas e gerar os cálculos.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer">
+          <span id="rowCount">0 colaboradores exibidos</span>
+        </div>
+      </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: PONTOS EXTRAS CONQUISTADOS         -->
+    <!-- ========================================== -->
+    <div class="view-panel" id="viewPontosExtras">
+      <!-- Banner Campanha Modo Potência -->
+      <section class="potencia-banner card">
+        <div class="potencia-banner-left">
+          <div class="potencia-logo-wrap">
+            <span class="potencia-tag">DESAFIO</span>
+            <h2 class="potencia-title">MODO <span>⚡</span> POTÊNCIA!</h2>
+            <p class="potencia-subtitle">Curadoria de Pontos Extras Conquistados no PDV</p>
+          </div>
+        </div>
+
+        <div class="potencia-rules-grid">
+          <div class="rule-chip chip-ilha">
+            <span class="rule-icon">🏛️</span>
+            <div class="rule-info">
+              <span class="rule-name">ILHA</span>
+              <span class="rule-pts">50 PONTOS</span>
+              <span class="rule-extra">Criativo: 100 pts</span>
+            </div>
+          </div>
+
+          <div class="rule-chip chip-meia-ilha">
+            <span class="rule-icon">📦</span>
+            <div class="rule-info">
+              <span class="rule-name">MEIA ILHA</span>
+              <span class="rule-pts">25 PONTOS</span>
+              <span class="rule-extra">Criativo: 50 pts</span>
+            </div>
+          </div>
+
+          <div class="rule-chip chip-ponta">
+            <span class="rule-icon">🏷️</span>
+            <div class="rule-info">
+              <span class="rule-name">PONTA DE GÔNDOLA</span>
+              <span class="rule-pts">30 PONTOS</span>
+              <span class="rule-extra">Criativo: 60 pts</span>
+            </div>
+          </div>
+
+          <div class="rule-chip chip-meia-ponta">
+            <span class="rule-icon">🔖</span>
+            <div class="rule-info">
+              <span class="rule-name">MEIA PONTA</span>
+              <span class="rule-pts">15 PONTOS</span>
+              <span class="rule-extra">Criativo: 30 pts</span>
+            </div>
+          </div>
+
+          <div class="rule-chip chip-criativo-bonus">
+            <span class="rule-icon">💡</span>
+            <div class="rule-info">
+              <span class="rule-name">BÔNUS CRIATIVO</span>
+              <span class="rule-pts-highlight">PONTUAÇÃO EM DOBRO!</span>
+              <span class="rule-extra">Multiplica por 2x</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pontos Extras Metrics Section -->
+      <section class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Registros com Ponto Extra</span>
+            <div class="metric-icon metric-purple">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="metric-val" id="peTotalReg">--</div>
+          <div class="metric-sub" id="peTotalProms">-- promotores distintos</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Pendentes de Curadoria</span>
+            <div class="metric-icon metric-gold">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 14 14"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="metric-val text-gold" id="peTotalPend">--</div>
+          <div class="metric-sub">Aguardando aprovação de foto</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Pontos Extras Aprovados</span>
+            <div class="metric-icon metric-green">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="metric-val text-success" id="peTotalAprov">--</div>
+          <div class="metric-sub" id="peTotalRejeit">-- reprovados</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Total de Pontos Gerados</span>
+            <div class="metric-icon metric-potencia">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </div>
+          </div>
+          <div class="metric-val text-potencia" id="peTotalPts">--</div>
+          <div class="metric-sub">Alimentarão a planilha de campanha</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Bônus Criativos (Dobro)</span>
+            <div class="metric-icon metric-gold">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="9" y1="18" x2="15" y2="18"></line>
+                <line x1="10" y1="22" x2="14" y2="22"></line>
+                <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path>
+              </svg>
+            </div>
+          </div>
+          <div class="metric-val text-gold" id="peTotalCriativos">--</div>
+          <div class="metric-sub">Conquistas com pontuação dobrada</div>
+        </div>
+      </section>
+
+      <!-- Action & Filters Toolbar -->
+      <section class="card potencia-toolbar-card">
+        <div class="toolbar-top">
+          <div class="toolbar-search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="peSearchInput" placeholder="Buscar por promotor, PDV, atividade ou ID...">
+          </div>
+
+          <div class="toolbar-actions-group">
+            <button id="btnPeAprovarTodos" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Aprovar Visíveis
+            </button>
+
+            <button id="btnPeExportAudit" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              Exportar Curadoria (.xlsx)
+            </button>
+
+            <button id="btnPeExportPdf" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+              Dossiê (.pdf)
+            </button>
+
+            <button id="btnPeSyncExcel" class="btn btn-potencia pulse-btn">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span id="btnPeSyncText">Alimentar Planilha de Campanha</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar-filters-row">
+          <div class="filter-group">
+            <label for="peFilterPeriodo">Período da Campanha:</label>
+            <select id="peFilterPeriodo" class="select-filter">
+              <option value="">Todos os Períodos</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="peFilterPromotor">Filtrar por Colaborador:</label>
+            <select id="peFilterPromotor" class="select-filter">
+              <option value="">Todos os Colaboradores</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="peFilterStatus">Status de Curadoria:</label>
+            <select id="peFilterStatus" class="select-filter">
+              <option value="">Todos os Status</option>
+              <option value="PENDENTE" selected>⏳ Pendentes</option>
+              <option value="APROVADO">✅ Aprovados</option>
+              <option value="REJEITADO">❌ Reprovados</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="peFilterTipo">Tipo de Conquista:</label>
+            <select id="peFilterTipo" class="select-filter">
+              <option value="">Todos os Tipos</option>
+              <option value="ILHA">🏛️ Ilha (50 pts)</option>
+              <option value="MEIA_ILHA">📦 Meia Ilha (25 pts)</option>
+              <option value="PONTA">🏷️ Ponta de Gôndola (30 pts)</option>
+              <option value="MEIA_PONTA">🔖 Meia Ponta (15 pts)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pontos Extras Grid -->
+      <section class="pe-cards-container">
+        <div class="pe-cards-header">
+          <span id="peCountDisplay">Carregando registros...</span>
+          <div class="pe-legend">
+            <span class="legend-dot dot-pendente"></span> Pendente
+            <span class="legend-dot dot-aprovado"></span> Aprovado
+            <span class="legend-dot dot-rejeitado"></span> Reprovado
+            <span class="legend-dot dot-criativo"></span> Criativo (Dobro)
+          </div>
+        </div>
+
+        <div class="pe-grid" id="peGrid">
+          <!-- Dynamically populated cards -->
+          <div class="pe-loading-card">
+            <div class="spinner"></div>
+            <p>Carregando registros de pontos extras e links de fotos...</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Detail Modal (Day-by-day punch mirror) -->
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="badge-dot pulse"></span>
+          <h3 id="modalPromotorName" class="modal-title">Detalhes do Promotor</h3>
+          <span id="modalPromotorMeta" class="text-muted text-sm">--</span>
+        </div>
+        <button id="btnCloseModal" class="btn-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-tabs" id="modalPeriodTabs">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="modal-body">
+        <div class="period-summary-bar" id="modalPeriodSummary">
+          <!-- Summary chips -->
+        </div>
+
+        <div class="table-responsive">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Dia</th>
+                <th>Início Exec.</th>
+                <th>Início Plan.</th>
+                <th>Atraso</th>
+                <th>Intervalo Exec.</th>
+                <th>Intervalo Plan.</th>
+                <th>Estouro Int.</th>
+                <th>Status</th>
+                <th>Pontual</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody id="modalDaysBody">
+              <!-- Days rendered here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX / ZOOM HD MODAL PARA FOTOS DO PDV -->
+  <div class="modal-backdrop lightbox-backdrop" id="lightboxModal">
+    <div class="lightbox-dialog">
+      <div class="lightbox-header">
+        <div class="lightbox-info">
+          <h4 id="lightboxTitle">Foto do Ponto Extra</h4>
+          <span id="lightboxSubtitle" class="text-muted text-sm">--</span>
+        </div>
+        <div class="lightbox-actions">
+          <span id="lightboxCounter" class="lightbox-counter">1 / 1</span>
+          <button id="btnLightboxOpenNewTab" class="btn-icon" title="Abrir em nova aba">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </button>
+          <button id="btnLightboxClose" class="btn-icon" title="Fechar (Esc)">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="lightbox-body">
+        <button id="btnLightboxPrev" class="lightbox-nav-btn prev-btn" title="Foto Anterior (←)">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <div class="lightbox-img-wrapper" id="lightboxImgWrapper">
+          <img id="lightboxImg" src="" alt="Foto Ponto Extra" class="lightbox-img">
+        </div>
+
+        <button id="btnLightboxNext" class="lightbox-nav-btn next-btn" title="Próxima Foto (→)">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <div class="lightbox-footer">
+        <div class="lightbox-thumbnails" id="lightboxThumbnails">
+          <!-- Dynamic thumbnails -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK TOAST NOTIFICATION -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../js/supabase-config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

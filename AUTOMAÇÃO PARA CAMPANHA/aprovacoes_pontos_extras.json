@@ -1,0 +1,22 @@
+{
+  "703852712": {
+    "status": "APROVADO",
+    "tipo": "ILHA",
+    "criativo": true,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "Ilha excelente e muito criativa",
+    "pontos": 100,
+    "updated_at": "2026-10-08T11:38:49.920159"
+  },
+  "703852922": {
+    "status": "APROVADO",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "P5 (28/09 A 30/09)",
+    "motivo": "",
+    "pontos": 50,
+    "updated_at": "2026-10-08T12:02:28.507709"
+  }
+}
