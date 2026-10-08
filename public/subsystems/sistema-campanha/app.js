@@ -1,4 +1,51 @@
 // ========================================================
+// THEME SYNCHRONIZATION (GRADE DE ASSIDUIDADE COMPLIANT)
+// ========================================================
+function syncTheme() {
+  try {
+    const parentTheme = window.parent && window.parent.document && window.parent.document.documentElement
+      ? window.parent.document.documentElement.getAttribute('data-theme')
+      : null;
+    const theme = parentTheme || localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    if (document.body) {
+      document.body.setAttribute('data-theme', theme);
+    }
+  } catch (e) {
+    const theme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    if (document.body) {
+      document.body.setAttribute('data-theme', theme);
+    }
+  }
+}
+syncTheme();
+
+// MutationObserver para mudanças de tema no pai (Objetiva Analytics)
+try {
+  if (window.parent && window.parent.document && window.parent.document.documentElement) {
+    const themeObserver = new MutationObserver(() => syncTheme());
+    themeObserver.observe(window.parent.document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+  }
+} catch (e) {}
+
+// BroadcastChannel para sincronização instantânea de tema
+try {
+  const syncChannel = new BroadcastChannel('objetiva_sync_channel');
+  syncChannel.onmessage = (e) => {
+    if (e.data && e.data.type === 'THEME_CHANGE' && e.data.theme) {
+      document.documentElement.setAttribute('data-theme', e.data.theme);
+      if (document.body) {
+        document.body.setAttribute('data-theme', e.data.theme);
+      }
+    }
+  };
+} catch (e) {}
+
+// ========================================================
 // API CONFIGURATION (INTEGRATED WITH OBJETIVA ANALYTICS)
 // ========================================================
 const API_BASE = (window.location.port === '5000') ? '' : 'http://127.0.0.1:5000';
