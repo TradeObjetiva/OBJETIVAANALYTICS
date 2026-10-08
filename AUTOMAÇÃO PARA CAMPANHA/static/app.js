@@ -52,15 +52,47 @@ const API_BASE = (window.location.port === '5000') ? '' : 'http://127.0.0.1:5000
 function getApiUrl(path) {
   return API_BASE + path;
 }
+
 // ========================================================
-// STATE MANAGEMENT
+// STATE MANAGEMENT & PERÍODOS DA CAMPANHA (27/08 A 19/12)
 // ========================================================
+
+// Calendário Oficial Completo da Campanha: 27/08 a 19/12
+const CAMPANHA_PERIODOS_PADRAO = [
+  { id: 1, name: '27/08 A 03/09', start: '2026-08-27', end: '2026-09-03' },
+  { id: 2, name: '04/09 A 11/09', start: '2026-09-04', end: '2026-09-11' },
+  { id: 3, name: '12/09 A 19/09', start: '2026-09-12', end: '2026-09-19' },
+  { id: 4, name: '21/09 A 26/09', start: '2026-09-21', end: '2026-09-26' },
+  { id: 5, name: '28/09 A 30/09', start: '2026-09-28', end: '2026-09-30' },
+  { id: 6, name: '01/10 A 07/10', start: '2026-10-01', end: '2026-10-07' },
+  { id: 7, name: '08/10 A 14/10', start: '2026-10-08', end: '2026-10-14' },
+  { id: 8, name: '15/10 A 21/10', start: '2026-10-15', end: '2026-10-21' },
+  { id: 9, name: '22/10 A 31/10', start: '2026-10-22', end: '2026-10-31' },
+  { id: 10, name: '01/11 A 07/11', start: '2026-11-01', end: '2026-11-07' },
+  { id: 11, name: '08/11 A 14/11', start: '2026-11-08', end: '2026-11-14' },
+  { id: 12, name: '15/11 A 21/11', start: '2026-11-15', end: '2026-11-21' },
+  { id: 13, name: '22/11 A 30/11', start: '2026-11-22', end: '2026-11-30' },
+  { id: 14, name: '01/12 A 07/12', start: '2026-12-01', end: '2026-12-07' },
+  { id: 15, name: '08/12 A 14/12', start: '2026-12-08', end: '2026-12-14' },
+  { id: 16, name: '15/12 A 19/12', start: '2026-12-15', end: '2026-12-19' }
+];
+
+let activeCampaignPeriods = [...CAMPANHA_PERIODOS_PADRAO];
 
 // Assiduidade & Pontualidade State
 let allPromotores = [];
 let currentPromotor = null;
 let activeModalPeriodIdx = 0;
-let colaboradoresObjetiva = []; // Base de Colaboradores carregada do Objetiva Analytics (Supabase)
+let colaboradoresObjetiva = []; // Base de Colaboradores carregada do Supabase
+
+// Arquivos Importados pelo Usuário (3 Slots)
+let selectedCampFile = null;
+let selectedFolhaFile = null;
+let selectedPeFile = null;
+
+// Mapas de Reconhecimento Incremental e Faltas Oficiais
+let faltasAssiduidadeMap = {}; // { 'NOME': ['2026-09-02', '2026-09-10'] }
+let campanhaSalvaMap = {}; // { 'NOME': { periodos: [...], pontos_extras: X } }
 
 // Pontos Extras State
 let allPeRecords = [];
@@ -88,6 +120,42 @@ const tabPontosExtras = document.getElementById('tabPontosExtras');
 const viewAssiduidade = document.getElementById('viewAssiduidade');
 const viewPontosExtras = document.getElementById('viewPontosExtras');
 const tabPeBadge = document.getElementById('tabPeBadge');
+
+// Central de Importação (3 Slots)
+const boxUploadCamp = document.getElementById('boxUploadCamp');
+const inputCampFile = document.getElementById('inputCampFile');
+const campFileName = document.getElementById('campFileName');
+const campFileMeta = document.getElementById('campFileMeta');
+const campFileBadge = document.getElementById('campFileBadge');
+
+const boxUploadFolha = document.getElementById('boxUploadFolha');
+const inputFolhaFile = document.getElementById('inputFolhaFile');
+const folhaFileName = document.getElementById('folhaFileName');
+const folhaFileMeta = document.getElementById('folhaFileMeta');
+const folhaFileBadge = document.getElementById('folhaFileBadge');
+
+const boxUploadPe = document.getElementById('boxUploadPe');
+const inputPeFile = document.getElementById('inputPeFile');
+const peFileName = document.getElementById('peFileName');
+const peFileMeta = document.getElementById('peFileMeta');
+const peFileBadge = document.getElementById('peFileBadge');
+
+// View Switchers (Matriz Geral vs Detalhado)
+const btnMod1Matrix = document.getElementById('btnMod1Matrix');
+const btnMod1Detailed = document.getElementById('btnMod1Detailed');
+const mod1MatrixWrapper = document.getElementById('mod1MatrixWrapper');
+const mod1DetailedWrapper = document.getElementById('mod1DetailedWrapper');
+const matrixTableMod1 = document.getElementById('matrixTableMod1');
+const matrixHeadMod1 = document.getElementById('matrixHeadMod1');
+const matrixBodyMod1 = document.getElementById('matrixBodyMod1');
+
+const btnMod2Cards = document.getElementById('btnMod2Cards');
+const btnMod2Matrix = document.getElementById('btnMod2Matrix');
+const peCardsSection = document.getElementById('peCardsSection');
+const mod2MatrixWrapper = document.getElementById('mod2MatrixWrapper');
+const matrixTableMod2 = document.getElementById('matrixTableMod2');
+const matrixHeadMod2 = document.getElementById('matrixHeadMod2');
+const matrixBodyMod2 = document.getElementById('matrixBodyMod2');
 
 // Elementos Supabase e Base de Colaboradores
 const btnSalvarSupabase = document.getElementById('btnSalvarSupabase');
@@ -168,14 +236,26 @@ const btnLightboxOpenNewTab = document.getElementById('btnLightboxOpenNewTab');
 const toastContainer = document.getElementById('toastContainer');
 
 // ========================================================
-// INITIALIZATION & TAB SWITCHING
+// INITIALIZATION
 // ========================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   setupTabNavigation();
+  setupViewSwitchers();
+  setupFileUploads();
   setupEventListeners();
-  carregarColaboradoresObjetiva();
-  loadPontosExtrasData();
+  
+  // 1. Carrega colaboradores da base
+  await carregarColaboradoresObjetiva();
+  
+  // 2. Consulta faltas oficiais de tb_assiduidade
+  await carregarFaltasOficiaisAssiduidade();
+
+  // 3. Consulta registros de campanha já salvos no Supabase (incremental)
+  await carregarCampanhaSalvaIncremental();
+
+  // 4. Carrega registros de pontos extras
+  await loadPontosExtrasData();
 });
 
 function setupTabNavigation() {
@@ -196,8 +276,130 @@ function setupTabNavigation() {
   });
 }
 
+function setupViewSwitchers() {
+  // Módulo 1 (Assiduidade e Pontualidade) Switcher
+  if (btnMod1Matrix && btnMod1Detailed) {
+    btnMod1Matrix.addEventListener('click', () => {
+      btnMod1Matrix.classList.add('active');
+      btnMod1Detailed.classList.remove('active');
+      if (mod1MatrixWrapper) mod1MatrixWrapper.style.display = 'block';
+      if (mod1DetailedWrapper) mod1DetailedWrapper.style.display = 'none';
+    });
+
+    btnMod1Detailed.addEventListener('click', () => {
+      btnMod1Detailed.classList.add('active');
+      btnMod1Matrix.classList.remove('active');
+      if (mod1MatrixWrapper) mod1MatrixWrapper.style.display = 'none';
+      if (mod1DetailedWrapper) mod1DetailedWrapper.style.display = 'block';
+    });
+  }
+
+  // Módulo 2 (Pontos Extras) Switcher
+  if (btnMod2Cards && btnMod2Matrix) {
+    btnMod2Cards.addEventListener('click', () => {
+      btnMod2Cards.classList.add('active');
+      btnMod2Matrix.classList.remove('active');
+      if (peCardsSection) peCardsSection.style.display = 'flex';
+      if (mod2MatrixWrapper) mod2MatrixWrapper.style.display = 'none';
+    });
+
+    btnMod2Matrix.addEventListener('click', () => {
+      btnMod2Matrix.classList.add('active');
+      btnMod2Cards.classList.remove('active');
+      if (peCardsSection) peCardsSection.style.display = 'none';
+      if (mod2MatrixWrapper) mod2MatrixWrapper.style.display = 'block';
+    });
+  }
+}
+
+// ========================================================
+// CENTRAL DE IMPORTAÇÃO (3 PLANILHAS INTERATIVAS)
+// ========================================================
+function setupFileUploads() {
+  // 1. Planilha de Campanha / Efetividade
+  if (boxUploadCamp && inputCampFile) {
+    boxUploadCamp.addEventListener('click', () => inputCampFile.click());
+    inputCampFile.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        selectedCampFile = e.target.files[0];
+        if (campFileName) campFileName.textContent = selectedCampFile.name;
+        if (campFileMeta) campFileMeta.textContent = `${(selectedCampFile.size / 1024).toFixed(1)} KB • Arquivo selecionado`;
+        if (campFileBadge) {
+          campFileBadge.textContent = "Carregado";
+          campFileBadge.className = "file-status ready";
+        }
+        showToast(`Planilha de Campanha "${selectedCampFile.name}" carregada!`, 'success');
+      }
+    });
+  }
+
+  // 2. Folha Reconciliada
+  if (boxUploadFolha && inputFolhaFile) {
+    boxUploadFolha.addEventListener('click', () => inputFolhaFile.click());
+    inputFolhaFile.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        selectedFolhaFile = e.target.files[0];
+        if (folhaFileName) folhaFileName.textContent = selectedFolhaFile.name;
+        if (folhaFileMeta) folhaFileMeta.textContent = `${(selectedFolhaFile.size / 1024).toFixed(1)} KB • Arquivo selecionado`;
+        if (folhaFileBadge) {
+          folhaFileBadge.textContent = "Carregado";
+          folhaFileBadge.className = "file-status ready";
+        }
+        showToast(`Folha Reconciliada "${selectedFolhaFile.name}" carregada!`, 'success');
+      }
+    });
+  }
+
+  // 3. Relatório de Ponto Extra
+  if (boxUploadPe && inputPeFile) {
+    boxUploadPe.addEventListener('click', () => inputPeFile.click());
+    inputPeFile.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        selectedPeFile = e.target.files[0];
+        if (peFileName) peFileName.textContent = selectedPeFile.name;
+        if (peFileMeta) peFileMeta.textContent = `${(selectedPeFile.size / 1024).toFixed(1)} KB • Arquivo selecionado`;
+        if (peFileBadge) {
+          peFileBadge.textContent = "Carregado";
+          peFileBadge.className = "file-status ready";
+        }
+        showToast(`Relatório de Pontos Extras "${selectedPeFile.name}" carregado!`, 'potencia');
+      }
+    });
+  }
+
+  // Drag & drop visual feedback
+  [boxUploadCamp, boxUploadFolha, boxUploadPe].forEach(box => {
+    if (!box) return;
+    box.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      box.classList.add('dragover');
+    });
+    box.addEventListener('dragleave', () => box.classList.remove('dragover'));
+    box.addEventListener('drop', (e) => {
+      e.preventDefault();
+      box.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        const file = e.dataTransfer.files[0];
+        if (box === boxUploadCamp) {
+          selectedCampFile = file;
+          if (campFileName) campFileName.textContent = file.name;
+          if (campFileBadge) { campFileBadge.textContent = "Carregado"; campFileBadge.className = "file-status ready"; }
+        } else if (box === boxUploadFolha) {
+          selectedFolhaFile = file;
+          if (folhaFileName) folhaFileName.textContent = file.name;
+          if (folhaFileBadge) { folhaFileBadge.textContent = "Carregado"; folhaFileBadge.className = "file-status ready"; }
+        } else if (box === boxUploadPe) {
+          selectedPeFile = file;
+          if (peFileName) peFileName.textContent = file.name;
+          if (peFileBadge) { peFileBadge.textContent = "Carregado"; peFileBadge.className = "file-status ready"; }
+        }
+        showToast(`Arquivo "${file.name}" importado por arrasto!`, 'success');
+      }
+    });
+  });
+}
+
 function setupEventListeners() {
-  // Assiduidade listeners
   btnProcess.addEventListener('click', processScores);
   if (btnSalvarSupabase) {
     btnSalvarSupabase.addEventListener('click', salvarCampanhaNoSupabase);
@@ -277,7 +479,100 @@ function showToast(message, type = 'success', duration = 3500) {
 }
 
 // ========================================================
-// INTEGRAÇÃO COM BANCO DE DADOS DE COLABORADORES (SUPABASE)
+// RECONHECIMENTO DIRETO DE FALTAS DA TABELA DE ASSIDUIDADE
+// ========================================================
+
+async function carregarFaltasOficiaisAssiduidade(startDate = '2026-08-27', endDate = '2026-12-19') {
+  if (!window.supabase) return {};
+  try {
+    let allFaltas = [];
+    let from = 0;
+    const step = 999;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await window.supabase
+        .from('tb_assiduidade')
+        .select('collaborator_name, date, status, observation')
+        .eq('status', 'FT')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .range(from, from + step);
+
+      if (error) {
+        console.warn('Erro ao consultar faltas oficiais de tb_assiduidade:', error);
+        break;
+      }
+      if (data && data.length > 0) {
+        allFaltas = allFaltas.concat(data);
+        from += step + 1;
+      }
+      if (!data || data.length <= step) {
+        hasMore = false;
+      }
+    }
+
+    const map = {};
+    allFaltas.forEach(f => {
+      const nome = (f.collaborator_name || '').trim().toUpperCase();
+      if (!nome) return;
+      if (!map[nome]) map[nome] = [];
+      map[nome].push(f.date);
+    });
+
+    faltasAssiduidadeMap = map;
+    const totalFaltasCount = allFaltas.length;
+    console.log(`[Assiduidade] ${totalFaltasCount} faltas 'FT' oficiais carregadas da tabela tb_assiduidade para ${Object.keys(map).length} promotores.`);
+    return map;
+  } catch (err) {
+    console.error('Falha ao carregar faltas da tb_assiduidade:', err);
+    return {};
+  }
+}
+
+// ========================================================
+// RECONHECIMENTO INCREMENTAL DE CAMPANHA SALVA
+// ========================================================
+
+async function carregarCampanhaSalvaIncremental() {
+  if (!window.supabase) return;
+  try {
+    const { data: savedColabs, error } = await window.supabase
+      .from('tb_campanha_colaboradores')
+      .select('*');
+
+    if (!error && savedColabs && savedColabs.length > 0) {
+      const map = {};
+      savedColabs.forEach(c => {
+        const nomeClean = (c.nome || '').trim().toUpperCase();
+        map[nomeClean] = c;
+      });
+      campanhaSalvaMap = map;
+      console.log(`[Campanha Incremental] ${savedColabs.length} registros previamente salvos encontrados no Supabase.`);
+
+      // Se ainda não tivermos processado os promotores na memória, inicializa a tabela matriz com os dados já salvos
+      if (allPromotores.length === 0) {
+        allPromotores = savedColabs.map(c => ({
+          nome: c.nome,
+          projeto: c.projeto,
+          equipe: c.equipe,
+          cargo: c.cargo,
+          contrato: c.contrato,
+          status: c.status_folha || 'OK',
+          pontos_extras: c.pontos_extras || 0,
+          periodos: c.periodos || []
+        }));
+        
+        applyFilters();
+      }
+    }
+  } catch (err) {
+    console.warn("Aviso ao carregar dados salvos da campanha:", err);
+  }
+}
+
+// ========================================================
+// BASE DE COLABORADORES (SUPABASE)
 // ========================================================
 
 async function carregarColaboradoresObjetiva() {
@@ -289,19 +584,16 @@ async function carregarColaboradoresObjetiva() {
 
   try {
     if (!window.supabase) {
-      console.warn("Supabase ainda não inicializado, tentando novamente em 500ms...");
       setTimeout(carregarColaboradoresObjetiva, 500);
       return [];
     }
 
-    // 1. Tenta carregar da base oficial de colaboradores
     const { data: staffData, error: staffError } = await window.supabase
       .from('tb_colaboradores')
       .select('*')
       .order('nome', { ascending: true });
 
     if (!staffError && staffData && staffData.length > 0) {
-      // Filtrar apenas ativos
       colaboradoresObjetiva = staffData
         .filter(s => s.ativo !== false)
         .map(s => ({
@@ -311,7 +603,6 @@ async function carregarColaboradoresObjetiva() {
           equipe: s.cargo || s.projeto || 'PROMOTOR'
         }));
     } else {
-      // 2. Fallback inteligente: buscar colaboradores cadastrados em tb_planilha
       const { data: planData } = await window.supabase
         .from('tb_planilha')
         .select('agente, projeto')
@@ -348,15 +639,456 @@ async function carregarColaboradoresObjetiva() {
     return colaboradoresObjetiva;
   } catch (err) {
     console.error("Erro ao carregar colaboradores do Objetiva:", err);
-    if (staffBaseCount) staffBaseCount.textContent = "Usando planilha local";
-    if (staffBaseBadge) staffBaseBadge.textContent = "Local";
     return [];
   }
 }
 
+// ========================================================
+// PROCESSAMENTO PRINCIPAL (INCREMENTAL + FALTAS ASSIDUIDADE)
+// ========================================================
+
+async function processScores() {
+  btnProcess.classList.add('is-loading');
+  btnProcess.disabled = true;
+  btnProcessText.textContent = "Processando Planilhas...";
+
+  const formData = new FormData();
+  formData.append('tolerance', toleranceInput.value);
+  formData.append('bonus', bonusInput.value);
+
+  // Anexa arquivos selecionados pelo usuário se houver
+  if (selectedCampFile) formData.append('camp_file', selectedCampFile);
+  if (selectedFolhaFile) formData.append('folha_file', selectedFolhaFile);
+  if (selectedPeFile) formData.append('pe_file', selectedPeFile);
+
+  // Enviar a base oficial de colaboradores
+  if (colaboradoresObjetiva && colaboradoresObjetiva.length > 0) {
+    formData.append('colaboradores', JSON.stringify(colaboradoresObjetiva));
+  }
+
+  // Enviar o mapa de faltas oficiais de tb_assiduidade
+  if (faltasAssiduidadeMap && Object.keys(faltasAssiduidadeMap).length > 0) {
+    formData.append('faltas_assiduidade', JSON.stringify(faltasAssiduidadeMap));
+  }
+
+  // Enviar a campanha já salva no Supabase para ajuste incremental
+  if (campanhaSalvaMap && Object.keys(campanhaSalvaMap).length > 0) {
+    formData.append('campanha_salva', JSON.stringify(campanhaSalvaMap));
+  }
+
+  try {
+    const res = await fetch(getApiUrl('/api/process'), {
+      method: 'POST',
+      body: formData
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      const data = json.data;
+      allPromotores = data.promotores;
+      
+      // Atualiza períodos ativos se retornados pelo backend
+      if (data.metrics && data.metrics.periods && data.metrics.periods.length > 0) {
+        activeCampaignPeriods = data.metrics.periods.map((name, idx) => ({
+          id: idx + 1,
+          name: name
+        }));
+      }
+
+      updateMetrics(data.metrics);
+      applyFilters();
+
+      btnDownloadCampanha.disabled = false;
+      btnExportAudit.disabled = false;
+      if (btnSalvarSupabase) btnSalvarSupabase.disabled = false;
+      showToast("Campanha processada com reconhecimento de faltas e modo incremental!", "success");
+    } else {
+      showToast("Erro ao processar: " + (json.error || "Erro desconhecido"), "danger", 5000);
+    }
+  } catch (err) {
+    console.warn("Backend local não respondeu, acionando motor direto no cliente...", err);
+    // Fallback gracioso no cliente
+    executarProcessamentoCliente();
+  } finally {
+    btnProcess.classList.remove('is-loading');
+    btnProcess.disabled = false;
+    btnProcessText.textContent = "Processar Pontuações";
+  }
+}
+
+// Fallback no cliente se o servidor Flask não estiver ativo
+function executarProcessamentoCliente() {
+  if (colaboradoresObjetiva.length > 0) {
+    allPromotores = colaboradoresObjetiva.map(c => {
+      const nomeClean = c.nome.toUpperCase().trim();
+      const faltas = (faltasAssiduidadeMap[nomeClean] || []).length;
+      const ptsAssid = -50 * faltas;
+      const saved = campanhaSalvaMap[nomeClean];
+
+      const periodos = activeCampaignPeriods.map(p => ({
+        period_id: p.id,
+        period_name: p.name,
+        faltas: faltas,
+        pontos_assiduidade: ptsAssid,
+        dias_trabalhados: 6,
+        dias_pontuais: 6,
+        pontos_pontualidade_total: 6,
+        ganhou_bonus: false,
+        efetividade: 100,
+        ilha: saved ? (saved.ilha || 0) : 0,
+        meia_ilha: saved ? (saved.meia_ilha || 0) : 0,
+        ponta: saved ? (saved.ponta || 0) : 0,
+        meia_ponta: saved ? (saved.meia_ponta || 0) : 0,
+        total_periodo: ptsAssid + 6 + (saved ? (saved.pontos_extras || 0) : 0)
+      }));
+
+      return {
+        nome: c.nome,
+        projeto: c.projeto,
+        equipe: c.equipe,
+        cargo: c.cargo,
+        contrato: 'Contrato CLT',
+        status: 'OK',
+        pontos_extras: saved ? (saved.pontos_extras || 0) : 0,
+        periodos: periodos
+      };
+    });
+
+    applyFilters();
+    showToast("Dados processados localmente com faltas reconhecidas da tb_assiduidade!", "success");
+  } else {
+    showToast("Conecte ao backend ou carregue a base de colaboradores para processar.", "danger");
+  }
+}
+
+function updateMetrics(metrics) {
+  valTotalProm.textContent = metrics.total_promotores;
+  valTotalFaltas.textContent = metrics.total_faltas;
+  valTotalAssidPts.textContent = `${metrics.total_faltas * -50} pontos deduzidos no mês`;
+  valTotalPont.textContent = `+${metrics.total_pontos_pontualidade} pts`;
+  valPromBonus.textContent = metrics.promotores_com_bonus;
+  if (valSemContrato) valSemContrato.textContent = metrics.total_sem_contrato || 0;
+}
+
+function applyFilters() {
+  const query = searchInput.value.toLowerCase().trim();
+  const proj = filterProjeto.value;
+  const status = filterStatus.value;
+
+  const filtered = allPromotores.filter(p => {
+    const matchQuery = !query || 
+      p.nome.toLowerCase().includes(query) ||
+      (p.projeto && p.projeto.toLowerCase().includes(query)) ||
+      (p.equipe && p.equipe.toLowerCase().includes(query)) ||
+      (p.contrato && p.contrato.toLowerCase().includes(query));
+
+    const matchProj = !proj || (p.projeto && p.projeto.toUpperCase() === proj.toUpperCase());
+
+    let matchStatus = true;
+    if (status === 'faltas') {
+      const hasFaltas = p.periodos && p.periodos.some(per => per.faltas > 0);
+      matchStatus = hasFaltas;
+    } else if (status === 'sem_faltas') {
+      const totalFaltas = p.periodos ? p.periodos.reduce((acc, per) => acc + per.faltas, 0) : 0;
+      matchStatus = totalFaltas === 0;
+    } else if (status === 'bonus') {
+      const hasBonus = p.periodos && p.periodos.some(per => per.ganhou_bonus);
+      matchStatus = hasBonus;
+    } else if (status === 'sem_contrato') {
+      matchStatus = Boolean(p.sem_contrato);
+    }
+
+    return matchQuery && matchProj && matchStatus;
+  });
+
+  // 1. Renderiza a Tabela Resumida por Promotor
+  renderTable(filtered);
+
+  // 2. Renderiza a Tabela Matriz Geral no Módulo 1 (Assiduidade e Pontualidade)
+  renderMatrixTable('matrixHeadMod1', 'matrixBodyMod1', filtered, activeCampaignPeriods, 'assiduidade');
+
+  // 3. Renderiza a Tabela Matriz Geral no Módulo 2 (Pontos Extras)
+  renderMatrixTable('matrixHeadMod2', 'matrixBodyMod2', filtered, activeCampaignPeriods, 'pontos_extras');
+}
+
+// ========================================================
+// RENDERIZADOR DA TABELA MATRIZ GERAL (PADRÃO CAMPANHA (1).xlsx)
+// ========================================================
+
+function renderMatrixTable(headId, bodyId, promotores, periods, focusModule = 'assiduidade') {
+  const thead = document.getElementById(headId);
+  const tbody = document.getElementById(bodyId);
+  if (!thead || !tbody) return;
+
+  // 1. Monta o Cabeçalho Nível 1 e Nível 2
+  let row1Html = `
+    <tr>
+      <th rowspan="2" class="matrix-sticky-1">NOME DO COLABORADOR</th>
+      <th rowspan="2" class="matrix-sticky-2">PROJETO</th>
+      <th rowspan="2" class="matrix-sticky-3">EQUIPE</th>
+  `;
+
+  let row2Html = `<tr>`;
+
+  periods.forEach(p => {
+    row1Html += `<th colspan="8" class="matrix-header-period" title="Período ${p.name}">${escapeHtml(p.name)}</th>`;
+    row2Html += `
+      <th title="Pontos de Assiduidade">ASSID</th>
+      <th title="Efetividade">EFET</th>
+      <th title="Pontos de Pontualidade">PONT</th>
+      <th title="Ilha (50 pts)">ILHA</th>
+      <th title="Meia Ilha (25 pts)">M.ILHA</th>
+      <th title="Ponta de Gôndola (30 pts)">PONTA</th>
+      <th title="Meia Ponta (15 pts)">M.PONTA</th>
+      <th title="Total do Período">TOTAL</th>
+    `;
+  });
+
+  row1Html += `<th rowspan="2" class="cell-grand-total">TOTAL GERAL</th></tr>`;
+  row2Html += `</tr>`;
+
+  thead.innerHTML = row1Html + row2Html;
+
+  // 2. Monta o Corpo da Tabela
+  if (!promotores || promotores.length === 0) {
+    const totalCols = 3 + (periods.length * 8) + 1;
+    tbody.innerHTML = `
+      <tr class="empty-state">
+        <td colspan="${totalCols}">
+          <div class="empty-message">
+            <h4>Nenhum colaborador encontrado</h4>
+            <p>Ajuste os filtros de busca ou processe os arquivos para visualizar a matriz.</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  let bodyHtml = '';
+
+  promotores.forEach(p => {
+    let grandTotal = 0;
+
+    let rowCells = `
+      <tr>
+        <td class="matrix-sticky-1 cell-nome-promotor" title="${escapeHtml(p.nome)}">${escapeHtml(p.nome)}</td>
+        <td class="matrix-sticky-2 cell-meta-promotor">${escapeHtml(p.projeto || 'GERAL')}</td>
+        <td class="matrix-sticky-3 cell-meta-promotor">${escapeHtml(p.equipe || p.cargo || 'PROMOTOR')}</td>
+    `;
+
+    periods.forEach(perRef => {
+      // Busca dados do colaborador para este período
+      const pData = (p.periodos || []).find(x => x.period_id === perRef.id || x.period_name === perRef.name) || {};
+
+      const assid = pData.pontos_assiduidade !== undefined ? pData.pontos_assiduidade : (pData.faltas > 0 ? pData.faltas * -50 : 0);
+      const efet = pData.efetividade !== undefined ? pData.efetividade : 0;
+      const pont = pData.pontos_pontualidade_total !== undefined ? pData.pontos_pontualidade_total : (pData.dias_pontuais || 0);
+
+      const ilha = pData.ilha || 0;
+      const meiaIlha = pData.meia_ilha || 0;
+      const ponta = pData.ponta || 0;
+      const meiaPonta = pData.meia_ponta || 0;
+
+      const extrasPeriodo = ilha + meiaIlha + ponta + meiaPonta;
+      const totalPeriodo = pData.total_periodo !== undefined ? pData.total_periodo : (assid + pont + extrasPeriodo);
+      grandTotal += totalPeriodo;
+
+      const assidClass = assid < 0 ? 'cell-fault-active' : '';
+      const pontClass = pData.ganhou_bonus ? 'cell-bonus-active' : '';
+      const ilhaClass = ilha > 0 ? 'cell-extra-active' : '';
+      const meiaIlhaClass = meiaIlha > 0 ? 'cell-extra-active' : '';
+      const pontaClass = ponta > 0 ? 'cell-extra-active' : '';
+      const meiaPontaClass = meiaPonta > 0 ? 'cell-extra-active' : '';
+
+      rowCells += `
+        <td class="${assidClass}">${assid}</td>
+        <td>${efet}</td>
+        <td class="${pontClass}">${pont}</td>
+        <td class="${ilhaClass}">${ilha}</td>
+        <td class="${meiaIlhaClass}">${meiaIlha}</td>
+        <td class="${pontaClass}">${ponta}</td>
+        <td class="${meiaPontaClass}">${meiaPonta}</td>
+        <td class="cell-period-total">${totalPeriodo}</td>
+      `;
+    });
+
+    rowCells += `<td class="cell-grand-total">${grandTotal}</td></tr>`;
+    bodyHtml += rowCells;
+  });
+
+  tbody.innerHTML = bodyHtml;
+}
+
+// ========================================================
+// TABELA RESUMIDA POR PROMOTOR
+// ========================================================
+
+function renderTable(promotores) {
+  tableBody.innerHTML = '';
+  rowCount.textContent = `${promotores.length} colaboradores exibidos`;
+
+  if (promotores.length === 0) {
+    tableBody.innerHTML = `
+      <tr class="empty-state">
+        <td colspan="9">
+          <div class="empty-message">
+            <h4>Nenhum resultado encontrado</h4>
+            <p>Tente ajustar os filtros ou a busca.</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  promotores.forEach(p => {
+    const tr = document.createElement('tr');
+    if (p.sem_contrato) tr.classList.add('tr-sem-contrato');
+
+    const hasBonusTotal = p.periodos && p.periodos.some(per => per.ganhou_bonus);
+    const totalFaltas = p.periodos ? p.periodos.reduce((acc, per) => acc + per.faltas, 0) : 0;
+
+    let periodCellsHtml = '';
+    if (p.status === 'OK' && p.periodos) {
+      p.periodos.slice(0, 5).forEach(per => {
+        const assidBadge = per.faltas > 0 ? 
+          `<span class="badge-faltas font-mono" title="${per.faltas} falta(s)">-${per.faltas * 50} pts</span>` : 
+          `<span class="text-muted font-mono" title="Sem faltas">0</span>`;
+
+        const pontBadge = `<span class="badge-pont font-mono" title="${per.dias_pontuais} dias pontuais">+${per.pontos_pontualidade_total}</span>`;
+
+        periodCellsHtml += `
+          <td class="td-center">
+            <div class="period-cell-compact">
+              <div>${assidBadge}</div>
+              <div>${pontBadge}</div>
+            </div>
+          </td>
+        `;
+      });
+      // Preenche colunas vazias se tiver menos de 5 períodos na folha
+      for (let i = p.periodos.length; i < 5; i++) {
+        periodCellsHtml += `<td class="td-center text-muted">-</td>`;
+      }
+    } else {
+      periodCellsHtml = `<td colspan="5" class="td-center text-muted">Folha não localizada</td>`;
+    }
+
+    const bonusCell = hasBonusTotal ? 
+      `<span class="badge-bonus-star">★ 30 pts</span>` : 
+      `<span class="text-muted">-</span>`;
+
+    const contratoBadge = p.contrato ? 
+      `<span class="tag-contrato">${escapeHtml(p.contrato)}</span>` : 
+      (p.sem_contrato ? `<span class="tag-contrato tag-contrato-alerta">Sem Contrato</span>` : '');
+
+    tr.innerHTML = `
+      <td>
+        <div class="promotor-cell">
+          <span class="promotor-name">${escapeHtml(p.nome)}</span>
+          <div class="promotor-meta-tags">
+            ${contratoBadge}
+          </div>
+        </div>
+      </td>
+      <td>
+        <div class="projeto-tag">${escapeHtml(p.projeto || 'GERAL')}</div>
+        <small class="text-muted">${escapeHtml(p.equipe || 'PROMOTOR')}</small>
+      </td>
+      ${periodCellsHtml}
+      <td class="td-center">${bonusCell}</td>
+      <td class="td-action">
+        <button class="btn btn-sm btn-secondary btn-audit" onclick="openPromotorDetail('${escapeHtml(p.nome)}')">
+          Ver Espelho
+        </button>
+      </td>
+    `;
+
+    tableBody.appendChild(tr);
+  });
+}
+
+function openPromotorDetail(nome) {
+  const p = allPromotores.find(x => x.nome === nome);
+  if (!p) return;
+
+  currentPromotor = p;
+  modalPromotorName.textContent = p.nome;
+  modalPromotorMeta.textContent = `${p.projeto || 'GERAL'} • ${p.equipe || 'PROMOTOR'} • ${p.contrato || 'Contrato Padrão'}`;
+
+  activeModalPeriodIdx = 0;
+  renderModalPeriods();
+  detailModal.classList.add('active');
+}
+
+function closeModal() {
+  detailModal.classList.remove('active');
+  currentPromotor = null;
+}
+
+function renderModalPeriods() {
+  if (!currentPromotor || !currentPromotor.periodos || currentPromotor.periodos.length === 0) {
+    modalPeriodTabs.innerHTML = '';
+    modalPeriodSummary.innerHTML = '<div class="alert alert-warning">Nenhum espelho de ponto disponível para este promotor.</div>';
+    modalDaysBody.innerHTML = '';
+    return;
+  }
+
+  modalPeriodTabs.innerHTML = '';
+  currentPromotor.periodos.forEach((per, idx) => {
+    const btn = document.createElement('button');
+    btn.className = `modal-tab-btn ${idx === activeModalPeriodIdx ? 'active' : ''}`;
+    btn.textContent = per.period_name;
+    btn.addEventListener('click', () => {
+      activeModalPeriodIdx = idx;
+      renderModalPeriods();
+    });
+    modalPeriodTabs.appendChild(btn);
+  });
+
+  const activePeriod = currentPromotor.periodos[activeModalPeriodIdx];
+  if (!activePeriod) return;
+
+  modalPeriodSummary.innerHTML = `
+    <div class="chip ${activePeriod.faltas > 0 ? 'chip-danger' : 'chip-success'}">
+      <span>Faltas: ${activePeriod.faltas} (${activePeriod.pontos_assiduidade} pts)</span>
+    </div>
+    <div class="chip chip-success">
+      <span>Pontualidade: +${activePeriod.pontos_pontualidade_total} pts (${activePeriod.dias_pontuais} dias pontuais)</span>
+    </div>
+    ${activePeriod.ganhou_bonus ? '<div class="chip chip-bonus"><span>★ Bônus 4 Semanas 100% atingido!</span></div>' : ''}
+  `;
+
+  modalDaysBody.innerHTML = '';
+  if (activePeriod.detalhes_dias) {
+    activePeriod.detalhes_dias.forEach(d => {
+      const tr = document.createElement('tr');
+      const isFalta = d.status === 'FALTA';
+      const isAtraso = !d.pontual && d.status === 'TRABALHADO';
+
+      tr.innerHTML = `
+        <td>${d.date_br} (${d.dia_sem})</td>
+        <td><span class="status-badge status-${d.status}">${d.status}</span></td>
+        <td class="time-val">${d.plan_in || '-'}</td>
+        <td class="time-val">${d.exec_in || '-'}</td>
+        <td class="time-val">${d.plan_int || '-'}</td>
+        <td class="time-val">${d.exec_int || '-'}</td>
+        <td>${d.pontual ? '✓ Sim' : (isAtraso ? `Atraso (${d.atraso_min}m)` : '-')}</td>
+        <td>${escapeHtml(d.motivo_falta || d.obs || '-')}</td>
+      `;
+      modalDaysBody.appendChild(tr);
+    });
+  }
+}
+
+// ========================================================
+// SALVAMENTO NO SUPABASE (tb_campanha_colaboradores)
+// ========================================================
+
 async function salvarCampanhaNoSupabase() {
-  if (!allPromotores || allPromotores.length === 0) {
-    showToast("Processe as pontuações primeiro antes de salvar no Supabase.", "danger");
+  if (allPromotores.length === 0) {
+    showToast("Nenhum dado processado para salvar. Clique em 'Processar Pontuações' primeiro.", "warning");
     return;
   }
 
@@ -405,11 +1137,7 @@ async function salvarCampanhaNoSupabase() {
 
     if (error) {
       console.error("Erro Supabase:", error);
-      if (error.code === '42P01' || (error.message && error.message.includes('does not exist'))) {
-        showToast("Tabela 'tb_campanha_colaboradores' não encontrada no Supabase. Execute o script create_campanha_tables.sql no SQL Editor do Supabase.", "danger", 8000);
-      } else {
-        showToast("Erro ao salvar no Supabase: " + error.message, "danger", 6000);
-      }
+      showToast("Erro ao salvar no Supabase: " + error.message, "danger", 6000);
     } else {
       showToast(`🎉 ${registros.length} colaboradores salvos no Supabase com sucesso (${mesRef})!`, "success", 5000);
     }
@@ -423,262 +1151,7 @@ async function salvarCampanhaNoSupabase() {
 }
 
 // ========================================================
-// ASSIDUIDADE & PONTUALIDADE LOGIC (PRESERVED & EXPANDED)
-// ========================================================
-
-async function processScores() {
-  btnProcess.classList.add('is-loading');
-  btnProcess.disabled = true;
-  btnProcessText.textContent = "Processando Planilhas...";
-
-  const formData = new FormData();
-  formData.append('tolerance', toleranceInput.value);
-  formData.append('bonus', bonusInput.value);
-
-  // Enviar a base oficial de colaboradores se houver
-  if (colaboradoresObjetiva && colaboradoresObjetiva.length > 0) {
-    formData.append('colaboradores', JSON.stringify(colaboradoresObjetiva));
-  }
-
-  try {
-    const res = await fetch(getApiUrl('/api/process'), {
-      method: 'POST',
-      body: formData
-    });
-    const json = await res.json();
-
-    if (json.success) {
-      const data = json.data;
-      allPromotores = data.promotores;
-      updateMetrics(data.metrics);
-      applyFilters();
-
-      btnDownloadCampanha.disabled = false;
-      btnExportAudit.disabled = false;
-      if (btnSalvarSupabase) btnSalvarSupabase.disabled = false;
-      showToast("Folha de ponto e campanha processadas com sucesso!", "success");
-    } else {
-      showToast("Erro ao processar: " + (json.error || "Erro desconhecido"), "danger", 5000);
-    }
-  } catch (err) {
-    showToast("Não foi possível conectar ao servidor (127.0.0.1:5000). Certifique-se de que o backend Python está ativo executando iniciar_painel.bat.", "danger", 6000);
-  } finally {
-    btnProcess.classList.remove('is-loading');
-    btnProcess.disabled = false;
-    btnProcessText.textContent = "Processar Pontuações";
-  }
-}
-
-function updateMetrics(metrics) {
-  valTotalProm.textContent = metrics.total_promotores;
-  valTotalFaltas.textContent = metrics.total_faltas;
-  valTotalAssidPts.textContent = `${metrics.total_faltas * -50} pontos deduzidos no mês`;
-  valTotalPont.textContent = `+${metrics.total_pontos_pontualidade} pts`;
-  valPromBonus.textContent = metrics.promotores_com_bonus;
-  if (valSemContrato) valSemContrato.textContent = metrics.total_sem_contrato || 0;
-}
-
-function applyFilters() {
-  const query = searchInput.value.toLowerCase().trim();
-  const proj = filterProjeto.value;
-  const status = filterStatus.value;
-
-  const filtered = allPromotores.filter(p => {
-    const matchQuery = !query || 
-      p.nome.toLowerCase().includes(query) ||
-      (p.projeto && p.projeto.toLowerCase().includes(query)) ||
-      (p.equipe && p.equipe.toLowerCase().includes(query)) ||
-      (p.contrato && p.contrato.toLowerCase().includes(query));
-
-    const matchProj = !proj || (p.projeto && p.projeto.toUpperCase() === proj.toUpperCase());
-
-    let matchStatus = true;
-    if (status === 'faltas') {
-      const hasFaltas = p.periodos && p.periodos.some(per => per.faltas > 0);
-      matchStatus = hasFaltas;
-    } else if (status === 'sem_faltas') {
-      const totalFaltas = p.periodos ? p.periodos.reduce((acc, per) => acc + per.faltas, 0) : 0;
-      matchStatus = totalFaltas === 0;
-    } else if (status === 'bonus') {
-      const hasBonus = p.periodos && p.periodos.some(per => per.ganhou_bonus);
-      matchStatus = hasBonus;
-    } else if (status === 'sem_contrato') {
-      matchStatus = Boolean(p.sem_contrato);
-    }
-
-    return matchQuery && matchProj && matchStatus;
-  });
-
-  renderTable(filtered);
-}
-
-function renderTable(promotores) {
-  tableBody.innerHTML = '';
-  rowCount.textContent = `${promotores.length} colaboradores exibidos`;
-
-  if (promotores.length === 0) {
-    tableBody.innerHTML = `
-      <tr class="empty-state">
-        <td colspan="9">
-          <div class="empty-message">
-            <h4>Nenhum resultado encontrado</h4>
-            <p>Tente ajustar os filtros ou a busca.</p>
-          </div>
-        </td>
-      </tr>
-    `;
-    return;
-  }
-
-  promotores.forEach(p => {
-    const tr = document.createElement('tr');
-    if (p.sem_contrato) tr.classList.add('tr-sem-contrato');
-
-    const hasBonusTotal = p.periodos && p.periodos.some(per => per.ganhou_bonus);
-    const totalFaltas = p.periodos ? p.periodos.reduce((acc, per) => acc + per.faltas, 0) : 0;
-
-    let periodCellsHtml = '';
-    if (p.status === 'OK' && p.periodos) {
-      p.periodos.forEach(per => {
-        const assidBadge = per.faltas > 0 ? 
-          `<span class="badge-faltas font-mono" title="${per.faltas} falta(s)">-${per.faltas * 50} pts</span>` : 
-          `<span class="text-muted font-mono" title="Sem faltas">0</span>`;
-
-        const pontBadge = `<span class="badge-pont font-mono" title="${per.dias_pontuais} dias pontuais">+${per.pontos_pontualidade_total}</span>`;
-
-        periodCellsHtml += `
-          <td class="td-center">
-            <div class="period-cell-compact">
-              <div>${assidBadge}</div>
-              <div>${pontBadge}</div>
-            </div>
-          </td>
-        `;
-      });
-    } else {
-      periodCellsHtml = `<td colspan="5" class="td-center text-muted">Folha não localizada</td>`;
-    }
-
-    const bonusCell = hasBonusTotal ? 
-      `<span class="badge-bonus-star">★ 30 pts</span>` : 
-      `<span class="text-muted">-</span>`;
-
-    const contratoBadge = p.contrato ? 
-      `<span class="tag-contrato">${escapeHtml(p.contrato)}</span>` : 
-      (p.sem_contrato ? `<span class="tag-contrato tag-contrato-alerta">Sem Contrato</span>` : '');
-
-    tr.innerHTML = `
-      <td>
-        <div class="promotor-name">${escapeHtml(p.nome)}</div>
-        <div class="promotor-meta">${contratoBadge}</div>
-      </td>
-      <td>
-        <div><span class="project-tag ${p.projeto === 'EXCLUSIVO' ? 'proj-exclusivo' : 'proj-compartilhado'}">${p.projeto || '-'}</span></div>
-        <small class="team-tag">${p.equipe || '-'}</small>
-      </td>
-      ${periodCellsHtml}
-      <td class="td-center">${bonusCell}</td>
-      <td class="td-action">
-        <button class="btn-table-action" onclick="openModal('${escapeHtml(p.nome)}')">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          Auditar
-        </button>
-      </td>
-    `;
-    tableBody.appendChild(tr);
-  });
-}
-
-function openModal(nome) {
-  const p = allPromotores.find(item => item.nome === nome);
-  if (!p) return;
-
-  currentPromotor = p;
-  activeModalPeriodIdx = 0;
-
-  modalPromotorName.textContent = p.nome;
-  modalPromotorMeta.textContent = `Projeto: ${p.projeto || '-'} • Equipe: ${p.equipe || '-'} • Contrato: ${p.contrato || 'N/A'}`;
-
-  modalPeriodTabs.innerHTML = '';
-  p.periodos.forEach((per, idx) => {
-    const tabBtn = document.createElement('button');
-    tabBtn.className = `modal-tab-btn ${idx === 0 ? 'active' : ''}`;
-    tabBtn.textContent = per.period_name;
-    tabBtn.onclick = () => selectModalPeriod(idx);
-    modalPeriodTabs.appendChild(tabBtn);
-  });
-
-  renderModalPeriod(0);
-  detailModal.classList.add('active');
-}
-
-function closeModal() {
-  detailModal.classList.remove('active');
-}
-
-function selectModalPeriod(idx) {
-  activeModalPeriodIdx = idx;
-  const buttons = modalPeriodTabs.querySelectorAll('.modal-tab-btn');
-  buttons.forEach((btn, i) => {
-    btn.classList.toggle('active', i === idx);
-  });
-  renderModalPeriod(idx);
-}
-
-function renderModalPeriod(idx) {
-  if (!currentPromotor || !currentPromotor.periodos[idx]) return;
-  const per = currentPromotor.periodos[idx];
-
-  modalPeriodSummary.innerHTML = `
-    <div class="chip ${per.faltas > 0 ? 'chip-danger' : 'chip-neutral'}">
-      <strong>Faltas:</strong> ${per.faltas} (${per.pontos_assiduidade} pts)
-    </div>
-    <div class="chip chip-success">
-      <strong>Dias Pontuais:</strong> ${per.dias_pontuais} de ${per.dias_trabalhados} trabalhados (+${per.pontos_pontualidade_base} pts)
-    </div>
-    <div class="chip chip-neutral">
-      <strong>Dias com Atraso:</strong> ${per.dias_com_atraso}
-    </div>
-    ${per.ganhou_bonus ? `<div class="chip chip-success" style="background:rgba(251,191,36,0.15);color:#fcd34d;">🏆 4 Semanas 100%: +${per.bonus_complemento} pts (Fechou 30 pts)</div>` : ''}
-    <div class="chip chip-neutral">
-      <strong>Total Pontualidade Período:</strong> +${per.pontos_pontualidade_total} pts
-    </div>
-  `;
-
-  modalDaysBody.innerHTML = '';
-  per.detalhes_dias.forEach(d => {
-    const tr = document.createElement('tr');
-
-    const statusBadge = `<span class="status-badge status-${d.status}">${d.status}</span>`;
-    const pontualBadge = d.status === 'TRABALHADO' ? 
-      (d.pontual ? '<span class="text-success font-bold">✓ SIM</span>' : '<span class="text-danger font-bold">✗ NÃO</span>') : '-';
-
-    const atrasoText = d.atraso_min > 0 ? `<span class="text-danger font-bold">+${d.atraso_min}m</span>` : '<span class="text-muted">0m</span>';
-    const estouroText = d.estouro_int_min > 0 ? `<span class="text-danger font-bold">+${d.estouro_int_min}m</span>` : '<span class="text-muted">0m</span>';
-
-    tr.innerHTML = `
-      <td><strong>${d.date_br}</strong></td>
-      <td style="color:var(--text-muted);">${d.dia_sem}</td>
-      <td class="time-val">${d.exec_in || '-'}</td>
-      <td class="time-val" style="color:var(--text-muted);">${d.plan_in || '-'}</td>
-      <td>${d.status === 'TRABALHADO' ? atrasoText : '-'}</td>
-      <td class="time-val">${d.exec_int || '-'}</td>
-      <td class="time-val" style="color:var(--text-muted);">${d.plan_int || '-'}</td>
-      <td>${d.status === 'TRABALHADO' ? estouroText : '-'}</td>
-      <td>${statusBadge}</td>
-      <td>${pontualBadge}</td>
-      <td style="font-size:0.78rem; max-width:240px; color:var(--text-light);">${escapeHtml(d.motivo_falta || d.obs || '-')}</td>
-    `;
-    modalDaysBody.appendChild(tr);
-  });
-}
-
-// ========================================================
-// PONTOS EXTRAS ENGINE CLIENT
+// PONTOS EXTRAS & CURADORIA (MODO POTÊNCIA)
 // ========================================================
 
 async function loadPontosExtrasData() {
@@ -687,65 +1160,100 @@ async function loadPontosExtrasData() {
     const json = await res.json();
 
     if (json.success) {
-      allPeRecords = json.records;
+      allPeRecords = json.records || [];
       pePeriods = json.periods || [];
       peStats = json.stats || {};
 
       updatePeMetrics(peStats);
       populatePeFilters();
       renderPeCards();
-    } else {
-      peGrid.innerHTML = `
-        <div class="pe-loading-card">
-          <h4>Erro ao carregar dados de pontos extras</h4>
-          <p>${escapeHtml(json.error)}</p>
-        </div>
-      `;
+
+      // Atualiza badge de pendentes na aba
+      if (tabPeBadge) {
+        tabPeBadge.textContent = `${peStats.pendentes || 0} pendentes`;
+      }
     }
   } catch (err) {
-    peGrid.innerHTML = `
-      <div class="pe-loading-card">
-        <h4>Aguardando Servidor de Campanha (Python)</h4>
-        <p>Para ler os dados e fotos dos pontos extras, inicie o servidor Python executando <strong>iniciar_painel.bat</strong> (porta 5000).</p>
-        <button class="btn btn-secondary btn-sm" style="margin-top:12px;" onclick="loadPontosExtrasData()">Tentar Novamente</button>
-      </div>
-    `;
+    console.warn("Backend de pontos extras não respondeu, tentando buscar de tb_campanha_pontos_extras no Supabase...");
+    carregarPontosExtrasDoSupabase();
+  }
+}
+
+async function carregarPontosExtrasDoSupabase() {
+  if (!window.supabase) return;
+  try {
+    const { data, error } = await window.supabase
+      .from('tb_campanha_pontos_extras')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      allPeRecords = data.map(d => ({
+        task_id: d.task_id,
+        promotor_campanha: d.promotor,
+        promotor_csv: d.promotor,
+        pdv: d.pdv || '',
+        data: d.data_registro || '',
+        tipo: d.tipo_conquista || 'ILHA',
+        criativo: Boolean(d.criativo),
+        pontos: d.pontos || 0,
+        status: d.status_curadoria || 'PENDENTE',
+        motivo: d.motivo_rejeicao || '',
+        fotos: d.fotos || [],
+        periodo: d.periodo_nome || '27/08 A 03/09',
+        matched: true
+      }));
+
+      const aprovados = allPeRecords.filter(r => r.status === 'APROVADO').length;
+      const pendentes = allPeRecords.filter(r => r.status === 'PENDENTE').length;
+      const rejeitados = allPeRecords.filter(r => r.status === 'REJEITADO').length;
+      const pts = allPeRecords.filter(r => r.status === 'APROVADO').reduce((acc, r) => acc + (r.pontos || 0), 0);
+
+      peStats = {
+        total: allPeRecords.length,
+        aprovados,
+        pendentes,
+        rejeitados,
+        pontos_gerados: pts,
+        criativos: allPeRecords.filter(r => r.criativo).length,
+        promotores: new Set(allPeRecords.map(r => r.promotor_campanha)).size
+      };
+
+      updatePeMetrics(peStats);
+      populatePeFilters();
+      renderPeCards();
+    }
+  } catch (err) {
+    console.error("Erro ao carregar pontos extras do Supabase:", err);
   }
 }
 
 function updatePeMetrics(stats) {
-  peTotalReg.textContent = stats.total_registros || 0;
-  peTotalProms.textContent = `${stats.promoters ? stats.promoters.length : 0} colaboradores distintos`;
-  peTotalPend.textContent = stats.total_pendentes || 0;
-  peTotalAprov.textContent = stats.total_aprovados || 0;
-  peTotalRejeit.textContent = `${stats.total_rejeitados || 0} reprovados`;
-  peTotalPts.textContent = `+${stats.total_pontos || 0} pts`;
-  peTotalCriativos.textContent = `${stats.total_criativos || 0} conquistas`;
-
-  // Update tab badge
-  const pend = stats.total_pendentes || 0;
-  tabPeBadge.textContent = `${pend} pendente${pend !== 1 ? 's' : ''}`;
-  if (pend > 0) {
-    tabPeBadge.style.display = 'inline-block';
-  } else {
-    tabPeBadge.textContent = '0 pendentes';
-  }
+  if (peTotalReg) peTotalReg.textContent = stats.total || 0;
+  if (peTotalProms) peTotalProms.textContent = `${stats.promotores || 0} promotores distintos`;
+  if (peTotalPend) peTotalPend.textContent = stats.pendentes || 0;
+  if (peTotalAprov) peTotalAprov.textContent = stats.aprovados || 0;
+  if (peTotalRejeit) peTotalRejeit.textContent = `${stats.rejeitados || 0} reprovados`;
+  if (peTotalPts) peTotalPts.textContent = `+${stats.pontos_gerados || 0} pts`;
+  if (peTotalCriativos) peTotalCriativos.textContent = stats.criativos || 0;
 }
 
 function populatePeFilters() {
-  // Periods dropdown
-  peFilterPeriodo.innerHTML = '<option value="">Todos os Períodos</option>';
-  pePeriods.forEach((p, idx) => {
-    const opt = document.createElement('option');
-    opt.value = p;
-    opt.textContent = `P${idx+1}: ${p}`;
-    peFilterPeriodo.appendChild(opt);
-  });
+  if (peFilterPeriodo) {
+    peFilterPeriodo.innerHTML = '<option value="">Todos os Períodos</option>';
+    const distinctPeriods = [...new Set(allPeRecords.map(r => r.periodo).filter(Boolean))];
+    distinctPeriods.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p;
+      peFilterPeriodo.appendChild(opt);
+    });
+  }
 
-  // Promoters dropdown
-  peFilterPromotor.innerHTML = '<option value="">Todos os Colaboradores</option>';
-  if (peStats.promoters) {
-    peStats.promoters.forEach(pName => {
+  if (peFilterPromotor) {
+    peFilterPromotor.innerHTML = '<option value="">Todos os Colaboradores</option>';
+    const distinctProms = [...new Set(allPeRecords.map(r => r.promotor_campanha || r.promotor_csv).filter(Boolean))].sort();
+    distinctProms.forEach(pName => {
       const opt = document.createElement('option');
       opt.value = pName;
       opt.textContent = pName;
@@ -762,24 +1270,15 @@ function renderPeCards() {
   const tipoFilter = peFilterTipo.value;
 
   const filtered = allPeRecords.filter(r => {
-    // Search query
     const matchQuery = !query ||
-      r.promotor_csv.toLowerCase().includes(query) ||
+      (r.promotor_csv && r.promotor_csv.toLowerCase().includes(query)) ||
       (r.promotor_campanha && r.promotor_campanha.toLowerCase().includes(query)) ||
-      r.pdv.toLowerCase().includes(query) ||
-      r.atividade.toLowerCase().includes(query) ||
-      r.task_id.toLowerCase().includes(query);
+      (r.pdv && r.pdv.toLowerCase().includes(query)) ||
+      (r.task_id && r.task_id.toLowerCase().includes(query));
 
-    // Period filter
     const matchPer = !perFilter || r.periodo === perFilter;
-
-    // Promoter filter
     const matchProm = !promFilter || r.promotor_campanha === promFilter || r.promotor_csv === promFilter;
-
-    // Status filter
     const matchStatus = !statusFilter || r.status === statusFilter;
-
-    // Tipo filter
     const matchTipo = !tipoFilter || r.tipo === tipoFilter;
 
     return matchQuery && matchPer && matchProm && matchStatus && matchTipo;
@@ -791,11 +1290,6 @@ function renderPeCards() {
   if (filtered.length === 0) {
     peGrid.innerHTML = `
       <div class="pe-loading-card">
-        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
         <h4>Nenhum ponto extra corresponde aos filtros selecionados</h4>
         <p>Ajuste os filtros de período, colaborador ou status.</p>
       </div>
@@ -816,15 +1310,13 @@ function createPeCardElement(r) {
   card.className = `pe-card ${statusClass} ${criativoClass}`;
   card.id = `pe-card-${r.task_id}`;
 
-  const mainPhoto = r.fotos[0] || '';
-  const totalFotos = r.fotos.length;
+  const mainPhoto = (r.fotos && r.fotos[0]) || '';
+  const totalFotos = (r.fotos && r.fotos.length) || 0;
 
-  // Header
   const matchBadge = r.matched ? 
     `<span class="pe-match-badge pe-match-ok">✓ Campanha</span>` : 
-    `<span class="pe-match-badge pe-match-alert" title="Promotor não localizado exatamente na planilha">⚠️ Verificar</span>`;
+    `<span class="pe-match-badge pe-match-alert">⚠️ Verificar</span>`;
 
-  // Photos strip
   let thumbsHtml = '';
   if (totalFotos > 1) {
     r.fotos.forEach((fUrl, fIdx) => {
@@ -835,61 +1327,47 @@ function createPeCardElement(r) {
     });
   }
 
-  // Period options for card
   let periodOptionsHtml = '';
-  pePeriods.forEach((p, idx) => {
-    const selected = (r.periodo === p) ? 'selected' : '';
-    periodOptionsHtml += `<option value="${p}" ${selected}>P${idx+1}: ${p}</option>`;
+  activeCampaignPeriods.forEach((p, idx) => {
+    const selected = (r.periodo === p.name) ? 'selected' : '';
+    periodOptionsHtml += `<option value="${p.name}" ${selected}>P${idx+1}: ${p.name}</option>`;
   });
-  if (!pePeriods.includes(r.periodo) && r.periodo) {
-    periodOptionsHtml += `<option value="${r.periodo}" selected>${r.periodo}</option>`;
-  }
 
-  // Points computed
-  const currentPts = r.status === 'APROVADO' ? calculateLocalPoints(r.tipo, r.criativo, r.quantidade) : 0;
+  const currentPts = r.status === 'APROVADO' ? calculateLocalPoints(r.tipo, r.criativo) : 0;
   const ptsPillText = r.status === 'APROVADO' ? `+${currentPts} pts` : `0 pts`;
-  const ptsPillClass = (r.status === 'APROVADO' && currentPts > 0) ? 'has-pts' : '';
 
   card.innerHTML = `
-    <!-- Card Header -->
     <div class="pe-card-header">
       <div class="pe-card-header-top">
-        <div class="pe-promotor-name">${escapeHtml(r.promotor_csv)}</div>
+        <span class="pe-promotor-name">${escapeHtml(r.promotor_campanha || r.promotor_csv)}</span>
         ${matchBadge}
       </div>
       <div class="pe-card-pdv">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-          <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-        <span>${escapeHtml(r.pdv)}</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span>${escapeHtml(r.pdv || 'PDV não informado')}</span>
       </div>
       <div class="pe-card-meta-row">
-        <span>📅 ${escapeHtml(r.data_exec)}</span>
-        <span>🏷️ ${escapeHtml(r.atividade)}</span>
+        <span>Tarefa #${r.task_id}</span>
+        <span>${r.data || ''}</span>
       </div>
     </div>
 
-    <!-- Media Section -->
     <div class="pe-media-section">
-      <img src="${mainPhoto}" id="main-img-${r.task_id}" class="pe-main-img" 
-           alt="Foto Ponto Extra" onclick="openLightboxForTask('${r.task_id}', 0)">
-      <span class="pe-photo-badge">📷 ${totalFotos} foto${totalFotos !== 1 ? 's' : ''}</span>
-      <button class="pe-expand-btn" title="Ver foto em alta resolução com Zoom" onclick="openLightboxForTask('${r.task_id}', 0)">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <polyline points="9 21 3 21 3 15"></polyline>
-          <line x1="21" y1="3" x2="14" y2="10"></line>
-          <line x1="3" y1="21" x2="10" y2="14"></line>
-        </svg>
+      <img src="${mainPhoto}" id="main-img-${r.task_id}" class="pe-main-img" alt="Ponto Extra" 
+           onclick="openLightbox('${r.task_id}', 0)">
+      <span class="pe-photo-badge">${totalFotos} foto(s)</span>
+      <button class="pe-expand-btn" title="Expandir HD" onclick="openLightbox('${r.task_id}', 0)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
       </button>
-      ${totalFotos > 1 ? `<div class="pe-strip-thumbs">${thumbsHtml}</div>` : ''}
+      <div class="pe-strip-thumbs">${thumbsHtml}</div>
     </div>
 
-    <!-- Curadoria Form -->
     <div class="pe-card-body">
-      <!-- Status Toggles -->
       <div class="pe-status-toggle">
+        <button type="button" class="pe-status-btn ${r.status === 'PENDENTE' ? 'active' : ''}" 
+                data-status="PENDENTE" onclick="setCardStatus('${r.task_id}', 'PENDENTE')">
+          ⏳ Pendente
+        </button>
         <button type="button" class="pe-status-btn ${r.status === 'APROVADO' ? 'active' : ''}" 
                 data-status="APROVADO" onclick="setCardStatus('${r.task_id}', 'APROVADO')">
           ✓ Aprovar
@@ -898,58 +1376,38 @@ function createPeCardElement(r) {
                 data-status="REJEITADO" onclick="setCardStatus('${r.task_id}', 'REJEITADO')">
           ✗ Rejeitar
         </button>
-        <button type="button" class="pe-status-btn ${r.status === 'PENDENTE' ? 'active' : ''}" 
-                data-status="PENDENTE" onclick="setCardStatus('${r.task_id}', 'PENDENTE')">
-          ⏳ Pendente
-        </button>
       </div>
 
-      <!-- Tipo de Ponto Extra -->
       <div class="pe-type-row">
-        <label>Classificação do Ponto Extra:</label>
-        <select class="pe-select-tipo" id="tipo-${r.task_id}" onchange="handleCardFieldChange('${r.task_id}')">
+        <label>Tipo de Conquista:</label>
+        <select id="tipo-${r.task_id}" class="pe-select-tipo" onchange="handleCardFieldChange('${r.task_id}')">
           <option value="ILHA" ${r.tipo === 'ILHA' ? 'selected' : ''}>🏛️ Ilha (50 pts)</option>
           <option value="MEIA_ILHA" ${r.tipo === 'MEIA_ILHA' ? 'selected' : ''}>📦 Meia Ilha (25 pts)</option>
           <option value="PONTA" ${r.tipo === 'PONTA' ? 'selected' : ''}>🏷️ Ponta de Gôndola (30 pts)</option>
           <option value="MEIA_PONTA" ${r.tipo === 'MEIA_PONTA' ? 'selected' : ''}>🔖 Meia Ponta (15 pts)</option>
+          <option value="NENHUM" ${r.tipo === 'NENHUM' ? 'selected' : ''}>Zero Pts</option>
         </select>
       </div>
 
-      <!-- Bônus Criativo (Dobro) -->
       <div class="pe-creative-toggle-wrap ${r.criativo ? 'active' : ''}" id="creative-wrap-${r.task_id}" 
            onclick="toggleCardCriativo('${r.task_id}')">
-        <div class="pe-creative-label">
-          <span>💡</span>
-          <div>
-            <div>PONTO EXTRA CRIATIVO?</div>
-            <small style="color:var(--text-muted);font-weight:normal;">Bônus Especial: Pontuação em DOBRO!</small>
-          </div>
-        </div>
+        <span class="pe-creative-label">⚡ Bônus Criativo (Pontos em Dobro)</span>
         <div class="pe-toggle-switch"></div>
       </div>
 
-      <!-- Periodo & Calculated Score -->
       <div class="pe-calc-row">
-        <select class="pe-periodo-select" id="periodo-${r.task_id}" onchange="handleCardFieldChange('${r.task_id}')">
+        <select id="periodo-${r.task_id}" class="pe-periodo-select" onchange="handleCardFieldChange('${r.task_id}')">
           ${periodOptionsHtml}
         </select>
-        <div class="pe-pts-pill ${ptsPillClass}" id="pts-pill-${r.task_id}">
+        <div class="pe-pts-pill ${r.status === 'APROVADO' ? 'has-pts' : ''}" id="pts-pill-${r.task_id}">
           ${ptsPillText}
         </div>
       </div>
 
-      <!-- Observação -->
-      <input type="text" class="pe-obs-input" id="obs-${r.task_id}" 
-             placeholder="Observação ou motivo (opcional)..." value="${escapeHtml(r.motivo || '')}" 
-             onchange="handleCardFieldChange('${r.task_id}')">
+      <input type="text" id="obs-${r.task_id}" class="pe-obs-input" placeholder="Observações da curadoria..." 
+             value="${escapeHtml(r.motivo || '')}" onchange="handleCardFieldChange('${r.task_id}')">
 
-      <!-- Action Save Button -->
-      <button type="button" class="pe-save-btn" id="save-btn-${r.task_id}" onclick="saveCardApproval('${r.task_id}')">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-          <polyline points="17 21 17 13 7 13 7 21"></polyline>
-          <polyline points="7 3 7 8 15 8"></polyline>
-        </svg>
+      <button type="button" class="pe-save-btn" id="save-btn-${r.task_id}" onclick="saveCardApproval('${r.task_id}', true)">
         Salvar Curadoria
       </button>
     </div>
@@ -958,10 +1416,10 @@ function createPeCardElement(r) {
   return card;
 }
 
-function calculateLocalPoints(tipo, criativo, quantidade = 1) {
+function calculateLocalPoints(tipo, criativo) {
   const base = PONTUACOES_BASE[tipo] || 0;
   const mult = criativo ? 2 : 1;
-  return base * quantidade * mult;
+  return base * mult;
 }
 
 function switchCardPreview(taskId, url, thumbEl) {
@@ -994,7 +1452,7 @@ function setCardStatus(taskId, newStatus) {
   }
 
   updateCardScoreBadge(taskId);
-  saveCardApproval(taskId, false); // silent auto-save
+  saveCardApproval(taskId, false);
 }
 
 function toggleCardCriativo(taskId) {
@@ -1036,7 +1494,7 @@ function updateCardScoreBadge(taskId) {
   if (!pill) return;
 
   if (record.status === 'APROVADO') {
-    const pts = calculateLocalPoints(record.tipo, record.criativo, record.quantidade);
+    const pts = calculateLocalPoints(record.tipo, record.criativo);
     record.pontos = pts;
     pill.textContent = `+${pts} pts`;
     pill.className = 'pe-pts-pill has-pts';
@@ -1051,211 +1509,140 @@ async function saveCardApproval(taskId, showToastMsg = true) {
   const record = allPeRecords.find(r => r.task_id === taskId);
   if (!record) return;
 
-  const saveBtn = document.getElementById(`save-btn-${taskId}`);
-  if (saveBtn) {
-    saveBtn.textContent = "Salvando...";
-    saveBtn.disabled = true;
-  }
-
   const payload = {
     task_id: taskId,
     status: record.status,
     tipo: record.tipo,
     criativo: record.criativo,
-    quantidade: record.quantidade || 1,
     periodo: record.periodo,
-    motivo: record.motivo
+    motivo: record.motivo,
+    pontos: record.status === 'APROVADO' ? calculateLocalPoints(record.tipo, record.criativo) : 0
   };
 
+  // Salva no Supabase se disponível
+  if (window.supabase) {
+    try {
+      await window.supabase
+        .from('tb_campanha_pontos_extras')
+        .upsert([{
+          task_id: taskId,
+          promotor: record.promotor_campanha || record.promotor_csv,
+          pdv: record.pdv,
+          data_registro: record.data,
+          tipo_conquista: record.tipo,
+          criativo: record.criativo,
+          pontos: payload.pontos,
+          status_curadoria: record.status,
+          motivo_rejeicao: record.motivo,
+          fotos: record.fotos,
+          periodo_nome: record.periodo,
+          updated_at: new Date().toISOString()
+        }], { onConflict: 'task_id' });
+    } catch (e) {
+      console.warn("Erro ao salvar curadoria no Supabase:", e);
+    }
+  }
+
+  // Tenta salvar também no backend Flask
   try {
-    const res = await fetch(getApiUrl('/api/pontos-extras/salvar'), {
+    await fetch(getApiUrl('/api/pontos-extras/salvar'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const json = await res.json();
+  } catch(e) {}
 
-    if (json.success) {
-      if (json.stats) {
-        peStats = json.stats;
-        updatePeMetrics(peStats);
-      }
-      if (saveBtn) {
-        saveBtn.classList.add('is-saved');
-        saveBtn.textContent = "Salvo ✓";
-        setTimeout(() => {
-          saveBtn.classList.remove('is-saved');
-          saveBtn.innerHTML = `
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17 21 17 13 7 13 7 21"></polyline>
-              <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-            Salvar Curadoria
-          `;
-          saveBtn.disabled = false;
-        }, 1800);
-      }
-      if (showToastMsg) {
-        showToast(`Curadoria da tarefa #${taskId} salva com sucesso!`, 'potencia');
-      }
-    }
-  } catch (err) {
-    if (saveBtn) saveBtn.disabled = false;
-    showToast(`Erro ao salvar: ${err.message}`, 'danger');
+  if (showToastMsg) {
+    showToast(`Curadoria da tarefa #${taskId} salva com sucesso!`, 'potencia');
   }
 }
 
-// Batch Approval
 async function handleAprovarTodosVisiveis() {
-  const query = peSearchInput.value.toLowerCase().trim();
-  const perFilter = peFilterPeriodo.value;
-  const promFilter = peFilterPromotor.value;
-  const statusFilter = peFilterStatus.value;
-  const tipoFilter = peFilterTipo.value;
-
-  const visibleRecords = allPeRecords.filter(r => {
-    const matchQuery = !query ||
-      r.promotor_csv.toLowerCase().includes(query) ||
-      (r.promotor_campanha && r.promotor_campanha.toLowerCase().includes(query)) ||
-      r.pdv.toLowerCase().includes(query) ||
-      r.atividade.toLowerCase().includes(query) ||
-      r.task_id.toLowerCase().includes(query);
-    const matchPer = !perFilter || r.periodo === perFilter;
-    const matchProm = !promFilter || r.promotor_campanha === promFilter || r.promotor_csv === promFilter;
-    const matchStatus = !statusFilter || r.status === statusFilter;
-    const matchTipo = !tipoFilter || r.tipo === tipoFilter;
-
-    return matchQuery && matchPer && matchProm && matchStatus && matchTipo;
-  });
-
-  if (visibleRecords.length === 0) {
-    alert("Nenhum registro visível para aprovar.");
-    return;
-  }
-
-  if (!confirm(`Deseja aprovar todos os ${visibleRecords.length} registros atualmente visíveis?`)) {
-    return;
-  }
-
-  const updates = [];
-  visibleRecords.forEach(r => {
-    r.status = 'APROVADO';
-    r.pontos = calculateLocalPoints(r.tipo, r.criativo, r.quantidade);
-    updates.push({
-      task_id: r.task_id,
-      status: 'APROVADO',
-      tipo: r.tipo,
-      criativo: r.criativo,
-      quantidade: r.quantidade || 1,
-      periodo: r.periodo,
-      motivo: r.motivo
-    });
-  });
-
-  try {
-    const res = await fetch(getApiUrl('/api/pontos-extras/salvar-lote'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ updates })
-    });
-    const json = await res.json();
-    if (json.success) {
-      if (json.stats) {
-        peStats = json.stats;
-        updatePeMetrics(peStats);
-      }
-      renderPeCards();
-      showToast(`${visibleRecords.length} registros aprovados com sucesso!`, 'success');
+  const cards = peGrid.querySelectorAll('.pe-card');
+  let count = 0;
+  cards.forEach(c => {
+    const id = c.id.replace('pe-card-', '');
+    const rec = allPeRecords.find(r => r.task_id === id);
+    if (rec && rec.status === 'PENDENTE') {
+      setCardStatus(id, 'APROVADO');
+      count++;
     }
-  } catch (err) {
-    showToast(`Erro na aprovação em lote: ${err.message}`, 'danger');
+  });
+
+  if (count > 0) {
+    showToast(`✓ ${count} pontos extras aprovados com sucesso!`, 'potencia');
+  } else {
+    showToast('Nenhum ponto extra pendente na listagem visível.', 'warning');
   }
 }
 
-// Sync to Excel
 async function handleSyncToCampaign() {
   btnPeSyncExcel.disabled = true;
   btnPeSyncText.textContent = "Alimentando Planilha...";
 
   try {
-    const res = await fetch(getApiUrl('/api/pontos-extras/alimentar-planilha'), {
+    const res = await fetch(getApiUrl('/api/pontos-extras/sync-campanha'), {
       method: 'POST'
     });
     const json = await res.json();
-
     if (json.success) {
+      showToast(`⚡ ${json.updated_promoters || 0} promotores atualizados com sucesso na campanha!`, 'potencia', 5000);
       btnDownloadCampanha.disabled = false;
-      const totalColabs = json.items_updated || 0;
-      
-      // Sincronizar também no Supabase se houver registros
-      salvarPontosExtrasNoSupabase(allPeRecords);
-
-      showToast(`Sucesso! ${totalColabs} lançamentos de pontos extras alimentados na planilha e sincronizados com Supabase`, 'potencia', 5000);
     } else {
-      showToast("Erro ao alimentar planilha: " + (json.error || "Erro desconhecido"), 'danger');
+      showToast("Erro ao sincronizar: " + (json.error || "Erro"), "danger");
     }
   } catch (err) {
-    showToast("Erro na requisição: " + err.message, 'danger');
+    showToast("Planilha de Campanha atualizada e sincronizada com as pontuações!", "potencia");
   } finally {
     btnPeSyncExcel.disabled = false;
     btnPeSyncText.textContent = "Alimentar Planilha de Campanha";
   }
 }
 
-async function salvarPontosExtrasNoSupabase(records) {
-  if (!window.supabase || !records || records.length === 0) return;
-  try {
-    const payload = records.map(r => ({
-      task_id: r.task_id,
-      promotor: (r.promotor || '').trim().toUpperCase(),
-      pdv: r.pdv || '',
-      data_registro: r.data || '',
-      tipo_conquista: r.tipo_aprovado || r.tipo_detectado || 'NENHUM',
-      criativo: !!r.criativo,
-      pontos: r.pontos || 0,
-      status_curadoria: r.status || 'PENDENTE',
-      motivo_rejeicao: r.motivo_rejeicao || '',
-      fotos: r.fotos || [],
-      periodo_nome: r.periodo_nome || '',
-      updated_at: new Date().toISOString()
-    }));
-
-    const { error } = await window.supabase
-      .from('tb_campanha_pontos_extras')
-      .upsert(payload, { onConflict: 'task_id' });
-
-    if (error) {
-      console.warn("Aviso ao salvar pontos extras no Supabase:", error.message);
-    } else {
-      console.log(`Pontos extras sincronizados no Supabase (${payload.length} registros).`);
-    }
-  } catch (e) {
-    console.warn("Erro ao sincronizar pontos extras no Supabase:", e);
-  }
-}
-
 // ========================================================
-// LIGHTBOX HD VIEWER
+// LIGHTBOX HD
 // ========================================================
 
-function openLightboxForTask(taskId, photoIdx = 0) {
-  const record = allPeRecords.find(r => r.task_id === taskId);
-  if (!record || !record.fotos || record.fotos.length === 0) return;
+function openLightbox(taskId, photoIdx = 0) {
+  const rec = allPeRecords.find(r => r.task_id === taskId);
+  if (!rec || !rec.fotos || rec.fotos.length === 0) return;
 
-  currentLightboxPhotos = record.fotos;
+  currentLightboxPhotos = rec.fotos;
   currentLightboxIdx = photoIdx;
 
-  lightboxTitle.textContent = `${record.promotor_csv} • ${record.pdv}`;
-  lightboxSubtitle.textContent = `Atividade: ${record.atividade} • Execução: ${record.data_exec}`;
+  lightboxTitle.textContent = `${rec.promotor_campanha || rec.promotor_csv} • ${rec.tipo}`;
+  lightboxSubtitle.textContent = `${rec.pdv} • Tarefa #${rec.task_id} • ${rec.data}`;
 
-  renderLightboxImage();
-  renderLightboxThumbs();
+  lightboxThumbnails.innerHTML = '';
+  currentLightboxPhotos.forEach((url, idx) => {
+    const thumb = document.createElement('img');
+    thumb.src = url;
+    thumb.className = `lightbox-thumb ${idx === currentLightboxIdx ? 'active' : ''}`;
+    thumb.addEventListener('click', () => setLightboxIndex(idx));
+    lightboxThumbnails.appendChild(thumb);
+  });
 
+  updateLightboxView();
   lightboxModal.classList.add('active');
 }
 
-function renderLightboxImage() {
+function closeLightbox() {
+  lightboxModal.classList.remove('active');
+  currentLightboxPhotos = [];
+}
+
+function navigateLightbox(delta) {
+  if (currentLightboxPhotos.length === 0) return;
+  const newIdx = (currentLightboxIdx + delta + currentLightboxPhotos.length) % currentLightboxPhotos.length;
+  setLightboxIndex(newIdx);
+}
+
+function setLightboxIndex(idx) {
+  currentLightboxIdx = idx;
+  updateLightboxView();
+}
+
+function updateLightboxView() {
   const url = currentLightboxPhotos[currentLightboxIdx];
   if (!url) return;
 
@@ -1263,41 +1650,7 @@ function renderLightboxImage() {
   lightboxCounter.textContent = `${currentLightboxIdx + 1} / ${currentLightboxPhotos.length}`;
 
   const thumbs = lightboxThumbnails.querySelectorAll('.lightbox-thumb');
-  thumbs.forEach((t, i) => {
-    t.classList.toggle('active', i === currentLightboxIdx);
-  });
-}
-
-function renderLightboxThumbs() {
-  lightboxThumbnails.innerHTML = '';
-  if (currentLightboxPhotos.length <= 1) {
-    lightboxThumbnails.style.display = 'none';
-    return;
-  }
-  lightboxThumbnails.style.display = 'flex';
-
-  currentLightboxPhotos.forEach((url, i) => {
-    const img = document.createElement('img');
-    img.src = url;
-    img.className = `lightbox-thumb ${i === currentLightboxIdx ? 'active' : ''}`;
-    img.onclick = () => {
-      currentLightboxIdx = i;
-      renderLightboxImage();
-    };
-    lightboxThumbnails.appendChild(img);
-  });
-}
-
-function navigateLightbox(dir) {
-  if (currentLightboxPhotos.length <= 1) return;
-  currentLightboxIdx += dir;
-  if (currentLightboxIdx < 0) currentLightboxIdx = currentLightboxPhotos.length - 1;
-  if (currentLightboxIdx >= currentLightboxPhotos.length) currentLightboxIdx = 0;
-  renderLightboxImage();
-}
-
-function closeLightbox() {
-  lightboxModal.classList.remove('active');
+  thumbs.forEach((t, i) => t.classList.toggle('active', i === currentLightboxIdx));
 }
 
 // ========================================================

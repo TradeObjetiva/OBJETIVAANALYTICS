@@ -1966,6 +1966,294 @@ select option {
 }
 
 /* ========================================================
+   CENTRAL DE IMPORTAÇÃO (3 PLANILHAS) & BANNER INCREMENTAL
+   ======================================================== */
+.file-box.interactive-upload {
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.file-box.interactive-upload:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.15);
+}
+
+.file-box.interactive-upload.dragover {
+  border-color: var(--primary);
+  background: var(--primary-soft) !important;
+  transform: scale(1.02);
+}
+
+.file-input-hidden {
+  display: none !important;
+}
+
+.file-pe {
+  background: rgba(255, 107, 0, 0.15);
+  color: var(--potencia);
+}
+
+.incremental-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  background: var(--bg-accent);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.incremental-info-banner strong {
+  color: var(--text-main);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.incremental-info-banner .banner-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+/* ========================================================
+   VIEW SWITCHER BAR (MATRIZ EXCEL VS DETALHADO)
+   ======================================================== */
+.view-switch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--bg-accent);
+  border-bottom: 1px solid var(--border);
+}
+
+.switch-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.switch-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.switch-btn:hover {
+  color: var(--text-main);
+}
+
+.switch-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+/* ========================================================
+   MATRIZ GERAL DA CAMPANHA (PADRÃO CAMPANHA (1).xlsx)
+   ======================================================== */
+.matrix-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 260px);
+  position: relative;
+  background: var(--bg-card);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 11px;
+}
+
+/* Header Level 1 (Períodos Mesclados) */
+.matrix-table thead tr:first-child th {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-accent) !important;
+  color: var(--text-main);
+  font-weight: 800;
+  font-size: 11px;
+  text-align: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  border-right: 2px solid var(--border-bright);
+  white-space: nowrap;
+}
+
+/* Header Level 2 (Subcolunas) */
+.matrix-table thead tr:nth-child(2) th {
+  position: sticky;
+  top: 37px;
+  z-index: 50;
+  background: var(--bg-card-hover) !important;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 8px 6px;
+  border-bottom: 2px solid var(--border-bright);
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+/* Colunas Fixas Sticky à Esquerda */
+.matrix-table th.matrix-sticky-1,
+.matrix-table td.matrix-sticky-1 {
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  min-width: 200px;
+  max-width: 220px;
+  background: var(--bg-card) !important;
+  border-right: 1px solid var(--border) !important;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.08);
+}
+
+.matrix-table th.matrix-sticky-2,
+.matrix-table td.matrix-sticky-2 {
+  position: sticky;
+  left: 200px;
+  z-index: 40;
+  min-width: 110px;
+  max-width: 120px;
+  background: var(--bg-card) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+.matrix-table th.matrix-sticky-3,
+.matrix-table td.matrix-sticky-3 {
+  position: sticky;
+  left: 310px;
+  z-index: 40;
+  min-width: 110px;
+  max-width: 120px;
+  background: var(--bg-card) !important;
+  border-right: 2px solid var(--border-bright) !important;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.12);
+}
+
+.matrix-table thead th.matrix-sticky-1,
+.matrix-table thead th.matrix-sticky-2,
+.matrix-table thead th.matrix-sticky-3 {
+  z-index: 70 !important;
+  background: var(--bg-accent) !important;
+}
+
+/* Células de Dados da Matriz */
+.matrix-table td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  color: var(--text-main);
+  background: var(--bg-card);
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.matrix-table tbody tr:hover td {
+  background: var(--bg-card-hover) !important;
+}
+
+.matrix-table td.cell-nome-promotor {
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matrix-table td.cell-meta-promotor {
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* Cores de Células Específicas */
+.matrix-table td.cell-fault-active {
+  color: #ef4444 !important;
+  font-weight: 800;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.matrix-table td.cell-bonus-active {
+  color: var(--gold) !important;
+  font-weight: 800;
+  background: rgba(251, 191, 36, 0.1) !important;
+}
+
+.matrix-table td.cell-extra-active {
+  color: var(--potencia) !important;
+  font-weight: 800;
+  background: rgba(255, 107, 0, 0.1) !important;
+}
+
+.matrix-table td.cell-period-total {
+  font-weight: 800;
+  background: rgba(99, 102, 241, 0.06);
+  border-right: 2px solid var(--border-bright) !important;
+  color: var(--text-accent);
+}
+
+.matrix-table td.cell-grand-total {
+  position: sticky;
+  right: 0;
+  z-index: 30;
+  font-weight: 900;
+  font-size: 12px;
+  background: var(--bg-accent) !important;
+  color: var(--primary);
+  border-left: 2px solid var(--primary);
+  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.matrix-table thead th.cell-grand-total {
+  position: sticky;
+  right: 0;
+  z-index: 70 !important;
+  background: var(--bg-accent) !important;
+  color: var(--primary);
+  border-left: 2px solid var(--primary);
+}
+
+/* ========================================================
    RESPONSIVIDADE (MOBILE & TABLET)
    ======================================================== */
 @media (max-width: 768px) {
@@ -2001,3 +2289,4 @@ select option {
     grid-template-columns: 1fr;
   }
 }
+

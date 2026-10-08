@@ -57,6 +57,11 @@ def api_process():
             f = request.files['folha_file']
             folha_path = os.path.join(BASE_DIR, f"temp_{f.filename}")
             f.save(folha_path)
+
+        if 'pe_file' in request.files and request.files['pe_file'].filename:
+            f_pe = request.files['pe_file']
+            pe_path = os.path.join(BASE_DIR, f"temp_{f_pe.filename}")
+            f_pe.save(pe_path)
             
         tolerance = int(request.form.get('tolerance', 10))
         bonus = int(request.form.get('bonus', 30))
@@ -69,6 +74,24 @@ def api_process():
                 colaboradores_list = json.loads(colabs_raw)
             except Exception:
                 colaboradores_list = None
+                
+        # Faltas reconhecidas diretamente pela tabela de assiduidade
+        faltas_raw = request.form.get('faltas_assiduidade')
+        faltas_map = None
+        if faltas_raw:
+            try:
+                faltas_map = json.loads(faltas_raw)
+            except Exception:
+                faltas_map = None
+                
+        # Dados de campanha já salvos no Supabase (incremental)
+        campanha_salva_raw = request.form.get('campanha_salva')
+        campanha_salva_map = None
+        if campanha_salva_raw:
+            try:
+                campanha_salva_map = json.loads(campanha_salva_raw)
+            except Exception:
+                campanha_salva_map = None
         
         processor = CampanhaProcessor(
             camp_path, 
@@ -77,17 +100,21 @@ def api_process():
             bonus_points=bonus,
             colaboradores_base=colaboradores_list
         )
-        promotores = processor.process_all()
+        promotores = processor.process_all(
+            faltas_assiduidade_map=faltas_map,
+            campanha_salva_map=campanha_salva_map
+        )
         
         # Calculate summary metrics
         total_promotores = len(promotores)
-        total_faltas = sum(sum(p['faltas'] for p in prom['periodos']) for prom in promotores if prom['status'] == 'OK')
-        total_pontos_pontualidade = sum(sum(p['pontos_pontualidade_total'] for p in prom['periodos']) for prom in promotores if prom['status'] == 'OK')
+        total_faltas = sum(sum(p['faltas'] for p in prom['periodos']) for prom in promotores if prom['status'] in ['OK', 'COM_FALTAS_ASSIDUIDADE'])
+        total_pontos_pontualidade = sum(sum(p['pontos_pontualidade_total'] for p in prom['periodos']) for prom in promotores if prom['status'] in ['OK', 'COM_FALTAS_ASSIDUIDADE'])
         promotores_com_bonus = sum(1 for prom in promotores if any(p['ganhou_bonus'] for p in prom['periodos']))
         total_sem_contrato = sum(1 for prom in promotores if prom.get('sem_contrato'))
         
-        # Generate the updated excel file
-        processor.generate_updated_excel(OUTPUT_FILE)
+        # Generate the updated excel file if camp_file exists
+        if os.path.exists(camp_path):
+            processor.generate_updated_excel(OUTPUT_FILE)
         
         LATEST_DATA = {
             'metrics': {
