@@ -1486,24 +1486,26 @@ select option {
 /* Card Photos */
 .pe-media-section {
   position: relative;
-  background: #000000;
-  height: 230px;
+  background: radial-gradient(circle at center, #181924 0%, #08090c 100%);
+  height: 320px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-bottom: 1px solid var(--border);
 }
 
 .pe-main-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   cursor: pointer;
-  transition: transform 0.4s ease;
+  transition: transform 0.3s ease;
+  padding: 6px;
 }
 
 .pe-main-img:hover {
-  transform: scale(1.04);
+  transform: scale(1.02);
 }
 
 .pe-photo-badge {
@@ -1530,8 +1532,8 @@ select option {
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1544,29 +1546,30 @@ select option {
 }
 
 .pe-strip-thumbs {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  right: 8px;
   display: flex;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
-  padding: 4px;
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: thin;
 }
 
 .pe-thumb-mini {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-sm);
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: var(--transition);
   flex-shrink: 0;
+  background: #000;
 }
 .pe-thumb-mini:hover, .pe-thumb-mini.active {
   border-color: var(--potencia);
-  transform: scale(1.08);
+  box-shadow: 0 0 8px rgba(255, 107, 0, 0.4);
+  transform: translateY(-2px);
 }
 
 /* Card Evaluation Form */
