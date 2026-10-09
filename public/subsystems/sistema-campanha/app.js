@@ -1598,7 +1598,7 @@ async function loadPontosExtrasData() {
     const json = await res.json();
 
     if (json.success) {
-      allPeRecords = json.records || [];
+      allPeRecords = (json.records || []).filter(r => r.fotos && Array.isArray(r.fotos) && r.fotos.length > 0);
       pePeriods = json.periods || [];
       peStats = json.stats || {};
 
@@ -1628,7 +1628,9 @@ async function carregarPontosExtrasDoSupabase() {
       .order('created_at', { ascending: false });
 
     if (!error && data && data.length > 0) {
-      allPeRecords = data.map(d => ({
+      // FILTRO CRÍTICO: apenas tarefas com fotos reais de ponto extra
+      const validosComFotos = data.filter(d => d.fotos && Array.isArray(d.fotos) && d.fotos.length > 0);
+      allPeRecords = validosComFotos.map(d => ({
         task_id: d.task_id,
         promotor_campanha: d.promotor,
         promotor_csv: d.promotor,
@@ -1779,6 +1781,9 @@ async function processarArquivoPeUpload(file) {
 
       if (!promotorRaw) continue;
 
+      const temPeRaw = colMap.tem_pe !== undefined ? String(row[colMap.tem_pe] || '').trim().toUpperCase() : '';
+      const isSim = (temPeRaw === 'SIM' || temPeRaw === 'S' || temPeRaw === 'TRUE' || temPeRaw === '1');
+
       // Extrai fotos da linha
       const fotosLinha = [];
       photoColIndices.forEach(pIdx => {
@@ -1795,6 +1800,14 @@ async function processarArquivoPeUpload(file) {
             fotosLinha.push(s);
           }
         });
+      }
+
+      // FILTRO ESSENCIAL: se houver a coluna "TEM PONTO EXTRA?", ignora linhas que não são "SIM" e não têm fotos
+      if (colMap.tem_pe !== undefined && !isSim && fotosLinha.length === 0) {
+        continue;
+      }
+      if (!isSim && fotosLinha.length === 0) {
+        continue;
       }
 
       const taskId = rawTaskId || `T_${Math.abs(hashString(promotorRaw + pdvRaw + dataRaw + r))}`;
@@ -1836,11 +1849,15 @@ async function processarArquivoPeUpload(file) {
       }
     }
 
-    const novosRegistros = Object.values(parsedTasksMap);
+    // FILTRO CRÍTICO: apenas tarefas que realmente possuem fotos comprovatórias
+    const novosRegistros = Object.values(parsedTasksMap).filter(t => t.fotos && Array.isArray(t.fotos) && t.fotos.length > 0);
     if (novosRegistros.length === 0) {
-      showToast("Nenhuma tarefa com promotor encontrada na planilha.", "warning");
+      showToast("Nenhuma tarefa com fotos de ponto extra ('SIM') encontrada na planilha.", "warning");
       return;
     }
+
+    // Remove qualquer registro inválido sem foto que possa estar na memória
+    allPeRecords = allPeRecords.filter(r => r.fotos && Array.isArray(r.fotos) && r.fotos.length > 0);
 
     // Mescla com registros existentes respeitando decisões prévias
     novosRegistros.forEach(novo => {
@@ -2003,6 +2020,9 @@ function renderPeCards() {
   const tipoFilter = peFilterTipo.value;
 
   const filtered = allPeRecords.filter(r => {
+    // FILTRO VISUAL ESTRITO: nunca renderiza tarefas sem fotos comprovatórias
+    if (!r.fotos || !Array.isArray(r.fotos) || r.fotos.length === 0) return false;
+
     const matchQuery = !query ||
       (r.promotor_csv && r.promotor_csv.toLowerCase().includes(query)) ||
       (r.promotor_campanha && r.promotor_campanha.toLowerCase().includes(query)) ||
@@ -2188,7 +2208,9 @@ function createPeCardElement(r) {
     r.fotos.forEach((fUrl, fIdx) => {
       thumbsHtml += `
         <img src="${fUrl}" class="pe-thumb-mini ${fIdx === 0 ? 'active' : ''}" 
-             alt="Foto ${fIdx+1}" onclick="switchCardPreview('${r.task_id}', '${fUrl}', this)">
+             alt="Foto ${fIdx+1}" referrerpolicy="no-referrer" loading="lazy"
+             onerror="this.style.opacity='0.4'"
+             onclick="switchCardPreview('${r.task_id}', '${fUrl}', this)">
       `;
     });
   }
@@ -2220,6 +2242,8 @@ function createPeCardElement(r) {
 
     <div class="pe-media-section">
       <img src="${mainPhoto}" id="main-img-${r.task_id}" class="pe-main-img" alt="Ponto Extra" 
+           referrerpolicy="no-referrer" loading="lazy"
+           onerror="this.onerror=null;this.style.opacity='0.5';this.alt='Imagem indisponível';"
            onclick="openLightbox('${r.task_id}', 0)">
       <span class="pe-photo-badge">${totalFotos} foto(s)</span>
       <button class="pe-expand-btn" title="Expandir HD" onclick="openLightbox('${r.task_id}', 0)">
@@ -2498,6 +2522,8 @@ function openLightbox(taskId, photoIdx = 0) {
   currentLightboxPhotos.forEach((url, idx) => {
     const thumb = document.createElement('img');
     thumb.src = url;
+    thumb.referrerPolicy = 'no-referrer';
+    thumb.loading = 'lazy';
     thumb.className = `lightbox-thumb ${idx === currentLightboxIdx ? 'active' : ''}`;
     thumb.addEventListener('click', () => setLightboxIndex(idx));
     lightboxThumbnails.appendChild(thumb);
@@ -2527,6 +2553,7 @@ function updateLightboxView() {
   const url = currentLightboxPhotos[currentLightboxIdx];
   if (!url) return;
 
+  lightboxImg.referrerPolicy = 'no-referrer';
   lightboxImg.src = url;
   lightboxCounter.textContent = `${currentLightboxIdx + 1} / ${currentLightboxPhotos.length}`;
 
