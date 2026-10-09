@@ -477,6 +477,37 @@
         </div>
       </section>
 
+      <!-- Central de Importação Dedicada de Pontos Extras (CSV / XLSX) -->
+      <section class="card pe-import-panel" id="peImportPanel">
+        <div class="pe-import-content">
+          <div class="pe-import-icon-box">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="pe-import-text-block">
+            <div class="pe-import-badge-line">
+              <span class="pe-import-badge">UPLOAD DE CURADORIA</span>
+              <span class="pe-import-hint">Importa fotos, lojas e tarefas para aprovação</span>
+            </div>
+            <h3 class="pe-import-title">Importar Relatório de Pontos Extras (.CSV ou .XLSX)</h3>
+            <p class="pe-import-desc" id="peImportStatusText">Arraste aqui o arquivo do Trade ou clique no botão ao lado para carregar as tarefas com fotos organizadas por <strong>Período</strong>, <strong>Colaborador</strong> e <strong>Loja</strong>.</p>
+          </div>
+        </div>
+        <div class="pe-import-action-block">
+          <input type="file" id="inputPeDedicatedFile" class="file-input-hidden" accept=".csv,.xlsx,.xls">
+          <button type="button" class="btn btn-potencia btn-lg pulse-btn" id="btnUploadPeDedicated">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Subir Relatório de Pontos Extras</span>
+          </button>
+          <div class="pe-file-meta-tag" id="peDedicatedFileMeta" style="display:none;"></div>
+        </div>
+      </section>
+
       <!-- Pontos Extras Metrics Section -->
       <section class="metrics-grid">
         <div class="metric-card">
@@ -566,6 +597,14 @@
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
               Aprovar Visíveis
+            </button>
+
+            <button id="btnPeToggleCollapse" class="btn btn-secondary" title="Expandir ou recolher todos os grupos">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="7 13 12 18 17 13"></polyline>
+                <polyline points="7 6 12 11 17 6"></polyline>
+              </svg>
+              <span id="btnPeToggleCollapseText">Recolher Grupos</span>
             </button>
 
             <button id="btnPeExportAudit" class="btn btn-secondary">
@@ -804,7 +843,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../js/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="campanha_base_data.js?v=20261009_1446"></script>
-  <script src="app.js?v=20261009_1446"></script>
+  <script src="campanha_base_data.js?v=20261009_1530"></script>
+  <script src="app.js?v=20261009_1530"></script>
 </body>
 </html>

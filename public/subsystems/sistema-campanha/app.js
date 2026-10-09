@@ -219,6 +219,13 @@ const btnPeSyncExcel = document.getElementById('btnPeSyncExcel');
 const btnPeSyncText = document.getElementById('btnPeSyncText');
 const peGrid = document.getElementById('peGrid');
 const peCountDisplay = document.getElementById('peCountDisplay');
+const inputPeDedicatedFile = document.getElementById('inputPeDedicatedFile');
+const btnUploadPeDedicated = document.getElementById('btnUploadPeDedicated');
+const peImportPanel = document.getElementById('peImportPanel');
+const peImportStatusText = document.getElementById('peImportStatusText');
+const peDedicatedFileMeta = document.getElementById('peDedicatedFileMeta');
+const btnPeToggleCollapse = document.getElementById('btnPeToggleCollapse');
+const btnPeToggleCollapseText = document.getElementById('btnPeToggleCollapseText');
 
 // Lightbox HD Elements
 const lightboxModal = document.getElementById('lightboxModal');
@@ -512,11 +519,51 @@ function setupEventListeners() {
   peFilterTipo.addEventListener('change', renderPeCards);
 
   btnPeAprovarTodos.addEventListener('click', handleAprovarTodosVisiveis);
-  btnPeExportAudit.addEventListener('click', () => window.location.href = getApiUrl('/api/pontos-extras/exportar-excel'));
+  if (btnPeExportAudit) btnPeExportAudit.addEventListener('click', () => window.location.href = getApiUrl('/api/pontos-extras/exportar-excel'));
   if (btnPeExportPdf) {
     btnPeExportPdf.addEventListener('click', () => window.location.href = getApiUrl('/api/pontos-extras/exportar-pdf'));
   }
   btnPeSyncExcel.addEventListener('click', handleSyncToCampaign);
+
+  // Upload Dedicado de Pontos Extras
+  if (btnUploadPeDedicated && inputPeDedicatedFile) {
+    btnUploadPeDedicated.addEventListener('click', () => inputPeDedicatedFile.click());
+    inputPeDedicatedFile.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processarArquivoPeUpload(e.target.files[0]);
+      }
+    });
+  }
+
+  if (peImportPanel && inputPeDedicatedFile) {
+    peImportPanel.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      peImportPanel.classList.add('dragover');
+    });
+    peImportPanel.addEventListener('dragleave', () => peImportPanel.classList.remove('dragover'));
+    peImportPanel.addEventListener('drop', (e) => {
+      e.preventDefault();
+      peImportPanel.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processarArquivoPeUpload(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  // Toggle de colapso de grupos
+  let allPeGroupsExpanded = true;
+  if (btnPeToggleCollapse) {
+    btnPeToggleCollapse.addEventListener('click', () => {
+      allPeGroupsExpanded = !allPeGroupsExpanded;
+      const bodies = peGrid.querySelectorAll('.pe-group-period-body');
+      bodies.forEach(b => {
+        b.style.display = allPeGroupsExpanded ? 'flex' : 'none';
+      });
+      if (btnPeToggleCollapseText) {
+        btnPeToggleCollapseText.textContent = allPeGroupsExpanded ? 'Recolher Grupos' : 'Expandir Grupos';
+      }
+    });
+  }
 
   // Lightbox listeners
   btnLightboxClose.addEventListener('click', closeLightbox);
@@ -1655,6 +1702,299 @@ function populatePeFilters() {
   }
 }
 
+// ========================================================
+// PROCESSADOR DE ARQUIVO CSV / XLSX DE PONTOS EXTRAS
+// ========================================================
+
+async function processarArquivoPeUpload(file) {
+  if (!file) return;
+
+  if (peImportStatusText) {
+    peImportStatusText.innerHTML = `<strong>Lendo arquivo "${escapeHtml(file.name)}"...</strong> Processando tarefas, promotores, lojas e links de fotos...`;
+  }
+  if (peDedicatedFileMeta) {
+    peDedicatedFileMeta.style.display = 'block';
+    peDedicatedFileMeta.textContent = `${(file.size / 1024).toFixed(1)} KB • Lendo dados...`;
+  }
+
+  try {
+    const buffer = await file.arrayBuffer();
+    // SheetJS com suporte universal a XLSX, XLS e CSV (com separador ; ou ,)
+    const workbook = XLSX.read(buffer, { type: 'array', codepage: 65001 });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
+
+    if (!rows || rows.length < 2) {
+      showToast("O arquivo selecionado está vazio ou sem formato válido.", "danger");
+      return;
+    }
+
+    // Identifica linha de cabeçalho
+    let headerIdx = -1;
+    let colMap = {};
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      const row = rows[i].map(c => String(c || '').trim().toUpperCase());
+      const hasTask = row.some(c => c.includes('TAREFA') || c.includes('TASK') || c.includes('ID'));
+      const hasProm = row.some(c => c.includes('PROMOTOR') || c.includes('AGENTE') || c.includes('COLABORADOR'));
+      if (hasTask || hasProm) {
+        headerIdx = i;
+        rows[i].forEach((colName, cIdx) => {
+          const upper = String(colName || '').trim().toUpperCase();
+          if ((upper.includes('TAREFA') || upper.includes('TASK') || upper === 'ID') && colMap.task_id === undefined) colMap.task_id = cIdx;
+          if (upper.includes('DATA') && (upper.includes('EXECU') || upper.includes('HORA')) && colMap.data === undefined) colMap.data = cIdx;
+          if (upper === 'DATA' && colMap.data === undefined) colMap.data = cIdx;
+          if ((upper.includes('PDV') || upper.includes('LOJA')) && colMap.pdv === undefined) colMap.pdv = cIdx;
+          if ((upper.includes('PROMOTOR') || upper.includes('AGENTE') || upper.includes('COLABORADOR')) && colMap.promotor === undefined) colMap.promotor = cIdx;
+          if (upper.includes('ATIVIDADE') && colMap.atividade === undefined) colMap.atividade = cIdx;
+          if (upper.includes('PONTO EXTRA') && colMap.tem_pe === undefined) colMap.tem_pe = cIdx;
+        });
+        break;
+      }
+    }
+
+    if (headerIdx === -1 || colMap.promotor === undefined) {
+      showToast("Cabeçalho do relatório não reconhecido (esperado PROMOTOR, PDV, ID DA TAREFA).", "warning");
+      return;
+    }
+
+    // Colunas de foto
+    const headerRow = rows[headerIdx].map(c => String(c || '').trim().toUpperCase());
+    const photoColIndices = [];
+    headerRow.forEach((c, idx) => {
+      if (c.includes('FOTO')) photoColIndices.push(idx);
+    });
+
+    const parsedTasksMap = {};
+
+    for (let r = headerIdx + 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row || row.length === 0) continue;
+
+      const rawTaskId = colMap.task_id !== undefined ? String(row[colMap.task_id] || '').trim() : '';
+      const promotorRaw = colMap.promotor !== undefined ? String(row[colMap.promotor] || '').trim().toUpperCase() : '';
+      const pdvRaw = colMap.pdv !== undefined ? String(row[colMap.pdv] || '').trim().toUpperCase() : 'PDV NÃO INFORMADO';
+      const dataRaw = colMap.data !== undefined ? String(row[colMap.data] || '').trim() : '';
+      const atividadeRaw = colMap.atividade !== undefined ? String(row[colMap.atividade] || '').trim() : '';
+
+      if (!promotorRaw) continue;
+
+      // Extrai fotos da linha
+      const fotosLinha = [];
+      photoColIndices.forEach(pIdx => {
+        const val = String(row[pIdx] || '').trim();
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+          fotosLinha.push(val);
+        }
+      });
+      // Fallback: varre qualquer coluna por links http de imagem
+      if (fotosLinha.length === 0) {
+        row.forEach(val => {
+          const s = String(val || '').trim();
+          if (s.startsWith('http://') || s.startsWith('https://')) {
+            fotosLinha.push(s);
+          }
+        });
+      }
+
+      const taskId = rawTaskId || `T_${Math.abs(hashString(promotorRaw + pdvRaw + dataRaw + r))}`;
+
+      if (!parsedTasksMap[taskId]) {
+        // Encontra período correspondente pela data da tarefa
+        let perNome = '27/08 A 03/09';
+        const iso = normalizarDataParaISO(dataRaw);
+        if (iso) {
+          const pMatch = activeCampaignPeriods.find(p => p.start && p.end && iso >= p.start && iso <= p.end);
+          if (pMatch) perNome = pMatch.name;
+        }
+
+        const matchedProm = encontrarPromotorCampanha(promotorRaw);
+
+        parsedTasksMap[taskId] = {
+          task_id: taskId,
+          promotor_csv: promotorRaw,
+          promotor_campanha: matchedProm || promotorRaw,
+          matched: Boolean(matchedProm),
+          pdv: pdvRaw,
+          data: dataRaw,
+          atividade: atividadeRaw,
+          fotos: [...fotosLinha],
+          status: 'PENDENTE',
+          tipo: 'ILHA',
+          criativo: false,
+          periodo: perNome,
+          motivo: '',
+          pontos: 0
+        };
+      } else {
+        // Junta fotos adicionais da mesma tarefa sem duplicar
+        fotosLinha.forEach(f => {
+          if (!parsedTasksMap[taskId].fotos.includes(f)) {
+            parsedTasksMap[taskId].fotos.push(f);
+          }
+        });
+      }
+    }
+
+    const novosRegistros = Object.values(parsedTasksMap);
+    if (novosRegistros.length === 0) {
+      showToast("Nenhuma tarefa com promotor encontrada na planilha.", "warning");
+      return;
+    }
+
+    // Mescla com registros existentes respeitando decisões prévias
+    novosRegistros.forEach(novo => {
+      const idx = allPeRecords.findIndex(r => r.task_id === novo.task_id);
+      if (idx >= 0) {
+        const anterior = allPeRecords[idx];
+        novo.status = anterior.status;
+        novo.tipo = anterior.tipo;
+        novo.criativo = anterior.criativo;
+        novo.periodo = anterior.periodo || novo.periodo;
+        novo.motivo = anterior.motivo;
+        novo.pontos = anterior.pontos;
+        anterior.fotos.forEach(f => {
+          if (!novo.fotos.includes(f)) novo.fotos.push(f);
+        });
+        allPeRecords[idx] = novo;
+      } else {
+        allPeRecords.push(novo);
+      }
+    });
+
+    // Salva no Supabase se conectado
+    salvarNovosPontosExtrasSupabase(novosRegistros);
+
+    recalcularEstatisticasPe();
+    populatePeFilters();
+    renderPeCards();
+
+    if (peImportStatusText) {
+      peImportStatusText.innerHTML = `✓ <strong>${novosRegistros.length} tarefas de pontos extras carregadas</strong> de "${escapeHtml(file.name)}"! Fotos organizadas abaixo por Período, Promotor e Loja.`;
+    }
+    if (peDedicatedFileMeta) {
+      peDedicatedFileMeta.textContent = `${novosRegistros.length} tarefas • ${(file.size / 1024).toFixed(1)} KB`;
+    }
+
+    showToast(`⚡ ${novosRegistros.length} tarefas de pontos extras carregadas com sucesso!`, 'potencia', 5000);
+
+  } catch (err) {
+    console.error("Erro ao processar arquivo de pontos extras:", err);
+    showToast("Erro ao processar arquivo: " + err.message, "danger");
+  }
+}
+
+function encontrarPromotorCampanha(promotorCsv) {
+  if (!promotorCsv) return null;
+  const clean = promotorCsv.trim().toUpperCase();
+
+  // 1. Match exato
+  const exato = allPromotores.find(p => p.nome === clean);
+  if (exato) return exato.nome;
+
+  // 2. Prefixo / Substring (primeiros 18 caracteres)
+  const pref = allPromotores.find(p => p.nome.startsWith(clean.slice(0, 18)) || clean.startsWith(p.nome.slice(0, 18)));
+  if (pref) return pref.nome;
+
+  return null;
+}
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function recalcularEstatisticasPe() {
+  const aprovados = allPeRecords.filter(r => r.status === 'APROVADO').length;
+  const pendentes = allPeRecords.filter(r => r.status === 'PENDENTE').length;
+  const rejeitados = allPeRecords.filter(r => r.status === 'REJEITADO').length;
+  const pts = allPeRecords.filter(r => r.status === 'APROVADO').reduce((acc, r) => acc + (r.pontos || 0), 0);
+
+  peStats = {
+    total: allPeRecords.length,
+    aprovados,
+    pendentes,
+    rejeitados,
+    pontos_gerados: pts,
+    criativos: allPeRecords.filter(r => r.criativo).length,
+    promotores: new Set(allPeRecords.map(r => r.promotor_campanha || r.promotor_csv)).size
+  };
+
+  updatePeMetrics(peStats);
+  if (tabPeBadge) {
+    tabPeBadge.textContent = `${pendentes} pendentes`;
+  }
+}
+
+async function salvarNovosPontosExtrasSupabase(records) {
+  const sb = await ensureSupabase();
+  if (!sb || !records || records.length === 0) return;
+
+  try {
+    const payload = records.map(r => ({
+      task_id: r.task_id,
+      promotor: r.promotor_campanha || r.promotor_csv,
+      pdv: r.pdv,
+      data_registro: r.data,
+      tipo_conquista: r.tipo,
+      criativo: r.criativo,
+      pontos: r.pontos || 0,
+      status_curadoria: r.status,
+      motivo_rejeicao: r.motivo,
+      fotos: r.fotos,
+      periodo_nome: r.periodo,
+      updated_at: new Date().toISOString()
+    }));
+
+    // Envia em blocos de 100 para alta estabilidade
+    for (let i = 0; i < payload.length; i += 100) {
+      const chunk = payload.slice(i, i + 100);
+      await sb.from('tb_campanha_pontos_extras').upsert(chunk, { onConflict: 'task_id' });
+    }
+    console.log(`[Pontos Extras] ${records.length} registros salvos no Supabase.`);
+  } catch (err) {
+    console.warn("Aviso ao salvar novos pontos extras no Supabase:", err);
+  }
+}
+
+window.togglePeGroupBody = function(bodyId, headerEl) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  const isHidden = body.style.display === 'none';
+  body.style.display = isHidden ? 'flex' : 'none';
+  const icon = headerEl ? headerEl.querySelector('.chevron-icon') : null;
+  if (icon) {
+    icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+};
+
+window.aprovarTodasDaLoja = async function(lojaName, btnEl) {
+  const tasks = allPeRecords.filter(r => r.pdv === lojaName && r.status === 'PENDENTE');
+  if (tasks.length === 0) {
+    showToast(`Todas as tarefas da loja "${lojaName}" já foram avaliadas.`, 'info');
+    return;
+  }
+
+  tasks.forEach(t => {
+    setCardStatus(t.task_id, 'APROVADO');
+  });
+
+  recalcularEstatisticasPe();
+  aplicarPontosExtrasAprovados();
+  updateMetrics();
+  applyFilters();
+
+  showToast(`✓ ${tasks.length} pontos extras da loja "${lojaName}" aprovados com sucesso!`, 'potencia');
+};
+
+// ========================================================
+// RENDERIZADOR HIERÁRQUICO: PERÍODO > PROMOTOR > LOJA
+// ========================================================
+
 function renderPeCards() {
   const query = peSearchInput.value.toLowerCase().trim();
   const perFilter = peFilterPeriodo.value;
@@ -1682,17 +2022,150 @@ function renderPeCards() {
 
   if (filtered.length === 0) {
     peGrid.innerHTML = `
-      <div class="pe-loading-card">
+      <div class="pe-loading-card" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">📸</div>
         <h4>Nenhum ponto extra corresponde aos filtros selecionados</h4>
-        <p>Ajuste os filtros de período, colaborador ou status.</p>
+        <p style="color: var(--text-muted); max-width: 520px; margin: 8px auto 16px;">
+          Suba o arquivo CSV ou XLSX com o relatório de tarefas no botão <strong>"Subir Relatório de Pontos Extras"</strong> acima, ou ajuste os filtros de período e colaborador.
+        </p>
       </div>
     `;
     return;
   }
 
+  // ESTRUTURA HIERÁRQUICA: PERÍODO -> PROMOTOR -> LOJA
+  const hierarchy = {};
+
   filtered.forEach(r => {
-    const card = createPeCardElement(r);
-    peGrid.appendChild(card);
+    const pName = r.periodo || '27/08 A 03/09';
+    const promName = r.promotor_campanha || r.promotor_csv || 'PROMOTOR NÃO INFORMADO';
+    const lojaName = r.pdv || 'LOJA NÃO INFORMADA';
+
+    if (!hierarchy[pName]) hierarchy[pName] = {};
+    if (!hierarchy[pName][promName]) hierarchy[pName][promName] = {};
+    if (!hierarchy[pName][promName][lojaName]) hierarchy[pName][promName][lojaName] = [];
+
+    hierarchy[pName][promName][lojaName].push(r);
+  });
+
+  // Ordena os períodos na ordem cronológica oficial da campanha
+  const sortedPeriods = Object.keys(hierarchy).sort((a, b) => {
+    const idxA = activeCampaignPeriods.findIndex(p => p.name === a);
+    const idxB = activeCampaignPeriods.findIndex(p => p.name === b);
+    return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
+  });
+
+  sortedPeriods.forEach(pName => {
+    const promotoresDoPeriodo = hierarchy[pName];
+    const totalTarefasPeriodo = Object.values(promotoresDoPeriodo).reduce((acc, lojas) => {
+      return acc + Object.values(lojas).reduce((a, arr) => a + arr.length, 0);
+    }, 0);
+    const totalPromotoresPeriodo = Object.keys(promotoresDoPeriodo).length;
+
+    // 1. Container do Período
+    const periodSection = document.createElement('div');
+    periodSection.className = 'pe-group-period';
+    const periodIdSafe = pName.replace(/[^a-zA-Z0-9]/g, '_');
+
+    periodSection.innerHTML = `
+      <div class="pe-group-period-header" onclick="togglePeGroupBody('body-${periodIdSafe}', this)">
+        <div class="pe-group-period-title">
+          <span style="font-size: 1.25rem;">📅</span>
+          <span>Período: ${escapeHtml(pName)}</span>
+          <span class="pe-group-period-badge">${totalTarefasPeriodo} tarefa${totalTarefasPeriodo > 1 ? 's' : ''}</span>
+        </div>
+        <div class="pe-group-period-meta">
+          <span>👥 ${totalPromotoresPeriodo} colaborador${totalPromotoresPeriodo > 1 ? 'es' : ''}</span>
+          <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="transition: transform 0.2s;">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="pe-group-period-body" id="body-${periodIdSafe}">
+      </div>
+    `;
+
+    const periodBody = periodSection.querySelector(`#body-${periodIdSafe}`);
+
+    // Ordena os promotores alfabeticamente
+    const sortedPromotores = Object.keys(promotoresDoPeriodo).sort();
+
+    sortedPromotores.forEach(promName => {
+      const lojasDoPromotor = promotoresDoPeriodo[promName];
+      const totalLojas = Object.keys(lojasDoPromotor).length;
+      const totalTarefasPromotor = Object.values(lojasDoPromotor).reduce((acc, arr) => acc + arr.length, 0);
+
+      // 2. Container do Promotor
+      const promotorCard = document.createElement('div');
+      promotorCard.className = 'pe-group-promotor';
+      const promotorIdSafe = `${periodIdSafe}_${promName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      const initials = promName.split(' ').slice(0, 2).map(n => n[0] || '').join('');
+
+      promotorCard.innerHTML = `
+        <div class="pe-group-promotor-header">
+          <div class="pe-group-promotor-info">
+            <div class="pe-promotor-avatar-icon">${initials}</div>
+            <div>
+              <span class="pe-group-promotor-name">${escapeHtml(promName)}</span>
+              <span class="pe-group-promotor-tag">PROMOTOR</span>
+            </div>
+          </div>
+          <div class="pe-group-promotor-stats">
+            <span>🏪 ${totalLojas} loja${totalLojas > 1 ? 's' : ''}</span>
+            <span>•</span>
+            <span>📸 ${totalTarefasPromotor} foto${totalTarefasPromotor > 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div class="pe-group-promotor-body" id="body-${promotorIdSafe}">
+        </div>
+      `;
+
+      const promotorBody = promotorCard.querySelector(`#body-${promotorIdSafe}`);
+
+      // Ordena as lojas alfabeticamente
+      const sortedLojas = Object.keys(lojasDoPromotor).sort();
+
+      sortedLojas.forEach(lojaName => {
+        const tasksDaLoja = lojasDoPromotor[lojaName];
+
+        // 3. Container da Loja / PDV
+        const lojaCard = document.createElement('div');
+        lojaCard.className = 'pe-group-loja';
+
+        lojaCard.innerHTML = `
+          <div class="pe-group-loja-header">
+            <div class="pe-group-loja-name-wrap">
+              <span class="pe-loja-icon">🏪</span>
+              <span>${escapeHtml(lojaName)}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(${tasksDaLoja.length} tarefa${tasksDaLoja.length > 1 ? 's' : ''})</span>
+            </div>
+            <div class="pe-group-loja-actions">
+              <button type="button" class="btn-aprovar-loja" onclick="aprovarTodasDaLoja('${lojaName.replace(/'/g, "\\'")}', this)">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Aprovar todas desta loja (${tasksDaLoja.length})
+              </button>
+            </div>
+          </div>
+          <div class="pe-group-loja-grid">
+          </div>
+        `;
+
+        const lojaGrid = lojaCard.querySelector('.pe-group-loja-grid');
+
+        // 4. Anexa os cards individuais das tarefas daquela loja
+        tasksDaLoja.forEach(t => {
+          const cardEl = createPeCardElement(t);
+          lojaGrid.appendChild(cardEl);
+        });
+
+        promotorBody.appendChild(lojaCard);
+      });
+
+      periodBody.appendChild(promotorCard);
+    });
+
+    peGrid.appendChild(periodSection);
   });
 }
 
@@ -1974,6 +2447,10 @@ async function handleAprovarTodosVisiveis() {
   });
 
   if (count > 0) {
+    recalcularEstatisticasPe();
+    aplicarPontosExtrasAprovados();
+    updateMetrics();
+    applyFilters();
     showToast(`✓ ${count} pontos extras aprovados com sucesso!`, 'potencia');
   } else {
     showToast('Nenhum ponto extra pendente na listagem visível.', 'warning');
