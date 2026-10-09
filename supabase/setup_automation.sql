@@ -101,35 +101,14 @@ END $$;
 -- 6. Configurar RLS (Row Level Security) para tb_colaboradores
 ALTER TABLE tb_colaboradores ENABLE ROW LEVEL SECURITY;
 
--- Permitir leitura para todos os usuários autenticados
+-- As policies desta tabela já estão configuradas no banco e NÃO devem ser recriadas aqui:
+--   colaboradores_select_authenticated -> SELECT para usuários logados
+--   colaboradores_write_admin_master   -> INSERT/UPDATE/DELETE apenas para profiles.role = admin/master
+-- Abaixo apenas removemos policies antigas e permissivas, caso ainda existam.
 DROP POLICY IF EXISTS "Permitir leitura para autenticados" ON tb_colaboradores;
-CREATE POLICY "Permitir leitura para autenticados" 
-ON tb_colaboradores FOR SELECT 
-TO authenticated 
-USING (true);
-
--- Permitir inserção/atualização para todos os usuários autenticados
 DROP POLICY IF EXISTS "Permitir tudo para autenticados" ON tb_colaboradores;
-CREATE POLICY "Permitir tudo para autenticados" 
-ON tb_colaboradores FOR ALL 
-TO authenticated 
-USING (true)
-WITH CHECK (true);
-
--- Permitir leitura para anon (papel usado pelo sistema frontend)
 DROP POLICY IF EXISTS "Permitir leitura para anon" ON tb_colaboradores;
-CREATE POLICY "Permitir leitura para anon" 
-ON tb_colaboradores FOR SELECT 
-TO anon 
-USING (true);
-
--- Permitir operações completas para anon (gerenciar equipe via frontend)
 DROP POLICY IF EXISTS "Permitir tudo para anon" ON tb_colaboradores;
-CREATE POLICY "Permitir tudo para anon" 
-ON tb_colaboradores FOR ALL 
-TO anon 
-USING (true)
-WITH CHECK (true);
 
 -- 7. Adicionar suporte a colaboradores inativos (Soft Delete)
 ALTER TABLE tb_colaboradores ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT TRUE;

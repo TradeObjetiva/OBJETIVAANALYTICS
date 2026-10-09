@@ -118,13 +118,23 @@
   box-sizing: border-box;
 }
 
+html {
+  height: auto;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
+  /* Override do style.css global (body { height: 100vh; overflow: hidden; })
+     que bloqueava a rolagem vertical deste subsistema */
+  height: auto;
   min-height: 100vh;
   line-height: 1.5;
   overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
   transition: background-color 0.25s ease, color 0.25s ease;
 }

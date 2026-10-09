@@ -238,25 +238,72 @@ const toastContainer = document.getElementById('toastContainer');
 // ========================================================
 // INITIALIZATION
 // ========================================================
+// INITIALIZATION & RESILIENT SUPABASE RESOLVER
+// ========================================================
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function ensureSupabase(maxRetries = 20, delayMs = 100) {
+  for (let i = 0; i < maxRetries; i++) {
+    if (window.supabase && typeof window.supabase.from === 'function') {
+      return window.supabase;
+    }
+    try {
+      if (window.parent && window.parent.supabase && typeof window.parent.supabase.from === 'function') {
+        window.supabase = window.parent.supabase;
+        return window.supabase;
+      }
+    } catch(e) {}
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      const url = window.SUPABASE_URL || 'https://xgbvokegqxqxpgznpxiq.supabase.co';
+      const key = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnYnZva2VncXhxeHBnem5weGlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjYzNjMsImV4cCI6MjA5MTk0MjM2M30.4VfzUCKCv_A2oXMgW5rPhWad1gHS2hWp_LXKmXzVjsM';
+      window.supabase = window.supabase.createClient(url, key);
+      return window.supabase;
+    }
+    await new Promise(r => setTimeout(r, delayMs));
+  }
+  return (window.supabase && typeof window.supabase.from === 'function') ? window.supabase : null;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
   setupTabNavigation();
   setupViewSwitchers();
   setupFileUploads();
   setupEventListeners();
-  
-  // 1. Carrega colaboradores da base
-  await carregarColaboradoresObjetiva();
-  
-  // 2. Consulta faltas oficiais de tb_assiduidade
-  await carregarFaltasOficiaisAssiduidade();
 
-  // 3. Consulta registros de campanha já salvos no Supabase (incremental)
-  await carregarCampanhaSalvaIncremental();
+  // 1. CARREGAMENTO IMEDIATO: Tabela Matriz da Campanha visível instantaneamente (zero travamento)
+  inicializarMatrizImediatamente();
 
-  // 4. Carrega registros de pontos extras
-  await loadPontosExtrasData();
+  // 2. SINCRONIZAÇÃO EM SEGUNDO PLANO COM SUPABASE (Não bloqueia UI nem trava a tela)
+  sincronizarDadosComSupabase();
 });
+
+function inicializarMatrizImediatamente() {
+  // Carrega baseline padrão de 99 promotores de CAMPANHA (1).xlsx
+  if (window.CAMPANHA_BASE_DATA && Array.isArray(window.CAMPANHA_BASE_DATA) && window.CAMPANHA_BASE_DATA.length > 0) {
+    allPromotores = JSON.parse(JSON.stringify(window.CAMPANHA_BASE_DATA));
+  } else {
+    allPromotores = [];
+  }
+
+  const count = allPromotores.length;
+  if (staffBaseCount) {
+    staffBaseCount.textContent = count > 0 
+      ? `${count} colaboradores carregados da base`
+      : 'Aguardando colaboradores da base...';
+  }
+  if (staffBaseBadge) {
+    staffBaseBadge.textContent = count > 0 ? 'Carregado' : 'Pendente';
+    staffBaseBadge.className = count > 0 ? 'file-status ready' : 'file-status';
+  }
+
+  // Renderiza imediatamente na tela em 10ms
+  updateMetrics();
+  applyFilters();
+
+  if (count > 0) {
+    btnDownloadCampanha.disabled = false;
+    if (btnSalvarSupabase) btnSalvarSupabase.disabled = false;
+  }
+}
 
 function setupTabNavigation() {
   const tabs = [
@@ -272,6 +319,11 @@ function setupTabNavigation() {
       });
       t.btn.classList.add('active');
       t.view.classList.add('active');
+
+      // Se mudou para a aba de pontos extras e a matriz do módulo 2 estiver ativa, re-renderiza
+      if (t.view === viewPontosExtras && mod2MatrixWrapper && mod2MatrixWrapper.style.display !== 'none') {
+        renderMatrixTable('matrixHeadMod2', 'matrixBodyMod2', allPromotores, activeCampaignPeriods, 'pontos_extras');
+      }
     });
   });
 }
@@ -284,6 +336,7 @@ function setupViewSwitchers() {
       btnMod1Detailed.classList.remove('active');
       if (mod1MatrixWrapper) mod1MatrixWrapper.style.display = 'block';
       if (mod1DetailedWrapper) mod1DetailedWrapper.style.display = 'none';
+      renderMatrixTable('matrixHeadMod1', 'matrixBodyMod1', allPromotores, activeCampaignPeriods, 'assiduidade');
     });
 
     btnMod1Detailed.addEventListener('click', () => {
@@ -291,6 +344,7 @@ function setupViewSwitchers() {
       btnMod1Matrix.classList.remove('active');
       if (mod1MatrixWrapper) mod1MatrixWrapper.style.display = 'none';
       if (mod1DetailedWrapper) mod1DetailedWrapper.style.display = 'block';
+      renderTable(allPromotores);
     });
   }
 
@@ -308,6 +362,7 @@ function setupViewSwitchers() {
       btnMod2Cards.classList.remove('active');
       if (peCardsSection) peCardsSection.style.display = 'none';
       if (mod2MatrixWrapper) mod2MatrixWrapper.style.display = 'block';
+      renderMatrixTable('matrixHeadMod2', 'matrixBodyMod2', allPromotores, activeCampaignPeriods, 'pontos_extras');
     });
   }
 }
@@ -479,11 +534,56 @@ function showToast(message, type = 'success', duration = 3500) {
 }
 
 // ========================================================
+// SINCRONIZAÇÃO EM SEGUNDO PLANO COM SUPABASE
+// ========================================================
+
+async function sincronizarDadosComSupabase() {
+  const sb = await ensureSupabase();
+  if (!sb) {
+    console.warn("Supabase não disponível no momento. Utilizando dados locais da campanha.");
+    return;
+  }
+
+  try {
+    // 1. Carrega faltas oficiais registradas em tb_assiduidade
+    await carregarFaltasOficiaisAssiduidade();
+
+    // 2. Carrega campanha salva de tb_campanha_colaboradores (incremental)
+    await carregarCampanhaSalvaIncremental();
+
+    // 3. Atualiza ou vincula novos colaboradores cadastrados no Objetiva Analytics
+    await carregarColaboradoresObjetiva();
+
+    // 4. Carrega registros de pontos extras
+    await carregarPontosExtrasDoSupabase();
+
+    // 5. Aplica as faltas oficiais de assiduidade em cada período de allPromotores
+    aplicarFaltasEmAllPromotores();
+
+    // 6. Atualiza interface e ambas as matrizes de visualização
+    updateMetrics();
+    applyFilters();
+
+    const count = allPromotores.length;
+    if (staffBaseCount) {
+      staffBaseCount.textContent = `${count} colaboradores ativos vinculados`;
+    }
+    if (staffBaseBadge) {
+      staffBaseBadge.textContent = "Sincronizado";
+      staffBaseBadge.className = "file-status ready";
+    }
+  } catch (err) {
+    console.warn("Aviso na sincronização em segundo plano:", err);
+  }
+}
+
+// ========================================================
 // RECONHECIMENTO DIRETO DE FALTAS DA TABELA DE ASSIDUIDADE
 // ========================================================
 
 async function carregarFaltasOficiaisAssiduidade(startDate = '2026-08-27', endDate = '2026-12-19') {
-  if (!window.supabase) return {};
+  const sb = await ensureSupabase();
+  if (!sb) return {};
   try {
     let allFaltas = [];
     let from = 0;
@@ -491,7 +591,7 @@ async function carregarFaltasOficiaisAssiduidade(startDate = '2026-08-27', endDa
     let hasMore = true;
 
     while (hasMore) {
-      const { data, error } = await window.supabase
+      const { data, error } = await sb
         .from('tb_assiduidade')
         .select('collaborator_name, date, status, observation')
         .eq('status', 'FT')
@@ -500,7 +600,7 @@ async function carregarFaltasOficiaisAssiduidade(startDate = '2026-08-27', endDa
         .range(from, from + step);
 
       if (error) {
-        console.warn('Erro ao consultar faltas oficiais de tb_assiduidade:', error);
+        console.warn('Erro ao consultar faltas de tb_assiduidade:', error);
         break;
       }
       if (data && data.length > 0) {
@@ -521,8 +621,7 @@ async function carregarFaltasOficiaisAssiduidade(startDate = '2026-08-27', endDa
     });
 
     faltasAssiduidadeMap = map;
-    const totalFaltasCount = allFaltas.length;
-    console.log(`[Assiduidade] ${totalFaltasCount} faltas 'FT' oficiais carregadas da tabela tb_assiduidade para ${Object.keys(map).length} promotores.`);
+    console.log(`[Assiduidade] ${allFaltas.length} faltas 'FT' oficiais carregadas para ${Object.keys(map).length} promotores.`);
     return map;
   } catch (err) {
     console.error('Falha ao carregar faltas da tb_assiduidade:', err);
@@ -530,14 +629,40 @@ async function carregarFaltasOficiaisAssiduidade(startDate = '2026-08-27', endDa
   }
 }
 
+// Aplica as faltas registradas em cada ciclo de cada promotor
+function aplicarFaltasEmAllPromotores() {
+  if (!faltasAssiduidadeMap || Object.keys(faltasAssiduidadeMap).length === 0) return;
+
+  allPromotores.forEach(prom => {
+    const nomeClean = (prom.nome || '').trim().toUpperCase();
+    const faltasDates = faltasAssiduidadeMap[nomeClean];
+    if (!faltasDates || faltasDates.length === 0) return;
+
+    faltasDates.forEach(dateStr => {
+      const per = activeCampaignPeriods.find(p => dateStr >= p.start && dateStr <= p.end);
+      if (per) {
+        const pObj = (prom.periodos || []).find(x => x.period_id === per.id || x.period_name === per.name);
+        if (pObj) {
+          pObj.faltas = (pObj.faltas || 0) + 1;
+          pObj.pontos_assiduidade = -50 * pObj.faltas;
+          pObj.ganhou_bonus = false;
+          const extras = (pObj.ilha || 0) + (pObj.meia_ilha || 0) + (pObj.ponta || 0) + (pObj.meia_ponta || 0);
+          pObj.total_periodo = pObj.pontos_assiduidade + (pObj.pontos_pontualidade_total || 0) + extras;
+        }
+      }
+    });
+  });
+}
+
 // ========================================================
 // RECONHECIMENTO INCREMENTAL DE CAMPANHA SALVA
 // ========================================================
 
 async function carregarCampanhaSalvaIncremental() {
-  if (!window.supabase) return;
+  const sb = await ensureSupabase();
+  if (!sb) return;
   try {
-    const { data: savedColabs, error } = await window.supabase
+    const { data: savedColabs, error } = await sb
       .from('tb_campanha_colaboradores')
       .select('*');
 
@@ -550,21 +675,34 @@ async function carregarCampanhaSalvaIncremental() {
       campanhaSalvaMap = map;
       console.log(`[Campanha Incremental] ${savedColabs.length} registros previamente salvos encontrados no Supabase.`);
 
-      // Se ainda não tivermos processado os promotores na memória, inicializa a tabela matriz com os dados já salvos
-      if (allPromotores.length === 0) {
-        allPromotores = savedColabs.map(c => ({
-          nome: c.nome,
-          projeto: c.projeto,
-          equipe: c.equipe,
-          cargo: c.cargo,
-          contrato: c.contrato,
-          status: c.status_folha || 'OK',
-          pontos_extras: c.pontos_extras || 0,
-          periodos: c.periodos || []
-        }));
-        
-        applyFilters();
-      }
+      // Mescla com allPromotores respeitando dados salvos
+      savedColabs.forEach(saved => {
+        const nomeClean = (saved.nome || '').trim().toUpperCase();
+        const existing = allPromotores.find(p => p.nome === nomeClean);
+        if (existing) {
+          if (saved.periodos && saved.periodos.length > 0) {
+            existing.periodos = saved.periodos;
+          }
+          if (saved.pontos_extras !== undefined) {
+            existing.pontos_extras = saved.pontos_extras;
+          }
+          if (saved.status_folha) {
+            existing.status = saved.status_folha;
+          }
+        } else {
+          allPromotores.push({
+            nome: saved.nome,
+            projeto: saved.projeto || 'GERAL',
+            equipe: saved.equipe || 'PROMOTOR',
+            cargo: saved.cargo || 'PROMOTOR',
+            contrato: saved.contrato || 'ATIVO',
+            status: saved.status_folha || 'OK',
+            sem_contrato: false,
+            pontos_extras: saved.pontos_extras || 0,
+            periodos: saved.periodos || []
+          });
+        }
+      });
     }
   } catch (err) {
     console.warn("Aviso ao carregar dados salvos da campanha:", err);
@@ -576,36 +714,31 @@ async function carregarCampanhaSalvaIncremental() {
 // ========================================================
 
 async function carregarColaboradoresObjetiva() {
-  if (staffBaseCount) staffBaseCount.textContent = "Conectando ao Supabase...";
-  if (staffBaseBadge) {
-    staffBaseBadge.textContent = "Carregando";
-    staffBaseBadge.className = "file-status";
-  }
+  const sb = await ensureSupabase();
+  if (!sb) return [];
 
   try {
-    if (!window.supabase) {
-      setTimeout(carregarColaboradoresObjetiva, 500);
-      return [];
-    }
-
-    const { data: staffData, error: staffError } = await window.supabase
+    // 1. Tenta tb_colaboradores
+    const { data: staffData } = await sb
       .from('tb_colaboradores')
       .select('*')
       .order('nome', { ascending: true });
 
-    if (!staffError && staffData && staffData.length > 0) {
-      colaboradoresObjetiva = staffData
-        .filter(s => s.ativo !== false)
+    let novos = [];
+    if (staffData && staffData.length > 0) {
+      novos = staffData
+        .filter(s => s.ativo !== false && s.nome && s.nome.trim())
         .map(s => ({
-          nome: (s.nome || '').trim().toUpperCase(),
+          nome: s.nome.trim().toUpperCase(),
           projeto: s.projeto || 'GERAL',
           cargo: s.cargo || 'PROMOTOR',
           equipe: s.cargo || s.projeto || 'PROMOTOR'
         }));
     } else {
-      const { data: planData } = await window.supabase
+      // 2. Se vazio, consulta agentes de tb_planilha
+      const { data: planData } = await sb
         .from('tb_planilha')
-        .select('agente, projeto')
+        .select('agente, projeto, lider')
         .not('agente', 'is', null);
 
       if (planData && planData.length > 0) {
@@ -617,24 +750,50 @@ async function carregarColaboradoresObjetiva() {
               nome: nome,
               projeto: r.projeto || 'GERAL',
               cargo: 'PROMOTOR',
-              equipe: 'PROMOTOR'
+              equipe: r.lider || r.projeto || 'PROMOTOR'
             };
           }
         });
-        colaboradoresObjetiva = Object.values(unique);
+        novos = Object.values(unique);
       }
     }
 
-    const count = colaboradoresObjetiva.length;
-    if (staffBaseCount) {
-      staffBaseCount.textContent = count > 0 
-        ? `${count} colaboradores ativos vinculados`
-        : "Nenhum colaborador na base (usando planilha padrão)";
-    }
-    if (staffBaseBadge) {
-      staffBaseBadge.textContent = count > 0 ? "Sincronizado" : "Pendente";
-      staffBaseBadge.className = count > 0 ? "file-status ready" : "file-status";
-    }
+    colaboradoresObjetiva = novos;
+
+    // Se houver novos colaboradores que não estão no baseline da campanha, adiciona com os 16 ciclos
+    novos.forEach(novo => {
+      const existe = allPromotores.some(p => p.nome === novo.nome);
+      if (!existe) {
+        const periodos = activeCampaignPeriods.map(p => ({
+          period_id: p.id,
+          period_name: p.name,
+          pontos_assiduidade: 0,
+          efetividade: 100,
+          pontos_pontualidade_total: 0,
+          dias_pontuais: 0,
+          dias_trabalhados: 6,
+          faltas: 0,
+          ilha: 0,
+          meia_ilha: 0,
+          ponta: 0,
+          meia_ponta: 0,
+          total_periodo: 0,
+          ganhou_bonus: false
+        }));
+
+        allPromotores.push({
+          nome: novo.nome,
+          projeto: novo.projeto,
+          equipe: novo.equipe,
+          cargo: novo.cargo,
+          contrato: 'ATIVO',
+          status: 'OK',
+          sem_contrato: false,
+          pontos_extras: 0,
+          periodos
+        });
+      }
+    });
 
     return colaboradoresObjetiva;
   } catch (err) {
@@ -652,63 +811,61 @@ async function processScores() {
   btnProcess.disabled = true;
   btnProcessText.textContent = "Processando Planilhas...";
 
-  const formData = new FormData();
-  formData.append('tolerance', toleranceInput.value);
-  formData.append('bonus', bonusInput.value);
-
-  // Anexa arquivos selecionados pelo usuário se houver
-  if (selectedCampFile) formData.append('camp_file', selectedCampFile);
-  if (selectedFolhaFile) formData.append('folha_file', selectedFolhaFile);
-  if (selectedPeFile) formData.append('pe_file', selectedPeFile);
-
-  // Enviar a base oficial de colaboradores
-  if (colaboradoresObjetiva && colaboradoresObjetiva.length > 0) {
-    formData.append('colaboradores', JSON.stringify(colaboradoresObjetiva));
-  }
-
-  // Enviar o mapa de faltas oficiais de tb_assiduidade
-  if (faltasAssiduidadeMap && Object.keys(faltasAssiduidadeMap).length > 0) {
-    formData.append('faltas_assiduidade', JSON.stringify(faltasAssiduidadeMap));
-  }
-
-  // Enviar a campanha já salva no Supabase para ajuste incremental
-  if (campanhaSalvaMap && Object.keys(campanhaSalvaMap).length > 0) {
-    formData.append('campanha_salva', JSON.stringify(campanhaSalvaMap));
-  }
-
+  // 1. Tenta envio ao servidor backend Flask (se ativo com timeout de 3.5s)
   try {
+    const formData = new FormData();
+    formData.append('tolerance', toleranceInput.value);
+    formData.append('bonus', bonusInput.value);
+
+    if (selectedCampFile) formData.append('camp_file', selectedCampFile);
+    if (selectedFolhaFile) formData.append('folha_file', selectedFolhaFile);
+    if (selectedPeFile) formData.append('pe_file', selectedPeFile);
+
+    if (colaboradoresObjetiva && colaboradoresObjetiva.length > 0) {
+      formData.append('colaboradores', JSON.stringify(colaboradoresObjetiva));
+    }
+    if (faltasAssiduidadeMap && Object.keys(faltasAssiduidadeMap).length > 0) {
+      formData.append('faltas_assiduidade', JSON.stringify(faltasAssiduidadeMap));
+    }
+    if (campanhaSalvaMap && Object.keys(campanhaSalvaMap).length > 0) {
+      formData.append('campanha_salva', JSON.stringify(campanhaSalvaMap));
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
     const res = await fetch(getApiUrl('/api/process'), {
       method: 'POST',
-      body: formData
+      body: formData,
+      signal: controller.signal
     });
-    const json = await res.json();
+    clearTimeout(timeoutId);
 
+    const json = await res.json();
     if (json.success) {
       const data = json.data;
       allPromotores = data.promotores;
-      
-      // Atualiza períodos ativos se retornados pelo backend
       if (data.metrics && data.metrics.periods && data.metrics.periods.length > 0) {
-        activeCampaignPeriods = data.metrics.periods.map((name, idx) => ({
-          id: idx + 1,
-          name: name
-        }));
+        activeCampaignPeriods = data.metrics.periods.map((name, idx) => ({ id: idx + 1, name: name }));
       }
-
       updateMetrics(data.metrics);
       applyFilters();
-
       btnDownloadCampanha.disabled = false;
       btnExportAudit.disabled = false;
       if (btnSalvarSupabase) btnSalvarSupabase.disabled = false;
       showToast("Campanha processada com reconhecimento de faltas e modo incremental!", "success");
-    } else {
-      showToast("Erro ao processar: " + (json.error || "Erro desconhecido"), "danger", 5000);
+      return;
     }
+  } catch (backendErr) {
+    console.log("Backend Flask não respondeu ou em espera. Acionando motor de processamento no cliente...", backendErr);
+  }
+
+  // 2. Fallback de alta performance diretamente no cliente com SheetJS
+  try {
+    await executarProcessamentoClienteComSheetJS();
   } catch (err) {
-    console.warn("Backend local não respondeu, acionando motor direto no cliente...", err);
-    // Fallback gracioso no cliente
-    executarProcessamentoCliente();
+    console.error("Erro no processamento cliente:", err);
+    showToast("Erro ao processar: " + err.message, "danger");
   } finally {
     btnProcess.classList.remove('is-loading');
     btnProcess.disabled = false;
@@ -716,57 +873,138 @@ async function processScores() {
   }
 }
 
-// Fallback no cliente se o servidor Flask não estiver ativo
-function executarProcessamentoCliente() {
-  if (colaboradoresObjetiva.length > 0) {
-    allPromotores = colaboradoresObjetiva.map(c => {
-      const nomeClean = c.nome.toUpperCase().trim();
-      const faltas = (faltasAssiduidadeMap[nomeClean] || []).length;
-      const ptsAssid = -50 * faltas;
-      const saved = campanhaSalvaMap[nomeClean];
+// Processador no cliente com suporte a leitura de planilhas .xlsx e .csv
+async function executarProcessamentoClienteComSheetJS() {
+  // Se o usuário selecionou uma nova planilha de Campanha (.xlsx)
+  if (selectedCampFile && typeof XLSX !== 'undefined') {
+    const parsed = await parseCampanhaComSheetJS(selectedCampFile);
+    if (parsed && parsed.length > 0) {
+      allPromotores = parsed;
+    }
+  }
 
-      const periodos = activeCampaignPeriods.map(p => ({
-        period_id: p.id,
-        period_name: p.name,
-        faltas: faltas,
-        pontos_assiduidade: ptsAssid,
-        dias_trabalhados: 6,
-        dias_pontuais: 6,
-        pontos_pontualidade_total: 6,
-        ganhou_bonus: false,
-        efetividade: 100,
-        ilha: saved ? (saved.ilha || 0) : 0,
-        meia_ilha: saved ? (saved.meia_ilha || 0) : 0,
-        ponta: saved ? (saved.ponta || 0) : 0,
-        meia_ponta: saved ? (saved.meia_ponta || 0) : 0,
-        total_periodo: ptsAssid + 6 + (saved ? (saved.pontos_extras || 0) : 0)
-      }));
+  // Aplica faltas oficiais de tb_assiduidade
+  aplicarFaltasEmAllPromotores();
 
-      return {
-        nome: c.nome,
-        projeto: c.projeto,
-        equipe: c.equipe,
-        cargo: c.cargo,
-        contrato: 'Contrato CLT',
-        status: 'OK',
-        pontos_extras: saved ? (saved.pontos_extras || 0) : 0,
-        periodos: periodos
-      };
+  // Aplica dados previamente salvos (modo incremental)
+  if (campanhaSalvaMap && Object.keys(campanhaSalvaMap).length > 0) {
+    allPromotores.forEach(prom => {
+      const saved = campanhaSalvaMap[prom.nome];
+      if (saved && saved.periodos && saved.periodos.length > 0) {
+        // Preserva períodos que já tinham sido salvos
+        saved.periodos.forEach(savedPer => {
+          const pObj = prom.periodos.find(x => x.period_id === savedPer.period_id || x.period_name === savedPer.period_name);
+          if (pObj && (savedPer.pontos_assiduidade !== 0 || savedPer.ilha > 0 || savedPer.ponta > 0)) {
+            Object.assign(pObj, savedPer);
+          }
+        });
+      }
     });
+  }
 
-    applyFilters();
-    showToast("Dados processados localmente com faltas reconhecidas da tb_assiduidade!", "success");
-  } else {
-    showToast("Conecte ao backend ou carregue a base de colaboradores para processar.", "danger");
+  updateMetrics();
+  applyFilters();
+
+  btnDownloadCampanha.disabled = false;
+  if (btnSalvarSupabase) btnSalvarSupabase.disabled = false;
+  showToast("✓ Planilhas reconhecidas e processadas no cliente com sucesso!", "success");
+}
+
+async function parseCampanhaComSheetJS(file) {
+  try {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const sheetName = wb.SheetNames.includes('Ativos') ? 'Ativos' : wb.SheetNames[0];
+    const ws = wb.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    if (!data || data.length < 3) return null;
+
+    const list = [];
+    for (let r = 2; r < data.length; r++) {
+      const row = data[r];
+      if (!row || !row[0] || !String(row[0]).trim()) continue;
+      const nome = String(row[0]).trim().toUpperCase();
+      const projeto = String(row[1] || 'COMPARTILHADO').trim().toUpperCase();
+      const equipe = String(row[2] || 'COMPARTILHADO').trim().toUpperCase();
+
+      const periodos = activeCampaignPeriods.map((p, idx) => {
+        const colStart = 3 + (idx * 8);
+        const assid = Number(row[colStart]) || 0;
+        const efet = Number(row[colStart + 1]) || 100;
+        const pont = Number(row[colStart + 2]) || 0;
+        const ilha = Number(row[colStart + 3]) || 0;
+        const meiaIlha = Number(row[colStart + 4]) || 0;
+        const ponta = Number(row[colStart + 5]) || 0;
+        const meiaPonta = Number(row[colStart + 6]) || 0;
+        const tot = Number(row[colStart + 7]) || (assid + pont + ilha + meiaIlha + ponta + meiaPonta);
+
+        return {
+          period_id: p.id,
+          period_name: p.name,
+          pontos_assiduidade: assid,
+          efetividade: efet,
+          pontos_pontualidade_total: pont,
+          dias_pontuais: pont,
+          dias_trabalhados: 6,
+          faltas: assid < 0 ? Math.abs(Math.round(assid / 50)) : 0,
+          ilha, meia_ilha: meiaIlha, ponta, meia_ponta: meiaPonta,
+          total_periodo: tot,
+          ganhou_bonus: false
+        };
+      });
+
+      list.push({
+        nome,
+        projeto,
+        equipe,
+        cargo: 'PROMOTOR',
+        contrato: 'ATIVO',
+        status: 'OK',
+        sem_contrato: false,
+        pontos_extras: periodos.reduce((acc, per) => acc + per.ilha + per.meia_ilha + per.ponta + per.meia_ponta, 0),
+        periodos
+      });
+    }
+    return list;
+  } catch (e) {
+    console.warn("Erro ao fazer parse de campanha com SheetJS:", e);
+    return null;
   }
 }
 
 function updateMetrics(metrics) {
-  valTotalProm.textContent = metrics.total_promotores;
-  valTotalFaltas.textContent = metrics.total_faltas;
-  valTotalAssidPts.textContent = `${metrics.total_faltas * -50} pontos deduzidos no mês`;
-  valTotalPont.textContent = `+${metrics.total_pontos_pontualidade} pts`;
-  valPromBonus.textContent = metrics.promotores_com_bonus;
+  if (!metrics) {
+    const totalProm = allPromotores.length;
+    let totalFaltas = 0;
+    let totalPont = 0;
+    let promBonus = 0;
+    let semContrato = 0;
+
+    allPromotores.forEach(p => {
+      if (p.sem_contrato) semContrato++;
+      if (p.periodos) {
+        p.periodos.forEach(per => {
+          totalFaltas += (per.faltas || 0);
+          totalPont += (per.pontos_pontualidade_total || 0);
+          if (per.ganhou_bonus) promBonus++;
+        });
+      }
+    });
+
+    metrics = {
+      total_promotores: totalProm,
+      total_faltas: totalFaltas,
+      total_pontos_pontualidade: totalPont,
+      promotores_com_bonus: promBonus,
+      total_sem_contrato: semContrato
+    };
+  }
+
+  if (valTotalProm) valTotalProm.textContent = metrics.total_promotores;
+  if (valTotalFaltas) valTotalFaltas.textContent = metrics.total_faltas;
+  if (valTotalAssidPts) valTotalAssidPts.textContent = `${(metrics.total_faltas || 0) * -50} pontos deduzidos no mês`;
+  if (valTotalPont) valTotalPont.textContent = `+${metrics.total_pontos_pontualidade || 0} pts`;
+  if (valPromBonus) valPromBonus.textContent = metrics.promotores_com_bonus || 0;
   if (valSemContrato) valSemContrato.textContent = metrics.total_sem_contrato || 0;
 }
 
@@ -1092,7 +1330,8 @@ async function salvarCampanhaNoSupabase() {
     return;
   }
 
-  if (!window.supabase) {
+  const sb = await ensureSupabase();
+  if (!sb) {
     showToast("Cliente Supabase não inicializado. Verifique sua conexão.", "danger");
     return;
   }
@@ -1131,7 +1370,7 @@ async function salvarCampanhaNoSupabase() {
       };
     });
 
-    const { error } = await window.supabase
+    const { error } = await sb
       .from('tb_campanha_colaboradores')
       .upsert(registros, { onConflict: 'nome,mes_referencia' });
 
@@ -1156,7 +1395,10 @@ async function salvarCampanhaNoSupabase() {
 
 async function loadPontosExtrasData() {
   try {
-    const res = await fetch(getApiUrl('/api/pontos-extras'));
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+    const res = await fetch(getApiUrl('/api/pontos-extras'), { signal: controller.signal });
+    clearTimeout(timeoutId);
     const json = await res.json();
 
     if (json.success) {
@@ -1168,21 +1410,22 @@ async function loadPontosExtrasData() {
       populatePeFilters();
       renderPeCards();
 
-      // Atualiza badge de pendentes na aba
       if (tabPeBadge) {
         tabPeBadge.textContent = `${peStats.pendentes || 0} pendentes`;
       }
+      return;
     }
   } catch (err) {
-    console.warn("Backend de pontos extras não respondeu, tentando buscar de tb_campanha_pontos_extras no Supabase...");
-    carregarPontosExtrasDoSupabase();
+    // Backend offline ou timeout - busca direto no Supabase
   }
+  await carregarPontosExtrasDoSupabase();
 }
 
 async function carregarPontosExtrasDoSupabase() {
-  if (!window.supabase) return;
+  const sb = await ensureSupabase();
+  if (!sb) return;
   try {
-    const { data, error } = await window.supabase
+    const { data, error } = await sb
       .from('tb_campanha_pontos_extras')
       .select('*')
       .order('created_at', { ascending: false });
@@ -1520,9 +1763,10 @@ async function saveCardApproval(taskId, showToastMsg = true) {
   };
 
   // Salva no Supabase se disponível
-  if (window.supabase) {
+  const sb = await ensureSupabase();
+  if (sb) {
     try {
-      await window.supabase
+      await sb
         .from('tb_campanha_pontos_extras')
         .upsert([{
           task_id: taskId,
