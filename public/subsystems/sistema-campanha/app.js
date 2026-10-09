@@ -1989,8 +1989,13 @@ window.togglePeGroupBody = function(bodyId, headerEl) {
   }
 };
 
-window.aprovarTodasDaLoja = async function(lojaName, btnEl) {
-  const tasks = allPeRecords.filter(r => r.pdv === lojaName && r.status === 'PENDENTE');
+window.aprovarTodasDaLoja = async function(lojaName, promName, pName, btnEl) {
+  const tasks = allPeRecords.filter(r => 
+    r.pdv === lojaName && 
+    (!promName || r.promotor_campanha === promName || r.promotor_csv === promName) &&
+    (!pName || r.periodo === pName) &&
+    r.status === 'PENDENTE'
+  );
   if (tasks.length === 0) {
     showToast(`Todas as tarefas da loja "${lojaName}" já foram avaliadas.`, 'info');
     return;
@@ -2157,13 +2162,14 @@ function renderPeCards() {
           <div class="pe-group-loja-header">
             <div class="pe-group-loja-name-wrap">
               <span class="pe-loja-icon">🏪</span>
-              <span>${escapeHtml(lojaName)}</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(${tasksDaLoja.length} tarefa${tasksDaLoja.length > 1 ? 's' : ''})</span>
+              <span class="pe-loja-title">${escapeHtml(lojaName)}</span>
+              <span class="pe-loja-period-badge">📅 ${escapeHtml(pName)}</span>
+              <span class="pe-loja-count">(${tasksDaLoja.length} tarefa${tasksDaLoja.length > 1 ? 's' : ''})</span>
             </div>
             <div class="pe-group-loja-actions">
-              <button type="button" class="btn-aprovar-loja" onclick="aprovarTodasDaLoja('${lojaName.replace(/'/g, "\\'")}', this)">
+              <button type="button" class="btn-aprovar-loja" onclick="aprovarTodasDaLoja('${lojaName.replace(/'/g, "\\'")}', '${promName.replace(/'/g, "\\'")}', '${pName.replace(/'/g, "\\'")}', this)">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Aprovar todas desta loja (${tasksDaLoja.length})
+                Aprovar loja (${tasksDaLoja.length})
               </button>
             </div>
           </div>
