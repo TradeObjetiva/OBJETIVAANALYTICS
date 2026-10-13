@@ -1119,7 +1119,7 @@ const TIPO_PARA_CAMPO_EXTRA = {
   'MEIA_PONTA': 'meia_ponta'
 };
 
-function defaultConquistas(tipo = 'ILHA', criativo = false) {
+function defaultConquistas(tipo = null, criativo = false) {
   const c = {
     ilha: { qtd: 0, criativo: 0 },
     meia_ilha: { qtd: 0, criativo: 0 },
@@ -1127,7 +1127,7 @@ function defaultConquistas(tipo = 'ILHA', criativo = false) {
     meia_ponta: { qtd: 0, criativo: 0 }
   };
   const key = (tipo || '').toLowerCase();
-  if (c[key]) {
+  if (key && c[key]) {
     c[key].qtd = 1;
     c[key].criativo = criativo ? 1 : 0;
   }
@@ -1796,7 +1796,10 @@ async function carregarPontosExtrasDoSupabase() {
         promotor_csv: d.promotor,
         pdv: d.pdv || '',
         data: d.data_registro || '',
-        tipo: d.tipo_conquista || 'ILHA',
+        tipo: d.tipo_conquista || '',
+        conquistas: (d.tipo_conquista && d.tipo_conquista.trim().startsWith('{')) ? 
+          parseConquistas(d.tipo_conquista) : 
+          (d.status_curadoria === 'APROVADO' && d.tipo_conquista ? parseConquistas(d.tipo_conquista, d.criativo) : null),
         criativo: Boolean(d.criativo),
         pontos: d.pontos || 0,
         status: d.status_curadoria || 'PENDENTE',
@@ -1995,7 +1998,8 @@ async function processarArquivoPeUpload(file) {
           atividade: atividadeRaw,
           fotos: [...fotosLinha],
           status: 'PENDENTE',
-          tipo: 'ILHA',
+          tipo: '',
+          conquistas: defaultConquistas(null),
           criativo: false,
           periodo: perNome,
           motivo: '',
@@ -2372,14 +2376,19 @@ function createPeStoreCardElement(pName, promName, lojaName, tasksDaLoja) {
   const currentObs = curatedTask.motivo || '';
 
   // Conquistas múltiplas no período (Ilha, Meia Ilha, Ponta, Meia Ponta)
-  let currentConquistas = curatedTask.conquistas ? 
-    parseConquistas(curatedTask.conquistas) : 
-    parseConquistas(curatedTask.tipo, curatedTask.criativo);
+  // Regra fundamental: registros PENDENTES sempre abrem sem preenchimento (zerados) para o usuário preencher manualmente!
+  let currentConquistas = null;
+  if (currentStatus === 'APROVADO' || currentStatus === 'REJEITADO') {
+    if (curatedTask.conquistas) {
+      currentConquistas = parseConquistas(curatedTask.conquistas);
+    } else if (curatedTask.tipo) {
+      currentConquistas = parseConquistas(curatedTask.tipo, curatedTask.criativo);
+    }
+  }
 
-  // Se for nova e não tiver nada selecionado, sugerir 1 Ilha
-  const ptsCheck = calculateConquestPoints(currentConquistas);
-  if (ptsCheck.totalQtd === 0 && !curatedTask.status) {
-    currentConquistas.ilha.qtd = 1;
+  // Se for pendente ou novo, garante que venha 100% zerado
+  if (!currentConquistas) {
+    currentConquistas = defaultConquistas(null);
   }
 
   const conquestResult = calculateConquestPoints(currentConquistas);
@@ -2496,7 +2505,9 @@ function createPeStoreCardElement(pName, promName, lojaName, tasksDaLoja) {
     ptsPillText = `0 pts (Rejeitado)`;
     ptsPillClass = 'is-rejected';
   } else {
-    ptsPillText = `0 pts (Pendente • Prev: ${conquestResult.total} pts)`;
+    ptsPillText = conquestResult.total > 0 ? 
+      `0 pts (Pendente • Prev: ${conquestResult.total} pts)` : 
+      `0 pts (Pendente)`;
     ptsPillClass = 'is-pending';
   }
 
@@ -2710,7 +2721,9 @@ window.updateStoreCardConquestView = function(storeIdSafe) {
       pill.textContent = `0 pts (Rejeitado)`;
       pill.className = `pe-pts-pill is-rejected`;
     } else {
-      pill.textContent = `0 pts (Pendente • Prev: ${conquestResult.total} pts)`;
+      pill.textContent = conquestResult.total > 0 ? 
+        `0 pts (Pendente • Prev: ${conquestResult.total} pts)` : 
+        `0 pts (Pendente)`;
       pill.className = `pe-pts-pill is-pending`;
     }
   }
@@ -2771,7 +2784,11 @@ window.setStoreStatus = function(storeIdSafe, newStatus) {
     showToast(`Loja marcada como REJEITADA. Pontuação zerada para este período.`, 'warning');
   } else if (newStatus === 'APROVADO') {
     const conquestResult = calculateConquestPoints(entry.conquistas);
-    showToast(`Loja APROVADA com +${conquestResult.total} pts no período.`, 'potencia');
+    if (conquestResult.totalQtd === 0) {
+      showToast(`Atenção: defina ao menos 1 conquista (+ em Ilha, Ponta, etc.) para pontuar a loja!`, 'warning');
+    } else {
+      showToast(`Loja APROVADA com +${conquestResult.total} pts no período.`, 'potencia');
+    }
   }
 };
 
