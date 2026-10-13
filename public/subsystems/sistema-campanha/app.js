@@ -940,7 +940,11 @@ async function processScores() {
       const data = json.data;
       allPromotores = data.promotores;
       if (data.metrics && data.metrics.periods && data.metrics.periods.length > 0) {
-        activeCampaignPeriods = data.metrics.periods.map((name, idx) => ({ id: idx + 1, name: name }));
+        // Preserva start/end do calendário oficial (necessários para localizar o período pela data)
+        activeCampaignPeriods = data.metrics.periods.map((name, idx) => {
+          const ref = CAMPANHA_PERIODOS_PADRAO.find(p => p.name === name) || CAMPANHA_PERIODOS_PADRAO[idx] || {};
+          return { id: idx + 1, name: name, start: ref.start, end: ref.end };
+        });
       }
       updateMetrics(data.metrics);
       applyFilters();
@@ -1186,23 +1190,52 @@ function calculateConquestPoints(conquistas) {
 }
 
 function normalizarDataParaISO(valor) {
-  if (!valor) return '';
+  if (valor === null || valor === undefined || valor === '') return '';
+  // Objeto Date
+  if (valor instanceof Date && !isNaN(valor)) {
+    return `${valor.getFullYear()}-${String(valor.getMonth() + 1).padStart(2, '0')}-${String(valor.getDate()).padStart(2, '0')}`;
+  }
   const s = String(valor).trim();
-  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  // 1. YYYY-MM-DD (com ou sem hora)
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  // 2. Com barras: DD/MM/YYYY (padrão BR) ou M/D/YY (padrão americano do SheetJS)
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) {
+    const p1 = parseInt(m[1], 10);
+    const p2 = parseInt(m[2], 10);
+    let y = parseInt(m[3], 10);
+    if (y < 100) y += 2000;
+    let dia, mes;
+    if (p1 > 12) { dia = p1; mes = p2; }
+    else if (p2 > 12) { mes = p1; dia = p2; }
+    else if (m[3].length === 2) { mes = p1; dia = p2; } // SheetJS: m/d/yy
+    else { dia = p1; mes = p2; } // BR: dd/mm/yyyy
+    return `${y}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+  }
+  // 3. Número serial do Excel
+  if (/^\d{5}(\.\d+)?$/.test(s)) {
+    const d = new Date(Math.round((parseFloat(s) - 25569) * 86400 * 1000));
+    return d.toISOString().slice(0, 10);
+  }
   return '';
 }
 
+// Localiza o período oficial da campanha a partir de uma data ISO
+function periodoPorDataISO(iso) {
+  if (!iso) return null;
+  return activeCampaignPeriods.find(p => p.start && p.end && iso >= p.start && iso <= p.end)
+    || CAMPANHA_PERIODOS_PADRAO.find(p => iso >= p.start && iso <= p.end)
+    || null;
+}
+
 function localizarPeriodoDoRegistro(rec) {
+  // 1. A data real de execução da tarefa é a fonte da verdade
+  const per = periodoPorDataISO(normalizarDataParaISO(rec.data || rec.data_registro));
+  if (per) return per;
+  // 2. Fallback: nome do período salvo
   if (rec.periodo) {
-    const porNome = activeCampaignPeriods.find(p => p.name === rec.periodo);
-    if (porNome) return porNome;
-  }
-  const iso = normalizarDataParaISO(rec.data);
-  if (iso) {
-    return activeCampaignPeriods.find(p => p.start && p.end && iso >= p.start && iso <= p.end) || null;
+    return activeCampaignPeriods.find(p => p.name === rec.periodo) || null;
   }
   return null;
 }
@@ -1708,6 +1741,10 @@ async function loadPontosExtrasData() {
 
     if (json.success) {
       allPeRecords = (json.records || []).filter(r => r.fotos && Array.isArray(r.fotos) && r.fotos.length > 0);
+      allPeRecords.forEach(r => {
+        const per = periodoPorDataISO(normalizarDataParaISO(r.data));
+        if (per) r.periodo = per.name;
+      });
       pePeriods = json.periods || [];
       peStats = json.stats || {};
 
@@ -1751,7 +1788,7 @@ async function carregarPontosExtrasDoSupabase() {
         status: d.status_curadoria || 'PENDENTE',
         motivo: d.motivo_rejeicao || '',
         fotos: d.fotos || [],
-        periodo: d.periodo_nome || '27/08 A 03/09',
+        periodo: (periodoPorDataISO(normalizarDataParaISO(d.data_registro)) || {}).name || d.periodo_nome || '27/08 A 03/09',
         matched: true
       }));
 
@@ -1831,7 +1868,9 @@ async function processarArquivoPeUpload(file) {
   try {
     const buffer = await file.arrayBuffer();
     // SheetJS com suporte universal a XLSX, XLS e CSV (com separador ; ou ,)
-    const workbook = XLSX.read(buffer, { type: 'array', codepage: 65001 });
+    // raw:true em CSV mantém as datas como texto ("2026-09-15 08:00:00"), evitando conversão para m/d/yy
+    const isCsv = /\.csv$/i.test(file.name || '');
+    const workbook = XLSX.read(buffer, { type: 'array', codepage: 65001, raw: isCsv });
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
     const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
@@ -1923,12 +1962,12 @@ async function processarArquivoPeUpload(file) {
 
       if (!parsedTasksMap[taskId]) {
         // Encontra período correspondente pela data da tarefa
-        let perNome = '27/08 A 03/09';
-        const iso = normalizarDataParaISO(dataRaw);
-        if (iso) {
-          const pMatch = activeCampaignPeriods.find(p => p.start && p.end && iso >= p.start && iso <= p.end);
-          if (pMatch) perNome = pMatch.name;
+        const pMatch = periodoPorDataISO(normalizarDataParaISO(dataRaw));
+        if (!pMatch) {
+          // Data fora do calendário da campanha (27/08 a 19/12) - ignora a tarefa
+          continue;
         }
+        const perNome = pMatch.name;
 
         const matchedProm = encontrarPromotorCampanha(promotorRaw);
 
@@ -1976,7 +2015,7 @@ async function processarArquivoPeUpload(file) {
         novo.status = anterior.status;
         novo.tipo = anterior.tipo;
         novo.criativo = anterior.criativo;
-        novo.periodo = anterior.periodo || novo.periodo;
+        // Mantém o período calculado pela data real (corrige registros antigos gravados no período errado)
         novo.motivo = anterior.motivo;
         novo.pontos = anterior.pontos;
         anterior.fotos.forEach(f => {
