@@ -1265,46 +1265,57 @@ function aplicarPontosExtrasAprovados() {
     if (!aprovadosMap[nome]) aprovadosMap[nome] = {};
     if (!aprovadosMap[nome][per.id]) aprovadosMap[nome][per.id] = { ilha: 0, meia_ilha: 0, ponta: 0, meia_ponta: 0 };
 
-    if (rec.conquistas) {
-      const { byTipo } = calculateConquestPoints(rec.conquistas);
-      aprovadosMap[nome][per.id].ilha += byTipo.ilha;
-      aprovadosMap[nome][per.id].meia_ilha += byTipo.meia_ilha;
-      aprovadosMap[nome][per.id].ponta += byTipo.ponta;
-      aprovadosMap[nome][per.id].meia_ponta += byTipo.meia_ponta;
-    } else {
-      const campo = TIPO_PARA_CAMPO_EXTRA[rec.tipo];
-      if (campo) {
-        const pts = calculateLocalPoints(rec.tipo, rec.criativo);
-        aprovadosMap[nome][per.id][campo] += pts;
-      }
+    let conquistasObj = rec.conquistas;
+    if (typeof conquistasObj === 'string') {
+      try { conquistasObj = JSON.parse(conquistasObj); } catch(e) { conquistasObj = null; }
+    }
+    if (!conquistasObj && rec.tipo) {
+      conquistasObj = parseConquistas(rec.tipo, rec.criativo);
+    }
+
+    if (conquistasObj) {
+      const { byTipo } = calculateConquestPoints(conquistasObj);
+      aprovadosMap[nome][per.id].ilha += (byTipo.ilha || 0);
+      aprovadosMap[nome][per.id].meia_ilha += (byTipo.meia_ilha || 0);
+      aprovadosMap[nome][per.id].ponta += (byTipo.ponta || 0);
+      aprovadosMap[nome][per.id].meia_ponta += (byTipo.meia_ponta || 0);
     }
   });
 
-  // 2. Preserva os pontos da base (planilha/banco) e SOMA os pontos curados/aprovados
+  // 2. Aplica na matriz de colaboradores os pontos curados/aprovados de forma exata e idempotente
+  const hasCuradoria = allPeRecords && allPeRecords.length > 0;
+
   allPromotores.forEach(prom => {
     const nome = String(prom.nome || '').trim().toUpperCase();
     const doPromotor = aprovadosMap[nome] || {};
     let totalExtras = 0;
 
-    // Busca dados originais na base window.CAMPANHA_BASE_DATA para não perder os pontos da planilha
     const baseProm = (window.CAMPANHA_BASE_DATA || []).find(b => String(b.nome || '').trim().toUpperCase() === nome);
 
     (prom.periodos || []).forEach(per => {
       const ref = activeCampaignPeriods.find(p => p.id === per.period_id || p.name === per.period_name);
       const basePer = baseProm && (baseProm.periodos || []).find(p => p.period_id === per.period_id || p.period_name === per.period_name);
 
-      const baseIlha = (basePer && Number(basePer.ilha)) || (Number(per.ilha) || 0);
-      const baseMeiaIlha = (basePer && Number(basePer.meia_ilha)) || (Number(per.meia_ilha) || 0);
-      const basePonta = (basePer && Number(basePer.ponta)) || (Number(per.ponta) || 0);
-      const baseMeiaPonta = (basePer && Number(basePer.meia_ponta)) || (Number(per.meia_ponta) || 0);
+      const baseIlha = basePer ? (Number(basePer.ilha) || 0) : 0;
+      const baseMeiaIlha = basePer ? (Number(basePer.meia_ilha) || 0) : 0;
+      const basePonta = basePer ? (Number(basePer.ponta) || 0) : 0;
+      const baseMeiaPonta = basePer ? (Number(basePer.meia_ponta) || 0) : 0;
 
       const ext = (ref && doPromotor[ref.id]) || { ilha: 0, meia_ilha: 0, ponta: 0, meia_ponta: 0 };
 
-      // Mantém os pontos conquistados na planilha e soma novas aprovações de curadoria
-      per.ilha = baseIlha + ext.ilha;
-      per.meia_ilha = baseMeiaIlha + ext.meia_ilha;
-      per.ponta = basePonta + ext.ponta;
-      per.meia_ponta = baseMeiaPonta + ext.meia_ponta;
+      // Se há curadoria carregada, os pontos aprovados da curadoria são atribuídos diretamente
+      // (NUNCA somar sobre per.ilha diretamente para evitar acumulação em cada renderização!)
+      if (hasCuradoria) {
+        per.ilha = ext.ilha;
+        per.meia_ilha = ext.meia_ilha;
+        per.ponta = ext.ponta;
+        per.meia_ponta = ext.meia_ponta;
+      } else {
+        per.ilha = baseIlha;
+        per.meia_ilha = baseMeiaIlha;
+        per.ponta = basePonta;
+        per.meia_ponta = baseMeiaPonta;
+      }
 
       const extras = per.ilha + per.meia_ilha + per.ponta + per.meia_ponta;
       totalExtras += extras;
@@ -1315,6 +1326,9 @@ function aplicarPontosExtrasAprovados() {
     });
 
     prom.pontos_extras = totalExtras;
+    const assidTotal = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_assiduidade || 0), 0);
+    const pontTotal = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_pontualidade_total || 0), 0);
+    prom.pontos_total_geral = assidTotal + pontTotal + totalExtras;
   });
 }
 
