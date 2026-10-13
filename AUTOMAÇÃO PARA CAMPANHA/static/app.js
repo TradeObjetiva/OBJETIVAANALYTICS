@@ -715,19 +715,36 @@ function aplicarFaltasEmAllPromotores() {
     const faltasDates = faltasAssiduidadeMap[nomeClean];
     if (!faltasDates || faltasDates.length === 0) return;
 
-    faltasDates.forEach(dateStr => {
-      const per = activeCampaignPeriods.find(p => dateStr >= p.start && dateStr <= p.end);
-      if (per) {
-        const pObj = (prom.periodos || []).find(x => x.period_id === per.id || x.period_name === per.name);
-        if (pObj) {
-          pObj.faltas = (pObj.faltas || 0) + 1;
-          pObj.pontos_assiduidade = -50 * pObj.faltas;
-          pObj.ganhou_bonus = false;
-          const extras = (pObj.ilha || 0) + (pObj.meia_ilha || 0) + (pObj.ponta || 0) + (pObj.meia_ponta || 0);
-          pObj.total_periodo = pObj.pontos_assiduidade + (pObj.pontos_pontualidade_total || 0) + extras;
-        }
+    // Normaliza todas as datas de faltas para o formato ISO YYYY-MM-DD
+    const isoFaltasDates = faltasDates.map(d => normalizarDataParaISO(d)).filter(Boolean);
+
+    // Itera por cada período da campanha e conta estritamente as faltas que ocorreram dentro dele
+    activeCampaignPeriods.forEach(per => {
+      const pObj = (prom.periodos || []).find(x => x.period_id === per.id || x.period_name === per.name);
+      if (!pObj) return;
+
+      const faltasNoPeriodo = isoFaltasDates.filter(d => d >= per.start && d <= per.end).length;
+      
+      // Define a contagem exata de faltas dentro do período
+      pObj.faltas = faltasNoPeriodo;
+      pObj.pontos_assiduidade = -50 * faltasNoPeriodo;
+      if (faltasNoPeriodo > 0) {
+        pObj.ganhou_bonus = false;
+        const diasTrabEsperados = pObj.dias_trabalhados || 6;
+        pObj.efetividade = Math.max(0, Math.round(((diasTrabEsperados - faltasNoPeriodo) / diasTrabEsperados) * 100));
+      } else {
+        pObj.efetividade = 100;
       }
+      const extras = (pObj.ilha || 0) + (pObj.meia_ilha || 0) + (pObj.ponta || 0) + (pObj.meia_ponta || 0);
+      pObj.total_periodo = pObj.pontos_assiduidade + (pObj.pontos_pontualidade_total || 0) + extras;
     });
+
+    // Atualiza os totais consolidados do colaborador
+    prom.total_faltas = (prom.periodos || []).reduce((acc, p) => acc + (p.faltas || 0), 0);
+    prom.pontos_assiduidade = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_assiduidade || 0), 0);
+    const pontTotal = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_pontualidade_total || 0), 0);
+    const extrasTotal = prom.pontos_extras || 0;
+    prom.pontos_total_geral = prom.pontos_assiduidade + pontTotal + extrasTotal;
   });
 }
 
@@ -1133,28 +1150,37 @@ function parseConquistas(rawTipo, criativo = false) {
 
 function calculateConquestPoints(conquistas) {
   if (!conquistas) {
-    return { total: 0, byTipo: { ilha: 0, meia_ilha: 0, ponta: 0, meia_ponta: 0 } };
+    return { total: 0, totalQtd: 0, totalCriativos: 0, byTipo: { ilha: 0, meia_ilha: 0, ponta: 0, meia_ponta: 0 } };
   }
   const calcForType = (item, base) => {
-    if (!item) return 0;
+    if (!item) return { pts: 0, qtd: 0, criativo: 0 };
     const qtd = Math.max(0, Number(item.qtd) || 0);
     const criativo = Math.max(0, Math.min(qtd, Number(item.criativo) || 0));
     const normal = qtd - criativo;
-    return (normal * base) + (criativo * base * 2);
+    return {
+      pts: (normal * base) + (criativo * base * 2),
+      qtd,
+      criativo
+    };
   };
 
-  const ptsIlha = calcForType(conquistas.ilha, 50);
-  const ptsMeiaIlha = calcForType(conquistas.meia_ilha, 25);
-  const ptsPonta = calcForType(conquistas.ponta, 30);
-  const ptsMeiaPonta = calcForType(conquistas.meia_ponta, 15);
+  const cIlha = calcForType(conquistas.ilha, 50);
+  const cMeiaIlha = calcForType(conquistas.meia_ilha, 25);
+  const cPonta = calcForType(conquistas.ponta, 30);
+  const cMeiaPonta = calcForType(conquistas.meia_ponta, 15);
+
+  const totalQtd = cIlha.qtd + cMeiaIlha.qtd + cPonta.qtd + cMeiaPonta.qtd;
+  const totalCriativos = cIlha.criativo + cMeiaIlha.criativo + cPonta.criativo + cMeiaPonta.criativo;
 
   return {
-    total: ptsIlha + ptsMeiaIlha + ptsPonta + ptsMeiaPonta,
+    total: cIlha.pts + cMeiaIlha.pts + cPonta.pts + cMeiaPonta.pts,
+    totalQtd,
+    totalCriativos,
     byTipo: {
-      ilha: ptsIlha,
-      meia_ilha: ptsMeiaIlha,
-      ponta: ptsPonta,
-      meia_ponta: ptsMeiaPonta
+      ilha: cIlha.pts,
+      meia_ilha: cMeiaIlha.pts,
+      ponta: cPonta.pts,
+      meia_ponta: cMeiaPonta.pts
     }
   };
 }

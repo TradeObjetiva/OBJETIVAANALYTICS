@@ -276,22 +276,22 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 50,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
         "period_name": "27/08 A 03/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 1,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 0,
+        "total_periodo": -50,
         "ganhou_bonus": false
       },
       {
@@ -812,7 +812,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 210,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -823,11 +823,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 150,
+        "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 180,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -841,9 +841,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 30,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -1080,7 +1080,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 30,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -1125,9 +1125,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 30,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -1348,7 +1348,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 15,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -1362,8 +1362,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -1616,7 +1616,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 100,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -1627,11 +1627,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -2152,7 +2152,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 1300,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -2163,11 +2163,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 950,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 950,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -2179,11 +2179,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 250,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 250,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -2195,11 +2195,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -2420,7 +2420,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 130,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -2431,11 +2431,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 130,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -2688,7 +2688,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 195,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -2702,8 +2702,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 105,
-        "total_periodo": 105,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -2718,8 +2718,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 60,
-        "total_periodo": 60,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -2734,8 +2734,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -3224,7 +3224,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 365,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -3235,11 +3235,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
-        "meia_ilha": 25,
+        "ilha": 0,
+        "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 155,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -3251,11 +3251,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 130,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -3267,11 +3267,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 80,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -3492,7 +3492,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 135,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -3505,9 +3505,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
-        "meia_ponta": 30,
-        "total_periodo": 60,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -3521,9 +3521,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
-        "meia_ponta": 45,
-        "total_periodo": 75,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -4296,7 +4296,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 15,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -4310,8 +4310,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -4832,7 +4832,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 2390,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -4843,11 +4843,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 1230,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 1260,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -4859,11 +4859,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 800,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 815,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -4875,11 +4875,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 300,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 315,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -5100,7 +5100,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 100,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -5111,11 +5111,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -6172,7 +6172,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 45,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -6185,9 +6185,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
-        "meia_ponta": 15,
-        "total_periodo": 45,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -6440,7 +6440,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 300,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -6451,11 +6451,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -6467,11 +6467,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 200,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -6708,7 +6708,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 50,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -6719,11 +6719,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -6746,11 +6746,11 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 3,
         "period_name": "12/09 A 19/09",
         "pontos_assiduidade": -100,
-        "efetividade": 50,
+        "efetividade": 67,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
-        "faltas": 1,
+        "faltas": 2,
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
@@ -6976,7 +6976,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 335,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -6990,8 +6990,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -7004,10 +7004,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 25,
-        "ponta": 30,
+        "meia_ilha": 0,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 55,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -7019,11 +7019,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 250,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 250,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -7780,7 +7780,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 15,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -7794,8 +7794,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -8852,7 +8852,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 1100,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -8863,11 +8863,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 600,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 600,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -8879,11 +8879,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 300,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 300,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -8895,11 +8895,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 200,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9120,7 +9120,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 1200,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -9131,11 +9131,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 850,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 850,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9147,11 +9147,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 200,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9163,11 +9163,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 150,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 150,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9388,7 +9388,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 490,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -9402,8 +9402,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 310,
-        "total_periodo": 310,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9418,8 +9418,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 90,
-        "total_periodo": 90,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9434,8 +9434,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 90,
-        "total_periodo": 90,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9656,13 +9656,13 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 50,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
         "period_name": "27/08 A 03/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
@@ -9683,22 +9683,22 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
         "period_id": 3,
         "period_name": "12/09 A 19/09",
         "pontos_assiduidade": -100,
-        "efetividade": 50,
+        "efetividade": 67,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
-        "faltas": 1,
+        "faltas": 2,
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
@@ -9924,7 +9924,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 550,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -9935,11 +9935,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 400,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 400,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -9951,11 +9951,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 150,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 150,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -10214,7 +10214,7 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 2,
         "period_name": "04/09 A 11/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
@@ -10460,7 +10460,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 210,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -10473,9 +10473,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
-        "meia_ponta": 150,
-        "total_periodo": 180,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -10490,8 +10490,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -10506,8 +10506,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -10728,7 +10728,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 210,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -10739,11 +10739,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 150,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 165,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -10758,8 +10758,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -10774,8 +10774,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -10996,7 +10996,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 150,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -11010,8 +11010,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 90,
-        "total_periodo": 90,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -11026,8 +11026,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -11042,8 +11042,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -11264,22 +11264,22 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 745,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
         "period_name": "27/08 A 03/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 1,
-        "ilha": 300,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 90,
-        "total_periodo": 340,
+        "meia_ponta": 0,
+        "total_periodo": -50,
         "ganhou_bonus": false
       },
       {
@@ -11292,10 +11292,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 25,
-        "ponta": 120,
-        "meia_ponta": 45,
-        "total_periodo": 190,
+        "meia_ilha": 0,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -11307,11 +11307,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
-        "meia_ilha": 25,
-        "ponta": 30,
-        "meia_ponta": 60,
-        "total_periodo": 165,
+        "ilha": 0,
+        "meia_ilha": 0,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -11532,7 +11532,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 15,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -11561,9 +11561,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 15,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 15,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -11800,7 +11800,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 25,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -11828,10 +11828,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 25,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 25,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -12336,7 +12336,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 425,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -12347,11 +12347,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 150,
-        "meia_ilha": 25,
-        "ponta": 30,
-        "meia_ponta": 30,
-        "total_periodo": 235,
+        "ilha": 0,
+        "meia_ilha": 0,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -12363,11 +12363,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
-        "meia_ponta": 45,
-        "total_periodo": 175,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -12382,8 +12382,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -12872,7 +12872,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 155,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -12886,8 +12886,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 95,
-        "total_periodo": 95,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -12902,8 +12902,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -12918,8 +12918,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -13140,7 +13140,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 30,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -13154,8 +13154,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -13170,8 +13170,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -13676,7 +13676,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 45,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -13690,8 +13690,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -13706,8 +13706,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -14212,7 +14212,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 1965,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -14223,11 +14223,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 1550,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 1550,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -14239,11 +14239,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 350,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 365,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -14255,11 +14255,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -14748,7 +14748,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 50,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -14791,11 +14791,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -15022,7 +15022,7 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 1,
         "period_name": "27/08 A 03/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
@@ -15038,7 +15038,7 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 2,
         "period_name": "04/09 A 11/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
@@ -15552,7 +15552,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 30,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -15566,8 +15566,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -15582,8 +15582,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -15820,7 +15820,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 825,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -15831,11 +15831,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
-        "meia_ilha": 75,
+        "ilha": 0,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 275,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -15847,11 +15847,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 400,
-        "meia_ilha": 50,
+        "ilha": 0,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 450,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -15863,11 +15863,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16088,7 +16088,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 755,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -16099,11 +16099,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 350,
+        "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 380,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16115,11 +16115,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 250,
-        "meia_ilha": 25,
+        "ilha": 0,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 275,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16131,11 +16131,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16624,7 +16624,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 200,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -16635,11 +16635,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 150,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 150,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16651,11 +16651,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16892,7 +16892,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 1550,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -16903,11 +16903,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 900,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 900,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16919,11 +16919,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 450,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 450,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -16935,11 +16935,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 200,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -17466,7 +17466,7 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 3,
         "period_name": "12/09 A 19/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
@@ -17964,7 +17964,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 30,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -17978,8 +17978,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -18500,7 +18500,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 15,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -18514,8 +18514,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -18768,22 +18768,22 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 325,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
         "period_name": "27/08 A 03/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 1,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 45,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 195,
+        "total_periodo": -50,
         "ganhou_bonus": false
       },
       {
@@ -18795,11 +18795,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 80,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -19042,7 +19042,7 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 1,
         "period_name": "27/08 A 03/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
@@ -19572,7 +19572,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 50,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -19599,11 +19599,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -20376,7 +20376,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 450,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -20387,11 +20387,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 250,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 250,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -20403,11 +20403,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 200,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -20644,7 +20644,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 85,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -20656,10 +20656,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 25,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 25,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -20674,8 +20674,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 45,
-        "total_periodo": 45,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -20690,8 +20690,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21180,7 +21180,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 310,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -21191,11 +21191,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
-        "meia_ilha": 50,
-        "ponta": 90,
-        "meia_ponta": 60,
-        "total_periodo": 250,
+        "ilha": 0,
+        "meia_ilha": 0,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21209,9 +21209,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
-        "meia_ponta": 15,
-        "total_periodo": 45,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21226,8 +21226,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21448,7 +21448,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 350,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -21459,11 +21459,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 200,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21475,11 +21475,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21491,11 +21491,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21716,7 +21716,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 90,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -21729,9 +21729,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
-        "meia_ponta": 30,
-        "total_periodo": 60,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21746,8 +21746,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21762,8 +21762,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -21984,7 +21984,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 265,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -21995,11 +21995,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 215,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -22012,10 +22012,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 25,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 25,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -22028,10 +22028,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 25,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 25,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -22252,7 +22252,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 25,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -22264,10 +22264,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 25,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 25,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -22520,7 +22520,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 425,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -22531,11 +22531,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
-        "meia_ilha": 25,
-        "ponta": 30,
-        "meia_ponta": 165,
-        "total_periodo": 270,
+        "ilha": 0,
+        "meia_ilha": 0,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -22550,8 +22550,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 30,
-        "total_periodo": 30,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -22564,10 +22564,10 @@ window.CAMPANHA_BASE_DATA = [
         "dias_trabalhados": 6,
         "faltas": 0,
         "ilha": 0,
-        "meia_ilha": 50,
+        "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 75,
-        "total_periodo": 125,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -22794,11 +22794,11 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 1,
         "period_name": "27/08 A 03/09",
         "pontos_assiduidade": -100,
-        "efetividade": 50,
+        "efetividade": 67,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
-        "faltas": 1,
+        "faltas": 2,
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
@@ -23056,7 +23056,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 140,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -23067,11 +23067,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
-        "meia_ilha": 25,
+        "ilha": 0,
+        "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 125,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -23086,8 +23086,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -23324,7 +23324,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 50,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -23335,11 +23335,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -23592,7 +23592,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 100,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -23603,11 +23603,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -23619,11 +23619,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -23898,7 +23898,7 @@ window.CAMPANHA_BASE_DATA = [
         "period_id": 3,
         "period_name": "12/09 A 19/09",
         "pontos_assiduidade": -50,
-        "efetividade": 50,
+        "efetividade": 83,
         "pontos_pontualidade_total": 0,
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
@@ -24396,7 +24396,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 550,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -24407,11 +24407,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 250,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 250,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -24423,11 +24423,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 200,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 200,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -24439,11 +24439,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 100,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 100,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -24664,7 +24664,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 280,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -24675,11 +24675,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 250,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 250,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -24694,8 +24694,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -24710,8 +24710,8 @@ window.CAMPANHA_BASE_DATA = [
         "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
-        "meia_ponta": 15,
-        "total_periodo": 15,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -25736,7 +25736,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 285,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -25749,9 +25749,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 120,
-        "meia_ponta": 15,
-        "total_periodo": 135,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -25765,9 +25765,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 90,
-        "meia_ponta": 30,
-        "total_periodo": 120,
+        "ponta": 0,
+        "meia_ponta": 0,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -25781,9 +25781,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 30,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -26272,7 +26272,7 @@ window.CAMPANHA_BASE_DATA = [
     "contrato": "ATIVO",
     "status": "OK",
     "sem_contrato": false,
-    "pontos_extras": 80,
+    "pontos_extras": 0,
     "periodos": [
       {
         "period_id": 1,
@@ -26285,9 +26285,9 @@ window.CAMPANHA_BASE_DATA = [
         "faltas": 0,
         "ilha": 0,
         "meia_ilha": 0,
-        "ponta": 30,
+        "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 30,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
@@ -26315,11 +26315,11 @@ window.CAMPANHA_BASE_DATA = [
         "dias_pontuais": 0,
         "dias_trabalhados": 6,
         "faltas": 0,
-        "ilha": 50,
+        "ilha": 0,
         "meia_ilha": 0,
         "ponta": 0,
         "meia_ponta": 0,
-        "total_periodo": 50,
+        "total_periodo": 0,
         "ganhou_bonus": false
       },
       {
