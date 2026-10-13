@@ -2649,3 +2649,340 @@ select option {
   flex: 1;
 }
 
+/* ========================================================
+   CARD UNIFICADO DE LOJA NO PERÍODO (1 CARD POR LOJA)
+   ======================================================== */
+.pe-card.pe-store-card {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.pe-card.pe-store-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: var(--shadow-md);
+}
+
+.pe-store-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pe-loja-name {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.pe-store-badges-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pe-card-promotor-sub {
+  font-size: 0.88rem;
+  color: #ff6b00;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.pe-execs-info {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.pe-dates-info {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.pe-thumb-wrap {
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-block;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.pe-thumb-wrap .pe-thumb-mini {
+  display: block;
+}
+
+.pe-thumb-wrap.active .pe-thumb-mini {
+  border-color: var(--potencia);
+  box-shadow: 0 0 10px rgba(255, 107, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.pe-thumb-date-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================================
+   PAINEL DE MÚLTIPLAS CONQUISTAS POR PERÍODO (QUANTIDADES E BÔNUS UNITÁRIO)
+   ======================================================== */
+.pe-conquests-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  margin-top: 2px;
+}
+
+.pe-conquests-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.pe-cq-legend {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.pe-conquests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pe-conquest-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  transition: var(--transition);
+}
+
+.pe-conquest-item:hover {
+  border-color: var(--border-bright);
+}
+
+.pe-conquest-item.has-qty {
+  border-color: rgba(255, 107, 0, 0.35);
+  background: rgba(255, 107, 0, 0.04);
+}
+
+.pe-cq-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pe-cq-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pe-cq-title small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: normal;
+}
+
+.pe-cq-subtotal {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--potencia);
+  font-family: var(--font-mono, monospace);
+  background: rgba(255, 107, 0, 0.1);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 107, 0, 0.2);
+}
+
+.pe-cq-controls-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pe-stepper-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+  gap: 4px;
+}
+
+.pe-step-tag {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+
+.btn-step {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-step:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.pe-step-val {
+  min-width: 22px;
+  text-align: center;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Bônus criativo (dobro) individual */
+.pe-stepper-cr {
+  border-color: rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+}
+
+.pe-tag-cr {
+  color: #ff9800;
+}
+
+.btn-step-cr:hover {
+  background: #ff9800 !important;
+  color: #000 !important;
+  border-color: #ff9800 !important;
+}
+
+.pe-stepper-cr.active {
+  background: rgba(255, 152, 0, 0.15);
+  border-color: rgba(255, 152, 0, 0.5);
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.25);
+}
+
+.pe-stepper-cr.active .pe-val-cr {
+  color: #ff9800;
+  font-weight: 800;
+}
+
+.pe-stepper-cr.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Barra de Resumo das Conquistas */
+.pe-conquests-summary-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+}
+
+.pe-cq-summary-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-light);
+}
+
+.pe-cq-summary-info strong {
+  color: var(--text-main);
+}
+
+.pe-cq-cr-tag {
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 152, 0, 0.35);
+}
+
+/* Pills de status para pontuação */
+.pe-pts-pill.is-rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+  font-weight: 700;
+}
+
+.pe-pts-pill.is-pending {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+/* Estilo do card quando rejeitado */
+.pe-store-card.status-rejeitado {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.pe-store-card.status-rejeitado .pe-card-header {
+  border-bottom-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.04);
+}
+
+
+

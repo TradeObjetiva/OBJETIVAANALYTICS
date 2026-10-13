@@ -333,7 +333,7 @@ def gerar_pdf_curadoria_pontos_extras(records, stats):
     story = []
 
     header_html = """
-    <b>CURADORIA DE PONTOS EXTRAS • DESAFIO MODO POTÊNCIA</b><br/>
+    <b>AUDITORIA DE PONTOS EXTRAS • DESAFIO MODO POTÊNCIA</b><br/>
     <font color="#ff6b00"><b>DOSSIÊ DE APROVAÇÃO DE CONQUISTAS NO PDV</b></font>
     """
     story.append(Paragraph(header_html, title_style))

@@ -219,6 +219,13 @@ const btnPeSyncExcel = document.getElementById('btnPeSyncExcel');
 const btnPeSyncText = document.getElementById('btnPeSyncText');
 const peGrid = document.getElementById('peGrid');
 const peCountDisplay = document.getElementById('peCountDisplay');
+const inputPeDedicatedFile = document.getElementById('inputPeDedicatedFile');
+const btnUploadPeDedicated = document.getElementById('btnUploadPeDedicated');
+const peImportPanel = document.getElementById('peImportPanel');
+const peImportStatusText = document.getElementById('peImportStatusText');
+const peDedicatedFileMeta = document.getElementById('peDedicatedFileMeta');
+const btnPeToggleCollapse = document.getElementById('btnPeToggleCollapse');
+const btnPeToggleCollapseText = document.getElementById('btnPeToggleCollapseText');
 
 // Lightbox HD Elements
 const lightboxModal = document.getElementById('lightboxModal');
@@ -299,6 +306,21 @@ function inicializarMatrizImediatamente() {
   updateMetrics();
   applyFilters();
 
+  // Se ainda não carregou curadoria individual, preenche métricas da aba de pontos extras com a base da planilha
+  const promsComExtras = allPromotores.filter(p => (p.pontos_extras || 0) > 0);
+  const totalPontosExtras = allPromotores.reduce((acc, p) => acc + (p.pontos_extras || 0), 0);
+  if (promsComExtras.length > 0 && (!allPeRecords || allPeRecords.length === 0)) {
+    updatePeMetrics({
+      total: promsComExtras.length,
+      promotores: promsComExtras.length,
+      pendentes: 0,
+      aprovados: promsComExtras.length,
+      rejeitados: 0,
+      pontos_gerados: totalPontosExtras,
+      criativos: 0
+    });
+  }
+
   if (count > 0) {
     btnDownloadCampanha.disabled = false;
     if (btnSalvarSupabase) btnSalvarSupabase.disabled = false;
@@ -320,9 +342,24 @@ function setupTabNavigation() {
       t.btn.classList.add('active');
       t.view.classList.add('active');
 
-      // Se mudou para a aba de pontos extras e a matriz do módulo 2 estiver ativa, re-renderiza
-      if (t.view === viewPontosExtras && mod2MatrixWrapper && mod2MatrixWrapper.style.display !== 'none') {
-        renderMatrixTable('matrixHeadMod2', 'matrixBodyMod2', allPromotores, activeCampaignPeriods, 'pontos_extras');
+      // Se mudou para a aba de pontos extras, atualiza matriz e métricas
+      if (t.view === viewPontosExtras) {
+        const promsComExtras = allPromotores.filter(p => (p.pontos_extras || 0) > 0);
+        const totalPontosExtras = allPromotores.reduce((acc, p) => acc + (p.pontos_extras || 0), 0);
+        if (!allPeRecords || allPeRecords.length === 0) {
+          updatePeMetrics({
+            total: promsComExtras.length,
+            promotores: promsComExtras.length,
+            pendentes: 0,
+            aprovados: promsComExtras.length,
+            rejeitados: 0,
+            pontos_gerados: totalPontosExtras,
+            criativos: 0
+          });
+        }
+        if (mod2MatrixWrapper && mod2MatrixWrapper.style.display !== 'none') {
+          renderMatrixTable('matrixHeadMod2', 'matrixBodyMod2', allPromotores, activeCampaignPeriods, 'pontos_extras');
+        }
       }
     });
   });
@@ -482,11 +519,51 @@ function setupEventListeners() {
   peFilterTipo.addEventListener('change', renderPeCards);
 
   btnPeAprovarTodos.addEventListener('click', handleAprovarTodosVisiveis);
-  btnPeExportAudit.addEventListener('click', () => window.location.href = getApiUrl('/api/pontos-extras/exportar-excel'));
+  if (btnPeExportAudit) btnPeExportAudit.addEventListener('click', () => window.location.href = getApiUrl('/api/pontos-extras/exportar-excel'));
   if (btnPeExportPdf) {
     btnPeExportPdf.addEventListener('click', () => window.location.href = getApiUrl('/api/pontos-extras/exportar-pdf'));
   }
   btnPeSyncExcel.addEventListener('click', handleSyncToCampaign);
+
+  // Upload Dedicado de Pontos Extras
+  if (btnUploadPeDedicated && inputPeDedicatedFile) {
+    btnUploadPeDedicated.addEventListener('click', () => inputPeDedicatedFile.click());
+    inputPeDedicatedFile.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        processarArquivoPeUpload(e.target.files[0]);
+      }
+    });
+  }
+
+  if (peImportPanel && inputPeDedicatedFile) {
+    peImportPanel.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      peImportPanel.classList.add('dragover');
+    });
+    peImportPanel.addEventListener('dragleave', () => peImportPanel.classList.remove('dragover'));
+    peImportPanel.addEventListener('drop', (e) => {
+      e.preventDefault();
+      peImportPanel.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processarArquivoPeUpload(e.dataTransfer.files[0]);
+      }
+    });
+  }
+
+  // Toggle de colapso de grupos
+  let allPeGroupsExpanded = true;
+  if (btnPeToggleCollapse) {
+    btnPeToggleCollapse.addEventListener('click', () => {
+      allPeGroupsExpanded = !allPeGroupsExpanded;
+      const bodies = peGrid.querySelectorAll('.pe-group-period-body');
+      bodies.forEach(b => {
+        b.style.display = allPeGroupsExpanded ? 'flex' : 'none';
+      });
+      if (btnPeToggleCollapseText) {
+        btnPeToggleCollapseText.textContent = allPeGroupsExpanded ? 'Recolher Grupos' : 'Expandir Grupos';
+      }
+    });
+  }
 
   // Lightbox listeners
   btnLightboxClose.addEventListener('click', closeLightbox);
@@ -1008,7 +1085,184 @@ function updateMetrics(metrics) {
   if (valSemContrato) valSemContrato.textContent = metrics.total_sem_contrato || 0;
 }
 
+// ========================================================
+// PONTOS EXTRAS: SOMENTE APÓS APROVAÇÃO DA CURADORIA
+// ========================================================
+// Ilha, Meia Ilha, Ponta e Meia Ponta só entram na campanha quando o time
+// aprova a foto na curadoria (status APROVADO). Qualquer valor vindo da
+// planilha base, do xlsx importado ou de registros salvos é descartado.
+const TIPO_PARA_CAMPO_EXTRA = {
+  'ILHA': 'ilha',
+  'MEIA_ILHA': 'meia_ilha',
+  'PONTA': 'ponta',
+  'MEIA_PONTA': 'meia_ponta'
+};
+
+function defaultConquistas(tipo = 'ILHA', criativo = false) {
+  const c = {
+    ilha: { qtd: 0, criativo: 0 },
+    meia_ilha: { qtd: 0, criativo: 0 },
+    ponta: { qtd: 0, criativo: 0 },
+    meia_ponta: { qtd: 0, criativo: 0 }
+  };
+  const key = (tipo || '').toLowerCase();
+  if (c[key]) {
+    c[key].qtd = 1;
+    c[key].criativo = criativo ? 1 : 0;
+  }
+  return c;
+}
+
+function parseConquistas(rawTipo, criativo = false) {
+  if (typeof rawTipo === 'object' && rawTipo !== null) {
+    return {
+      ilha: { qtd: Math.max(0, Number(rawTipo.ilha?.qtd) || 0), criativo: Math.max(0, Number(rawTipo.ilha?.criativo) || 0) },
+      meia_ilha: { qtd: Math.max(0, Number(rawTipo.meia_ilha?.qtd) || 0), criativo: Math.max(0, Number(rawTipo.meia_ilha?.criativo) || 0) },
+      ponta: { qtd: Math.max(0, Number(rawTipo.ponta?.qtd) || 0), criativo: Math.max(0, Number(rawTipo.ponta?.criativo) || 0) },
+      meia_ponta: { qtd: Math.max(0, Number(rawTipo.meia_ponta?.qtd) || 0), criativo: Math.max(0, Number(rawTipo.meia_ponta?.criativo) || 0) }
+    };
+  }
+  if (typeof rawTipo === 'string' && rawTipo.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(rawTipo);
+      return parseConquistas(parsed, criativo);
+    } catch(e) {}
+  }
+  return defaultConquistas(rawTipo, criativo);
+}
+
+function calculateConquestPoints(conquistas) {
+  if (!conquistas) {
+    return { total: 0, byTipo: { ilha: 0, meia_ilha: 0, ponta: 0, meia_ponta: 0 } };
+  }
+  const calcForType = (item, base) => {
+    if (!item) return 0;
+    const qtd = Math.max(0, Number(item.qtd) || 0);
+    const criativo = Math.max(0, Math.min(qtd, Number(item.criativo) || 0));
+    const normal = qtd - criativo;
+    return (normal * base) + (criativo * base * 2);
+  };
+
+  const ptsIlha = calcForType(conquistas.ilha, 50);
+  const ptsMeiaIlha = calcForType(conquistas.meia_ilha, 25);
+  const ptsPonta = calcForType(conquistas.ponta, 30);
+  const ptsMeiaPonta = calcForType(conquistas.meia_ponta, 15);
+
+  return {
+    total: ptsIlha + ptsMeiaIlha + ptsPonta + ptsMeiaPonta,
+    byTipo: {
+      ilha: ptsIlha,
+      meia_ilha: ptsMeiaIlha,
+      ponta: ptsPonta,
+      meia_ponta: ptsMeiaPonta
+    }
+  };
+}
+
+function normalizarDataParaISO(valor) {
+  if (!valor) return '';
+  const s = String(valor).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return '';
+}
+
+function localizarPeriodoDoRegistro(rec) {
+  if (rec.periodo) {
+    const porNome = activeCampaignPeriods.find(p => p.name === rec.periodo);
+    if (porNome) return porNome;
+  }
+  const iso = normalizarDataParaISO(rec.data);
+  if (iso) {
+    return activeCampaignPeriods.find(p => p.start && p.end && iso >= p.start && iso <= p.end) || null;
+  }
+  return null;
+}
+
+function aplicarPontosExtrasAprovados() {
+  // 1. Agrupa pontos aprovados da curadoria por promotor + período + loja + tipo
+  // Regra de ouro da campanha: cada loja no período pontua uma única vez
+  // Se o status for REJEITADO ou PENDENTE, pontuação é ZERADA
+  const aprovadosMap = {}; // { NOME: { periodId: { ilha, meia_ilha, ponta, meia_ponta } } }
+  const lojasProcessadasNoPeriodo = new Set();
+
+  (allPeRecords || []).forEach(rec => {
+    // Caso rejeitado ou pendente, não pontua no período (fica ZERADO)
+    if (rec.status !== 'APROVADO') return;
+
+    const nome = String(rec.promotor_campanha || rec.promotor_csv || '').trim().toUpperCase();
+    if (!nome) return;
+    const per = localizarPeriodoDoRegistro(rec);
+    if (!per) return;
+    const pdv = String(rec.pdv || 'LOJA').trim().toUpperCase();
+
+    // Chave única para garantir 1 avaliação por loja dentro do período avaliado
+    const storeKey = `${nome}__${per.id}__${pdv}`;
+    if (lojasProcessadasNoPeriodo.has(storeKey)) return;
+    lojasProcessadasNoPeriodo.add(storeKey);
+
+    if (!aprovadosMap[nome]) aprovadosMap[nome] = {};
+    if (!aprovadosMap[nome][per.id]) aprovadosMap[nome][per.id] = { ilha: 0, meia_ilha: 0, ponta: 0, meia_ponta: 0 };
+
+    if (rec.conquistas) {
+      const { byTipo } = calculateConquestPoints(rec.conquistas);
+      aprovadosMap[nome][per.id].ilha += byTipo.ilha;
+      aprovadosMap[nome][per.id].meia_ilha += byTipo.meia_ilha;
+      aprovadosMap[nome][per.id].ponta += byTipo.ponta;
+      aprovadosMap[nome][per.id].meia_ponta += byTipo.meia_ponta;
+    } else {
+      const campo = TIPO_PARA_CAMPO_EXTRA[rec.tipo];
+      if (campo) {
+        const pts = calculateLocalPoints(rec.tipo, rec.criativo);
+        aprovadosMap[nome][per.id][campo] += pts;
+      }
+    }
+  });
+
+  // 2. Preserva os pontos da base (planilha/banco) e SOMA os pontos curados/aprovados
+  allPromotores.forEach(prom => {
+    const nome = String(prom.nome || '').trim().toUpperCase();
+    const doPromotor = aprovadosMap[nome] || {};
+    let totalExtras = 0;
+
+    // Busca dados originais na base window.CAMPANHA_BASE_DATA para não perder os pontos da planilha
+    const baseProm = (window.CAMPANHA_BASE_DATA || []).find(b => String(b.nome || '').trim().toUpperCase() === nome);
+
+    (prom.periodos || []).forEach(per => {
+      const ref = activeCampaignPeriods.find(p => p.id === per.period_id || p.name === per.period_name);
+      const basePer = baseProm && (baseProm.periodos || []).find(p => p.period_id === per.period_id || p.period_name === per.period_name);
+
+      const baseIlha = (basePer && Number(basePer.ilha)) || (Number(per.ilha) || 0);
+      const baseMeiaIlha = (basePer && Number(basePer.meia_ilha)) || (Number(per.meia_ilha) || 0);
+      const basePonta = (basePer && Number(basePer.ponta)) || (Number(per.ponta) || 0);
+      const baseMeiaPonta = (basePer && Number(basePer.meia_ponta)) || (Number(per.meia_ponta) || 0);
+
+      const ext = (ref && doPromotor[ref.id]) || { ilha: 0, meia_ilha: 0, ponta: 0, meia_ponta: 0 };
+
+      // Mantém os pontos conquistados na planilha e soma novas aprovações de curadoria
+      per.ilha = baseIlha + ext.ilha;
+      per.meia_ilha = baseMeiaIlha + ext.meia_ilha;
+      per.ponta = basePonta + ext.ponta;
+      per.meia_ponta = baseMeiaPonta + ext.meia_ponta;
+
+      const extras = per.ilha + per.meia_ilha + per.ponta + per.meia_ponta;
+      totalExtras += extras;
+
+      const assid = per.pontos_assiduidade !== undefined ? per.pontos_assiduidade : ((per.faltas || 0) * -50);
+      const pont = per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.dias_pontuais || 0);
+      per.total_periodo = (Number(assid) || 0) + (Number(pont) || 0) + extras;
+    });
+
+    prom.pontos_extras = totalExtras;
+  });
+}
+
 function applyFilters() {
+  // Garante que só pontos extras aprovados apareçam na campanha
+  aplicarPontosExtrasAprovados();
+
   const query = searchInput.value.toLowerCase().trim();
   const proj = filterProjeto.value;
   const status = filterStatus.value;
@@ -1187,6 +1441,7 @@ function renderTable(promotores) {
     const hasBonusTotal = p.periodos && p.periodos.some(per => per.ganhou_bonus);
     const totalFaltas = p.periodos ? p.periodos.reduce((acc, per) => acc + per.faltas, 0) : 0;
 
+    let grandTotal = 0;
     let periodCellsHtml = '';
     if (p.status === 'OK' && p.periodos) {
       p.periodos.slice(0, 5).forEach(per => {
@@ -1196,11 +1451,19 @@ function renderTable(promotores) {
 
         const pontBadge = `<span class="badge-pont font-mono" title="${per.dias_pontuais} dias pontuais">+${per.pontos_pontualidade_total}</span>`;
 
+        const extraPts = (per.ilha || 0) + (per.meia_ilha || 0) + (per.ponta || 0) + (per.meia_ponta || 0);
+        const extraBadge = extraPts > 0 ? 
+          `<span class="badge-pont font-mono text-gold" style="font-size:0.75rem; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.4); border-radius:4px; padding:1px 4px;" title="${extraPts} pts extras">+${extraPts} pe</span>` : '';
+
+        const totPer = per.total_periodo !== undefined ? per.total_periodo : ((per.pontos_assiduidade || 0) + (per.pontos_pontualidade_total || 0) + extraPts);
+        grandTotal += totPer;
+
         periodCellsHtml += `
           <td class="td-center">
-            <div class="period-cell-compact">
+            <div class="period-cell-compact" style="display:flex; flex-direction:column; gap:2px; align-items:center;">
               <div>${assidBadge}</div>
               <div>${pontBadge}</div>
+              ${extraBadge ? `<div>${extraBadge}</div>` : ''}
             </div>
           </td>
         `;
@@ -1221,6 +1484,8 @@ function renderTable(promotores) {
       `<span class="tag-contrato">${escapeHtml(p.contrato)}</span>` : 
       (p.sem_contrato ? `<span class="tag-contrato tag-contrato-alerta">Sem Contrato</span>` : '');
 
+    const ptsExtrasVal = p.pontos_extras || 0;
+
     tr.innerHTML = `
       <td>
         <div class="promotor-cell">
@@ -1236,6 +1501,12 @@ function renderTable(promotores) {
       </td>
       ${periodCellsHtml}
       <td class="td-center">${bonusCell}</td>
+      <td class="td-center font-mono font-bold ${ptsExtrasVal > 0 ? 'text-gold' : 'text-muted'}" style="${ptsExtrasVal > 0 ? 'color:#eab308;' : ''}">
+        ${ptsExtrasVal > 0 ? `+${ptsExtrasVal} pts` : '0'}
+      </td>
+      <td class="td-center font-mono font-bold" style="font-size: 1rem; color: #a855f7;">
+        ${grandTotal} pts
+      </td>
       <td class="td-action">
         <button class="btn btn-sm btn-secondary btn-audit" onclick="openPromotorDetail('${escapeHtml(p.nome)}')">
           Ver Espelho
@@ -1288,6 +1559,13 @@ function renderModalPeriods() {
   const activePeriod = currentPromotor.periodos[activeModalPeriodIdx];
   if (!activePeriod) return;
 
+  const pePeriodo = (activePeriod.ilha || 0) + (activePeriod.meia_ilha || 0) + (activePeriod.ponta || 0) + (activePeriod.meia_ponta || 0);
+  const peChip = pePeriodo > 0 ? `
+    <div class="chip" style="background:rgba(234,179,8,0.18); border:1px solid #eab308; color:#fef08a;">
+      <span>⚡ Pontos Extras: +${pePeriodo} pts (Ilha: ${activePeriod.ilha || 0}, M.Ilha: ${activePeriod.meia_ilha || 0}, Ponta: ${activePeriod.ponta || 0}, M.Ponta: ${activePeriod.meia_ponta || 0})</span>
+    </div>
+  ` : '';
+
   modalPeriodSummary.innerHTML = `
     <div class="chip ${activePeriod.faltas > 0 ? 'chip-danger' : 'chip-success'}">
       <span>Faltas: ${activePeriod.faltas} (${activePeriod.pontos_assiduidade} pts)</span>
@@ -1295,6 +1573,7 @@ function renderModalPeriods() {
     <div class="chip chip-success">
       <span>Pontualidade: +${activePeriod.pontos_pontualidade_total} pts (${activePeriod.dias_pontuais} dias pontuais)</span>
     </div>
+    ${peChip}
     ${activePeriod.ganhou_bonus ? '<div class="chip chip-bonus"><span>★ Bônus 4 Semanas 100% atingido!</span></div>' : ''}
   `;
 
@@ -1402,13 +1681,14 @@ async function loadPontosExtrasData() {
     const json = await res.json();
 
     if (json.success) {
-      allPeRecords = json.records || [];
+      allPeRecords = (json.records || []).filter(r => r.fotos && Array.isArray(r.fotos) && r.fotos.length > 0);
       pePeriods = json.periods || [];
       peStats = json.stats || {};
 
       updatePeMetrics(peStats);
       populatePeFilters();
       renderPeCards();
+      applyFilters();
 
       if (tabPeBadge) {
         tabPeBadge.textContent = `${peStats.pendentes || 0} pendentes`;
@@ -1431,7 +1711,9 @@ async function carregarPontosExtrasDoSupabase() {
       .order('created_at', { ascending: false });
 
     if (!error && data && data.length > 0) {
-      allPeRecords = data.map(d => ({
+      // FILTRO CRÍTICO: apenas tarefas com fotos reais de ponto extra
+      const validosComFotos = data.filter(d => d.fotos && Array.isArray(d.fotos) && d.fotos.length > 0);
+      allPeRecords = validosComFotos.map(d => ({
         task_id: d.task_id,
         promotor_campanha: d.promotor,
         promotor_csv: d.promotor,
@@ -1505,6 +1787,323 @@ function populatePeFilters() {
   }
 }
 
+// ========================================================
+// PROCESSADOR DE ARQUIVO CSV / XLSX DE PONTOS EXTRAS
+// ========================================================
+
+async function processarArquivoPeUpload(file) {
+  if (!file) return;
+
+  if (peImportStatusText) {
+    peImportStatusText.innerHTML = `<strong>Lendo arquivo "${escapeHtml(file.name)}"...</strong> Processando tarefas, promotores, lojas e links de fotos...`;
+  }
+  if (peDedicatedFileMeta) {
+    peDedicatedFileMeta.style.display = 'block';
+    peDedicatedFileMeta.textContent = `${(file.size / 1024).toFixed(1)} KB • Lendo dados...`;
+  }
+
+  try {
+    const buffer = await file.arrayBuffer();
+    // SheetJS com suporte universal a XLSX, XLS e CSV (com separador ; ou ,)
+    const workbook = XLSX.read(buffer, { type: 'array', codepage: 65001 });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
+
+    if (!rows || rows.length < 2) {
+      showToast("O arquivo selecionado está vazio ou sem formato válido.", "danger");
+      return;
+    }
+
+    // Identifica linha de cabeçalho
+    let headerIdx = -1;
+    let colMap = {};
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      const row = rows[i].map(c => String(c || '').trim().toUpperCase());
+      const hasTask = row.some(c => c.includes('TAREFA') || c.includes('TASK') || c.includes('ID'));
+      const hasProm = row.some(c => c.includes('PROMOTOR') || c.includes('AGENTE') || c.includes('COLABORADOR'));
+      if (hasTask || hasProm) {
+        headerIdx = i;
+        rows[i].forEach((colName, cIdx) => {
+          const upper = String(colName || '').trim().toUpperCase();
+          if ((upper.includes('TAREFA') || upper.includes('TASK') || upper === 'ID') && colMap.task_id === undefined) colMap.task_id = cIdx;
+          if (upper.includes('DATA') && (upper.includes('EXECU') || upper.includes('HORA')) && colMap.data === undefined) colMap.data = cIdx;
+          if (upper === 'DATA' && colMap.data === undefined) colMap.data = cIdx;
+          if ((upper.includes('PDV') || upper.includes('LOJA')) && colMap.pdv === undefined) colMap.pdv = cIdx;
+          if ((upper.includes('PROMOTOR') || upper.includes('AGENTE') || upper.includes('COLABORADOR')) && colMap.promotor === undefined) colMap.promotor = cIdx;
+          if (upper.includes('ATIVIDADE') && colMap.atividade === undefined) colMap.atividade = cIdx;
+          if (upper.includes('PONTO EXTRA') && colMap.tem_pe === undefined) colMap.tem_pe = cIdx;
+        });
+        break;
+      }
+    }
+
+    if (headerIdx === -1 || colMap.promotor === undefined) {
+      showToast("Cabeçalho do relatório não reconhecido (esperado PROMOTOR, PDV, ID DA TAREFA).", "warning");
+      return;
+    }
+
+    // Colunas de foto
+    const headerRow = rows[headerIdx].map(c => String(c || '').trim().toUpperCase());
+    const photoColIndices = [];
+    headerRow.forEach((c, idx) => {
+      if (c.includes('FOTO')) photoColIndices.push(idx);
+    });
+
+    const parsedTasksMap = {};
+
+    for (let r = headerIdx + 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row || row.length === 0) continue;
+
+      const rawTaskId = colMap.task_id !== undefined ? String(row[colMap.task_id] || '').trim() : '';
+      const promotorRaw = colMap.promotor !== undefined ? String(row[colMap.promotor] || '').trim().toUpperCase() : '';
+      const pdvRaw = colMap.pdv !== undefined ? String(row[colMap.pdv] || '').trim().toUpperCase() : 'PDV NÃO INFORMADO';
+      const dataRaw = colMap.data !== undefined ? String(row[colMap.data] || '').trim() : '';
+      const atividadeRaw = colMap.atividade !== undefined ? String(row[colMap.atividade] || '').trim() : '';
+
+      if (!promotorRaw) continue;
+
+      const temPeRaw = colMap.tem_pe !== undefined ? String(row[colMap.tem_pe] || '').trim().toUpperCase() : '';
+      const isSim = (temPeRaw === 'SIM' || temPeRaw === 'S' || temPeRaw === 'TRUE' || temPeRaw === '1');
+
+      // Extrai fotos da linha
+      const fotosLinha = [];
+      photoColIndices.forEach(pIdx => {
+        const val = String(row[pIdx] || '').trim();
+        if (val.startsWith('http://') || val.startsWith('https://')) {
+          fotosLinha.push(val);
+        }
+      });
+      // Fallback: varre qualquer coluna por links http de imagem
+      if (fotosLinha.length === 0) {
+        row.forEach(val => {
+          const s = String(val || '').trim();
+          if (s.startsWith('http://') || s.startsWith('https://')) {
+            fotosLinha.push(s);
+          }
+        });
+      }
+
+      // FILTRO ESSENCIAL: se houver a coluna "TEM PONTO EXTRA?", ignora linhas que não são "SIM" e não têm fotos
+      if (colMap.tem_pe !== undefined && !isSim && fotosLinha.length === 0) {
+        continue;
+      }
+      if (!isSim && fotosLinha.length === 0) {
+        continue;
+      }
+
+      const taskId = rawTaskId || `T_${Math.abs(hashString(promotorRaw + pdvRaw + dataRaw + r))}`;
+
+      if (!parsedTasksMap[taskId]) {
+        // Encontra período correspondente pela data da tarefa
+        let perNome = '27/08 A 03/09';
+        const iso = normalizarDataParaISO(dataRaw);
+        if (iso) {
+          const pMatch = activeCampaignPeriods.find(p => p.start && p.end && iso >= p.start && iso <= p.end);
+          if (pMatch) perNome = pMatch.name;
+        }
+
+        const matchedProm = encontrarPromotorCampanha(promotorRaw);
+
+        parsedTasksMap[taskId] = {
+          task_id: taskId,
+          promotor_csv: promotorRaw,
+          promotor_campanha: matchedProm || promotorRaw,
+          matched: Boolean(matchedProm),
+          pdv: pdvRaw,
+          data: dataRaw,
+          atividade: atividadeRaw,
+          fotos: [...fotosLinha],
+          status: 'PENDENTE',
+          tipo: 'ILHA',
+          criativo: false,
+          periodo: perNome,
+          motivo: '',
+          pontos: 0
+        };
+      } else {
+        // Junta fotos adicionais da mesma tarefa sem duplicar
+        fotosLinha.forEach(f => {
+          if (!parsedTasksMap[taskId].fotos.includes(f)) {
+            parsedTasksMap[taskId].fotos.push(f);
+          }
+        });
+      }
+    }
+
+    // FILTRO CRÍTICO: apenas tarefas que realmente possuem fotos comprovatórias
+    const novosRegistros = Object.values(parsedTasksMap).filter(t => t.fotos && Array.isArray(t.fotos) && t.fotos.length > 0);
+    if (novosRegistros.length === 0) {
+      showToast("Nenhuma tarefa com fotos de ponto extra ('SIM') encontrada na planilha.", "warning");
+      return;
+    }
+
+    // Remove qualquer registro inválido sem foto que possa estar na memória
+    allPeRecords = allPeRecords.filter(r => r.fotos && Array.isArray(r.fotos) && r.fotos.length > 0);
+
+    // Mescla com registros existentes respeitando decisões prévias
+    novosRegistros.forEach(novo => {
+      const idx = allPeRecords.findIndex(r => r.task_id === novo.task_id);
+      if (idx >= 0) {
+        const anterior = allPeRecords[idx];
+        novo.status = anterior.status;
+        novo.tipo = anterior.tipo;
+        novo.criativo = anterior.criativo;
+        novo.periodo = anterior.periodo || novo.periodo;
+        novo.motivo = anterior.motivo;
+        novo.pontos = anterior.pontos;
+        anterior.fotos.forEach(f => {
+          if (!novo.fotos.includes(f)) novo.fotos.push(f);
+        });
+        allPeRecords[idx] = novo;
+      } else {
+        allPeRecords.push(novo);
+      }
+    });
+
+    // Salva no Supabase se conectado
+    salvarNovosPontosExtrasSupabase(novosRegistros);
+
+    recalcularEstatisticasPe();
+    populatePeFilters();
+    renderPeCards();
+
+    if (peImportStatusText) {
+      peImportStatusText.innerHTML = `✓ <strong>${novosRegistros.length} tarefas de pontos extras carregadas</strong> de "${escapeHtml(file.name)}"! Fotos organizadas abaixo por Período, Promotor e Loja.`;
+    }
+    if (peDedicatedFileMeta) {
+      peDedicatedFileMeta.textContent = `${novosRegistros.length} tarefas • ${(file.size / 1024).toFixed(1)} KB`;
+    }
+
+    showToast(`⚡ ${novosRegistros.length} tarefas de pontos extras carregadas com sucesso!`, 'potencia', 5000);
+
+  } catch (err) {
+    console.error("Erro ao processar arquivo de pontos extras:", err);
+    showToast("Erro ao processar arquivo: " + err.message, "danger");
+  }
+}
+
+function encontrarPromotorCampanha(promotorCsv) {
+  if (!promotorCsv) return null;
+  const clean = promotorCsv.trim().toUpperCase();
+
+  // 1. Match exato
+  const exato = allPromotores.find(p => p.nome === clean);
+  if (exato) return exato.nome;
+
+  // 2. Prefixo / Substring (primeiros 18 caracteres)
+  const pref = allPromotores.find(p => p.nome.startsWith(clean.slice(0, 18)) || clean.startsWith(p.nome.slice(0, 18)));
+  if (pref) return pref.nome;
+
+  return null;
+}
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function recalcularEstatisticasPe() {
+  // Agrupa registros por loja no período para refletir curadoria real
+  const storeGroups = {};
+  allPeRecords.forEach(r => {
+    const key = `${r.periodo || 'P1'}__${r.promotor_campanha || r.promotor_csv || ''}__${r.pdv || ''}`;
+    if (!storeGroups[key]) storeGroups[key] = [];
+    storeGroups[key].push(r);
+  });
+
+  const storeList = Object.values(storeGroups);
+  const totalLojas = storeList.length;
+  const aprovados = storeList.filter(arr => arr.some(r => r.status === 'APROVADO')).length;
+  const pendentes = storeList.filter(arr => arr.every(r => r.status === 'PENDENTE')).length;
+  const rejeitados = storeList.filter(arr => arr.some(r => r.status === 'REJEITADO') && !arr.some(r => r.status === 'APROVADO')).length;
+
+  const pts = storeList.reduce((acc, arr) => {
+    const isAprov = arr.some(r => r.status === 'APROVADO');
+    if (!isAprov) return acc;
+    const prim = arr.find(r => r.status === 'APROVADO') || arr[0];
+    if (prim.conquistas) {
+      return acc + calculateConquestPoints(prim.conquistas).total;
+    }
+    return acc + calculateLocalPoints(prim.tipo, prim.criativo);
+  }, 0);
+
+  peStats = {
+    total: totalLojas,
+    total_tarefas: allPeRecords.length,
+    aprovados,
+    pendentes,
+    rejeitados,
+    pontos_gerados: pts,
+    criativos: storeList.filter(arr => arr.some(r => (r.conquistas && Object.values(r.conquistas).some(x => x.criativo > 0)) || r.criativo)).length,
+    promotores: new Set(allPeRecords.map(r => r.promotor_campanha || r.promotor_csv)).size
+  };
+
+  updatePeMetrics(peStats);
+  if (tabPeBadge) {
+    tabPeBadge.textContent = `${pendentes} pendentes`;
+  }
+}
+
+async function salvarNovosPontosExtrasSupabase(records) {
+  const sb = await ensureSupabase();
+  if (!sb || !records || records.length === 0) return;
+
+  try {
+    const payload = records.map(r => ({
+      task_id: r.task_id,
+      promotor: r.promotor_campanha || r.promotor_csv,
+      pdv: r.pdv,
+      data_registro: r.data,
+      tipo_conquista: r.tipo,
+      criativo: r.criativo,
+      pontos: r.pontos || 0,
+      status_curadoria: r.status,
+      motivo_rejeicao: r.motivo,
+      fotos: r.fotos,
+      periodo_nome: r.periodo,
+      updated_at: new Date().toISOString()
+    }));
+
+    // Envia em blocos de 100 para alta estabilidade
+    for (let i = 0; i < payload.length; i += 100) {
+      const chunk = payload.slice(i, i + 100);
+      await sb.from('tb_campanha_pontos_extras').upsert(chunk, { onConflict: 'task_id' });
+    }
+    console.log(`[Pontos Extras] ${records.length} registros salvos no Supabase.`);
+  } catch (err) {
+    console.warn("Aviso ao salvar novos pontos extras no Supabase:", err);
+  }
+}
+
+window.togglePeGroupBody = function(bodyId, headerEl) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  const isHidden = body.style.display === 'none';
+  body.style.display = isHidden ? 'flex' : 'none';
+  const icon = headerEl ? headerEl.querySelector('.chevron-icon') : null;
+  if (icon) {
+    icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+};
+
+window.aprovarTodasDaLoja = async function(lojaName, promName, pName, btnEl) {
+  const storeIdSafe = 'store_' + `${pName}_${promName}_${lojaName}`.replace(/[^a-zA-Z0-9]/g, '_');
+  setStoreStatus(storeIdSafe, 'APROVADO');
+  showToast(`✓ Loja "${lojaName}" aprovada com sucesso!`, 'potencia');
+};
+
+// ========================================================
+// RENDERIZADOR HIERÁRQUICO: PERÍODO > PROMOTOR > LOJA (1 CARD POR LOJA)
+// ========================================================
+
+window.storeCardRegistry = {};
+
 function renderPeCards() {
   const query = peSearchInput.value.toLowerCase().trim();
   const perFilter = peFilterPeriodo.value;
@@ -1513,6 +2112,9 @@ function renderPeCards() {
   const tipoFilter = peFilterTipo.value;
 
   const filtered = allPeRecords.filter(r => {
+    // FILTRO VISUAL ESTRITO: nunca renderiza tarefas sem fotos comprovatórias
+    if (!r.fotos || !Array.isArray(r.fotos) || r.fotos.length === 0) return false;
+
     const matchQuery = !query ||
       (r.promotor_csv && r.promotor_csv.toLowerCase().includes(query)) ||
       (r.promotor_campanha && r.promotor_campanha.toLowerCase().includes(query)) ||
@@ -1527,131 +2129,383 @@ function renderPeCards() {
     return matchQuery && matchPer && matchProm && matchStatus && matchTipo;
   });
 
-  peCountDisplay.textContent = `${filtered.length} de ${allPeRecords.length} registros exibidos`;
+  // Limpa o registry antes de renderizar
+  window.storeCardRegistry = {};
+
+  // ESTRUTURA HIERÁRQUICA: PERÍODO -> PROMOTOR -> LOJA
+  const hierarchy = {};
+
+  filtered.forEach(r => {
+    const pName = r.periodo || '27/08 A 03/09';
+    const promName = r.promotor_campanha || r.promotor_csv || 'PROMOTOR NÃO INFORMADO';
+    const lojaName = r.pdv || 'LOJA NÃO INFORMADA';
+
+    if (!hierarchy[pName]) hierarchy[pName] = {};
+    if (!hierarchy[pName][promName]) hierarchy[pName][promName] = {};
+    if (!hierarchy[pName][promName][lojaName]) hierarchy[pName][promName][lojaName] = [];
+
+    hierarchy[pName][promName][lojaName].push(r);
+  });
+
+  // Conta total de lojas exibidas
+  let totalLojasExibidas = 0;
+  Object.values(hierarchy).forEach(proms => {
+    Object.values(proms).forEach(lojas => {
+      totalLojasExibidas += Object.keys(lojas).length;
+    });
+  });
+
+  peCountDisplay.textContent = `${totalLojasExibidas} lojas (${filtered.length} tarefas) exibidas`;
   peGrid.innerHTML = '';
 
   if (filtered.length === 0) {
     peGrid.innerHTML = `
-      <div class="pe-loading-card">
+      <div class="pe-loading-card" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 12px;">📸</div>
         <h4>Nenhum ponto extra corresponde aos filtros selecionados</h4>
-        <p>Ajuste os filtros de período, colaborador ou status.</p>
+        <p style="color: var(--text-muted); max-width: 520px; margin: 8px auto 16px;">
+          Suba o arquivo CSV ou XLSX com o relatório de tarefas no botão <strong>"Subir Relatório de Pontos Extras"</strong> acima, ou ajuste os filtros de período e colaborador.
+        </p>
       </div>
     `;
     return;
   }
 
-  filtered.forEach(r => {
-    const card = createPeCardElement(r);
-    peGrid.appendChild(card);
+  // Ordena os períodos na ordem cronológica oficial da campanha
+  const sortedPeriods = Object.keys(hierarchy).sort((a, b) => {
+    const idxA = activeCampaignPeriods.findIndex(p => p.name === a);
+    const idxB = activeCampaignPeriods.findIndex(p => p.name === b);
+    return (idxA >= 0 ? idxA : 999) - (idxB >= 0 ? idxB : 999);
+  });
+
+  sortedPeriods.forEach(pName => {
+    const promotoresDoPeriodo = hierarchy[pName];
+    let totalTarefasPeriodo = 0;
+    let totalLojasPeriodo = 0;
+    Object.values(promotoresDoPeriodo).forEach(lojas => {
+      totalLojasPeriodo += Object.keys(lojas).length;
+      Object.values(lojas).forEach(arr => {
+        totalTarefasPeriodo += arr.length;
+      });
+    });
+    const totalPromotoresPeriodo = Object.keys(promotoresDoPeriodo).length;
+
+    // 1. Container do Período
+    const periodSection = document.createElement('div');
+    periodSection.className = 'pe-group-period';
+    const periodIdSafe = pName.replace(/[^a-zA-Z0-9]/g, '_');
+
+    periodSection.innerHTML = `
+      <div class="pe-group-period-header" onclick="togglePeGroupBody('body-${periodIdSafe}', this)">
+        <div class="pe-group-period-title">
+          <span style="font-size: 1.25rem;">📅</span>
+          <span>Período: ${escapeHtml(pName)}</span>
+          <span class="pe-group-period-badge">${totalLojasPeriodo} loja${totalLojasPeriodo > 1 ? 's' : ''} (${totalTarefasPeriodo} tarefas)</span>
+        </div>
+        <div class="pe-group-period-meta">
+          <span>👥 ${totalPromotoresPeriodo} colaborador${totalPromotoresPeriodo > 1 ? 'es' : ''}</span>
+          <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="transition: transform 0.2s;">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </div>
+      <div class="pe-group-period-body" id="body-${periodIdSafe}">
+      </div>
+    `;
+
+    const periodBody = periodSection.querySelector(`#body-${periodIdSafe}`);
+
+    // Ordena os promotores alfabeticamente
+    const sortedPromotores = Object.keys(promotoresDoPeriodo).sort();
+
+    sortedPromotores.forEach(promName => {
+      const lojasDoPromotor = promotoresDoPeriodo[promName];
+      const totalLojas = Object.keys(lojasDoPromotor).length;
+      const totalTarefasPromotor = Object.values(lojasDoPromotor).reduce((acc, arr) => acc + arr.length, 0);
+
+      // 2. Container do Promotor
+      const promotorCard = document.createElement('div');
+      promotorCard.className = 'pe-group-promotor';
+      const promotorIdSafe = `${periodIdSafe}_${promName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      const initials = promName.split(' ').slice(0, 2).map(n => n[0] || '').join('');
+
+      promotorCard.innerHTML = `
+        <div class="pe-group-promotor-header">
+          <div class="pe-group-promotor-info">
+            <div class="pe-promotor-avatar-icon">${initials}</div>
+            <div>
+              <span class="pe-group-promotor-name">${escapeHtml(promName)}</span>
+              <span class="pe-group-promotor-tag">PROMOTOR</span>
+            </div>
+          </div>
+          <div class="pe-group-promotor-stats">
+            <span>🏪 ${totalLojas} loja${totalLojas > 1 ? 's' : ''}</span>
+            <span>•</span>
+            <span>📸 ${totalTarefasPromotor} foto${totalTarefasPromotor > 1 ? 's' : ''}</span>
+          </div>
+        </div>
+        <div class="pe-group-promotor-body" id="body-${promotorIdSafe}">
+        </div>
+      `;
+
+      const promotorBody = promotorCard.querySelector(`#body-${promotorIdSafe}`);
+
+      // Ordena as lojas alfabeticamente
+      const sortedLojas = Object.keys(lojasDoPromotor).sort();
+
+      sortedLojas.forEach(lojaName => {
+        const tasksDaLoja = lojasDoPromotor[lojaName];
+
+        // 3. Renderiza EXATAMENTE UM CARD por loja no período, consolidando todas as fotos e datas
+        const storeCardEl = createPeStoreCardElement(pName, promName, lojaName, tasksDaLoja);
+        promotorBody.appendChild(storeCardEl);
+      });
+
+      periodBody.appendChild(promotorCard);
+    });
+
+    peGrid.appendChild(periodSection);
   });
 }
 
-function createPeCardElement(r) {
+function createPeStoreCardElement(pName, promName, lojaName, tasksDaLoja) {
+  // Coleta todas as fotos de todas as tarefas/datas da loja sem duplicar
+  const allPhotos = [];
+  tasksDaLoja.forEach(t => {
+    (t.fotos || []).forEach(fUrl => {
+      if (fUrl && !allPhotos.some(p => p.url === fUrl)) {
+        allPhotos.push({
+          url: fUrl,
+          data: t.data || '',
+          taskId: t.task_id
+        });
+      }
+    });
+  });
+
+  const storeIdSafe = 'store_' + `${pName}_${promName}_${lojaName}`.replace(/[^a-zA-Z0-9]/g, '_');
+
+  // Estado consolidado da curadoria da loja
+  const curatedTask = tasksDaLoja.find(t => t.status !== 'PENDENTE') || tasksDaLoja[0] || {};
+  const currentStatus = curatedTask.status || 'PENDENTE';
+  const currentPeriodo = curatedTask.periodo || pName;
+  const currentObs = curatedTask.motivo || '';
+
+  // Conquistas múltiplas no período (Ilha, Meia Ilha, Ponta, Meia Ponta)
+  let currentConquistas = curatedTask.conquistas ? 
+    parseConquistas(curatedTask.conquistas) : 
+    parseConquistas(curatedTask.tipo, curatedTask.criativo);
+
+  // Se for nova e não tiver nada selecionado, sugerir 1 Ilha
+  const ptsCheck = calculateConquestPoints(currentConquistas);
+  if (ptsCheck.totalQtd === 0 && !curatedTask.status) {
+    currentConquistas.ilha.qtd = 1;
+  }
+
+  const conquestResult = calculateConquestPoints(currentConquistas);
+  const hasCriativo = conquestResult.totalCriativos > 0;
+
+  // Pontuação: APROVADO soma pontos; REJEITADO ou PENDENTE fica ZERADO (0 pts)
+  const currentPts = (currentStatus === 'APROVADO') ? conquestResult.total : 0;
+
+  // Registra no mapa global
+  window.storeCardRegistry[storeIdSafe] = {
+    pName,
+    promName,
+    lojaName,
+    tasks: tasksDaLoja,
+    allPhotos,
+    conquistas: currentConquistas,
+    criativo: hasCriativo,
+    status: currentStatus,
+    periodo: currentPeriodo,
+    motivo: currentObs
+  };
+
   const card = document.createElement('div');
-  const statusClass = `status-${r.status.toLowerCase()}`;
-  const criativoClass = r.criativo ? 'is-criativo' : '';
-  card.className = `pe-card ${statusClass} ${criativoClass}`;
-  card.id = `pe-card-${r.task_id}`;
+  const statusClass = `status-${currentStatus.toLowerCase()}`;
+  const criativoClass = hasCriativo ? 'is-criativo' : '';
+  card.className = `pe-card pe-store-card ${statusClass} ${criativoClass}`;
+  card.id = `pe-store-card-${storeIdSafe}`;
 
-  const mainPhoto = (r.fotos && r.fotos[0]) || '';
-  const totalFotos = (r.fotos && r.fotos.length) || 0;
+  const mainPhoto = (allPhotos[0] && allPhotos[0].url) || '';
+  const totalFotos = allPhotos.length;
 
-  const matchBadge = r.matched ? 
+  const isMatched = tasksDaLoja.some(t => t.matched);
+  const matchBadge = isMatched ? 
     `<span class="pe-match-badge pe-match-ok">✓ Campanha</span>` : 
     `<span class="pe-match-badge pe-match-alert">⚠️ Verificar</span>`;
 
+  // Datas e tarefas
+  const uniqueDates = [...new Set(tasksDaLoja.map(t => t.data).filter(Boolean))];
+  const datesText = uniqueDates.length > 0 ? uniqueDates.join(', ') : 'Data não informada';
+  const taskIdsList = tasksDaLoja.map(t => `#${t.task_id}`).join(', ');
+
+  // Miniaturas de todas as fotos com badge da data de execução
   let thumbsHtml = '';
   if (totalFotos > 1) {
-    r.fotos.forEach((fUrl, fIdx) => {
+    allPhotos.forEach((item, fIdx) => {
+      const dataLabel = item.data ? item.data.split(' ')[0] : '';
       thumbsHtml += `
-        <img src="${fUrl}" class="pe-thumb-mini ${fIdx === 0 ? 'active' : ''}" 
-             alt="Foto ${fIdx+1}" onclick="switchCardPreview('${r.task_id}', '${fUrl}', this)">
+        <div class="pe-thumb-wrap ${fIdx === 0 ? 'active' : ''}" 
+             onclick="switchStorePreview('${storeIdSafe}', '${item.url}', this)"
+             title="Data: ${escapeHtml(item.data || '-')} (Tarefa #${escapeHtml(item.taskId || '-')})">
+          <img src="${item.url}" class="pe-thumb-mini" 
+               alt="Foto ${fIdx+1}" referrerpolicy="no-referrer" loading="lazy"
+               onerror="this.style.opacity='0.4'">
+          ${dataLabel ? `<span class="pe-thumb-date-badge">${escapeHtml(dataLabel)}</span>` : ''}
+        </div>
       `;
     });
   }
 
   let periodOptionsHtml = '';
   activeCampaignPeriods.forEach((p, idx) => {
-    const selected = (r.periodo === p.name) ? 'selected' : '';
+    const selected = (currentPeriodo === p.name) ? 'selected' : '';
     periodOptionsHtml += `<option value="${p.name}" ${selected}>P${idx+1}: ${p.name}</option>`;
   });
 
-  const currentPts = r.status === 'APROVADO' ? calculateLocalPoints(r.tipo, r.criativo) : 0;
-  const ptsPillText = r.status === 'APROVADO' ? `+${currentPts} pts` : `0 pts`;
+  const conquestConfig = [
+    { key: 'ilha', label: 'Ilha', icon: '🏛️', base: 50 },
+    { key: 'meia_ilha', label: 'Meia Ilha', icon: '📦', base: 25 },
+    { key: 'ponta', label: 'Ponta de Gôndola', icon: '🏷️', base: 30 },
+    { key: 'meia_ponta', label: 'Meia Ponta', icon: '🔖', base: 15 }
+  ];
+
+  let conquestRowsHtml = '';
+  conquestConfig.forEach(c => {
+    const item = currentConquistas[c.key] || { qtd: 0, criativo: 0 };
+    const q = item.qtd || 0;
+    const cr = item.criativo || 0;
+    const norm = Math.max(0, q - cr);
+    const subPts = (norm * c.base) + (cr * c.base * 2);
+
+    conquestRowsHtml += `
+      <div class="pe-conquest-item ${q > 0 ? 'has-qty' : ''}" id="cq-row-${storeIdSafe}-${c.key}">
+        <div class="pe-cq-header-row">
+          <span class="pe-cq-title">${c.icon} ${c.label} <small>(${c.base} pts)</small></span>
+          <span class="pe-cq-subtotal" id="cq-sub-${storeIdSafe}-${c.key}">${subPts} pts</span>
+        </div>
+        <div class="pe-cq-controls-grid">
+          <!-- Quantidade -->
+          <div class="pe-stepper-box">
+            <span class="pe-step-tag">Qtd</span>
+            <button type="button" class="btn-step" onclick="stepConquestQtd('${storeIdSafe}', '${c.key}', -1)">−</button>
+            <span class="pe-step-val" id="val-qtd-${storeIdSafe}-${c.key}">${q}</span>
+            <button type="button" class="btn-step" onclick="stepConquestQtd('${storeIdSafe}', '${c.key}', 1)">+</button>
+          </div>
+          <!-- Bônus Criativo Dobro -->
+          <div class="pe-stepper-box pe-stepper-cr ${cr > 0 ? 'active' : ''} ${q === 0 ? 'disabled' : ''}" 
+               id="box-cr-${storeIdSafe}-${c.key}" title="Bônus Criativo: pontos em dobro nesta unidade">
+            <span class="pe-step-tag pe-tag-cr">⚡ Dobro</span>
+            <button type="button" class="btn-step btn-step-cr" onclick="stepConquestCriativo('${storeIdSafe}', '${c.key}', -1)">−</button>
+            <span class="pe-step-val pe-val-cr" id="val-cr-${storeIdSafe}-${c.key}">${cr}</span>
+            <button type="button" class="btn-step btn-step-cr" onclick="stepConquestCriativo('${storeIdSafe}', '${c.key}', 1)">+</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  let ptsPillText = '0 pts';
+  let ptsPillClass = '';
+  if (currentStatus === 'APROVADO') {
+    ptsPillText = `+${conquestResult.total} pts`;
+    ptsPillClass = 'has-pts';
+  } else if (currentStatus === 'REJEITADO') {
+    ptsPillText = `0 pts (Rejeitado)`;
+    ptsPillClass = 'is-rejected';
+  } else {
+    ptsPillText = `0 pts (Pendente • Prev: ${conquestResult.total} pts)`;
+    ptsPillClass = 'is-pending';
+  }
 
   card.innerHTML = `
     <div class="pe-card-header">
       <div class="pe-card-header-top">
-        <span class="pe-promotor-name">${escapeHtml(r.promotor_campanha || r.promotor_csv)}</span>
-        ${matchBadge}
+        <div class="pe-store-title-wrap">
+          <span class="pe-loja-icon">🏪</span>
+          <span class="pe-loja-name" title="${escapeHtml(lojaName)}">${escapeHtml(lojaName)}</span>
+        </div>
+        <div class="pe-store-badges-wrap">
+          <span class="pe-loja-period-badge">📅 ${escapeHtml(pName)}</span>
+          ${matchBadge}
+        </div>
       </div>
-      <div class="pe-card-pdv">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        <span>${escapeHtml(r.pdv || 'PDV não informado')}</span>
+      <div class="pe-card-promotor-sub">
+        <strong>${escapeHtml(promName)}</strong>
       </div>
       <div class="pe-card-meta-row">
-        <span>Tarefa #${r.task_id}</span>
-        <span>${r.data || ''}</span>
+        <span class="pe-execs-info" title="Tarefas: ${taskIdsList}">
+          ${tasksDaLoja.length > 1 ? `⚡ ${tasksDaLoja.length} tarefas (${taskIdsList})` : `Tarefa ${taskIdsList}`}
+        </span>
+        <span class="pe-dates-info">
+          📅 ${escapeHtml(datesText)}
+        </span>
       </div>
     </div>
 
     <div class="pe-media-section">
-      <img src="${mainPhoto}" id="main-img-${r.task_id}" class="pe-main-img" alt="Ponto Extra" 
-           onclick="openLightbox('${r.task_id}', 0)">
-      <span class="pe-photo-badge">${totalFotos} foto(s)</span>
-      <button class="pe-expand-btn" title="Expandir HD" onclick="openLightbox('${r.task_id}', 0)">
+      <img src="${mainPhoto}" id="main-img-${storeIdSafe}" class="pe-main-img" alt="Ponto Extra" 
+           referrerpolicy="no-referrer" loading="lazy"
+           onerror="this.onerror=null;this.style.opacity='0.5';this.alt='Imagem indisponível';"
+           onclick="openStoreLightbox('${storeIdSafe}', 0)">
+      <span class="pe-photo-badge">${totalFotos} foto(s)${tasksDaLoja.length > 1 ? ` • ${tasksDaLoja.length} tarefas` : ''}</span>
+      <button class="pe-expand-btn" title="Expandir HD" onclick="openStoreLightbox('${storeIdSafe}', 0)">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
       </button>
-      <div class="pe-strip-thumbs">${thumbsHtml}</div>
     </div>
+    ${thumbsHtml ? `<div class="pe-strip-thumbs">${thumbsHtml}</div>` : ''}
 
     <div class="pe-card-body">
       <div class="pe-status-toggle">
-        <button type="button" class="pe-status-btn ${r.status === 'PENDENTE' ? 'active' : ''}" 
-                data-status="PENDENTE" onclick="setCardStatus('${r.task_id}', 'PENDENTE')">
+        <button type="button" class="pe-status-btn ${currentStatus === 'PENDENTE' ? 'active' : ''}" 
+                data-status="PENDENTE" onclick="setStoreStatus('${storeIdSafe}', 'PENDENTE')">
           ⏳ Pendente
         </button>
-        <button type="button" class="pe-status-btn ${r.status === 'APROVADO' ? 'active' : ''}" 
-                data-status="APROVADO" onclick="setCardStatus('${r.task_id}', 'APROVADO')">
+        <button type="button" class="pe-status-btn ${currentStatus === 'APROVADO' ? 'active' : ''}" 
+                data-status="APROVADO" onclick="setStoreStatus('${storeIdSafe}', 'APROVADO')">
           ✓ Aprovar
         </button>
-        <button type="button" class="pe-status-btn ${r.status === 'REJEITADO' ? 'active' : ''}" 
-                data-status="REJEITADO" onclick="setCardStatus('${r.task_id}', 'REJEITADO')">
+        <button type="button" class="pe-status-btn ${currentStatus === 'REJEITADO' ? 'active' : ''}" 
+                data-status="REJEITADO" onclick="setStoreStatus('${storeIdSafe}', 'REJEITADO')">
           ✗ Rejeitar
         </button>
       </div>
 
-      <div class="pe-type-row">
-        <label>Tipo de Conquista:</label>
-        <select id="tipo-${r.task_id}" class="pe-select-tipo" onchange="handleCardFieldChange('${r.task_id}')">
-          <option value="ILHA" ${r.tipo === 'ILHA' ? 'selected' : ''}>🏛️ Ilha (50 pts)</option>
-          <option value="MEIA_ILHA" ${r.tipo === 'MEIA_ILHA' ? 'selected' : ''}>📦 Meia Ilha (25 pts)</option>
-          <option value="PONTA" ${r.tipo === 'PONTA' ? 'selected' : ''}>🏷️ Ponta de Gôndola (30 pts)</option>
-          <option value="MEIA_PONTA" ${r.tipo === 'MEIA_PONTA' ? 'selected' : ''}>🔖 Meia Ponta (15 pts)</option>
-          <option value="NENHUM" ${r.tipo === 'NENHUM' ? 'selected' : ''}>Zero Pts</option>
-        </select>
-      </div>
-
-      <div class="pe-creative-toggle-wrap ${r.criativo ? 'active' : ''}" id="creative-wrap-${r.task_id}" 
-           onclick="toggleCardCriativo('${r.task_id}')">
-        <span class="pe-creative-label">⚡ Bônus Criativo (Pontos em Dobro)</span>
-        <div class="pe-toggle-switch"></div>
-      </div>
-
-      <div class="pe-calc-row">
-        <select id="periodo-${r.task_id}" class="pe-periodo-select" onchange="handleCardFieldChange('${r.task_id}')">
-          ${periodOptionsHtml}
-        </select>
-        <div class="pe-pts-pill ${r.status === 'APROVADO' ? 'has-pts' : ''}" id="pts-pill-${r.task_id}">
-          ${ptsPillText}
+      <!-- PAINEL MULTI-CONQUISTAS COM QUANTIDADES E BÔNUS DOBRO UNITÁRIO -->
+      <div class="pe-conquests-panel">
+        <div class="pe-conquests-title">
+          <span>🏆 Conquistas no Período</span>
+          <span class="pe-cq-legend">Qtd & ⚡ Dobro por Unidade</span>
+        </div>
+        <div class="pe-conquests-list">
+          ${conquestRowsHtml}
+        </div>
+        <div class="pe-conquests-summary-bar">
+          <div class="pe-cq-summary-info">
+            <span id="summary-qtd-${storeIdSafe}">Total: <strong>${conquestResult.totalQtd}</strong> un</span>
+            ${conquestResult.totalCriativos > 0 ? `<span class="pe-cq-cr-tag" id="summary-cr-${storeIdSafe}">⚡ <strong>${conquestResult.totalCriativos}</strong> criativo(s)</span>` : `<span class="pe-cq-cr-tag" id="summary-cr-${storeIdSafe}" style="display:none;"></span>`}
+          </div>
+          <div class="pe-pts-pill ${ptsPillClass}" id="pts-pill-${storeIdSafe}">
+            ${ptsPillText}
+          </div>
         </div>
       </div>
 
-      <input type="text" id="obs-${r.task_id}" class="pe-obs-input" placeholder="Observações da curadoria..." 
-             value="${escapeHtml(r.motivo || '')}" onchange="handleCardFieldChange('${r.task_id}')">
+      <div class="pe-calc-row">
+        <label class="pe-periodo-label">Período Avaliado:</label>
+        <select id="periodo-${storeIdSafe}" class="pe-periodo-select" onchange="handleStoreFieldChange('${storeIdSafe}')">
+          ${periodOptionsHtml}
+        </select>
+      </div>
 
-      <button type="button" class="pe-save-btn" id="save-btn-${r.task_id}" onclick="saveCardApproval('${r.task_id}', true)">
-        Salvar Curadoria
+      <input type="text" id="obs-${storeIdSafe}" class="pe-obs-input" placeholder="Observações / Motivo da rejeição..." 
+             value="${escapeHtml(currentObs)}" onchange="handleStoreFieldChange('${storeIdSafe}')">
+
+      <button type="button" class="pe-save-btn" id="save-btn-${storeIdSafe}" onclick="saveStoreApproval('${storeIdSafe}', true)">
+        Salvar Auditoria
       </button>
     </div>
   `;
@@ -1659,31 +2513,169 @@ function createPeCardElement(r) {
   return card;
 }
 
-function calculateLocalPoints(tipo, criativo) {
-  const base = PONTUACOES_BASE[tipo] || 0;
-  const mult = criativo ? 2 : 1;
-  return base * mult;
-}
-
-function switchCardPreview(taskId, url, thumbEl) {
-  const mainImg = document.getElementById(`main-img-${taskId}`);
+window.switchStorePreview = function(storeIdSafe, url, thumbWrapEl) {
+  const mainImg = document.getElementById(`main-img-${storeIdSafe}`);
   if (mainImg) mainImg.src = url;
 
-  const card = document.getElementById(`pe-card-${taskId}`);
+  const card = document.getElementById(`pe-store-card-${storeIdSafe}`);
   if (card) {
-    const thumbs = card.querySelectorAll('.pe-thumb-mini');
+    const thumbs = card.querySelectorAll('.pe-thumb-wrap');
     thumbs.forEach(t => t.classList.remove('active'));
-    if (thumbEl) thumbEl.classList.add('active');
+    if (thumbWrapEl) thumbWrapEl.classList.add('active');
   }
-}
+};
 
-function setCardStatus(taskId, newStatus) {
-  const record = allPeRecords.find(r => r.task_id === taskId);
-  if (!record) return;
+window.stepConquestQtd = function(storeIdSafe, tipoKey, delta) {
+  const entry = window.storeCardRegistry[storeIdSafe];
+  if (!entry) return;
 
-  record.status = newStatus;
+  if (!entry.conquistas) entry.conquistas = defaultConquistas();
+  if (!entry.conquistas[tipoKey]) entry.conquistas[tipoKey] = { qtd: 0, criativo: 0 };
 
-  const card = document.getElementById(`pe-card-${taskId}`);
+  const currentQtd = Math.max(0, Number(entry.conquistas[tipoKey].qtd) || 0);
+  const newQtd = Math.max(0, currentQtd + delta);
+  entry.conquistas[tipoKey].qtd = newQtd;
+
+  // Se a quantidade diminuir para menos do que os criativos atribuídos, ajusta os criativos
+  if (entry.conquistas[tipoKey].criativo > newQtd) {
+    entry.conquistas[tipoKey].criativo = newQtd;
+  }
+
+  updateStoreCardConquestView(storeIdSafe);
+};
+
+window.stepConquestCriativo = function(storeIdSafe, tipoKey, delta) {
+  const entry = window.storeCardRegistry[storeIdSafe];
+  if (!entry) return;
+
+  if (!entry.conquistas) entry.conquistas = defaultConquistas();
+  if (!entry.conquistas[tipoKey]) entry.conquistas[tipoKey] = { qtd: 0, criativo: 0 };
+
+  const currentQtd = Math.max(0, Number(entry.conquistas[tipoKey].qtd) || 0);
+  if (currentQtd === 0) {
+    showToast(`Adicione primeiro ao menos 1 unidade desta conquista para aplicar o bônus criativo.`, 'warning');
+    return;
+  }
+
+  const currentCr = Math.max(0, Number(entry.conquistas[tipoKey].criativo) || 0);
+  const newCr = Math.max(0, Math.min(currentQtd, currentCr + delta));
+  entry.conquistas[tipoKey].criativo = newCr;
+
+  updateStoreCardConquestView(storeIdSafe);
+};
+
+window.updateStoreCardConquestView = function(storeIdSafe) {
+  const entry = window.storeCardRegistry[storeIdSafe];
+  if (!entry) return;
+
+  const conquestResult = calculateConquestPoints(entry.conquistas);
+  entry.criativo = (conquestResult.totalCriativos > 0);
+
+  const bases = { ilha: 50, meia_ilha: 25, ponta: 30, meia_ponta: 15 };
+
+  // Atualiza cada linha no DOM
+  Object.keys(bases).forEach(key => {
+    const item = entry.conquistas[key] || { qtd: 0, criativo: 0 };
+    const q = item.qtd || 0;
+    const cr = item.criativo || 0;
+    const base = bases[key];
+    const norm = Math.max(0, q - cr);
+    const subPts = (norm * base) + (cr * base * 2);
+
+    const valQtdEl = document.getElementById(`val-qtd-${storeIdSafe}-${key}`);
+    const valCrEl = document.getElementById(`val-cr-${storeIdSafe}-${key}`);
+    const subPtsEl = document.getElementById(`cq-sub-${storeIdSafe}-${key}`);
+    const boxCrEl = document.getElementById(`box-cr-${storeIdSafe}-${key}`);
+    const rowEl = document.getElementById(`cq-row-${storeIdSafe}-${key}`);
+
+    if (valQtdEl) valQtdEl.textContent = q;
+    if (valCrEl) valCrEl.textContent = cr;
+    if (subPtsEl) subPtsEl.textContent = `${subPts} pts`;
+
+    if (boxCrEl) {
+      boxCrEl.classList.toggle('active', cr > 0);
+      boxCrEl.classList.toggle('disabled', q === 0);
+    }
+    if (rowEl) {
+      rowEl.classList.toggle('has-qty', q > 0);
+    }
+  });
+
+  // Atualiza resumo
+  const sumQtdEl = document.getElementById(`summary-qtd-${storeIdSafe}`);
+  const sumCrEl = document.getElementById(`summary-cr-${storeIdSafe}`);
+  if (sumQtdEl) sumQtdEl.innerHTML = `Total: <strong>${conquestResult.totalQtd}</strong> un`;
+  if (sumCrEl) {
+    if (conquestResult.totalCriativos > 0) {
+      sumCrEl.style.display = '';
+      sumCrEl.innerHTML = `⚡ <strong>${conquestResult.totalCriativos}</strong> criativo(s)`;
+    } else {
+      sumCrEl.style.display = 'none';
+    }
+  }
+
+  // Pontuação final do período:
+  // REJEITADO = 0 pts
+  // APROVADO = total calculado
+  // PENDENTE = 0 pts
+  const isAprovado = (entry.status === 'APROVADO');
+  const isRejeitado = (entry.status === 'REJEITADO');
+  const finalPts = isAprovado ? conquestResult.total : 0;
+
+  const pill = document.getElementById(`pts-pill-${storeIdSafe}`);
+  if (pill) {
+    if (isAprovado) {
+      pill.textContent = `+${finalPts} pts`;
+      pill.className = `pe-pts-pill has-pts`;
+    } else if (isRejeitado) {
+      pill.textContent = `0 pts (Rejeitado)`;
+      pill.className = `pe-pts-pill is-rejected`;
+    } else {
+      pill.textContent = `0 pts (Pendente • Prev: ${conquestResult.total} pts)`;
+      pill.className = `pe-pts-pill is-pending`;
+    }
+  }
+
+  const card = document.getElementById(`pe-store-card-${storeIdSafe}`);
+  if (card) {
+    card.classList.toggle('is-criativo', entry.criativo);
+  }
+
+  // Sincroniza em allPeRecords para todas as tarefas desta loja neste período
+  const matchingTasks = allPeRecords.filter(r => 
+    r.pdv === entry.lojaName &&
+    (r.periodo || '27/08 A 03/09') === entry.pName &&
+    (r.promotor_campanha === entry.promName || r.promotor_csv === entry.promName)
+  );
+
+  matchingTasks.forEach((t, idx) => {
+    t.conquistas = entry.conquistas;
+    t.tipo = JSON.stringify(entry.conquistas);
+    t.criativo = entry.criativo;
+    t.status = entry.status;
+    t.periodo = entry.periodo || entry.pName;
+    t.motivo = entry.motivo || '';
+    // Apenas a primeira tarefa recebe a pontuação se for APROVADO, caso contrário 0
+    t.pontos = (isAprovado && idx === 0) ? finalPts : 0;
+  });
+
+  saveStoreApproval(storeIdSafe, false);
+  recalcularEstatisticasPe();
+  atualizarMatrizAposCuradoria();
+};
+
+window.setStoreStatus = function(storeIdSafe, newStatus) {
+  const entry = window.storeCardRegistry[storeIdSafe];
+  if (!entry) return;
+
+  entry.status = newStatus;
+
+  const perSelect = document.getElementById(`periodo-${storeIdSafe}`);
+  const obsInput = document.getElementById(`obs-${storeIdSafe}`);
+  if (perSelect) entry.periodo = perSelect.value;
+  if (obsInput) entry.motivo = obsInput.value;
+
+  const card = document.getElementById(`pe-store-card-${storeIdSafe}`);
   if (card) {
     card.classList.remove('status-aprovado', 'status-rejeitado', 'status-pendente');
     card.classList.add(`status-${newStatus.toLowerCase()}`);
@@ -1694,129 +2686,132 @@ function setCardStatus(taskId, newStatus) {
     });
   }
 
-  updateCardScoreBadge(taskId);
-  saveCardApproval(taskId, false);
-}
+  updateStoreCardConquestView(storeIdSafe);
 
-function toggleCardCriativo(taskId) {
-  const record = allPeRecords.find(r => r.task_id === taskId);
-  if (!record) return;
-
-  record.criativo = !record.criativo;
-
-  const wrap = document.getElementById(`creative-wrap-${taskId}`);
-  const card = document.getElementById(`pe-card-${taskId}`);
-  if (wrap) wrap.classList.toggle('active', record.criativo);
-  if (card) card.classList.toggle('is-criativo', record.criativo);
-
-  updateCardScoreBadge(taskId);
-  saveCardApproval(taskId, false);
-}
-
-function handleCardFieldChange(taskId) {
-  const record = allPeRecords.find(r => r.task_id === taskId);
-  if (!record) return;
-
-  const tipoSelect = document.getElementById(`tipo-${taskId}`);
-  const perSelect = document.getElementById(`periodo-${taskId}`);
-  const obsInput = document.getElementById(`obs-${taskId}`);
-
-  if (tipoSelect) record.tipo = tipoSelect.value;
-  if (perSelect) record.periodo = perSelect.value;
-  if (obsInput) record.motivo = obsInput.value;
-
-  updateCardScoreBadge(taskId);
-  saveCardApproval(taskId, false);
-}
-
-function updateCardScoreBadge(taskId) {
-  const record = allPeRecords.find(r => r.task_id === taskId);
-  if (!record) return;
-
-  const pill = document.getElementById(`pts-pill-${taskId}`);
-  if (!pill) return;
-
-  if (record.status === 'APROVADO') {
-    const pts = calculateLocalPoints(record.tipo, record.criativo);
-    record.pontos = pts;
-    pill.textContent = `+${pts} pts`;
-    pill.className = 'pe-pts-pill has-pts';
-  } else {
-    record.pontos = 0;
-    pill.textContent = '0 pts';
-    pill.className = 'pe-pts-pill';
+  if (newStatus === 'REJEITADO') {
+    showToast(`Loja marcada como REJEITADA. Pontuação zerada para este período.`, 'warning');
+  } else if (newStatus === 'APROVADO') {
+    const conquestResult = calculateConquestPoints(entry.conquistas);
+    showToast(`Loja APROVADA com +${conquestResult.total} pts no período.`, 'potencia');
   }
-}
+};
 
-async function saveCardApproval(taskId, showToastMsg = true) {
-  const record = allPeRecords.find(r => r.task_id === taskId);
-  if (!record) return;
+window.handleStoreFieldChange = function(storeIdSafe) {
+  const entry = window.storeCardRegistry[storeIdSafe];
+  if (!entry) return;
 
-  const payload = {
-    task_id: taskId,
-    status: record.status,
-    tipo: record.tipo,
-    criativo: record.criativo,
-    periodo: record.periodo,
-    motivo: record.motivo,
-    pontos: record.status === 'APROVADO' ? calculateLocalPoints(record.tipo, record.criativo) : 0
-  };
+  const perSelect = document.getElementById(`periodo-${storeIdSafe}`);
+  const obsInput = document.getElementById(`obs-${storeIdSafe}`);
 
-  // Salva no Supabase se disponível
+  if (perSelect) entry.periodo = perSelect.value;
+  if (obsInput) entry.motivo = obsInput.value;
+
+  updateStoreCardConquestView(storeIdSafe);
+};
+
+window.saveStoreApproval = async function(storeIdSafe, showToastMsg = true) {
+  const entry = window.storeCardRegistry[storeIdSafe];
+  if (!entry) return;
+
+  const matchingTasks = allPeRecords.filter(r => 
+    r.pdv === entry.lojaName &&
+    (r.periodo || '27/08 A 03/09') === entry.pName &&
+    (r.promotor_campanha === entry.promName || r.promotor_csv === entry.promName)
+  );
+
   const sb = await ensureSupabase();
-  if (sb) {
+  if (sb && matchingTasks.length > 0) {
     try {
-      await sb
-        .from('tb_campanha_pontos_extras')
-        .upsert([{
-          task_id: taskId,
-          promotor: record.promotor_campanha || record.promotor_csv,
-          pdv: record.pdv,
-          data_registro: record.data,
-          tipo_conquista: record.tipo,
-          criativo: record.criativo,
-          pontos: payload.pontos,
-          status_curadoria: record.status,
-          motivo_rejeicao: record.motivo,
-          fotos: record.fotos,
-          periodo_nome: record.periodo,
-          updated_at: new Date().toISOString()
-        }], { onConflict: 'task_id' });
+      const payload = matchingTasks.map(t => ({
+        task_id: t.task_id,
+        promotor: t.promotor_campanha || t.promotor_csv,
+        pdv: t.pdv,
+        data_registro: t.data,
+        tipo_conquista: typeof t.tipo === 'object' ? JSON.stringify(t.tipo) : t.tipo,
+        criativo: Boolean(t.criativo),
+        pontos: t.pontos || 0,
+        status_curadoria: t.status,
+        motivo_rejeicao: t.motivo,
+        fotos: t.fotos,
+        periodo_nome: t.periodo,
+        updated_at: new Date().toISOString()
+      }));
+      await sb.from('tb_campanha_pontos_extras').upsert(payload, { onConflict: 'task_id' });
     } catch (e) {
       console.warn("Erro ao salvar curadoria no Supabase:", e);
     }
   }
 
-  // Tenta salvar também no backend Flask
+  // Tenta salvar no backend Flask
   try {
-    await fetch(getApiUrl('/api/pontos-extras/salvar'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    for (const t of matchingTasks) {
+      await fetch(getApiUrl('/api/pontos-extras/salvar'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_id: t.task_id,
+          status: t.status,
+          tipo: typeof t.tipo === 'object' ? JSON.stringify(t.tipo) : t.tipo,
+          criativo: t.criativo,
+          periodo: t.periodo,
+          motivo: t.motivo,
+          pontos: t.pontos
+        })
+      });
+    }
   } catch(e) {}
 
   if (showToastMsg) {
-    showToast(`Curadoria da tarefa #${taskId} salva com sucesso!`, 'potencia');
+    const conquestResult = calculateConquestPoints(entry.conquistas);
+    const ptsInfo = entry.status === 'APROVADO' ? `(+${conquestResult.total} pts)` : `(0 pts - ${entry.status})`;
+    showToast(`Auditoria de "${entry.lojaName}" salva com sucesso ${ptsInfo}!`, 'potencia');
   }
+};
+
+function calculateLocalPoints(tipo, criativo) {
+  const base = PONTUACOES_BASE[tipo] || 0;
+  const mult = criativo ? 2 : 1;
+  return base * mult;
+}
+
+// Compatibilidade retroativa para rotinas que possam chamar por taskId
+function setCardStatus(taskId, newStatus) {
+  const record = allPeRecords.find(r => r.task_id === taskId);
+  if (!record) return;
+  const pName = record.periodo || '27/08 A 03/09';
+  const promName = record.promotor_campanha || record.promotor_csv || '';
+  const lojaName = record.pdv || '';
+  const storeIdSafe = 'store_' + `${pName}_${promName}_${lojaName}`.replace(/[^a-zA-Z0-9]/g, '_');
+  setStoreStatus(storeIdSafe, newStatus);
+}
+
+// Reflete imediatamente na matriz da campanha qualquer mudança da curadoria
+let _curadoriaRefreshTimer = null;
+function atualizarMatrizAposCuradoria() {
+  clearTimeout(_curadoriaRefreshTimer);
+  _curadoriaRefreshTimer = setTimeout(() => applyFilters(), 150);
 }
 
 async function handleAprovarTodosVisiveis() {
-  const cards = peGrid.querySelectorAll('.pe-card');
+  const cards = peGrid.querySelectorAll('.pe-store-card, .pe-card');
   let count = 0;
   cards.forEach(c => {
-    const id = c.id.replace('pe-card-', '');
-    const rec = allPeRecords.find(r => r.task_id === id);
-    if (rec && rec.status === 'PENDENTE') {
-      setCardStatus(id, 'APROVADO');
+    const storeIdSafe = c.id.replace('pe-store-card-', '').replace('pe-card-', '');
+    const entry = window.storeCardRegistry && window.storeCardRegistry[storeIdSafe];
+    if (entry && entry.status === 'PENDENTE') {
+      setStoreStatus(storeIdSafe, 'APROVADO');
       count++;
     }
   });
 
   if (count > 0) {
-    showToast(`✓ ${count} pontos extras aprovados com sucesso!`, 'potencia');
+    recalcularEstatisticasPe();
+    aplicarPontosExtrasAprovados();
+    updateMetrics();
+    applyFilters();
+    showToast(`✓ ${count} lojas aprovadas com sucesso!`, 'potencia');
   } else {
-    showToast('Nenhum ponto extra pendente na listagem visível.', 'warning');
+    showToast('Nenhuma loja pendente na listagem visível.', 'warning');
   }
 }
 
@@ -1847,11 +2842,45 @@ async function handleSyncToCampaign() {
 // LIGHTBOX HD
 // ========================================================
 
+let currentLightboxMeta = [];
+
+window.openStoreLightbox = function(storeIdSafe, photoIdx = 0) {
+  const entry = window.storeCardRegistry && window.storeCardRegistry[storeIdSafe];
+  if (!entry || !entry.allPhotos || entry.allPhotos.length === 0) return;
+
+  currentLightboxPhotos = entry.allPhotos.map(p => p.url);
+  currentLightboxMeta = entry.allPhotos;
+  currentLightboxIdx = photoIdx;
+
+  const curPhoto = entry.allPhotos[photoIdx];
+  const curData = curPhoto?.data ? ` • Data: ${curPhoto.data}` : '';
+  const curTask = curPhoto?.taskId ? ` • Tarefa #${curPhoto.taskId}` : '';
+
+  lightboxTitle.textContent = `${entry.promName} • ${entry.tipo || 'PONTO EXTRA'}`;
+  lightboxSubtitle.textContent = `${entry.lojaName} • Período: ${entry.pName}${curData}${curTask}`;
+
+  lightboxThumbnails.innerHTML = '';
+  entry.allPhotos.forEach((item, idx) => {
+    const thumb = document.createElement('img');
+    thumb.src = item.url;
+    thumb.referrerPolicy = 'no-referrer';
+    thumb.loading = 'lazy';
+    thumb.title = `Data: ${item.data || '-'} (Tarefa #${item.taskId || '-'})`;
+    thumb.className = `lightbox-thumb ${idx === currentLightboxIdx ? 'active' : ''}`;
+    thumb.addEventListener('click', () => setLightboxIndex(idx));
+    lightboxThumbnails.appendChild(thumb);
+  });
+
+  updateLightboxView();
+  lightboxModal.classList.add('active');
+};
+
 function openLightbox(taskId, photoIdx = 0) {
   const rec = allPeRecords.find(r => r.task_id === taskId);
   if (!rec || !rec.fotos || rec.fotos.length === 0) return;
 
   currentLightboxPhotos = rec.fotos;
+  currentLightboxMeta = rec.fotos.map(f => ({ url: f, data: rec.data, taskId: rec.task_id }));
   currentLightboxIdx = photoIdx;
 
   lightboxTitle.textContent = `${rec.promotor_campanha || rec.promotor_csv} • ${rec.tipo}`;
@@ -1861,6 +2890,8 @@ function openLightbox(taskId, photoIdx = 0) {
   currentLightboxPhotos.forEach((url, idx) => {
     const thumb = document.createElement('img');
     thumb.src = url;
+    thumb.referrerPolicy = 'no-referrer';
+    thumb.loading = 'lazy';
     thumb.className = `lightbox-thumb ${idx === currentLightboxIdx ? 'active' : ''}`;
     thumb.addEventListener('click', () => setLightboxIndex(idx));
     lightboxThumbnails.appendChild(thumb);
@@ -1873,6 +2904,7 @@ function openLightbox(taskId, photoIdx = 0) {
 function closeLightbox() {
   lightboxModal.classList.remove('active');
   currentLightboxPhotos = [];
+  currentLightboxMeta = [];
 }
 
 function navigateLightbox(delta) {
@@ -1890,8 +2922,17 @@ function updateLightboxView() {
   const url = currentLightboxPhotos[currentLightboxIdx];
   if (!url) return;
 
+  lightboxImg.referrerPolicy = 'no-referrer';
   lightboxImg.src = url;
   lightboxCounter.textContent = `${currentLightboxIdx + 1} / ${currentLightboxPhotos.length}`;
+
+  if (currentLightboxMeta && currentLightboxMeta[currentLightboxIdx]) {
+    const item = currentLightboxMeta[currentLightboxIdx];
+    const curData = item.data ? ` • Data: ${item.data}` : '';
+    const curTask = item.taskId ? ` • Tarefa #${item.taskId}` : '';
+    const baseSub = lightboxSubtitle.textContent.split(' • Data:')[0].split(' • Tarefa')[0];
+    lightboxSubtitle.textContent = `${baseSub}${curData}${curTask}`;
+  }
 
   const thumbs = lightboxThumbnails.querySelectorAll('.lightbox-thumb');
   thumbs.forEach((t, i) => t.classList.toggle('active', i === currentLightboxIdx));

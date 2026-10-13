@@ -284,7 +284,7 @@ def api_pontos_extras_exportar_excel():
             output,
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             as_attachment=True,
-            download_name="CURADORIA_PONTOS_EXTRAS.xlsx"
+            download_name="AUDITORIA_PONTOS_EXTRAS.xlsx"
         )
     except Exception as e:
         return str(e), 500
@@ -338,7 +338,7 @@ def api_pontos_extras_exportar_pdf():
             pdf_buffer,
             mimetype="application/pdf",
             as_attachment=True,
-            download_name="CURADORIA_PONTOS_EXTRAS_MODO_POTENCIA.pdf"
+            download_name="AUDITORIA_PONTOS_EXTRAS_MODO_POTENCIA.pdf"
         )
     except Exception as e:
         import traceback

@@ -103,6 +103,47 @@ class PontoExtraEngine:
                 
         return None
 
+    def calculate_conquest_points_dict(self, raw_data):
+        """
+        Calculates points for each conquest type (ILHA, MEIA_ILHA, PONTA, MEIA_PONTA)
+        supporting dictionary or JSON string format:
+        {'ilha': {'qtd': 2, 'criativo': 1}, 'meia_ilha': {'qtd': 1, 'criativo': 0}, ...}
+        Returns:
+            dict: {'ILHA': pts, 'MEIA_ILHA': pts, 'PONTA': pts, 'MEIA_PONTA': pts}, total
+        """
+        col_map = {
+            'ilha': ('ILHA', 50),
+            'meia_ilha': ('MEIA_ILHA', 25),
+            'ponta': ('PONTA', 30),
+            'meia_ponta': ('MEIA_PONTA', 15)
+        }
+        res = {'ILHA': 0, 'MEIA_ILHA': 0, 'PONTA': 0, 'MEIA_PONTA': 0}
+        total = 0
+
+        conquistas = raw_data
+        if isinstance(conquistas, str):
+            s = conquistas.strip()
+            if s.startswith('{'):
+                try:
+                    conquistas = json.loads(s)
+                except Exception:
+                    conquistas = None
+            else:
+                conquistas = None
+
+        if isinstance(conquistas, dict):
+            for k, (col_name, base) in col_map.items():
+                item = conquistas.get(k) or {}
+                qtd = max(0, int(item.get('qtd', 0) or 0))
+                criativo = max(0, min(qtd, int(item.get('criativo', 0) or 0)))
+                norm = max(0, qtd - criativo)
+                pts = (norm * base) + (criativo * base * 2)
+                res[col_name] = pts
+                total += pts
+            return res, total
+
+        return res, 0
+
     def calculate_points(self, tipo, criativo, quantidade=1):
         """Calculates points based on type, quantity and creative double bonus."""
         base = self.PONTUACOES_BASE.get(tipo, 0)
@@ -155,12 +196,21 @@ class PontoExtraEngine:
             # Check saved approval
             aprov = self.aprovacoes.get(task_id, {})
             status = aprov.get('status', 'PENDENTE')
-            tipo = aprov.get('tipo', 'ILHA') # default suggestion
+            tipo = aprov.get('tipo', 'ILHA') # default suggestion or JSON string
             criativo = bool(aprov.get('criativo', False))
             quantidade = int(aprov.get('quantidade', 1))
             periodo = aprov.get('periodo', 'P5 (28/09 A 30/09)') # or auto-derived
             motivo = aprov.get('motivo', '')
-            pontos = self.calculate_points(tipo, criativo, quantidade) if status == 'APROVADO' else 0
+
+            # Rejeitado ou Pendente fica rigorosamente zerado (0 pts)
+            if status != 'APROVADO':
+                pontos = 0
+            else:
+                by_col, total_conq = self.calculate_conquest_points_dict(tipo)
+                if total_conq > 0:
+                    pontos = total_conq
+                else:
+                    pontos = self.calculate_points(tipo, criativo, quantidade)
 
             records.append({
                 'task_id': task_id,
@@ -224,20 +274,33 @@ class PontoExtraEngine:
         records, periods = self.load_ponto_extra_records()
         
         # Aggregate approved points by (promotor_campanha, periodo, tipo)
+        # Regra da campanha: cada loja no período pontua uma única vez
         aggregated = {} # key: (promotor_nome, periodo_str) -> {'ILHA': pts, 'MEIA_ILHA': pts, 'PONTA': pts, 'MEIA_PONTA': pts}
+        lojas_processadas = set()
         
         for r in records:
             if r['status'] == 'APROVADO':
                 prom = r['promotor_campanha']
                 per = r['periodo']
                 tipo = r['tipo']
-                pts = r['pontos']
-                
+                pdv = str(r.get('pdv') or '').strip().upper()
+                store_key = (prom, per, pdv)
+                if store_key in lojas_processadas:
+                    continue
+                lojas_processadas.add(store_key)
+
                 key = (prom, per)
                 if key not in aggregated:
                     aggregated[key] = {'ILHA': 0, 'MEIA_ILHA': 0, 'PONTA': 0, 'MEIA_PONTA': 0}
-                if tipo in aggregated[key]:
-                    aggregated[key][tipo] += pts
+
+                by_col, total_cq = self.calculate_conquest_points_dict(tipo)
+                if total_cq > 0:
+                    for col_name, pts_cq in by_col.items():
+                        aggregated[key][col_name] += pts_cq
+                else:
+                    pts = r['pontos']
+                    if tipo in aggregated[key]:
+                        aggregated[key][tipo] += pts
 
         # Open workbook (preserving formulas)
         src_file = output_excel_path if os.path.exists(output_excel_path) else self.camp_file
@@ -361,7 +424,7 @@ class PontoExtraEngine:
         records, periods = self.load_ponto_extra_records()
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = "Curadoria Pontos Extras"
+        ws.title = "Auditoria Pontos Extras"
 
         headers = [
             "ID Tarefa", "Status", "Promotor (CSV)", "Promotor (Campanha)", "PDV",
