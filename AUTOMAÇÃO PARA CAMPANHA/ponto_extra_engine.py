@@ -24,9 +24,22 @@ class PontoExtraEngine:
     }
 
     def __init__(self, base_dir=None, camp_file=None, pe_csv_file=None, storage_file=None):
-        self.base_dir = base_dir or os.path.dirname(os.path.abspath(__file__))
+        self.base_dir = os.path.abspath(base_dir or os.path.dirname(os.path.abspath(__file__)))
         self.camp_file = camp_file or os.path.join(self.base_dir, "CAMPANHA (1).xlsx")
-        self.pe_csv_file = pe_csv_file or os.path.join(self.base_dir, "RELATÓRIO_PONTO_EXTRA (4).csv")
+        # Prioritize RELATÓRIO_DE_PONTO_EXTRA.csv if available
+        if not pe_csv_file:
+            candidates = [
+                os.path.join(os.path.dirname(self.base_dir), "RELATÓRIO_DE_PONTO_EXTRA.csv"),
+                os.path.join(self.base_dir, "RELATÓRIO_DE_PONTO_EXTRA.csv"),
+                os.path.join(os.path.dirname(self.base_dir), "RELATÓRIO_PONTO_EXTRA.csv"),
+                os.path.join(self.base_dir, "RELATÓRIO_PONTO_EXTRA.csv"),
+                os.path.join(self.base_dir, "RELATÓRIO_PONTO_EXTRA (4).csv")
+            ]
+            for c in candidates:
+                if os.path.exists(c):
+                    pe_csv_file = c
+                    break
+        self.pe_csv_file = pe_csv_file or os.path.join(self.base_dir, "RELATÓRIO_DE_PONTO_EXTRA.csv")
         self.storage_file = storage_file or os.path.join(self.base_dir, "aprovacoes_pontos_extras.json")
         self.load_storage()
 
@@ -85,20 +98,32 @@ class PontoExtraEngine:
         return promoters, periods
 
     def match_promoter(self, csv_name, camp_promoters):
-        """Matches CSV promoter name with campaign spreadsheet."""
+        """Matches CSV promoter name with campaign spreadsheet with accent tolerance."""
         if not csv_name:
             return None
+        import unicodedata
+        def _strip_accents(text):
+            if not text: return ''
+            text = unicodedata.normalize('NFD', str(text).strip().upper())
+            return ''.join(c for c in text if unicodedata.category(c) != 'Mn')
+            
         clean_csv = re.sub(r'\s+', ' ', str(csv_name).strip().upper())
+        clean_csv_norm = _strip_accents(clean_csv)
         
         # 1. Exact match
         for p in camp_promoters:
             if p['nome'].upper() == clean_csv:
                 return p['nome']
                 
-        # 2. Prefix / substring match
+        # 2. Normalized match (without accents)
         for p in camp_promoters:
-            p_clean = p['nome'].upper()
-            if clean_csv.startswith(p_clean[:20]) or p_clean.startswith(clean_csv[:20]):
+            if _strip_accents(p['nome']) == clean_csv_norm:
+                return p['nome']
+                
+        # 3. Prefix / substring match
+        for p in camp_promoters:
+            p_norm = _strip_accents(p['nome'])
+            if clean_csv_norm.startswith(p_norm[:18]) or p_norm.startswith(clean_csv_norm[:18]):
                 return p['nome']
                 
         return None
@@ -178,7 +203,13 @@ class PontoExtraEngine:
         records = []
         for _, row in df_pe.iterrows():
             task_id = str(row['ID DA TAREFA']).strip()
-            data_exec = str(row.get('DATA E HORA DE EXECUÇÃO', '') or '').strip()
+            data_exec = str(
+                row.get('DATA E HORA INÍCIO EXECUÇÃO') or 
+                row.get('DATA E HORA INICIO EXECUCAO') or 
+                row.get('DATA E HORA DE EXECUÇÃO') or 
+                row.get('DATA E HORA DA EXECUÇÃO') or 
+                row.get('DATA') or ''
+            ).strip()
             pdv = str(row.get('PDV', '') or '').strip()
             promotor_csv = str(row.get('PROMOTOR', '') or '').strip()
             atividade = str(row.get('ATIVIDADE', '') or '').strip()

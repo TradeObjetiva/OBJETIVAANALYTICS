@@ -1,1 +1,3182 @@
-{}
+{
+  "699176338": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:32:14.024+00:00"
+  },
+  "700233908": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:07:12.721+00:00"
+  },
+  "698772898": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:32:11.136+00:00"
+  },
+  "700639511": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":1,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 25,
+    "updated_at": "2026-10-13T18:07:44.906+00:00"
+  },
+  "698912793": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T15:25:49.541+00:00"
+  },
+  "699651449": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:36:00.098+00:00"
+  },
+  "699651420": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:37:51.411+00:00"
+  },
+  "700639553": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:10:51.849+00:00"
+  },
+  "700822491": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:18:37.711+00:00"
+  },
+  "699862157": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:18:37.711+00:00"
+  },
+  "699651526": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T16:32:45.387+00:00"
+  },
+  "698600035": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:33:24.72+00:00"
+  },
+  "700639441": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:54:40.345+00:00"
+  },
+  "700639471": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:49:05.352+00:00"
+  },
+  "700639392": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639395": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639408": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639412": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639430": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "699176243": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 50,
+    "updated_at": "2026-10-13T16:35:28.58+00:00"
+  },
+  "700435990": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:53:10.301+00:00"
+  },
+  "698595535": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:37:30.708+00:00"
+  },
+  "699862081": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":2,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:53:08.772+00:00"
+  },
+  "701502788": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502791": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502842": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502851": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701688456": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701688459": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701693879": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701694031": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701694163": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "698912943": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 50,
+    "updated_at": "2026-10-13T16:38:57.136+00:00"
+  },
+  "698595579": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:38:57.136+00:00"
+  },
+  "700639449": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:54:19.951+00:00"
+  },
+  "698912815": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 45,
+    "updated_at": "2026-10-13T16:41:16.616+00:00"
+  },
+  "702733305": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702733344": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702733345": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702733354": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702733355": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702733380": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702733383": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "699651518": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T17:55:03.079+00:00"
+  },
+  "699176490": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T17:55:03.079+00:00"
+  },
+  "699176124": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T17:57:07.508+00:00"
+  },
+  "703607826": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703607894": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703607911": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703607948": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703607955": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703608030": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703608719": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703608723": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704499135": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "698772903": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T17:59:58.751+00:00"
+  },
+  "699176308": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:00:55.618+00:00"
+  },
+  "704450377": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "698399540": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:38:42.008+00:00"
+  },
+  "698399393": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:04:41.503+00:00"
+  },
+  "698399411": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 50,
+    "updated_at": "2026-10-13T15:25:34.741+00:00"
+  },
+  "699440557": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:04:58.743+00:00"
+  },
+  "698399559": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:37:51.411+00:00"
+  },
+  "698399513": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T17:57:07.508+00:00"
+  },
+  "698399545": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:38:22.632+00:00"
+  },
+  "698399617": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:00:55.618+00:00"
+  },
+  "698912915": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "698772883": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T16:33:47.68+00:00"
+  },
+  "698912865": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T16:37:30.708+00:00"
+  },
+  "698595549": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:35:28.58+00:00"
+  },
+  "698599314": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:36:45.192+00:00"
+  },
+  "698912817": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T16:41:39.464+00:00"
+  },
+  "698912854": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:38:09.608+00:00"
+  },
+  "698912814": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T16:39:55.416+00:00"
+  },
+  "698595489": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:42:16.072+00:00"
+  },
+  "698772848": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T17:54:07.769+00:00"
+  },
+  "698595488": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T17:53:18.103+00:00"
+  },
+  "698399777": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:03:48.488+00:00"
+  },
+  "698595476": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T17:54:18.543+00:00"
+  },
+  "698399711": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T17:55:03.079+00:00"
+  },
+  "698599744": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T17:55:15.807+00:00"
+  },
+  "698772924": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T17:55:33.593+00:00"
+  },
+  "699440584": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "699440474": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:39:36.232+00:00"
+  },
+  "699440616": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T16:36:19.552+00:00"
+  },
+  "699440613": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:37:01.138+00:00"
+  },
+  "699176051": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T16:40:17.456+00:00"
+  },
+  "699176317": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T17:55:44.352+00:00"
+  },
+  "699175894": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T17:54:39.472+00:00"
+  },
+  "699651458": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 100,
+    "updated_at": "2026-10-13T18:00:55.618+00:00"
+  },
+  "699651461": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T17:55:56.567+00:00"
+  },
+  "699651392": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 100,
+    "updated_at": "2026-10-13T17:57:07.508+00:00"
+  },
+  "699651502": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:06:49.888+00:00"
+  },
+  "698912921": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:03:19.799+00:00"
+  },
+  "699440693": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:04:03.178+00:00"
+  },
+  "698912968": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:04:20.647+00:00"
+  },
+  "699651337": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:04:32.623+00:00"
+  },
+  "699176480": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":1,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 25,
+    "updated_at": "2026-10-13T18:05:52.751+00:00"
+  },
+  "699651504": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:06:38.616+00:00"
+  },
+  "699825895": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "699861921": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "699862126": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700050863": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310309": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700050915": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700050921": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700050927": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233796": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233804": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233821": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233845": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "699651552": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":2,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:03:48.488+00:00"
+  },
+  "699651534": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:05:33.631+00:00"
+  },
+  "699795927": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "27/08 A 03/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:06:32.263+00:00"
+  },
+  "699862058": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:55:22.086+00:00"
+  },
+  "700050897": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:48:01.734+00:00"
+  },
+  "699861999": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:48:43.973+00:00"
+  },
+  "700233868": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:54:40.345+00:00"
+  },
+  "700233899": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233930": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233955": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233963": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233975": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700435867": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700435896": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700435922": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700435954": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700436098": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700436114": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700436116": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700532605": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700998538": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700233967": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:08:00.258+00:00"
+  },
+  "700233888": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:48:43.973+00:00"
+  },
+  "700435985": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:54:01.742+00:00"
+  },
+  "700233879": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":1,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 15,
+    "updated_at": "2026-10-13T18:54:12.63+00:00"
+  },
+  "700435905": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:54:54.512+00:00"
+  },
+  "700639486": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639491": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639508": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639561": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700639590": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700822302": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700822304": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310315": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700822386": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700822461": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700822510": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700998516": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700998529": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700998547": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "700822436": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":2,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 100,
+    "updated_at": "2026-10-13T18:55:22.086+00:00"
+  },
+  "700822267": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:11:01.583+00:00"
+  },
+  "700822521": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":1,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 30,
+    "updated_at": "2026-10-13T18:11:14.343+00:00"
+  },
+  "700822400": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 50,
+    "updated_at": "2026-10-13T18:48:43.973+00:00"
+  },
+  "700822444": {
+    "status": "APROVADO",
+    "tipo": "{\"ilha\":{\"qtd\":0,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":2,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 60,
+    "updated_at": "2026-10-13T18:53:08.772+00:00"
+  },
+  "700998554": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701121248": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701121253": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701121381": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701121526": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310195": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310199": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310212": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310249": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310277": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310285": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310347": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310366": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701310407": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502690": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502726": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502748": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502768": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701502772": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701695158": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701695999": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701696837": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701697248": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701697265": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701697773": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701698339": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701804878": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701866033": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701866036": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701866145": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701866204": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701866211": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701866282": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "701866310": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702052222": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702052223": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702052225": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702052239": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "12/09 A 19/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177095": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177097": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177151": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177155": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177177": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177178": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177195": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177208": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177212": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702177245": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351388": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351451": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259872": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351474": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351495": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351504": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351531": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351537": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351560": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351565": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702351583": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702733276": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702735926": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702736518": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702736625": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702736733": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702736769": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702737121": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702913841": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702913896": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702913903": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702919836": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702920054": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702920622": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702921012": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702921064": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "702921516": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703124832": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703124851": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703124858": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703124859": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703124863": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703124872": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703124898": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "21/09 A 26/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703240064": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259550": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259792": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259812": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259839": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259842": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259918": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259929": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703259988": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703285755": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419215": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419222": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419311": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419325": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419353": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419374": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419477": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419527": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703419941": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703548179": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703607822": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703608728": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703608731": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "28/09 A 30/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852435": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852445": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852480": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852486": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852562": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852588": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852712": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852727": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852729": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852733": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852808": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852827": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852841": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852922": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "703852925": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704060328": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118362": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118369": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118474": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118479": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118501": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118521": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118532": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118538": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118561": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118567": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118572": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704118594": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704331391": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704331415": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704331427": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704847220": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704331429": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704331438": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704450101": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704450210": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704450218": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704450320": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704450336": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704450337": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704648859": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704648864": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704648902": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704648904": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704648906": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704648966": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704648976": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704649006": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704649072": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704649099": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704755786": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704847163": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704847166": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704847224": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704847238": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.846+00:00"
+  },
+  "704847256": {
+    "status": "PENDENTE",
+    "tipo": "ILHA",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "01/10 A 07/10",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T14:47:19.847+00:00"
+  },
+  "700435961": {
+    "status": "REJEITADO",
+    "tipo": "{\"ilha\":{\"qtd\":1,\"criativo\":0},\"meia_ilha\":{\"qtd\":0,\"criativo\":0},\"ponta\":{\"qtd\":0,\"criativo\":0},\"meia_ponta\":{\"qtd\":0,\"criativo\":0}}",
+    "criativo": false,
+    "quantidade": 1,
+    "periodo": "04/09 A 11/09",
+    "motivo": "",
+    "pontos": 0,
+    "updated_at": "2026-10-13T18:07:05.219+00:00"
+  }
+}

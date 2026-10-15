@@ -1782,14 +1782,25 @@ async function carregarPontosExtrasDoSupabase() {
   const sb = await ensureSupabase();
   if (!sb) return;
   try {
-    const { data, error } = await sb
-      .from('tb_campanha_pontos_extras')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let allData = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data, error } = await sb
+        .from('tb_campanha_pontos_extras')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(from, from + batchSize - 1);
 
-    if (!error && data && data.length > 0) {
+      if (error || !data || data.length === 0) break;
+      allData = allData.concat(data);
+      if (data.length < batchSize) break;
+      from += batchSize;
+    }
+
+    if (allData.length > 0) {
       // FILTRO CRÍTICO: apenas tarefas com fotos reais de ponto extra
-      const validosComFotos = data.filter(d => d.fotos && Array.isArray(d.fotos) && d.fotos.length > 0);
+      const validosComFotos = allData.filter(d => d.fotos && Array.isArray(d.fotos) && d.fotos.length > 0);
       allPeRecords = validosComFotos.map(d => ({
         task_id: d.task_id,
         promotor_campanha: d.promotor,
@@ -2067,16 +2078,31 @@ async function processarArquivoPeUpload(file) {
   }
 }
 
+function normalizarNomeCampanha(txt) {
+  if (!txt) return '';
+  return String(txt)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9 ]/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
 function encontrarPromotorCampanha(promotorCsv) {
   if (!promotorCsv) return null;
   const clean = promotorCsv.trim().toUpperCase();
+  const normClean = normalizarNomeCampanha(clean);
 
-  // 1. Match exato
-  const exato = allPromotores.find(p => p.nome === clean);
+  // 1. Match exato (com ou sem acentos)
+  const exato = allPromotores.find(p => p.nome === clean || normalizarNomeCampanha(p.nome) === normClean);
   if (exato) return exato.nome;
 
-  // 2. Prefixo / Substring (primeiros 18 caracteres)
-  const pref = allPromotores.find(p => p.nome.startsWith(clean.slice(0, 18)) || clean.startsWith(p.nome.slice(0, 18)));
+  // 2. Prefixo / Substring tolerante a acentos (primeiros 18 caracteres)
+  const pref = allPromotores.find(p => {
+    const pNorm = normalizarNomeCampanha(p.nome);
+    return pNorm.startsWith(normClean.slice(0, 18)) || normClean.startsWith(pNorm.slice(0, 18));
+  });
   if (pref) return pref.nome;
 
   return null;
