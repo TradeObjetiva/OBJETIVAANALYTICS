@@ -1221,6 +1221,86 @@ function normalizarDataParaISO(valor) {
   return '';
 }
 
+// Formata datas para o padrão brasileiro: DD/MM/AAAA (com ou sem hora HH:mm:ss)
+function formatarDataBR(valor, incluirHora = false) {
+  if (valor === null || valor === undefined || valor === '') return '';
+  if (valor instanceof Date && !isNaN(valor)) {
+    const d = String(valor.getDate()).padStart(2, '0');
+    const m = String(valor.getMonth() + 1).padStart(2, '0');
+    const y = valor.getFullYear();
+    if (incluirHora) {
+      const h = String(valor.getHours()).padStart(2, '0');
+      const min = String(valor.getMinutes()).padStart(2, '0');
+      const s = String(valor.getSeconds()).padStart(2, '0');
+      return `${d}/${m}/${y} ${h}:${min}:${s}`;
+    }
+    return `${d}/${m}/${y}`;
+  }
+  const s = String(valor).trim();
+  // 1. Formato YYYY-MM-DD ou YYYY/MM/DD (com ou sem hora)
+  const mIso = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+  if (mIso) {
+    const y = mIso[1];
+    const m = mIso[2].padStart(2, '0');
+    const d = mIso[3].padStart(2, '0');
+    if (incluirHora && mIso[4] !== undefined) {
+      const h = mIso[4].padStart(2, '0');
+      const min = mIso[5].padStart(2, '0');
+      const sec = mIso[6] ? ':' + mIso[6].padStart(2, '0') : '';
+      return `${d}/${m}/${y} ${h}:${min}${sec}`;
+    }
+    return `${d}/${m}/${y}`;
+  }
+  // 2. Formato com barras DD/MM/AAAA ou MM/DD/AAAA
+  const mSlash = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+  if (mSlash) {
+    const p1 = parseInt(mSlash[1], 10);
+    const p2 = parseInt(mSlash[2], 10);
+    let y = parseInt(mSlash[3], 10);
+    if (y < 100) y += 2000;
+    let dia, mes;
+    if (p1 > 12) { dia = p1; mes = p2; }
+    else if (p2 > 12) { mes = p1; dia = p2; }
+    else if (mSlash[3].length === 2) { mes = p1; dia = p2; }
+    else { dia = p1; mes = p2; }
+    const d = String(dia).padStart(2, '0');
+    const m = String(mes).padStart(2, '0');
+    if (incluirHora && mSlash[4] !== undefined) {
+      const h = mSlash[4].padStart(2, '0');
+      const min = mSlash[5].padStart(2, '0');
+      const sec = mSlash[6] ? ':' + mSlash[6].padStart(2, '0') : '';
+      return `${d}/${m}/${y} ${h}:${min}${sec}`;
+    }
+    return `${d}/${m}/${y}`;
+  }
+  // 3. Serial do Excel
+  if (/^\d{5}(\.\d+)?$/.test(s)) {
+    const dObj = new Date(Math.round((parseFloat(s) - 25569) * 86400 * 1000));
+    return formatarDataBR(dObj, incluirHora);
+  }
+  return s;
+}
+
+// Extrai timestamp numérico para ordenação cronológica precisa
+function extrairTimestampData(valor) {
+  if (!valor) return 0;
+  if (valor instanceof Date && !isNaN(valor)) return valor.getTime();
+  const s = String(valor).trim();
+  const iso = normalizarDataParaISO(s);
+  if (!iso) return 0;
+  const timeMatch = s.match(/(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)/);
+  let timeStr = '00:00:00';
+  if (timeMatch) {
+    const h = timeMatch[1].padStart(2, '0');
+    const m = timeMatch[2].padStart(2, '0');
+    const sec = timeMatch[3] ? timeMatch[3].padStart(2, '0') : '00';
+    timeStr = `${h}:${m}:${sec}`;
+  }
+  const t = new Date(`${iso}T${timeStr}`).getTime();
+  return isNaN(t) ? 0 : t;
+}
+
+
 // Localiza o período oficial da campanha a partir de uma data ISO
 function periodoPorDataISO(iso) {
   if (!iso) return null;
@@ -2379,7 +2459,10 @@ function renderPeCards() {
 }
 
 function createPeStoreCardElement(pName, promName, lojaName, tasksDaLoja) {
-  // Coleta todas as fotos de todas as tarefas/datas da loja sem duplicar
+  // Ordena tarefas por data cronológica crescente (dia, mês e ano)
+  tasksDaLoja.sort((a, b) => extrairTimestampData(a.data) - extrairTimestampData(b.data));
+
+  // Coleta todas as fotos de todas as tarefas/datas da loja sem duplicar (preservando ordem cronológica)
   const allPhotos = [];
   tasksDaLoja.forEach(t => {
     (t.fotos || []).forEach(fUrl => {
@@ -2451,20 +2534,21 @@ function createPeStoreCardElement(pName, promName, lojaName, tasksDaLoja) {
     `<span class="pe-match-badge pe-match-ok">✓ Campanha</span>` : 
     `<span class="pe-match-badge pe-match-alert">⚠️ Verificar</span>`;
 
-  // Datas e tarefas
-  const uniqueDates = [...new Set(tasksDaLoja.map(t => t.data).filter(Boolean))];
+  // Datas e tarefas (formatadas em DD/MM/AAAA [HH:mm:ss] em ordem cronológica)
+  const uniqueDates = [...new Set(tasksDaLoja.map(t => formatarDataBR(t.data, true)).filter(Boolean))];
   const datesText = uniqueDates.length > 0 ? uniqueDates.join(', ') : 'Data não informada';
   const taskIdsList = tasksDaLoja.map(t => `#${t.task_id}`).join(', ');
 
-  // Miniaturas de todas as fotos com badge da data de execução
+  // Miniaturas de todas as fotos com badge da data de execução (Dia/Mês/Ano: DD/MM/AAAA)
   let thumbsHtml = '';
   if (totalFotos > 1) {
     allPhotos.forEach((item, fIdx) => {
-      const dataLabel = item.data ? item.data.split(' ')[0] : '';
+      const dataLabel = item.data ? formatarDataBR(item.data, false) : '';
+      const dataFull = item.data ? formatarDataBR(item.data, true) : '-';
       thumbsHtml += `
         <div class="pe-thumb-wrap ${fIdx === 0 ? 'active' : ''}" 
              onclick="switchStorePreview('${storeIdSafe}', '${item.url}', this)"
-             title="Data: ${escapeHtml(item.data || '-')} (Tarefa #${escapeHtml(item.taskId || '-')})">
+             title="Data: ${escapeHtml(dataFull)} (Tarefa #${escapeHtml(item.taskId || '-')})">
           <img src="${item.url}" class="pe-thumb-mini" 
                alt="Foto ${fIdx+1}" referrerpolicy="no-referrer" loading="lazy"
                onerror="this.style.opacity='0.4'">
@@ -2975,7 +3059,7 @@ window.openStoreLightbox = function(storeIdSafe, photoIdx = 0) {
   currentLightboxIdx = photoIdx;
 
   const curPhoto = entry.allPhotos[photoIdx];
-  const curData = curPhoto?.data ? ` • Data: ${curPhoto.data}` : '';
+  const curData = curPhoto?.data ? ` • Data: ${formatarDataBR(curPhoto.data, true)}` : '';
   const curTask = curPhoto?.taskId ? ` • Tarefa #${curPhoto.taskId}` : '';
 
   lightboxTitle.textContent = `${entry.promName} • ${entry.tipo || 'PONTO EXTRA'}`;
@@ -2987,7 +3071,7 @@ window.openStoreLightbox = function(storeIdSafe, photoIdx = 0) {
     thumb.src = item.url;
     thumb.referrerPolicy = 'no-referrer';
     thumb.loading = 'lazy';
-    thumb.title = `Data: ${item.data || '-'} (Tarefa #${item.taskId || '-'})`;
+    thumb.title = `Data: ${formatarDataBR(item.data, true) || '-'} (Tarefa #${item.taskId || '-'})`;
     thumb.className = `lightbox-thumb ${idx === currentLightboxIdx ? 'active' : ''}`;
     thumb.addEventListener('click', () => setLightboxIndex(idx));
     lightboxThumbnails.appendChild(thumb);
@@ -3006,7 +3090,7 @@ function openLightbox(taskId, photoIdx = 0) {
   currentLightboxIdx = photoIdx;
 
   lightboxTitle.textContent = `${rec.promotor_campanha || rec.promotor_csv} • ${rec.tipo}`;
-  lightboxSubtitle.textContent = `${rec.pdv} • Tarefa #${rec.task_id} • ${rec.data}`;
+  lightboxSubtitle.textContent = `${rec.pdv} • Tarefa #${rec.task_id} • ${formatarDataBR(rec.data, true)}`;
 
   lightboxThumbnails.innerHTML = '';
   currentLightboxPhotos.forEach((url, idx) => {

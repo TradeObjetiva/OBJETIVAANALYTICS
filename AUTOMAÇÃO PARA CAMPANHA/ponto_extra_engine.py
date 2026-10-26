@@ -6,6 +6,38 @@ import pandas as pd
 import openpyxl
 from datetime import datetime
 
+def formatar_data_br(val, incluir_hora=True):
+    if not val:
+        return ''
+    s = str(val).strip()
+    m_iso = re.match(r'^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?', s)
+    if m_iso:
+        y, mo, d = m_iso.group(1), m_iso.group(2).zfill(2), m_iso.group(3).zfill(2)
+        if incluir_hora and m_iso.group(4) is not None:
+            h = m_iso.group(4).zfill(2)
+            mi = m_iso.group(5).zfill(2)
+            sec = (':' + m_iso.group(6).zfill(2)) if m_iso.group(6) else ''
+            return f'{d}/{mo}/{y} {h}:{mi}{sec}'
+        return f'{d}/{mo}/{y}'
+    m_slash = re.match(r'^(\d{1,2})/(\d{1,2})/(\d{2,4})(?:[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?', s)
+    if m_slash:
+        p1 = int(m_slash.group(1))
+        p2 = int(m_slash.group(2))
+        y = int(m_slash.group(3))
+        if y < 100: y += 2000
+        if p1 > 12: d, mo = p1, p2
+        elif p2 > 12: mo, d = p1, p2
+        elif len(m_slash.group(3)) == 2: mo, d = p1, p2
+        else: d, mo = p1, p2
+        d_str, mo_str = str(d).zfill(2), str(mo).zfill(2)
+        if incluir_hora and m_slash.group(4) is not None:
+            h = m_slash.group(4).zfill(2)
+            mi = m_slash.group(5).zfill(2)
+            sec = (':' + m_slash.group(6).zfill(2)) if m_slash.group(6) else ''
+            return f'{d_str}/{mo_str}/{y} {h}:{mi}{sec}'
+        return f'{d_str}/{mo_str}/{y}'
+    return s
+
 class PontoExtraEngine:
     PONTUACOES_BASE = {
         'ILHA': 50,
@@ -472,7 +504,7 @@ class PontoExtraEngine:
                 r['promotor_csv'],
                 r['promotor_campanha'],
                 r['pdv'],
-                r['data_exec'],
+                formatar_data_br(r['data_exec']) or r['data_exec'],
                 r['atividade'],
                 r['periodo'],
                 r['tipo'],

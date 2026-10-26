@@ -10,6 +10,7 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfgen import canvas
 from datetime import datetime
+from ponto_extra_engine import formatar_data_br
 
 class NumberedCanvas(canvas.Canvas):
     """Adds page numbers and running header/footer."""
@@ -391,7 +392,7 @@ def gerar_pdf_curadoria_pontos_extras(records, stats):
             Paragraph(str(r['task_id']), td_center),
             Paragraph(f"<b>{r['promotor_campanha']}</b>", td_style),
             Paragraph(r['pdv'], td_style),
-            Paragraph(r['data_exec'], td_center),
+            Paragraph(formatar_data_br(r['data_exec']) or r['data_exec'], td_center),
             Paragraph(r['tipo'].replace('_', ' '), td_style),
             Paragraph(criativo_str, td_center),
             Paragraph(r['periodo'], td_center),
