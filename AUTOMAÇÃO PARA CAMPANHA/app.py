@@ -92,6 +92,17 @@ def api_process():
                 campanha_salva_map = json.loads(campanha_salva_raw)
             except Exception:
                 campanha_salva_map = None
+
+        # Pontuação de efetividade apurada no mês fechado
+        efetividade_raw = request.form.get('efetividade_map')
+        efetividade_map = None
+        if efetividade_raw:
+            try:
+                efetividade_map = json.loads(efetividade_raw)
+            except Exception:
+                efetividade_map = None
+
+        mes_referencia = request.form.get('mes_referencia') or 'Setembro/2026'
         
         processor = CampanhaProcessor(
             camp_path, 
@@ -102,7 +113,9 @@ def api_process():
         )
         promotores = processor.process_all(
             faltas_assiduidade_map=faltas_map,
-            campanha_salva_map=campanha_salva_map
+            campanha_salva_map=campanha_salva_map,
+            efetividade_map=efetividade_map,
+            mes_referencia=mes_referencia
         )
         
         # Calculate summary metrics
@@ -111,10 +124,11 @@ def api_process():
         total_pontos_pontualidade = sum(sum(p['pontos_pontualidade_total'] for p in prom['periodos']) for prom in promotores if prom['status'] in ['OK', 'COM_FALTAS_ASSIDUIDADE'])
         promotores_com_bonus = sum(1 for prom in promotores if any(p['ganhou_bonus'] for p in prom['periodos']))
         total_sem_contrato = sum(1 for prom in promotores if prom.get('sem_contrato'))
+        total_efetividade = sum(p.get('pontos_efetividade', 0) for p in promotores)
         
         # Generate the updated excel file if camp_file exists
         if os.path.exists(camp_path):
-            processor.generate_updated_excel(OUTPUT_FILE)
+            processor.generate_updated_excel(OUTPUT_FILE, efetividade_map=efetividade_map, mes_referencia=mes_referencia)
         
         LATEST_DATA = {
             'metrics': {
@@ -123,6 +137,7 @@ def api_process():
                 'total_pontos_pontualidade': total_pontos_pontualidade,
                 'promotores_com_bonus': promotores_com_bonus,
                 'total_sem_contrato': total_sem_contrato,
+                'total_efetividade': total_efetividade,
                 'output_filename': os.path.basename(OUTPUT_FILE),
                 'periods': [p['name'] for p in processor.periods]
             },

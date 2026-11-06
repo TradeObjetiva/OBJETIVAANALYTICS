@@ -79,6 +79,21 @@ const CAMPANHA_PERIODOS_PADRAO = [
 
 let activeCampaignPeriods = [...CAMPANHA_PERIODOS_PADRAO];
 
+// ========================================================
+// REGRA DE COLABORADORES ATIVOS NA CAMPANHA
+// ========================================================
+function isPromotorAtivo(prom) {
+  if (!prom) return false;
+  if (prom.ativo === false) return false;
+  if (prom.sem_contrato === true) return false;
+  const st = String(prom.status || '').toUpperCase().trim();
+  if (st === 'INATIVO' || st === 'DEMITIDO' || st === 'DESLIGADO' || st === 'SEM_FOLHA') return false;
+  const ct = String(prom.contrato || '').toLowerCase().trim();
+  if (ct.includes('sem contrato') || ct.includes('inativo') || ct.includes('demitido') || ct.includes('desligado')) return false;
+  if (prom.data_desativacao) return false;
+  return true;
+}
+
 // Assiduidade & Pontualidade State
 let allPromotores = [];
 let currentPromotor = null;
@@ -177,6 +192,8 @@ const bonusInput = document.getElementById('bonusInput');
 const searchInput = document.getElementById('searchInput');
 const filterProjeto = document.getElementById('filterProjeto');
 const filterStatus = document.getElementById('filterStatus');
+const filterMes = document.getElementById('filterMes');
+const promotorsTableHead = document.getElementById('promotorsTableHead');
 
 const tableBody = document.getElementById('tableBody');
 const rowCount = document.getElementById('rowCount');
@@ -187,6 +204,61 @@ const valTotalAssidPts = document.getElementById('valTotalAssidPts');
 const valTotalPont = document.getElementById('valTotalPont');
 const valPromBonus = document.getElementById('valPromBonus');
 const valSemContrato = document.getElementById('valSemContrato');
+
+// Efetividade Elements & Modal
+const btnImportarEfetividade = document.getElementById('btnImportarEfetividade');
+const modalImportEfetividade = document.getElementById('modalImportEfetividade');
+const btnCloseImportEfetModal = document.getElementById('btnCloseImportEfetModal');
+const importEfetMesSelect = document.getElementById('importEfetMesSelect');
+const efetDropZone = document.getElementById('efetDropZone');
+const efetFileInput = document.getElementById('efetFileInput');
+const efetFileSelectedName = document.getElementById('efetFileSelectedName');
+const btnConfirmarImportEfet = document.getElementById('btnConfirmarImportEfet');
+const btnDownloadTemplateEfet = document.getElementById('btnDownloadTemplateEfet');
+const importEfetFeedback = document.getElementById('importEfetFeedback');
+const importEfetMesSubtitle = document.getElementById('importEfetMesSubtitle');
+const valTotalEfet = document.getElementById('valTotalEfet');
+const valTotalEfetSub = document.getElementById('valTotalEfetSub');
+
+let parsedEfetividadeMap = {}; // { 'NOME_PROMOTOR': { 'Setembro/2026': X, ... } } ou { 'NOME': pts }
+
+// Configuração Oficial dos Meses da Campanha e Períodos de Fechamento
+const MESES_CAMPANHA_INFO = {
+  'Setembro/2026': {
+    nome: 'Setembro',
+    periodIds: [1, 2, 3, 4, 5],
+    fechamentoId: 5,
+    colExcel: 37,
+    fechamentoNome: 'P5 (28/09-30/09)'
+  },
+  'Outubro/2026': {
+    nome: 'Outubro',
+    periodIds: [6, 7, 8, 9],
+    fechamentoId: 9,
+    colExcel: 69,
+    fechamentoNome: 'P9 (22/10-31/10)'
+  },
+  'Novembro/2026': {
+    nome: 'Novembro',
+    periodIds: [10, 11, 12, 13],
+    fechamentoId: 13,
+    colExcel: 101,
+    fechamentoNome: 'P13 (22/11-30/11)'
+  },
+  'Dezembro/2026': {
+    nome: 'Dezembro',
+    periodIds: [14, 15, 16],
+    fechamentoId: 16,
+    colExcel: 125,
+    fechamentoNome: 'P16 (15/12-19/12)'
+  }
+};
+const FECHAMENTO_PERIODOS_MAP = {
+  5: 'Setembro/2026',
+  9: 'Outubro/2026',
+  13: 'Novembro/2026',
+  16: 'Dezembro/2026'
+};
 
 // Modal Espelho de Ponto
 const detailModal = document.getElementById('detailModal');
@@ -284,9 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function inicializarMatrizImediatamente() {
-  // Carrega baseline padrão de 99 promotores de CAMPANHA (1).xlsx
+  // Carrega baseline padrão de promotores de CAMPANHA (1).xlsx garantindo apenas ativos
   if (window.CAMPANHA_BASE_DATA && Array.isArray(window.CAMPANHA_BASE_DATA) && window.CAMPANHA_BASE_DATA.length > 0) {
-    allPromotores = JSON.parse(JSON.stringify(window.CAMPANHA_BASE_DATA));
+    allPromotores = JSON.parse(JSON.stringify(window.CAMPANHA_BASE_DATA)).filter(p => isPromotorAtivo(p));
   } else {
     allPromotores = [];
   }
@@ -294,7 +366,7 @@ function inicializarMatrizImediatamente() {
   const count = allPromotores.length;
   if (staffBaseCount) {
     staffBaseCount.textContent = count > 0 
-      ? `${count} colaboradores carregados da base`
+      ? `${count} colaboradores ativos carregados da base`
       : 'Aguardando colaboradores da base...';
   }
   if (staffBaseBadge) {
@@ -491,6 +563,18 @@ function setupFileUploads() {
   });
 }
 
+function sincronizarBotoesCiclo(mesAtivo) {
+  const btns = document.querySelectorAll('.btn-ciclo');
+  btns.forEach(btn => {
+    const mesBtn = btn.getAttribute('data-mes');
+    if (mesBtn === mesAtivo) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
 function setupEventListeners() {
   btnProcess.addEventListener('click', processScores);
   if (btnSalvarSupabase) {
@@ -578,6 +662,88 @@ function setupEventListeners() {
     }
   });
 
+  // Efetividade Import Listeners
+  if (btnImportarEfetividade && modalImportEfetividade) {
+    btnImportarEfetividade.addEventListener('click', abrirModalImportEfetividade);
+  }
+  if (btnCloseImportEfetModal && modalImportEfetividade) {
+    btnCloseImportEfetModal.addEventListener('click', fecharModalImportEfetividade);
+    modalImportEfetividade.addEventListener('click', (e) => {
+      if (e.target === modalImportEfetividade) fecharModalImportEfetividade();
+    });
+  }
+  if (efetDropZone && efetFileInput) {
+    efetDropZone.addEventListener('click', () => efetFileInput.click());
+    efetFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleEfetFileUpload(e.target.files[0]);
+      }
+    });
+    efetDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      efetDropZone.classList.add('efet-dropzone-active');
+    });
+    efetDropZone.addEventListener('dragleave', () => efetDropZone.classList.remove('efet-dropzone-active'));
+    efetDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      efetDropZone.classList.remove('efet-dropzone-active');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleEfetFileUpload(e.dataTransfer.files[0]);
+      }
+    });
+  }
+  if (btnConfirmarImportEfet) {
+    btnConfirmarImportEfet.addEventListener('click', confirmarImportEfetividade);
+  }
+  if (btnDownloadTemplateEfet) {
+    btnDownloadTemplateEfet.addEventListener('click', downloadTemplateEfetividade);
+  }
+  // Listeners dos botões de ciclo em destaque (Pills)
+  const cicloBtns = document.querySelectorAll('.btn-ciclo');
+  cicloBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mesEscolhido = btn.getAttribute('data-mes');
+      sincronizarBotoesCiclo(mesEscolhido);
+      if (filterMes) filterMes.value = mesEscolhido;
+      if (mesEscolhido !== 'TODOS' && mesReferenciaSelect) {
+        mesReferenciaSelect.value = mesEscolhido;
+      }
+      if (importEfetMesSubtitle) importEfetMesSubtitle.textContent = `Ciclo: ${mesEscolhido}`;
+      atualizarTodosPeriodosFechamento();
+      applyFilters();
+      updateMetrics();
+      showToast(`Ciclo alterado para ${mesEscolhido === 'TODOS' ? 'Todos os Meses' : mesEscolhido}`, 'success', 2000);
+    });
+  });
+
+  if (filterMes) {
+    filterMes.addEventListener('change', () => {
+      const mesEscolhido = filterMes.value;
+      sincronizarBotoesCiclo(mesEscolhido);
+      if (mesEscolhido !== 'TODOS' && mesReferenciaSelect) {
+        mesReferenciaSelect.value = mesEscolhido;
+      }
+      if (importEfetMesSubtitle) importEfetMesSubtitle.textContent = `Ciclo: ${mesEscolhido}`;
+      atualizarTodosPeriodosFechamento();
+      applyFilters();
+      updateMetrics();
+    });
+  }
+
+  if (mesReferenciaSelect) {
+    mesReferenciaSelect.addEventListener('change', () => {
+      const mesAtual = mesReferenciaSelect.value;
+      if (filterMes && filterMes.value !== 'TODOS') {
+        filterMes.value = mesAtual;
+      }
+      sincronizarBotoesCiclo(mesAtual);
+      if (importEfetMesSubtitle) importEfetMesSubtitle.textContent = `Ciclo: ${mesAtual}`;
+      atualizarTodosPeriodosFechamento();
+      applyFilters();
+      updateMetrics();
+    });
+  }
+
   document.addEventListener('keydown', (e) => {
     if (lightboxModal.classList.contains('active')) {
       if (e.key === 'Escape') closeLightbox();
@@ -585,6 +751,8 @@ function setupEventListeners() {
       if (e.key === 'ArrowRight') navigateLightbox(1);
     } else if (detailModal.classList.contains('active') && e.key === 'Escape') {
       closeModal();
+    } else if (modalImportEfetividade && modalImportEfetividade.style.display !== 'none' && e.key === 'Escape') {
+      fecharModalImportEfetividade();
     }
   });
 }
@@ -719,6 +887,9 @@ function aplicarFaltasEmAllPromotores() {
     const isoFaltasDates = faltasDates.map(d => normalizarDataParaISO(d)).filter(Boolean);
 
     // Itera por cada período da campanha e conta estritamente as faltas que ocorreram dentro dele
+    const mesRef = mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026';
+    const fechamentoId = getFechamentoPeriodId(mesRef);
+
     activeCampaignPeriods.forEach(per => {
       const pObj = (prom.periodos || []).find(x => x.period_id === per.id || x.period_name === per.name);
       if (!pObj) return;
@@ -730,13 +901,13 @@ function aplicarFaltasEmAllPromotores() {
       pObj.pontos_assiduidade = -50 * faltasNoPeriodo;
       if (faltasNoPeriodo > 0) {
         pObj.ganhou_bonus = false;
-        const diasTrabEsperados = pObj.dias_trabalhados || 6;
-        pObj.efetividade = Math.max(0, Math.round(((diasTrabEsperados - faltasNoPeriodo) / diasTrabEsperados) * 100));
-      } else {
-        pObj.efetividade = 100;
       }
+      
+      // Regra de Efetividade: computada somente no período de fechamento do mês
+      pObj.efetividade = (per.id === fechamentoId) ? (prom.pontos_efetividade || 0) : 0;
+
       const extras = (pObj.ilha || 0) + (pObj.meia_ilha || 0) + (pObj.ponta || 0) + (pObj.meia_ponta || 0);
-      pObj.total_periodo = pObj.pontos_assiduidade + (pObj.pontos_pontualidade_total || 0) + extras;
+      pObj.total_periodo = pObj.pontos_assiduidade + (pObj.pontos_pontualidade_total || 0) + extras + pObj.efetividade;
     });
 
     // Atualiza os totais consolidados do colaborador
@@ -744,8 +915,395 @@ function aplicarFaltasEmAllPromotores() {
     prom.pontos_assiduidade = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_assiduidade || 0), 0);
     const pontTotal = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_pontualidade_total || 0), 0);
     const extrasTotal = prom.pontos_extras || 0;
-    prom.pontos_total_geral = prom.pontos_assiduidade + pontTotal + extrasTotal;
+    const efetTotal = prom.pontos_efetividade || 0;
+    prom.pontos_total_geral = prom.pontos_assiduidade + pontTotal + extrasTotal + efetTotal;
   });
+}
+
+// ========================================================
+// CONTROLE DE EFETIVIDADE DO MÊS FECHADO (SET, OUT, NOV, DEZ)
+// ========================================================
+
+function normalizarPromotorEfetividade(p) {
+  if (!p) return;
+  if (!p.pontos_efetividade_meses) {
+    p.pontos_efetividade_meses = {
+      'Setembro/2026': Number(p.pontos_efetividade) || 0,
+      'Outubro/2026': 0,
+      'Novembro/2026': 0,
+      'Dezembro/2026': 0
+    };
+  }
+  ['Setembro/2026', 'Outubro/2026', 'Novembro/2026', 'Dezembro/2026'].forEach(m => {
+    if (p.pontos_efetividade_meses[m] === undefined) {
+      p.pontos_efetividade_meses[m] = 0;
+    }
+  });
+
+  // Se já possuía registros em períodos de fechamento, aproveita
+  if (p.periodos && Array.isArray(p.periodos)) {
+    p.periodos.forEach(per => {
+      if (per.efetividade && per.efetividade > 0) {
+        if (per.period_id === 5 && !p.pontos_efetividade_meses['Setembro/2026']) {
+          p.pontos_efetividade_meses['Setembro/2026'] = per.efetividade;
+        } else if (per.period_id === 9 && !p.pontos_efetividade_meses['Outubro/2026']) {
+          p.pontos_efetividade_meses['Outubro/2026'] = per.efetividade;
+        } else if (per.period_id === 13 && !p.pontos_efetividade_meses['Novembro/2026']) {
+          p.pontos_efetividade_meses['Novembro/2026'] = per.efetividade;
+        } else if (per.period_id === 16 && !p.pontos_efetividade_meses['Dezembro/2026']) {
+          p.pontos_efetividade_meses['Dezembro/2026'] = per.efetividade;
+        }
+      }
+    });
+  }
+}
+
+function getEfetividadeTotalPromotor(p) {
+  normalizarPromotorEfetividade(p);
+  return (Number(p.pontos_efetividade_meses['Setembro/2026']) || 0) +
+         (Number(p.pontos_efetividade_meses['Outubro/2026']) || 0) +
+         (Number(p.pontos_efetividade_meses['Novembro/2026']) || 0) +
+         (Number(p.pontos_efetividade_meses['Dezembro/2026']) || 0);
+}
+
+function getFechamentoPeriodId(mesRef) {
+  const m = (mesRef || '').toLowerCase();
+  if (m.includes('setembro')) return 5;   // 28/09 A 30/09
+  if (m.includes('outubro')) return 9;    // 22/10 A 31/10
+  if (m.includes('novembro')) return 13;  // 22/11 A 30/11
+  if (m.includes('dezembro')) return 16;  // 15/12 A 19/12
+  return 5;
+}
+
+function atualizarTodosPeriodosFechamento() {
+  const mesAtivo = (filterMes && filterMes.value !== 'TODOS') ? 
+    filterMes.value : 
+    (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026');
+
+  allPromotores.forEach(p => {
+    normalizarPromotorEfetividade(p);
+
+    (p.periodos || []).forEach(per => {
+      if (per.period_id === 5) {
+        per.efetividade = p.pontos_efetividade_meses['Setembro/2026'] || 0;
+      } else if (per.period_id === 9) {
+        per.efetividade = p.pontos_efetividade_meses['Outubro/2026'] || 0;
+      } else if (per.period_id === 13) {
+        per.efetividade = p.pontos_efetividade_meses['Novembro/2026'] || 0;
+      } else if (per.period_id === 16) {
+        per.efetividade = p.pontos_efetividade_meses['Dezembro/2026'] || 0;
+      } else {
+        per.efetividade = 0;
+      }
+
+      const assid = per.pontos_assiduidade !== undefined ? per.pontos_assiduidade : ((per.faltas || 0) * -50);
+      const pont = per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.dias_pontuais || 0);
+      const extraPts = (per.ilha || 0) + (per.meia_ilha || 0) + (per.ponta || 0) + (per.meia_ponta || 0);
+      per.total_periodo = (Number(assid) || 0) + (Number(pont) || 0) + extraPts + (per.efetividade || 0);
+    });
+
+    const assidTotal = (p.periodos || []).reduce((acc, per) => acc + (per.pontos_assiduidade || 0), 0);
+    const pontTotal = (p.periodos || []).reduce((acc, per) => acc + (per.pontos_pontualidade_total || 0), 0);
+    const extraTotal = p.pontos_extras || 0;
+    const efetTotal = getEfetividadeTotalPromotor(p);
+
+    p.pontos_efetividade = p.pontos_efetividade_meses[mesAtivo] || 0;
+    p.pontos_efetividade_total = efetTotal;
+    p.pontos_total_geral = assidTotal + pontTotal + extraTotal + efetTotal;
+  });
+}
+
+function atualizarEfetividadeColaborador(nome, novoValor, silencioso = false, mesAlvo = null) {
+  const nomeClean = (nome || '').trim().toUpperCase();
+  const p = allPromotores.find(x => (x.nome || '').trim().toUpperCase() === nomeClean);
+  if (!p) return;
+
+  normalizarPromotorEfetividade(p);
+  const mesDestino = mesAlvo || 
+    (filterMes && filterMes.value !== 'TODOS' ? filterMes.value : (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026'));
+  const pts = Math.max(0, parseInt(novoValor, 10) || 0);
+
+  p.pontos_efetividade_meses[mesDestino] = pts;
+  p.pontos_efetividade = pts;
+
+  if (!campanhaSalvaMap[nomeClean]) {
+    campanhaSalvaMap[nomeClean] = { nome: p.nome };
+  }
+  campanhaSalvaMap[nomeClean].pontos_efetividade = pts;
+  campanhaSalvaMap[nomeClean].pontos_efetividade_meses = p.pontos_efetividade_meses;
+
+  atualizarTodosPeriodosFechamento();
+
+  if (!silencioso) {
+    updateMetrics();
+    applyFilters();
+  }
+}
+
+window.handleInlineEfetividadeChange = function(inputEl) {
+  const nome = inputEl.getAttribute('data-nome');
+  const mes = inputEl.getAttribute('data-mes') || null;
+  const valor = parseInt(inputEl.value, 10) || 0;
+  atualizarEfetividadeColaborador(nome, valor, false, mes);
+};
+
+window.handleMatrixEfetividadeChange = function(inputEl) {
+  const nome = inputEl.getAttribute('data-nome');
+  const periodId = parseInt(inputEl.getAttribute('data-period-id'), 10);
+  const mes = FECHAMENTO_PERIODOS_MAP[periodId] || 'Setembro/2026';
+  const valor = parseInt(inputEl.value, 10) || 0;
+  atualizarEfetividadeColaborador(nome, valor, false, mes);
+};
+
+window.handleInlineEfetividadeKeydown = function(e, inputEl) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    inputEl.blur();
+    const allInputs = Array.from(document.querySelectorAll('.input-efetividade, .matrix-input-efet'));
+    const idx = allInputs.indexOf(inputEl);
+    if (idx >= 0 && idx < allInputs.length - 1) {
+      allInputs[idx + 1].focus();
+      allInputs[idx + 1].select();
+    }
+  }
+};
+
+function abrirModalImportEfetividade() {
+  if (!modalImportEfetividade) return;
+  const mesAtual = filterMes && filterMes.value !== 'TODOS' ? 
+    filterMes.value : 
+    (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026');
+  if (importEfetMesSubtitle) importEfetMesSubtitle.textContent = `Ciclo: ${mesAtual}`;
+  if (efetFileSelectedName) efetFileSelectedName.textContent = '';
+  if (importEfetFeedback) {
+    importEfetFeedback.style.display = 'none';
+    importEfetFeedback.textContent = '';
+  }
+  if (btnConfirmarImportEfet) btnConfirmarImportEfet.disabled = true;
+  parsedEfetividadeMap = {};
+  modalImportEfetividade.style.display = 'flex';
+}
+
+function fecharModalImportEfetividade() {
+  if (!modalImportEfetividade) return;
+  modalImportEfetividade.style.display = 'none';
+  if (efetFileInput) efetFileInput.value = '';
+  parsedEfetividadeMap = {};
+}
+
+function normalizeStr(str) {
+  return (str || '')
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+async function handleEfetFileUpload(file) {
+  if (!file) return;
+  if (efetFileSelectedName) {
+    efetFileSelectedName.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  }
+  if (importEfetFeedback) {
+    importEfetFeedback.style.display = 'block';
+    importEfetFeedback.style.background = 'rgba(59, 130, 246, 0.1)';
+    importEfetFeedback.style.color = '#93c5fd';
+    importEfetFeedback.innerHTML = 'Analisando arquivo e colunas dos meses...';
+  }
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+    const firstSheetName = wb.SheetNames[0];
+    const ws = wb.Sheets[firstSheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+    if (!rows || rows.length === 0) {
+      throw new Error("A planilha selecionada está vazia ou sem cabeçalhos válidos.");
+    }
+
+    const firstRow = rows[0];
+    const keys = Object.keys(firstRow);
+
+    const colNome = keys.find(k => {
+      const norm = normalizeStr(k);
+      return norm.includes('NOME') || norm.includes('PROMOTOR') || norm.includes('COLABORADOR') || norm.includes('FUNCIONARIO');
+    });
+
+    if (!colNome) {
+      throw new Error(`Coluna de colaborador não identificada. A planilha deve conter uma coluna com cabeçalho "NOME" ou "PROMOTOR". Colunas encontradas: ${keys.join(', ')}`);
+    }
+
+    // Procura colunas específicas de cada mês
+    const colSet = keys.find(k => {
+      const norm = normalizeStr(k);
+      return norm.includes('SETEMBRO') || norm.includes('SET') || norm.includes('P5');
+    });
+    const colOut = keys.find(k => {
+      const norm = normalizeStr(k);
+      return norm.includes('OUTUBRO') || norm.includes('OUT') || norm.includes('P9');
+    });
+    const colNov = keys.find(k => {
+      const norm = normalizeStr(k);
+      return norm.includes('NOVEMBRO') || norm.includes('NOV') || norm.includes('P13');
+    });
+    const colDez = keys.find(k => {
+      const norm = normalizeStr(k);
+      return norm.includes('DEZEMBRO') || norm.includes('DEZ') || norm.includes('P16');
+    });
+
+    // Coluna genérica de efetividade
+    const colGenerica = keys.find(k => {
+      const norm = normalizeStr(k);
+      return norm.includes('EFETIVIDADE') || norm.includes('PONTOS') || norm.includes('NOTA') || norm.includes('VALOR') || norm.includes('PTS');
+    });
+
+    const modoMultiMes = Boolean(colSet || colOut || colNov || colDez);
+    const mesDestinoFixo = (importEfetMesSelect && importEfetMesSelect.value !== 'AUTO') ? 
+      importEfetMesSelect.value : 
+      (filterMes && filterMes.value !== 'TODOS' ? filterMes.value : (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026'));
+
+    if (!modoMultiMes && !colGenerica) {
+      throw new Error(`Nenhuma coluna de pontuação identificada. A planilha deve conter colunas com os meses (SETEMBRO, OUTUBRO, NOVEMBRO, DEZEMBRO) ou uma coluna genérica "EFETIVIDADE". Colunas encontradas: ${keys.join(', ')}`);
+    }
+
+    parsedEfetividadeMap = {};
+    let matchedCount = 0;
+    let ignoredCount = 0;
+
+    const promsMap = {};
+    allPromotores.forEach(p => {
+      promsMap[normalizeStr(p.nome)] = p.nome;
+    });
+
+    rows.forEach(r => {
+      const rawNome = r[colNome];
+      if (!rawNome) return;
+
+      const normNome = normalizeStr(rawNome);
+      let matchRealName = promsMap[normNome];
+
+      if (!matchRealName) {
+        const partialKey = Object.keys(promsMap).find(k => k.startsWith(normNome) || normNome.startsWith(k));
+        if (partialKey) matchRealName = promsMap[partialKey];
+      }
+
+      if (!matchRealName) {
+        ignoredCount++;
+        return;
+      }
+
+      parsedEfetividadeMap[matchRealName] = parsedEfetividadeMap[matchRealName] || {};
+
+      if (modoMultiMes) {
+        if (colSet && r[colSet] !== '') {
+          parsedEfetividadeMap[matchRealName]['Setembro/2026'] = Math.max(0, parseInt(String(r[colSet]).replace(/[^\d]/g, ''), 10) || 0);
+        }
+        if (colOut && r[colOut] !== '') {
+          parsedEfetividadeMap[matchRealName]['Outubro/2026'] = Math.max(0, parseInt(String(r[colOut]).replace(/[^\d]/g, ''), 10) || 0);
+        }
+        if (colNov && r[colNov] !== '') {
+          parsedEfetividadeMap[matchRealName]['Novembro/2026'] = Math.max(0, parseInt(String(r[colNov]).replace(/[^\d]/g, ''), 10) || 0);
+        }
+        if (colDez && r[colDez] !== '') {
+          parsedEfetividadeMap[matchRealName]['Dezembro/2026'] = Math.max(0, parseInt(String(r[colDez]).replace(/[^\d]/g, ''), 10) || 0);
+        }
+      } else if (colGenerica) {
+        const pts = Math.max(0, parseInt(String(r[colGenerica]).replace(/[^\d]/g, ''), 10) || 0);
+        parsedEfetividadeMap[matchRealName][mesDestinoFixo] = pts;
+      }
+
+      matchedCount++;
+    });
+
+    if (matchedCount === 0) {
+      throw new Error("Nenhum nome da planilha coincidiu com a lista de colaboradores ativos da campanha.");
+    }
+
+    const mesesEncontrados = [];
+    if (colSet) mesesEncontrados.push('Setembro');
+    if (colOut) mesesEncontrados.push('Outubro');
+    if (colNov) mesesEncontrados.push('Novembro');
+    if (colDez) mesesEncontrados.push('Dezembro');
+
+    const descrModo = modoMultiMes ? 
+      `Planilha Multi-Mês detectada (${mesesEncontrados.join(', ')})` : 
+      `Coluna única para ${mesDestinoFixo}`;
+
+    if (importEfetFeedback) {
+      importEfetFeedback.style.display = 'block';
+      importEfetFeedback.style.background = 'rgba(16, 185, 129, 0.15)';
+      importEfetFeedback.style.color = '#34d399';
+      importEfetFeedback.innerHTML = `✓ <strong>${matchedCount} colaboradores reconhecidos com sucesso!</strong><br><small style="color:var(--text-light);">${descrModo}.${ignoredCount > 0 ? ` (${ignoredCount} linhas ignoradas)` : ''}</small>`;
+    }
+
+    if (btnConfirmarImportEfet) {
+      btnConfirmarImportEfet.disabled = false;
+      btnConfirmarImportEfet.textContent = `Aplicar (${matchedCount} colaboradores)`;
+    }
+  } catch (err) {
+    console.error("Erro ao processar arquivo de efetividade:", err);
+    if (importEfetFeedback) {
+      importEfetFeedback.style.display = 'block';
+      importEfetFeedback.style.background = 'rgba(239, 68, 68, 0.15)';
+      importEfetFeedback.style.color = '#f87171';
+      importEfetFeedback.innerHTML = `⚠️ ${err.message}`;
+    }
+    if (btnConfirmarImportEfet) btnConfirmarImportEfet.disabled = true;
+  }
+}
+
+function confirmarImportEfetividade() {
+  const entries = Object.entries(parsedEfetividadeMap);
+  if (entries.length === 0) return;
+
+  entries.forEach(([nome, mesesObj]) => {
+    Object.entries(mesesObj).forEach(([mes, pts]) => {
+      atualizarEfetividadeColaborador(nome, pts, true, mes);
+    });
+  });
+
+  atualizarTodosPeriodosFechamento();
+  updateMetrics();
+  applyFilters();
+
+  fecharModalImportEfetividade();
+  showToast(`🎉 Efetividade de ${entries.length} colaboradores atualizada em todos os meses selecionados! Salve no Supabase para persistir.`, 'success', 5000);
+}
+
+function downloadTemplateEfetividade() {
+  try {
+    const promotoresAtivos = allPromotores.filter(p => isPromotorAtivo(p));
+    const rows = promotoresAtivos.map(p => {
+      normalizarPromotorEfetividade(p);
+      return {
+        'NOME': p.nome,
+        'PROJETO': p.projeto || 'GERAL',
+        'EQUIPE': p.equipe || 'PROMOTOR',
+        'SETEMBRO_P5': p.pontos_efetividade_meses['Setembro/2026'] || 0,
+        'OUTUBRO_P9': p.pontos_efetividade_meses['Outubro/2026'] || 0,
+        'NOVEMBRO_P13': p.pontos_efetividade_meses['Novembro/2026'] || 0,
+        'DEZEMBRO_P16': p.pontos_efetividade_meses['Dezembro/2026'] || 0
+      };
+    });
+
+    if (rows.length === 0) {
+      showToast("Nenhum colaborador ativo carregado na base para gerar o modelo.", "warning");
+      return;
+    }
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Efetividade_Meses");
+
+    const fileNameSafe = `MODELO_EFETIVIDADE_CAMPANHA_COMPLETO.xlsx`;
+    XLSX.writeFile(wb, fileNameSafe);
+    showToast(`Modelo exportado: ${fileNameSafe}`, "success");
+  } catch (e) {
+    console.error("Erro ao gerar template:", e);
+    showToast("Erro ao exportar modelo de efetividade.", "danger");
+  }
 }
 
 // ========================================================
@@ -769,34 +1327,69 @@ async function carregarCampanhaSalvaIncremental() {
       campanhaSalvaMap = map;
       console.log(`[Campanha Incremental] ${savedColabs.length} registros previamente salvos encontrados no Supabase.`);
 
-      // Mescla com allPromotores respeitando dados salvos
+      // Mescla com allPromotores respeitando dados salvos e descartando inativos
       savedColabs.forEach(saved => {
         const nomeClean = (saved.nome || '').trim().toUpperCase();
-        const existing = allPromotores.find(p => p.nome === nomeClean);
+        const isSavedInativo = saved.ativo === false || 
+                               saved.status_folha === 'SEM_FOLHA' || 
+                               saved.status_folha === 'INATIVO' || 
+                               saved.status_folha === 'DEMITIDO' || 
+                               Boolean(saved.sem_contrato) ||
+                               String(saved.contrato || '').toLowerCase().includes('sem contrato') ||
+                               String(saved.contrato || '').toLowerCase().includes('inativo');
+
+        const existing = allPromotores.find(p => (p.nome || '').trim().toUpperCase() === nomeClean);
+        if (isSavedInativo) {
+          if (existing) {
+            existing.ativo = false;
+            existing.status = 'INATIVO';
+          }
+          return; // Colaborador inativo não entra na campanha
+        }
+
         if (existing) {
+          existing.ativo = true;
+          normalizarPromotorEfetividade(existing);
           if (saved.periodos && saved.periodos.length > 0) {
             existing.periodos = saved.periodos;
           }
           if (saved.pontos_extras !== undefined) {
             existing.pontos_extras = saved.pontos_extras;
           }
+          if (saved.mes_referencia && saved.pontos_efetividade !== undefined) {
+            existing.pontos_efetividade_meses[saved.mes_referencia] = Number(saved.pontos_efetividade) || 0;
+          }
           if (saved.status_folha) {
             existing.status = saved.status_folha;
           }
         } else {
-          allPromotores.push({
+          const novoProm = {
             nome: saved.nome,
             projeto: saved.projeto || 'GERAL',
             equipe: saved.equipe || 'PROMOTOR',
             cargo: saved.cargo || 'PROMOTOR',
             contrato: saved.contrato || 'ATIVO',
             status: saved.status_folha || 'OK',
+            ativo: true,
             sem_contrato: false,
             pontos_extras: saved.pontos_extras || 0,
+            pontos_efetividade: Number(saved.pontos_efetividade) || 0,
+            pontos_efetividade_meses: {
+              'Setembro/2026': 0,
+              'Outubro/2026': 0,
+              'Novembro/2026': 0,
+              'Dezembro/2026': 0
+            },
             periodos: saved.periodos || []
-          });
+          };
+          if (saved.mes_referencia && saved.pontos_efetividade !== undefined) {
+            novoProm.pontos_efetividade_meses[saved.mes_referencia] = Number(saved.pontos_efetividade) || 0;
+          }
+          allPromotores.push(novoProm);
         }
       });
+
+      atualizarTodosPeriodosFechamento();
     }
   } catch (err) {
     console.warn("Aviso ao carregar dados salvos da campanha:", err);
@@ -812,82 +1405,94 @@ async function carregarColaboradoresObjetiva() {
   if (!sb) return [];
 
   try {
-    // 1. Tenta tb_colaboradores
+    // 1. Tenta tb_colaboradores para carregar tanto ativos quanto inativos/demitidos
     const { data: staffData } = await sb
       .from('tb_colaboradores')
       .select('*')
       .order('nome', { ascending: true });
 
-    let novos = [];
-    if (staffData && staffData.length > 0) {
-      novos = staffData
-        .filter(s => s.ativo !== false && s.nome && s.nome.trim())
-        .map(s => ({
-          nome: s.nome.trim().toUpperCase(),
-          projeto: s.projeto || 'GERAL',
-          cargo: s.cargo || 'PROMOTOR',
-          equipe: s.cargo || s.projeto || 'PROMOTOR'
-        }));
-    } else {
-      // 2. Se vazio, consulta agentes de tb_planilha
-      const { data: planData } = await sb
-        .from('tb_planilha')
-        .select('agente, projeto, lider')
-        .not('agente', 'is', null);
+    const inativosSet = new Set();
+    let novosAtivos = [];
 
-      if (planData && planData.length > 0) {
-        const unique = {};
-        planData.forEach(r => {
-          const nome = (r.agente || '').trim().toUpperCase();
-          if (nome && !unique[nome]) {
-            unique[nome] = {
-              nome: nome,
-              projeto: r.projeto || 'GERAL',
-              cargo: 'PROMOTOR',
-              equipe: r.lider || r.projeto || 'PROMOTOR'
-            };
-          }
-        });
-        novos = Object.values(unique);
-      }
+    if (staffData && staffData.length > 0) {
+      staffData.forEach(s => {
+        const nomeClean = (s.nome || '').trim().toUpperCase();
+        if (!nomeClean) return;
+
+        const isInativo = (s.ativo === false) || 
+                          Boolean(s.data_desativacao) || 
+                          ['INATIVO', 'DEMITIDO', 'DESLIGADO'].includes(String(s.status || '').toUpperCase().trim());
+        
+        if (isInativo) {
+          inativosSet.add(nomeClean);
+        } else {
+          novosAtivos.push({
+            nome: nomeClean,
+            projeto: s.projeto || 'GERAL',
+            cargo: s.cargo || 'PROMOTOR',
+            equipe: s.cargo || s.projeto || 'PROMOTOR',
+            ativo: true
+          });
+        }
+      });
     }
 
-    colaboradoresObjetiva = novos;
+    // EXPURGA imediatamente de allPromotores qualquer colaborador reconhecido como inativo
+    if (inativosSet.size > 0) {
+      const totalAntes = allPromotores.length;
+      allPromotores = allPromotores.filter(p => {
+        const nomeClean = (p.nome || '').trim().toUpperCase();
+        if (inativosSet.has(nomeClean)) {
+          console.log(`[Campanha] Removendo colaborador inativo/demitido: ${p.nome}`);
+          return false;
+        }
+        return true;
+      });
+      console.log(`[Campanha] ${totalAntes - allPromotores.length} colaboradores inativos removidos com base em tb_colaboradores.`);
+    }
 
-    // Se houver novos colaboradores que não estão no baseline da campanha, adiciona com os 16 ciclos
-    novos.forEach(novo => {
-      const existe = allPromotores.some(p => p.nome === novo.nome);
-      if (!existe) {
-        const periodos = activeCampaignPeriods.map(p => ({
-          period_id: p.id,
-          period_name: p.name,
-          pontos_assiduidade: 0,
-          efetividade: 100,
-          pontos_pontualidade_total: 0,
-          dias_pontuais: 0,
-          dias_trabalhados: 6,
-          faltas: 0,
-          ilha: 0,
-          meia_ilha: 0,
-          ponta: 0,
-          meia_ponta: 0,
-          total_periodo: 0,
-          ganhou_bonus: false
-        }));
+    // Sincroniza novos promotores ativos de tb_colaboradores
+    if (novosAtivos.length > 0) {
+      colaboradoresObjetiva = novosAtivos;
+      novosAtivos.forEach(novo => {
+        const existe = allPromotores.some(p => (p.nome || '').trim().toUpperCase() === novo.nome);
+        if (!existe) {
+          const periodos = activeCampaignPeriods.map(p => ({
+            period_id: p.id,
+            period_name: p.name,
+            pontos_assiduidade: 0,
+            efetividade: 0,
+            pontos_pontualidade_total: 0,
+            dias_pontuais: 0,
+            dias_trabalhados: 6,
+            faltas: 0,
+            ilha: 0,
+            meia_ilha: 0,
+            ponta: 0,
+            meia_ponta: 0,
+            total_periodo: 0,
+            ganhou_bonus: false
+          }));
 
-        allPromotores.push({
-          nome: novo.nome,
-          projeto: novo.projeto,
-          equipe: novo.equipe,
-          cargo: novo.cargo,
-          contrato: 'ATIVO',
-          status: 'OK',
-          sem_contrato: false,
-          pontos_extras: 0,
-          periodos
-        });
-      }
-    });
+          allPromotores.push({
+            nome: novo.nome,
+            projeto: novo.projeto,
+            equipe: novo.equipe,
+            cargo: novo.cargo,
+            contrato: 'ATIVO',
+            status: 'OK',
+            ativo: true,
+            sem_contrato: false,
+            pontos_extras: 0,
+            pontos_efetividade: 0,
+            periodos
+          });
+        }
+      });
+    }
+
+    // Garante que somente colaboradores ativos permaneçam na campanha
+    allPromotores = allPromotores.filter(p => isPromotorAtivo(p));
 
     return colaboradoresObjetiva;
   } catch (err) {
@@ -925,6 +1530,19 @@ async function processScores() {
       formData.append('campanha_salva', JSON.stringify(campanhaSalvaMap));
     }
 
+    const mesRef = mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026';
+    formData.append('mes_referencia', mesRef);
+
+    const efetMap = {};
+    allPromotores.forEach(p => {
+      if (p.pontos_efetividade > 0) {
+        efetMap[(p.nome || '').trim().toUpperCase()] = p.pontos_efetividade;
+      }
+    });
+    if (Object.keys(efetMap).length > 0) {
+      formData.append('efetividade_map', JSON.stringify(efetMap));
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
 
@@ -938,7 +1556,21 @@ async function processScores() {
     const json = await res.json();
     if (json.success) {
       const data = json.data;
+
+      // Preserva pontos_efetividade nos colaboradores
+      data.promotores.forEach(p => {
+        const nomeClean = (p.nome || '').trim().toUpperCase();
+        const existing = allPromotores.find(x => (x.nome || '').trim().toUpperCase() === nomeClean);
+        if (existing && existing.pontos_efetividade !== undefined) {
+          p.pontos_efetividade = existing.pontos_efetividade;
+        } else if (campanhaSalvaMap[nomeClean] && campanhaSalvaMap[nomeClean].pontos_efetividade !== undefined) {
+          p.pontos_efetividade = Number(campanhaSalvaMap[nomeClean].pontos_efetividade) || 0;
+        }
+      });
+
       allPromotores = data.promotores;
+      atualizarTodosPeriodosFechamento();
+
       if (data.metrics && data.metrics.periods && data.metrics.periods.length > 0) {
         // Preserva start/end do calendário oficial (necessários para localizar o período pela data)
         activeCampaignPeriods = data.metrics.periods.map((name, idx) => {
@@ -1071,15 +1703,16 @@ async function parseCampanhaComSheetJS(file) {
 }
 
 function updateMetrics(metrics) {
+  const promotoresAtivos = allPromotores.filter(p => isPromotorAtivo(p));
+
   if (!metrics) {
-    const totalProm = allPromotores.length;
+    const totalProm = promotoresAtivos.length;
     let totalFaltas = 0;
     let totalPont = 0;
     let promBonus = 0;
-    let semContrato = 0;
+    let semContrato = allPromotores.filter(p => p.sem_contrato || !isPromotorAtivo(p)).length;
 
-    allPromotores.forEach(p => {
-      if (p.sem_contrato) semContrato++;
+    promotoresAtivos.forEach(p => {
       if (p.periodos) {
         p.periodos.forEach(per => {
           totalFaltas += (per.faltas || 0);
@@ -1104,6 +1737,12 @@ function updateMetrics(metrics) {
   if (valTotalPont) valTotalPont.textContent = `+${metrics.total_pontos_pontualidade || 0} pts`;
   if (valPromBonus) valPromBonus.textContent = metrics.promotores_com_bonus || 0;
   if (valSemContrato) valSemContrato.textContent = metrics.total_sem_contrato || 0;
+
+  // Métrica de Efetividade do Mês Fechado (somente ativos)
+  const totalEfet = promotoresAtivos.reduce((acc, p) => acc + (p.pontos_efetividade || 0), 0);
+  const promsComEfet = promotoresAtivos.filter(p => (p.pontos_efetividade || 0) > 0).length;
+  if (valTotalEfet) valTotalEfet.textContent = `+${totalEfet} pts`;
+  if (valTotalEfetSub) valTotalEfetSub.textContent = `${promsComEfet} colaborador${promsComEfet === 1 ? '' : 'es'} pontuado${promsComEfet === 1 ? '' : 's'}`;
 }
 
 // ========================================================
@@ -1402,13 +2041,29 @@ function aplicarPontosExtrasAprovados() {
 
       const assid = per.pontos_assiduidade !== undefined ? per.pontos_assiduidade : ((per.faltas || 0) * -50);
       const pont = per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.dias_pontuais || 0);
-      per.total_periodo = (Number(assid) || 0) + (Number(pont) || 0) + extras;
+
+      normalizarPromotorEfetividade(prom);
+      if (per.period_id === 5) {
+        per.efetividade = prom.pontos_efetividade_meses['Setembro/2026'] || 0;
+      } else if (per.period_id === 9) {
+        per.efetividade = prom.pontos_efetividade_meses['Outubro/2026'] || 0;
+      } else if (per.period_id === 13) {
+        per.efetividade = prom.pontos_efetividade_meses['Novembro/2026'] || 0;
+      } else if (per.period_id === 16) {
+        per.efetividade = prom.pontos_efetividade_meses['Dezembro/2026'] || 0;
+      } else {
+        per.efetividade = 0;
+      }
+
+      per.total_periodo = (Number(assid) || 0) + (Number(pont) || 0) + extras + (per.efetividade || 0);
     });
 
     prom.pontos_extras = totalExtras;
     const assidTotal = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_assiduidade || 0), 0);
     const pontTotal = (prom.periodos || []).reduce((acc, p) => acc + (p.pontos_pontualidade_total || 0), 0);
-    prom.pontos_total_geral = assidTotal + pontTotal + totalExtras;
+    const efetTotal = getEfetividadeTotalPromotor(prom);
+    prom.pontos_efetividade_total = efetTotal;
+    prom.pontos_total_geral = assidTotal + pontTotal + totalExtras + efetTotal;
   });
 }
 
@@ -1421,6 +2076,11 @@ function applyFilters() {
   const status = filterStatus.value;
 
   const filtered = allPromotores.filter(p => {
+    // REGRA DE OURO: Somente colaboradores ATIVOS aparecem na campanha
+    const ativo = isPromotorAtivo(p);
+    if (status !== 'inativos' && !ativo) return false;
+    if (status === 'inativos' && ativo) return false;
+
     const matchQuery = !query || 
       p.nome.toLowerCase().includes(query) ||
       (p.projeto && p.projeto.toLowerCase().includes(query)) ||
@@ -1439,8 +2099,8 @@ function applyFilters() {
     } else if (status === 'bonus') {
       const hasBonus = p.periodos && p.periodos.some(per => per.ganhou_bonus);
       matchStatus = hasBonus;
-    } else if (status === 'sem_contrato') {
-      matchStatus = Boolean(p.sem_contrato);
+    } else if (status === 'inativos') {
+      matchStatus = true;
     }
 
     return matchQuery && matchProj && matchStatus;
@@ -1476,10 +2136,16 @@ function renderMatrixTable(headId, bodyId, promotores, periods, focusModule = 'a
   let row2Html = `<tr>`;
 
   periods.forEach(p => {
-    row1Html += `<th colspan="8" class="matrix-header-period" title="Período ${p.name}">${escapeHtml(p.name)}</th>`;
+    const isPeriodoFechamento = Boolean(FECHAMENTO_PERIODOS_MAP[p.id]);
+    const mesFech = FECHAMENTO_PERIODOS_MAP[p.id];
+    const titlePeriodo = isPeriodoFechamento ? 
+      `Período ${p.name} (Fechamento Mensal de ${mesFech})` : 
+      `Período ${p.name}`;
+
+    row1Html += `<th colspan="8" class="matrix-header-period ${isPeriodoFechamento ? 'matrix-fechamento-header' : ''}" title="${titlePeriodo}">${escapeHtml(p.name)}</th>`;
     row2Html += `
       <th title="Pontos de Assiduidade">ASSID</th>
-      <th title="Efetividade">EFET</th>
+      <th title="${isPeriodoFechamento ? `Efetividade Fechamento (${mesFech}) - Digitação rápida permitida` : 'Efetividade apurada somente no final do mês'}" class="${isPeriodoFechamento ? 'cell-efet-fechamento' : ''}">EFET</th>
       <th title="Pontos de Pontualidade">PONT</th>
       <th title="Ilha (50 pts)">ILHA</th>
       <th title="Meia Ilha (25 pts)">M.ILHA</th>
@@ -1513,8 +2179,7 @@ function renderMatrixTable(headId, bodyId, promotores, periods, focusModule = 'a
   let bodyHtml = '';
 
   promotores.forEach(p => {
-    let grandTotal = 0;
-
+    normalizarPromotorEfetividade(p);
     let rowCells = `
       <tr>
         <td class="matrix-sticky-1 cell-nome-promotor" title="${escapeHtml(p.nome)}">${escapeHtml(p.nome)}</td>
@@ -1523,11 +2188,12 @@ function renderMatrixTable(headId, bodyId, promotores, periods, focusModule = 'a
     `;
 
     periods.forEach(perRef => {
-      // Busca dados do colaborador para este período
       const pData = (p.periodos || []).find(x => x.period_id === perRef.id || x.period_name === perRef.name) || {};
+      const isFechamento = Boolean(FECHAMENTO_PERIODOS_MAP[perRef.id]);
+      const mesDoFechamento = FECHAMENTO_PERIODOS_MAP[perRef.id];
 
       const assid = pData.pontos_assiduidade !== undefined ? pData.pontos_assiduidade : (pData.faltas > 0 ? pData.faltas * -50 : 0);
-      const efet = pData.efetividade !== undefined ? pData.efetividade : 0;
+      const efetPts = isFechamento ? (p.pontos_efetividade_meses[mesDoFechamento] || 0) : 0;
       const pont = pData.pontos_pontualidade_total !== undefined ? pData.pontos_pontualidade_total : (pData.dias_pontuais || 0);
 
       const ilha = pData.ilha || 0;
@@ -1536,8 +2202,7 @@ function renderMatrixTable(headId, bodyId, promotores, periods, focusModule = 'a
       const meiaPonta = pData.meia_ponta || 0;
 
       const extrasPeriodo = ilha + meiaIlha + ponta + meiaPonta;
-      const totalPeriodo = pData.total_periodo !== undefined ? pData.total_periodo : (assid + pont + extrasPeriodo);
-      grandTotal += totalPeriodo;
+      const totalPeriodo = (Number(assid) || 0) + (Number(pont) || 0) + extrasPeriodo + efetPts;
 
       const assidClass = assid < 0 ? 'cell-fault-active' : '';
       const pontClass = pData.ganhou_bonus ? 'cell-bonus-active' : '';
@@ -1546,9 +2211,14 @@ function renderMatrixTable(headId, bodyId, promotores, periods, focusModule = 'a
       const pontaClass = ponta > 0 ? 'cell-extra-active' : '';
       const meiaPontaClass = meiaPonta > 0 ? 'cell-extra-active' : '';
 
+      const efetDisplay = isFechamento ? 
+        `<input type="number" class="matrix-input-efet" min="0" max="1000" value="${efetPts}" data-nome="${escapeHtml(p.nome)}" data-period-id="${perRef.id}" data-mes="${mesDoFechamento}" onchange="handleMatrixEfetividadeChange(this)" onkeydown="handleInlineEfetividadeKeydown(event, this)" title="Efetividade (${mesDoFechamento}) - Pressione Enter/Tab para avançar" />` : 
+        `<span class="text-muted" title="Efetividade apurada somente no final do mês">-</span>`;
+      const efetClass = isFechamento ? 'cell-efet-fechamento' : '';
+
       rowCells += `
         <td class="${assidClass}">${assid}</td>
-        <td>${efet}</td>
+        <td class="${efetClass}">${efetDisplay}</td>
         <td class="${pontClass}">${pont}</td>
         <td class="${ilhaClass}">${ilha}</td>
         <td class="${meiaIlhaClass}">${meiaIlha}</td>
@@ -1558,11 +2228,61 @@ function renderMatrixTable(headId, bodyId, promotores, periods, focusModule = 'a
       `;
     });
 
-    rowCells += `<td class="cell-grand-total">${grandTotal}</td></tr>`;
+    rowCells += `<td class="cell-grand-total">${p.pontos_total_geral || 0}</td></tr>`;
     bodyHtml += rowCells;
   });
 
   tbody.innerHTML = bodyHtml;
+}
+
+// ========================================================
+// CABEÇALHO DINÂMICO DA TABELA RESUMIDA POR MÊS
+// ========================================================
+
+function renderPromotorsHeader(mesAtivo) {
+  const thead = document.getElementById('promotorsTableHead');
+  if (!thead) return;
+
+  if (mesAtivo === 'TODOS') {
+    thead.innerHTML = `
+      <tr>
+        <th>Promotor</th>
+        <th>Projeto / Equipe</th>
+        <th class="th-center" title="Fechamento de Setembro (28/09 a 30/09)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Set (P5)</th>
+        <th class="th-center" title="Fechamento de Outubro (22/10 a 31/10)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Out (P9)</th>
+        <th class="th-center" title="Fechamento de Novembro (22/11 a 30/11)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Nov (P13)</th>
+        <th class="th-center" title="Fechamento de Dezembro (15/12 a 19/12)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Dez (P16)</th>
+        <th class="th-center" title="Bônus de 4 semanas consecutivas">Bônus 4x</th>
+        <th class="th-center" title="Total de Efetividade Somada (Set+Out+Nov+Dez)" style="color: #93c5fd; font-weight: 700;">Total Efet.</th>
+        <th class="th-center" title="Pontos Extras Totais Conquistados">Pontos Extras</th>
+        <th class="th-center" title="Pontuação Geral Acumulada da Campanha">Total Geral</th>
+        <th class="th-action">Auditoria</th>
+      </tr>
+    `;
+    return;
+  }
+
+  const info = MESES_CAMPANHA_INFO[mesAtivo] || MESES_CAMPANHA_INFO['Setembro/2026'];
+  const periodosMes = CAMPANHA_PERIODOS_PADRAO.filter(p => info.periodIds.includes(p.id));
+
+  let colsPeriodosHtml = '';
+  periodosMes.forEach(p => {
+    const isFech = (p.id === info.fechamentoId);
+    colsPeriodosHtml += `<th class="th-center ${isFech ? 'cell-efet-fechamento' : ''}" title="${escapeHtml(p.name)}">${isFech ? `★ P${p.id} (${p.name})` : `P${p.id} (${p.name})`}</th>`;
+  });
+
+  thead.innerHTML = `
+    <tr>
+      <th>Promotor</th>
+      <th>Projeto / Equipe</th>
+      ${colsPeriodosHtml}
+      <th class="th-center">Bônus 4x</th>
+      <th class="th-center" title="Efetividade apurada e somada somente no mês fechado (${info.nome})" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efetividade (${info.nome})</th>
+      <th class="th-center" title="Pontos Extras Totais Conquistados">Pontos Extras</th>
+      <th class="th-center" title="Pontuação Geral Acumulada">Total Geral</th>
+      <th class="th-action">Auditoria</th>
+    </tr>
+  `;
 }
 
 // ========================================================
@@ -1573,10 +2293,17 @@ function renderTable(promotores) {
   tableBody.innerHTML = '';
   rowCount.textContent = `${promotores.length} colaboradores exibidos`;
 
+  const mesAtivo = (filterMes && filterMes.value) ? 
+    filterMes.value : 
+    (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026');
+
+  renderPromotorsHeader(mesAtivo);
+
   if (promotores.length === 0) {
+    const totalCols = mesAtivo === 'TODOS' ? 11 : ((MESES_CAMPANHA_INFO[mesAtivo] ? MESES_CAMPANHA_INFO[mesAtivo].periodIds.length : 5) + 6);
     tableBody.innerHTML = `
       <tr class="empty-state">
-        <td colspan="9">
+        <td colspan="${totalCols}">
           <div class="empty-message">
             <h4>Nenhum resultado encontrado</h4>
             <p>Tente ajustar os filtros ou a busca.</p>
@@ -1588,28 +2315,92 @@ function renderTable(promotores) {
   }
 
   promotores.forEach(p => {
+    normalizarPromotorEfetividade(p);
     const tr = document.createElement('tr');
     if (p.sem_contrato) tr.classList.add('tr-sem-contrato');
 
     const hasBonusTotal = p.periodos && p.periodos.some(per => per.ganhou_bonus);
-    const totalFaltas = p.periodos ? p.periodos.reduce((acc, per) => acc + per.faltas, 0) : 0;
+    const bonusCell = hasBonusTotal ? 
+      `<span class="badge-bonus-star">★ 30 pts</span>` : 
+      `<span class="text-muted">-</span>`;
 
-    let grandTotal = 0;
+    const contratoBadge = p.contrato ? 
+      `<span class="tag-contrato">${escapeHtml(p.contrato)}</span>` : 
+      (p.sem_contrato ? `<span class="tag-contrato tag-contrato-alerta">Sem Contrato</span>` : '');
+
+    const ptsExtrasVal = p.pontos_extras || 0;
+
+    // Se o usuário selecionou a VISÃO GERAL DE TODOS OS MESES
+    if (mesAtivo === 'TODOS') {
+      const efetSet = p.pontos_efetividade_meses['Setembro/2026'] || 0;
+      const efetOut = p.pontos_efetividade_meses['Outubro/2026'] || 0;
+      const efetNov = p.pontos_efetividade_meses['Novembro/2026'] || 0;
+      const efetDez = p.pontos_efetividade_meses['Dezembro/2026'] || 0;
+      const totalEfet = efetSet + efetOut + efetNov + efetDez;
+
+      tr.innerHTML = `
+        <td>
+          <div class="promotor-cell">
+            <span class="promotor-name">${escapeHtml(p.nome)}</span>
+            <div class="promotor-meta-tags">${contratoBadge}</div>
+          </div>
+        </td>
+        <td>
+          <div class="projeto-tag">${escapeHtml(p.projeto || 'GERAL')}</div>
+          <small class="text-muted">${escapeHtml(p.equipe || 'PROMOTOR')}</small>
+        </td>
+        <td class="td-center">
+          <input type="number" class="input-efetividade" min="0" max="1000" value="${efetSet}" data-nome="${escapeHtml(p.nome)}" data-mes="Setembro/2026" onchange="handleInlineEfetividadeChange(this)" onkeydown="handleInlineEfetividadeKeydown(event, this)" title="Setembro (P5)" style="width:65px;" />
+        </td>
+        <td class="td-center">
+          <input type="number" class="input-efetividade" min="0" max="1000" value="${efetOut}" data-nome="${escapeHtml(p.nome)}" data-mes="Outubro/2026" onchange="handleInlineEfetividadeChange(this)" onkeydown="handleInlineEfetividadeKeydown(event, this)" title="Outubro (P9)" style="width:65px;" />
+        </td>
+        <td class="td-center">
+          <input type="number" class="input-efetividade" min="0" max="1000" value="${efetNov}" data-nome="${escapeHtml(p.nome)}" data-mes="Novembro/2026" onchange="handleInlineEfetividadeChange(this)" onkeydown="handleInlineEfetividadeKeydown(event, this)" title="Novembro (P13)" style="width:65px;" />
+        </td>
+        <td class="td-center">
+          <input type="number" class="input-efetividade" min="0" max="1000" value="${efetDez}" data-nome="${escapeHtml(p.nome)}" data-mes="Dezembro/2026" onchange="handleInlineEfetividadeChange(this)" onkeydown="handleInlineEfetividadeKeydown(event, this)" title="Dezembro (P16)" style="width:65px;" />
+        </td>
+        <td class="td-center">${bonusCell}</td>
+        <td class="td-center font-mono font-bold" style="color: #60a5fa;">+${totalEfet} pts</td>
+        <td class="td-center font-mono font-bold ${ptsExtrasVal > 0 ? 'text-gold' : 'text-muted'}" style="${ptsExtrasVal > 0 ? 'color:#eab308;' : ''}">
+          ${ptsExtrasVal > 0 ? `+${ptsExtrasVal} pts` : '0'}
+        </td>
+        <td class="td-center font-mono font-bold" style="font-size: 1rem; color: #a855f7;">
+          ${p.pontos_total_geral || 0} pts
+        </td>
+        <td class="td-action">
+          <button class="btn btn-sm btn-secondary btn-audit" onclick="openPromotorDetail('${escapeHtml(p.nome)}')">
+            Ver Espelho
+          </button>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+      return;
+    }
+
+    // Se for um mês específico (Setembro, Outubro, Novembro ou Dezembro)
+    const info = MESES_CAMPANHA_INFO[mesAtivo] || MESES_CAMPANHA_INFO['Setembro/2026'];
+    const periodosIds = info.periodIds;
     let periodCellsHtml = '';
+
     if (p.status === 'OK' && p.periodos) {
-      p.periodos.slice(0, 5).forEach(per => {
+      periodosIds.forEach(pId => {
+        const per = p.periodos.find(x => x.period_id === pId);
+        if (!per) {
+          periodCellsHtml += `<td class="td-center text-muted">-</td>`;
+          return;
+        }
+
         const assidBadge = per.faltas > 0 ? 
           `<span class="badge-faltas font-mono" title="${per.faltas} falta(s)">-${per.faltas * 50} pts</span>` : 
           `<span class="text-muted font-mono" title="Sem faltas">0</span>`;
 
-        const pontBadge = `<span class="badge-pont font-mono" title="${per.dias_pontuais} dias pontuais">+${per.pontos_pontualidade_total}</span>`;
+        const pontBadge = `<span class="badge-pont font-mono" title="${per.dias_pontuais || 0} dias pontuais">+${per.pontos_pontualidade_total || 0}</span>`;
 
         const extraPts = (per.ilha || 0) + (per.meia_ilha || 0) + (per.ponta || 0) + (per.meia_ponta || 0);
         const extraBadge = extraPts > 0 ? 
           `<span class="badge-pont font-mono text-gold" style="font-size:0.75rem; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.4); border-radius:4px; padding:1px 4px;" title="${extraPts} pts extras">+${extraPts} pe</span>` : '';
-
-        const totPer = per.total_periodo !== undefined ? per.total_periodo : ((per.pontos_assiduidade || 0) + (per.pontos_pontualidade_total || 0) + extraPts);
-        grandTotal += totPer;
 
         periodCellsHtml += `
           <td class="td-center">
@@ -1621,31 +2412,17 @@ function renderTable(promotores) {
           </td>
         `;
       });
-      // Preenche colunas vazias se tiver menos de 5 períodos na folha
-      for (let i = p.periodos.length; i < 5; i++) {
-        periodCellsHtml += `<td class="td-center text-muted">-</td>`;
-      }
     } else {
-      periodCellsHtml = `<td colspan="5" class="td-center text-muted">Folha não localizada</td>`;
+      periodCellsHtml = `<td colspan="${periodosIds.length}" class="td-center text-muted">Folha não localizada</td>`;
     }
 
-    const bonusCell = hasBonusTotal ? 
-      `<span class="badge-bonus-star">★ 30 pts</span>` : 
-      `<span class="text-muted">-</span>`;
-
-    const contratoBadge = p.contrato ? 
-      `<span class="tag-contrato">${escapeHtml(p.contrato)}</span>` : 
-      (p.sem_contrato ? `<span class="tag-contrato tag-contrato-alerta">Sem Contrato</span>` : '');
-
-    const ptsExtrasVal = p.pontos_extras || 0;
+    const efetMesVal = p.pontos_efetividade_meses[mesAtivo] || 0;
 
     tr.innerHTML = `
       <td>
         <div class="promotor-cell">
           <span class="promotor-name">${escapeHtml(p.nome)}</span>
-          <div class="promotor-meta-tags">
-            ${contratoBadge}
-          </div>
+          <div class="promotor-meta-tags">${contratoBadge}</div>
         </div>
       </td>
       <td>
@@ -1654,11 +2431,26 @@ function renderTable(promotores) {
       </td>
       ${periodCellsHtml}
       <td class="td-center">${bonusCell}</td>
+      <td class="td-center">
+        <div class="input-efetividade-wrap">
+          <input type="number" 
+                 class="input-efetividade" 
+                 min="0" 
+                 max="1000" 
+                 value="${efetMesVal}" 
+                 data-nome="${escapeHtml(p.nome)}" 
+                 data-mes="${escapeHtml(mesAtivo)}" 
+                 onchange="handleInlineEfetividadeChange(this)" 
+                 onkeydown="handleInlineEfetividadeKeydown(event, this)" 
+                 title="Efetividade (${info.nome}) - Pressione Enter ou Tab para avançar" />
+          <span class="efet-unit">pts</span>
+        </div>
+      </td>
       <td class="td-center font-mono font-bold ${ptsExtrasVal > 0 ? 'text-gold' : 'text-muted'}" style="${ptsExtrasVal > 0 ? 'color:#eab308;' : ''}">
         ${ptsExtrasVal > 0 ? `+${ptsExtrasVal} pts` : '0'}
       </td>
       <td class="td-center font-mono font-bold" style="font-size: 1rem; color: #a855f7;">
-        ${grandTotal} pts
+        ${p.pontos_total_geral || 0} pts
       </td>
       <td class="td-action">
         <button class="btn btn-sm btn-secondary btn-audit" onclick="openPromotorDetail('${escapeHtml(p.nome)}')">
@@ -1676,8 +2468,42 @@ function openPromotorDetail(nome) {
   if (!p) return;
 
   currentPromotor = p;
+  normalizarPromotorEfetividade(p);
   modalPromotorName.textContent = p.nome;
   modalPromotorMeta.textContent = `${p.projeto || 'GERAL'} • ${p.equipe || 'PROMOTOR'} • ${p.contrato || 'Contrato Padrão'}`;
+
+  // Preenche os 4 meses de efetividade no card do modal
+  const modalEfetSet = document.getElementById('modalEfetSet');
+  const modalEfetOut = document.getElementById('modalEfetOut');
+  const modalEfetNov = document.getElementById('modalEfetNov');
+  const modalEfetDez = document.getElementById('modalEfetDez');
+  const btnSalvarEfetModal = document.getElementById('btnSalvarEfetModal');
+
+  if (modalEfetSet) modalEfetSet.value = p.pontos_efetividade_meses['Setembro/2026'] || 0;
+  if (modalEfetOut) modalEfetOut.value = p.pontos_efetividade_meses['Outubro/2026'] || 0;
+  if (modalEfetNov) modalEfetNov.value = p.pontos_efetividade_meses['Novembro/2026'] || 0;
+  if (modalEfetDez) modalEfetDez.value = p.pontos_efetividade_meses['Dezembro/2026'] || 0;
+
+  if (btnSalvarEfetModal) {
+    btnSalvarEfetModal.onclick = () => {
+      if (!currentPromotor) return;
+      const vSet = Math.max(0, parseInt(modalEfetSet ? modalEfetSet.value : 0, 10) || 0);
+      const vOut = Math.max(0, parseInt(modalEfetOut ? modalEfetOut.value : 0, 10) || 0);
+      const vNov = Math.max(0, parseInt(modalEfetNov ? modalEfetNov.value : 0, 10) || 0);
+      const vDez = Math.max(0, parseInt(modalEfetDez ? modalEfetDez.value : 0, 10) || 0);
+
+      atualizarEfetividadeColaborador(currentPromotor.nome, vSet, true, 'Setembro/2026');
+      atualizarEfetividadeColaborador(currentPromotor.nome, vOut, true, 'Outubro/2026');
+      atualizarEfetividadeColaborador(currentPromotor.nome, vNov, true, 'Novembro/2026');
+      atualizarEfetividadeColaborador(currentPromotor.nome, vDez, true, 'Dezembro/2026');
+
+      atualizarTodosPeriodosFechamento();
+      updateMetrics();
+      applyFilters();
+      renderModalPeriods();
+      showToast(`✓ Efetividades de ${currentPromotor.nome} atualizadas com sucesso!`, 'success');
+    };
+  }
 
   activeModalPeriodIdx = 0;
   renderModalPeriods();
@@ -1772,16 +2598,20 @@ async function salvarCampanhaNoSupabase() {
   if (btnSalvarSupabaseText) btnSalvarSupabaseText.textContent = "Salvando...";
 
   try {
-    const mesRef = mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026';
+    const mesRef = (filterMes && filterMes.value !== 'TODOS') ? 
+      filterMes.value : 
+      (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026');
 
     const registros = allPromotores.map(p => {
+      normalizarPromotorEfetividade(p);
       const periodos = p.periodos || [];
       const faltas = periodos.reduce((acc, per) => acc + (per.faltas || 0), 0);
       const ptsAssid = periodos.reduce((acc, per) => acc + (per.pontos_assiduidade || 0), 0);
       const ptsPont = periodos.reduce((acc, per) => acc + (per.pontos_pontualidade_total || 0), 0);
       const temBonus = periodos.some(per => per.ganhou_bonus);
       const ptsExtras = p.pontos_extras || 0;
-      const totalGeral = ptsAssid + ptsPont + ptsExtras;
+      const ptsEfet = p.pontos_efetividade_meses[mesRef] || p.pontos_efetividade || 0;
+      const totalGeral = p.pontos_total_geral || (ptsAssid + ptsPont + ptsExtras + ptsEfet);
 
       return {
         nome: (p.nome || '').trim().toUpperCase(),
@@ -1795,6 +2625,7 @@ async function salvarCampanhaNoSupabase() {
         pontos_pontualidade: ptsPont,
         bonus_4_semanas: temBonus,
         pontos_extras: ptsExtras,
+        pontos_efetividade: ptsEfet,
         pontos_total_geral: totalGeral,
         status_folha: p.status || 'OK',
         periodos: periodos,

@@ -318,13 +318,30 @@ class CampanhaProcessor:
             'periodos': period_results
         }
 
-    def process_all(self, faltas_assiduidade_map=None, campanha_salva_map=None):
+    def get_fechamento_period_id(self, mes_referencia="Setembro/2026"):
+        """Retorna o ID do período de fechamento do mês para pontuação de efetividade."""
+        m = str(mes_referencia or '').lower()
+        if 'setembro' in m:
+            return 5   # 28/09 A 30/09
+        if 'outubro' in m:
+            return 9   # 22/10 A 31/10
+        if 'novembro' in m:
+            return 13  # 22/11 A 30/11
+        if 'dezembro' in m:
+            return 16  # 15/12 A 19/12
+        return 5
+
+    def process_all(self, faltas_assiduidade_map=None, campanha_salva_map=None, efetividade_map=None, mes_referencia="Setembro/2026", apenas_ativos=True):
         """
         Processa toda a folha de ponto e colaboradores.
         Ajuste INCREMENTAL: reconhece dados já salvos e adiciona novos.
+        Efetividade é pontuada pelo período do mês fechado e somada somente ao final do mês.
+        Quando apenas_ativos=True, ignora colaboradores sem contrato/demitidos/sem folha.
         """
         faltas_map = faltas_assiduidade_map or {}
         salva_map = campanha_salva_map or {}
+        efet_map = efetividade_map or {}
+        fechamento_id = self.get_fechamento_period_id(mes_referencia)
         
         wb_folha = None
         if self.folha_file and os.path.exists(self.folha_file):
@@ -339,6 +356,9 @@ class CampanhaProcessor:
             for idx, c in enumerate(self.colaboradores_base):
                 nome = c.get('nome')
                 if not nome:
+                    continue
+                # Se o colaborador estiver explicitamente inativo na base cadastral, pula
+                if c.get('ativo') is False or c.get('data_desativacao'):
                     continue
                 lista_promotores.append({
                     'row': idx + 3,
@@ -379,6 +399,11 @@ class CampanhaProcessor:
             
             analysis = self.analyze_promotor(ws_folha, str(nome), faltas_assiduidade_datas=faltas_datas)
             
+            # Se for solicitado apenas ativos, desconsidera colaboradores sem contrato/folha
+            is_ativo = bool(sheet_name and not analysis['sem_contrato'])
+            if apenas_ativos and not is_ativo:
+                continue
+
             # Se já havia dados salvos na campanha para este colaborador, mescla de forma incremental
             if saved_colab and saved_colab.get('periodos'):
                 saved_periodos = saved_colab['periodos']
@@ -394,6 +419,32 @@ class CampanhaProcessor:
                             p_curr['pontos_assiduidade'] = matched_saved.get('pontos_assiduidade', 0)
                             p_curr['faltas'] = matched_saved.get('faltas', 0)
 
+            # Efetividade apurada nos períodos de fechamento dos meses
+            nome_clean = str(nome).strip().upper()
+            efet_data = efet_map.get(nome_clean, 0)
+            efet_meses = {}
+            if isinstance(efet_data, dict):
+                efet_meses = efet_data
+            elif isinstance(efet_data, (int, float)) and efet_data > 0:
+                efet_meses = { mes_referencia: efet_data }
+            elif saved_colab:
+                efet_meses = saved_colab.get('pontos_efetividade_meses') or { mes_referencia: saved_colab.get('pontos_efetividade', 0) }
+
+            fechamentos_periodo = {
+                5: 'Setembro/2026',
+                9: 'Outubro/2026',
+                13: 'Novembro/2026',
+                16: 'Dezembro/2026'
+            }
+
+            for p_curr in analysis['periodos']:
+                pid = p_curr['period_id']
+                if pid in fechamentos_periodo:
+                    mes_fech = fechamentos_periodo[pid]
+                    p_curr['efetividade'] = efet_meses.get(mes_fech, 0)
+                else:
+                    p_curr['efetividade'] = 0
+
             results.append({
                 'row': r,
                 'nome': nome,
@@ -402,16 +453,20 @@ class CampanhaProcessor:
                 'status': 'OK' if sheet_name else ('COM_FALTAS_ASSIDUIDADE' if faltas_datas else 'SEM_FOLHA'),
                 'contrato': analysis['contrato'],
                 'sem_contrato': analysis['sem_contrato'],
+                'ativo': is_ativo,
                 'sheet_name': sheet_name,
                 'periodos': analysis['periodos'],
-                'pontos_extras': saved_colab.get('pontos_extras', 0) if saved_colab else 0
+                'pontos_extras': saved_colab.get('pontos_extras', 0) if saved_colab else 0,
+                'pontos_efetividade': efet_meses.get(mes_referencia, 0),
+                'pontos_efetividade_meses': efet_meses
             })
             
         return results
 
-    def generate_updated_excel(self, output_path):
+    def generate_updated_excel(self, output_path, efetividade_map=None, mes_referencia="Setembro/2026"):
         """
         Gera o Excel atualizado preservando fórmulas e valores existentes.
+        Escreve Assiduidade, Pontualidade e Efetividade em cada período de fechamento mensal.
         """
         if not self.camp_file or not os.path.exists(self.camp_file):
             return None
@@ -420,28 +475,51 @@ class CampanhaProcessor:
         ws = wb['Ativos'] if 'Ativos' in wb.sheetnames else wb.active
         
         wb_folha = openpyxl.load_workbook(self.folha_file, data_only=True) if (self.folha_file and os.path.exists(self.folha_file)) else None
+        efet_map = efetividade_map or {}
+        
+        fechamentos_periodo = {
+            5: 'Setembro/2026',
+            9: 'Outubro/2026',
+            13: 'Novembro/2026',
+            16: 'Dezembro/2026'
+        }
         
         for r in range(3, ws.max_row + 1):
             nome_val = ws.cell(r, 1).value
             if not nome_val:
                 continue
             nome = str(nome_val).strip()
+            nome_clean = nome.upper()
             
             sheet_name = self.find_sheet(wb_folha, nome) if wb_folha else None
-            if not sheet_name:
-                continue
-                
-            analysis = self.analyze_promotor(wb_folha[sheet_name], nome)
+            analysis = self.analyze_promotor(wb_folha[sheet_name], nome) if sheet_name else None
+            
+            # Mapeamento de efetividade multi-mês
+            efet_data = efet_map.get(nome_clean, 0)
+            efet_meses = {}
+            if isinstance(efet_data, dict):
+                efet_meses = efet_data
+            elif isinstance(efet_data, (int, float)) and efet_data > 0:
+                efet_meses = { mes_referencia: efet_data }
             
             for p in self.periods:
-                p_res = next((res for res in analysis['periodos'] if res['period_id'] == p['id']), None)
-                if not p_res:
-                    continue
+                p_res = next((res for res in analysis['periodos'] if res['period_id'] == p['id']), None) if analysis else None
+                
                 # Escreve Assiduidade e Pontualidade se a coluna existir
-                if p['col_assid'] <= ws.max_column:
-                    ws.cell(r, p['col_assid']).value = p_res['pontos_assiduidade']
-                if p['col_pont'] <= ws.max_column:
-                    ws.cell(r, p['col_pont']).value = p_res['pontos_pontualidade_total']
+                if p_res:
+                    if p['col_assid'] <= ws.max_column:
+                        ws.cell(r, p['col_assid']).value = p_res['pontos_assiduidade']
+                    if p['col_pont'] <= ws.max_column:
+                        ws.cell(r, p['col_pont']).value = p_res['pontos_pontualidade_total']
+                        
+                # Escreve Efetividade nos períodos de fechamento mensal
+                if p['col_efet'] <= ws.max_column:
+                    if p['id'] in fechamentos_periodo:
+                        mes_fech = fechamentos_periodo[p['id']]
+                        val = efet_meses.get(mes_fech, 0)
+                        ws.cell(r, p['col_efet']).value = val if val > 0 else None
+                    else:
+                        ws.cell(r, p['col_efet']).value = None
                     
         wb.save(output_path)
         return output_path

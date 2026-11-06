@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../style.css">
-  <link rel="stylesheet" href="style.css?v=20261009_1650">
+  <link rel="stylesheet" href="style.css?v=20261106_ciclos_v2">
   <script>
     (function() {
       try {
@@ -67,6 +67,14 @@
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
           Baixar Campanha (.xlsx)
+        </button>
+        <button id="btnImportarEfetividade" class="btn btn-secondary" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;" title="Importar pontuação de efetividade do mês fechado via planilha CSV ou Excel">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Importar Efetividade
         </button>
         <button id="btnSalvarSupabase" class="btn btn-potencia" disabled style="background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -306,6 +314,20 @@
           <div class="metric-val text-danger" id="valSemContrato">--</div>
           <div class="metric-sub">Usuário sem contrato / sem jornada na folha</div>
         </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <span class="metric-title">Efetividade Mês Fechado</span>
+            <div class="metric-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+          </div>
+          <div class="metric-val" id="valTotalEfet" style="color: #60a5fa;">0 pts</div>
+          <div class="metric-sub" id="valTotalEfetSub">Preenchida no fechamento do ciclo</div>
+        </div>
       </section>
 
       <!-- Main Results Table -->
@@ -324,6 +346,37 @@
           </div>
         </div>
 
+        <!-- Barra de Ciclos / Meses em Destaque Visual Imediato -->
+        <div class="ciclos-bar-container" style="display: flex !important; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 12px; padding: 12px 18px; margin-bottom: 16px;">
+          <div class="ciclos-bar-title" style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#60a5fa" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span style="font-weight: 700; font-size: 0.88rem; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.6px;">Selecione o Ciclo / Mês:</span>
+          </div>
+
+          <div class="ciclos-pills-group" id="ciclosPillsGroup" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button type="button" class="btn-ciclo active" data-mes="Setembro/2026">
+              📅 Setembro <small style="font-size: 0.72rem; opacity: 0.85;">(P1 a P5)</small>
+            </button>
+            <button type="button" class="btn-ciclo" data-mes="Outubro/2026">
+              📅 Outubro <small style="font-size: 0.72rem; opacity: 0.85;">(P6 a P9)</small>
+            </button>
+            <button type="button" class="btn-ciclo" data-mes="Novembro/2026">
+              📅 Novembro <small style="font-size: 0.72rem; opacity: 0.85;">(P10 a P13)</small>
+            </button>
+            <button type="button" class="btn-ciclo" data-mes="Dezembro/2026">
+              📅 Dezembro <small style="font-size: 0.72rem; opacity: 0.85;">(P14 a P16)</small>
+            </button>
+            <button type="button" class="btn-ciclo btn-ciclo-todos" data-mes="TODOS">
+              🌐 Todos os Meses
+            </button>
+          </div>
+        </div>
+
         <div class="table-toolbar">
           <div class="toolbar-search">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -334,6 +387,14 @@
           </div>
 
           <div class="toolbar-filters">
+            <select id="filterMes" class="select-filter font-bold" style="border-color: rgba(96,165,250,0.6); background: rgba(59,130,246,0.12); color: #60a5fa; font-weight: 600;">
+              <option value="Setembro/2026" selected>📅 Setembro / 2026 (P1 a P5)</option>
+              <option value="Outubro/2026">📅 Outubro / 2026 (P6 a P9)</option>
+              <option value="Novembro/2026">📅 Novembro / 2026 (P10 a P13)</option>
+              <option value="Dezembro/2026">📅 Dezembro / 2026 (P14 a P16)</option>
+              <option value="TODOS">🌐 Todos os Meses (Visão Geral P1 a P16)</option>
+            </select>
+
             <select id="filterProjeto" class="select-filter">
               <option value="">Todos os Projetos</option>
               <option value="EXCLUSIVO">Exclusivo</option>
@@ -341,11 +402,11 @@
             </select>
 
             <select id="filterStatus" class="select-filter">
-              <option value="">Todos os Status</option>
-              <option value="faltas">Com Faltas (-50)</option>
-              <option value="sem_faltas">Sem Faltas (100% Assíduo)</option>
-              <option value="bonus">Com Super Bônus (30 pts)</option>
-              <option value="sem_contrato">⚠️ Sem Contrato na Folha</option>
+              <option value="" selected>Apenas Ativos (Padrão)</option>
+              <option value="faltas">Ativos com Faltas (-50)</option>
+              <option value="sem_faltas">Ativos 100% Assíduos</option>
+              <option value="bonus">Ativos com Super Bônus (30 pts)</option>
+              <option value="inativos">⚠️ Ver Inativos / Desligados</option>
             </select>
           </div>
         </div>
@@ -377,7 +438,7 @@
         <!-- Visão Resumida por Promotor -->
         <div class="table-responsive" id="mod1DetailedWrapper" style="display: none;">
           <table class="data-table" id="promotorsTable">
-            <thead>
+            <thead id="promotorsTableHead">
               <tr>
                 <th>Promotor</th>
                 <th>Projeto / Equipe</th>
@@ -387,6 +448,7 @@
                 <th class="th-center" title="21/09 A 26/09">P4 (21/09-26/09)</th>
                 <th class="th-center" title="28/09 A 30/09">P5 (28/09-30/09)</th>
                 <th class="th-center">Bônus 4x</th>
+                <th class="th-center" title="Efetividade apurada e somada somente no mês fechado" style="color: #60a5fa;">Efetividade (Mês)</th>
                 <th class="th-center" title="Pontos Extras Totais Conquistados">Pontos Extras</th>
                 <th class="th-center" title="Pontuação Geral Acumulada">Total Geral</th>
                 <th class="th-action">Auditoria</th>
@@ -394,7 +456,7 @@
             </thead>
             <tbody id="tableBody">
               <tr class="empty-state">
-                <td colspan="9">
+                <td colspan="12">
                   <div class="empty-message">
                     <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
                       <circle cx="12" cy="12" r="10"></circle>
@@ -750,6 +812,40 @@
         </button>
       </div>
 
+      <!-- Card Efetividade dos Meses Fechados -->
+      <div class="modal-efetividade-card" style="margin: 0 20px 16px 20px;">
+        <div class="modal-efet-left">
+          <span class="efet-tag-fechamento">MÊS FECHADO</span>
+          <div>
+            <h4 class="modal-efet-title">Efetividade por Mês Fechado</h4>
+            <p class="modal-efet-desc">Pontuação apurada e somada no final de cada mês da campanha (Set, Out, Nov e Dez).</p>
+          </div>
+        </div>
+        <div class="modal-efet-right" style="gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.15); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              <span style="font-size: 0.68rem; font-weight: 700; color: #93c5fd;">SET (P5)</span>
+              <input type="number" id="modalEfetSet" class="input-efetividade" min="0" max="1000" style="width: 70px; text-align: center; height: 32px;" value="0" />
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              <span style="font-size: 0.68rem; font-weight: 700; color: #93c5fd;">OUT (P9)</span>
+              <input type="number" id="modalEfetOut" class="input-efetividade" min="0" max="1000" style="width: 70px; text-align: center; height: 32px;" value="0" />
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              <span style="font-size: 0.68rem; font-weight: 700; color: #93c5fd;">NOV (P13)</span>
+              <input type="number" id="modalEfetNov" class="input-efetividade" min="0" max="1000" style="width: 70px; text-align: center; height: 32px;" value="0" />
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+              <span style="font-size: 0.68rem; font-weight: 700; color: #93c5fd;">DEZ (P16)</span>
+              <input type="number" id="modalEfetDez" class="input-efetividade" min="0" max="1000" style="width: 70px; text-align: center; height: 32px;" value="0" />
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" id="btnSalvarEfetModal" style="height: 48px; padding: 0 16px; font-weight: 600;">
+            Salvar Efetividades
+          </button>
+        </div>
+      </div>
+
       <div class="modal-tabs" id="modalPeriodTabs">
         <!-- Rendered dynamically -->
       </div>
@@ -781,6 +877,71 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE IMPORTAÇÃO DE EFETIVIDADE (MÊS FECHADO) -->
+  <div class="modal-backdrop" id="modalImportEfetividade" style="display: none;">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <div>
+          <span class="badge-dot pulse" style="background: #3b82f6;"></span>
+          <h3 class="modal-title">Importar Efetividade do Mês Fechado</h3>
+          <span class="text-muted text-sm" id="importEfetMesSubtitle">Ciclo: Setembro/2026</span>
+        </div>
+        <button id="btnCloseImportEfetModal" class="btn-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-light); margin-bottom: 4px; display: block;">Mês Destino da Importação:</label>
+          <select id="importEfetMesSelect" class="clean-select" style="width: 100%; border-color: rgba(59, 130, 246, 0.4); background: rgba(59, 130, 246, 0.08); font-weight: 600;">
+            <option value="AUTO" selected>🌐 Detecção Automática (Planilha com colunas Setembro, Outubro, Novembro, Dezembro)</option>
+            <option value="Setembro/2026">📅 Apenas Setembro / 2026 (P5)</option>
+            <option value="Outubro/2026">📅 Apenas Outubro / 2026 (P9)</option>
+            <option value="Novembro/2026">📅 Apenas Novembro / 2026 (P13)</option>
+            <option value="Dezembro/2026">📅 Apenas Dezembro / 2026 (P16)</option>
+          </select>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-light); margin-bottom: 16px;">
+          Suba uma planilha (<strong>.xlsx</strong> ou <strong>.csv</strong>) contendo <strong>NOME</strong> e as colunas de cada mês (ou coluna <strong>EFETIVIDADE</strong>).
+          O sistema fará o cruzamento automático com os colaboradores e somará os pontos no fechamento mensal correspondente.
+        </p>
+
+        <div class="drop-zone" id="efetDropZone" style="border: 2px dashed rgba(59, 130, 246, 0.4); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: rgba(59, 130, 246, 0.03);">
+          <input type="file" id="efetFileInput" accept=".csv, .xlsx, .xls" style="display: none;">
+          <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#3b82f6" stroke-width="1.8" style="margin-bottom: 8px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <p style="margin: 0; font-weight: 500; color: var(--text-main);">Clique para selecionar ou arraste o arquivo aqui</p>
+          <small class="text-muted">Formatos aceitos: CSV, XLSX ou XLS</small>
+          <div id="efetFileSelectedName" style="margin-top: 10px; font-weight: 600; color: #60a5fa;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+          <button type="button" class="btn btn-secondary btn-sm" id="btnDownloadTemplateEfet" title="Baixa modelo com todos os promotores atuais prontos para preenchimento">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Baixar Modelo (.xlsx)
+          </button>
+
+          <button type="button" class="btn btn-primary" id="btnConfirmarImportEfet" disabled>
+            Aplicar Pontuações
+          </button>
+        </div>
+
+        <div id="importEfetFeedback" style="display: none; margin-top: 14px; padding: 10px; border-radius: 6px; font-size: 0.85rem;"></div>
       </div>
     </div>
   </div>
@@ -843,7 +1004,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../js/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="campanha_base_data.js?v=20261013_assid_fix"></script>
-  <script src="app.js?v=20261013_pe_empty_pendentes"></script>
+  <script src="campanha_base_data.js?v=20261106_ciclos_v2"></script>
+  <script src="app.js?v=20261106_ciclos_v2"></script>
 </body>
 </html>

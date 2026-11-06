@@ -2988,5 +2988,231 @@ select option {
   background: rgba(239, 68, 68, 0.04);
 }
 
+/* ========================================================
+   EFETIVIDADE DO MÊS FECHADO (PREENCHIMENTO MANUAL & IMPORTAÇÃO)
+   ======================================================== */
+
+.input-efetividade-wrap {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 6px;
+  padding: 2px 6px;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.input-efetividade-wrap:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.input-efetividade {
+  width: 58px;
+  background: transparent;
+  border: none;
+  color: #60a5fa;
+  font-weight: 700;
+  font-size: 0.88rem;
+  font-family: var(--font-mono, monospace);
+  text-align: center;
+  outline: none;
+  padding: 2px 0;
+}
+
+.input-efetividade::-webkit-inner-spin-button,
+.input-efetividade::-webkit-outer-spin-button {
+  opacity: 0.5;
+}
+
+.efet-unit {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(96, 165, 250, 0.75);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+/* Na Matriz Geral */
+.cell-efet-fechamento {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-left: 2px solid #3b82f6 !important;
+  border-right: 2px solid #3b82f6 !important;
+  font-weight: 700;
+  color: #60a5fa !important;
+  padding: 4px !important;
+}
+
+.matrix-input-efet {
+  width: 52px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 4px;
+  color: #93c5fd;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-align: center;
+  padding: 2px 4px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.matrix-input-efet:focus {
+  border-color: #3b82f6;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Card de Efetividade no Modal de Detalhes */
+.modal-efetividade-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(37, 99, 235, 0.05));
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: var(--radius-md, 8px);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.modal-efet-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.efet-tag-fechamento {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.modal-efet-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main, #f8fafc);
+}
+
+.modal-efet-desc {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.modal-efet-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-efet-modal-wrap input {
+  width: 80px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  color: #60a5fa;
+}
+
+/* Modal de Importação */
+.efet-dropzone-active {
+  border-color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+}
+
+/* ========================================================
+   BARRA DE CICLOS / MESES EM DESTAQUE (SET, OUT, NOV, DEZ)
+   ======================================================== */
+.ciclos-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(17, 24, 39, 0.6) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+}
+
+.ciclos-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ciclos-bar-title span {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.ciclos-pills-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-ciclo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  background: var(--bg-card, rgba(30, 41, 59, 0.7));
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.btn-ciclo small {
+  font-size: 0.72rem;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.btn-ciclo:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.btn-ciclo.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 14px rgba(37, 99, 235, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-ciclo-todos.active {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 14px rgba(124, 58, 237, 0.6);
+}
+
+
+
 
 

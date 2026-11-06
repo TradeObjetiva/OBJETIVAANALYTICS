@@ -244,6 +244,7 @@ const countRows = document.getElementById('countRows');
 const countColumns = document.getElementById('countColumns');
 const downloadCsvBtn = document.getElementById('downloadCsvBtn');
 const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+const downloadExecucaoVisitasBtn = document.getElementById('downloadExecucaoVisitasBtn');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const fileTabsContainer = document.querySelector('.file-tabs');
 
@@ -1897,6 +1898,552 @@ downloadExcelBtn.addEventListener('click', async () => {
   }
 });
 
+// ==========================================
+// EXPORTAÇÃO: MODELO EXECUÇÃO DE VISITAS (MINAS BOM)
+// ==========================================
+async function exportExecucaoVisitasMinasBom() {
+  if (!state.files || !state.files.length) {
+    showAlert('Aviso', 'Importe um arquivo CSV ou Excel antes de exportar.', 'warning');
+    return;
+  }
+  const fileObj = state.files[state.activeIndex || 0];
+  if (!fileObj) return;
+
+  const rows = fileObj.rawParsedRows;
+  if (!rows || rows.length < 2) {
+    showAlert('Aviso', 'O arquivo selecionado não contém linhas de dados suficientes para gerar a execução de visitas.', 'warning');
+    return;
+  }
+
+  toggleLoading(true);
+
+  try {
+    const headerRowIdx = detectHeaderRow(rows);
+    const headers = (rows[headerRowIdx] || []).map(c => String(c ?? '').trim());
+
+    // Dicionário de colunas
+    const colMap = {};
+    headers.forEach((h, idx) => {
+      const norm = normalizeHeader(h);
+      colMap[norm] = idx;
+      colMap[h] = idx;
+    });
+
+    const getVal = (row, ...names) => {
+      for (const name of names) {
+        if (colMap[name] !== undefined) {
+          const v = row[colMap[name]];
+          if (v !== undefined && v !== null && String(v).trim() !== '') {
+            return String(v).trim();
+          }
+        }
+        const norm = normalizeHeader(name);
+        if (colMap[norm] !== undefined) {
+          const v = row[colMap[norm]];
+          if (v !== undefined && v !== null && String(v).trim() !== '') {
+            return String(v).trim();
+          }
+        }
+      }
+      return '';
+    };
+
+    // Agrupamento por visita
+    const visits = {};
+    const allSkus = {}; // nome_item -> id_item
+    const dataRows = rows.slice(headerRowIdx + 1);
+
+    dataRows.forEach(row => {
+      if (!row || !row.length) return;
+      const tipoReg = getVal(row, 'Tipo Registro', 'TIPO REGISTRO', 'TIPO_REGISTRO').toUpperCase();
+      if (tipoReg && tipoReg !== 'INSERT') {
+        return; // Ignora cabeçalhos extras ou linha de rodapé FIM
+      }
+
+      const execId = getVal(row, 'Cod Execucao Atividade', 'COD EXECUCAO ATIVIDADE', 'COD_EXECUCAO_ATIVIDADE') ||
+                     getVal(row, 'Tarefa ID para Integração', 'Tarefa ID para Integracao', 'TAREFA ID') ||
+                     getVal(row, 'Identificador Interno Tarefa');
+
+      const lojaNome = getVal(row, 'Local de Atendimento Descrição', 'Local de Atendimento Descricao', 'LOCAL DE ATENDIMENTO', 'PDV', 'LOJA');
+      const promotorNome = getVal(row, 'Pessoa Nome', 'PROMOTOR', 'NOME DO PROMOTOR', 'PESSOA');
+
+      if (!execId && !lojaNome && !promotorNome) return;
+
+      const visitKey = execId || `${lojaNome}_${promotorNome}`;
+
+      if (!visits[visitKey]) {
+        const dInicio = getVal(row, 'Data Hora Inicio Execucao Atividade Gerada Pelo Sistema (Dim Tempo)', 'DATA HORA INICIO', 'DATA E HORA INÍCIO EXECUÇÃO', 'DATA INICIO');
+        const dFim = getVal(row, 'Data Hora Fim Execucao Atividade Gerada Pelo Sistema (Dim Tempo)', 'DATA HORA FIM', 'DATA E HORA FIM EXECUÇÃO', 'DATA FIM');
+        const dTarefa = getVal(row, 'Data Hora Tarefa', 'DATA TAREFA', 'DATA');
+
+        visits[visitKey] = {
+          execId: execId || visitKey,
+          dInicio: dInicio || dTarefa,
+          dFim: dFim,
+          loja: lojaNome,
+          promotor: promotorNome,
+          itens: {},
+          fotosAntes: [],
+          fotosDepois: [],
+          outrasFotos: [],
+          obsGerente: '',
+          caixas: ''
+        };
+      }
+
+      const v = visits[visitKey];
+      const secDesc = getVal(row, 'Seção Descrição', 'Seção Descricao', 'SEÇÃO', 'SECAO').toUpperCase();
+      const itemDesc = getVal(row, 'Itens Descrição', 'Itens Descricao', 'ITENS', 'SKU', 'PRODUTO');
+      const itemId = getVal(row, 'Itens Identificador', 'ITENS IDENTIFICADOR', 'COD ITEM', 'CODIGO ITEM');
+
+      // Se for SKU
+      if (secDesc === 'PESQUISA' || (itemDesc && !['PADRÃO', 'PADRAO'].includes(itemDesc.toUpperCase()))) {
+        if (!allSkus[itemDesc]) {
+          allSkus[itemDesc] = itemId;
+        }
+        const ruptura = getVal(row, 'PRODUTO EM RUPTURA?', 'PRODUTO EM RUPTURA', 'RUPTURA').toUpperCase();
+        const validade = getVal(row, 'INFORME A VALIDADE', 'VALIDADE');
+        const qtdUn = getVal(row, 'QUAL A QUANTIDADE EM UNIDADES?', 'QUANTIDADE EM UNIDADES', 'QTD');
+
+        v.itens[itemDesc] = {
+          itemId: itemId,
+          ruptura: ruptura,
+          validade: validade,
+          qtdUn: qtdUn
+        };
+      }
+
+      // Fotos antes (01 a 08 ou FOTO ANTES)
+      for (let k = 1; k <= 8; k++) {
+        const keyK = `FOTO ANTES ${String(k).padStart(2, '0')}`;
+        const keyK2 = `FOTO ANTES ${k}`;
+        const f = getVal(row, keyK, keyK2);
+        if (f && !v.fotosAntes.includes(f)) v.fotosAntes.push(f);
+      }
+      const faSingle = getVal(row, 'FOTO ANTES');
+      if (faSingle && !v.fotosAntes.includes(faSingle)) v.fotosAntes.push(faSingle);
+
+      // Fotos depois (01 a 08)
+      for (let k = 1; k <= 8; k++) {
+        const keyK = `FOTO DEPOIS ${String(k).padStart(2, '0')}`;
+        const keyK2 = `FOTO DEPOIS ${k}`;
+        const f = getVal(row, keyK, keyK2);
+        if (f && !v.fotosDepois.includes(f)) v.fotosDepois.push(f);
+      }
+
+      // Outras fotos (Mix, Ponto Extra)
+      const fMix1 = getVal(row, 'FOTO DO MIX 01', 'FOTO DO MIX 1', 'FOTO DO MIX');
+      const fMix2 = getVal(row, 'FOTO DO MIX 02', 'FOTO DO MIX 2');
+      if (fMix1 && !v.outrasFotos.includes(fMix1)) v.outrasFotos.push(fMix1);
+      if (fMix2 && !v.outrasFotos.includes(fMix2)) v.outrasFotos.push(fMix2);
+
+      for (let k = 1; k <= 5; k++) {
+        const fPe = getVal(row, `FOTO DO PONTO EXTRA ${String(k).padStart(2, '0')}`, `FOTO DO PONTO EXTRA ${k}`);
+        if (fPe && !v.outrasFotos.includes(fPe)) v.outrasFotos.push(fPe);
+      }
+
+      // Observação gerente e caixas
+      const obsG = getVal(row, 'O QUE SE RESOLVEU COM O GERENTE?');
+      if (obsG && !v.obsGerente) v.obsGerente = obsG;
+
+      const cx = getVal(row, 'QUANTAS CAIXAS FORAM ABASTECIDAS?');
+      if (cx && !v.caixas) v.caixas = cx;
+    });
+
+    const visitList = Object.values(visits);
+    if (visitList.length === 0) {
+      toggleLoading(false);
+      showAlert('Aviso', 'Nenhuma visita com dados válidos foi identificada no arquivo para o modelo de execução.', 'warning');
+      return;
+    }
+
+    // Criar Workbook
+    const wb = new ExcelJS.Workbook();
+
+    // Paleta e Estilos Oficiais do Modelo
+    const FILL_AGENDA_HEADER = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4B5563' } };
+    const FILL_EXEC_HEADER   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D4ED8' } };
+    const FILL_FOTO_HEADER   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+    const FILL_ESTOQUE_HEADER= { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF15803D' } };
+    const FILL_VALIDADE_HEADER={ type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC2410C' } };
+    const FILL_AGENDA_ROW    = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE7E9EE' } };
+
+    const FONT_HEADER_WHITE  = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+    const FONT_HEADER_SUB    = { name: 'Calibri', size: 9, bold: false, color: { argb: 'FFFFFFFF' } };
+    const FONT_DATA_NORMAL   = { name: 'Calibri', size: 11, bold: false, color: { argb: 'FF000000' } };
+    const FONT_DATA_CODE     = { name: 'Calibri', size: 9, bold: false, color: { argb: 'FF000000' } };
+
+    const ALIGN_CENTER = { vertical: 'middle', horizontal: 'center' };
+    const ALIGN_LEFT   = { vertical: 'middle', horizontal: 'left' };
+
+    const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+    // 1. ABA INSTRUÇÕES
+    const wsInst = wb.addWorksheet('Instruções', { views: [{ showGridLines: true }] });
+    wsInst.getColumn(1).width = 3.0;
+    wsInst.getColumn(2).width = 110.0;
+
+    const instrucoes = [
+      { row: 2, text: 'Importar execução de visitas', font: { name: 'Calibri', size: 16, bold: true } },
+      { row: 3, text: 'Agência de teste – gerada pela Agenda', font: { name: 'Calibri', size: 11, color: { argb: 'FF6B7280' } } },
+      { row: 5, text: 'Para que serve', font: { name: 'Calibri', size: 12, bold: true } },
+      { row: 6, text: 'Registrar de uma vez as visitas que os promotores fizeram e relataram fora do app (WhatsApp, papel, ligação).' },
+      { row: 7, text: 'Cada linha é uma visita da sua Agenda. As colunas cinza vêm da Agenda e não podem ser alteradas.' },
+      { row: 9, text: 'Como preencher', font: { name: 'Calibri', size: 12, bold: true } },
+      { row: 10, text: 'Executada? – escolha Sim ou Não. Linha em branco é ignorada e a visita continua como está.' },
+      { row: 11, text: 'Início e Fim – obrigatórios quando a visita foi executada. Formato 08:30. O fim precisa ser depois do início.' },
+      { row: 12, text: 'Motivo – obrigatório quando a visita não foi executada. Escolha da lista. A visita será cancelada com esse motivo.' },
+      { row: 13, text: 'Observações – opcional. Aparece na visita como observação da execução.' },
+      { row: 14, text: 'Fotos – opcional. Cole o link público da imagem (Google Drive compartilhado, Dropbox, WhatsApp Web não serve).' },
+      { row: 15, text: 'Quando o contrato exige foto, pelo menos um link é obrigatório. Sem ele, a linha volta com erro.' },
+      { row: 16, text: 'Código da visita – não altere nem apague. É por ele que o sistema acha a visita certa.' },
+      { row: 18, text: 'O que acontece ao enviar', font: { name: 'Calibri', size: 12, bold: true } },
+      { row: 19, text: 'Antes de gravar, o sistema mostra a revisão: quantas serão concluídas, quantas canceladas e quais têm erro.' },
+      { row: 20, text: 'Só ao clicar em Aplicar as visitas são gravadas. Linhas com erro não impedem as outras.' },
+      { row: 21, text: 'Visita executada vai para Aguardando avaliação, registrada como executada pela agência.' },
+      { row: 22, text: 'Tarefas do contrato não entram por planilha. Faça pelo Executar visita, se precisar.' },
+      { row: 24, text: 'Estoque e validade', font: { name: 'Calibri', size: 12, bold: true } },
+      { row: 25, text: 'Cada linha é uma visita. Cada coluna é um produto do contrato do cliente.' },
+      { row: 26, text: 'Estoque – quantidade na loja. 0 marca o produto em falta e registra ruptura. Vazio quer dizer que não foi contado.' },
+      { row: 27, text: 'Validade – é a data de vencimento mais próxima encontrada. Vazio quer dizer que não há produto perto de vencer.' },
+      { row: 28, text: 'Os produtos aparecem só para clientes cujo contrato pede estoque ou validade.' }
+    ];
+
+    instrucoes.forEach(item => {
+      const cell = wsInst.getCell(item.row, 2);
+      cell.value = item.text;
+      cell.font = item.font || { name: 'Calibri', size: 11 };
+    });
+
+    // 2. ABA VISITAS
+    const wsVisitas = wb.addWorksheet('Visitas', { views: [{ showGridLines: true }] });
+
+    // Linha 1 de Visitas
+    wsVisitas.mergeCells('A1:I1');
+    const cA1 = wsVisitas.getCell('A1');
+    cA1.value = 'DA AGENDA – NÃO ALTERAR';
+    cA1.fill = FILL_AGENDA_HEADER;
+    cA1.font = FONT_HEADER_WHITE;
+    cA1.alignment = ALIGN_CENTER;
+
+    wsVisitas.mergeCells('J1:N1');
+    const cJ1 = wsVisitas.getCell('J1');
+    cJ1.value = 'EXECUÇÃO – PREENCHER';
+    cJ1.fill = FILL_EXEC_HEADER;
+    cJ1.font = FONT_HEADER_WHITE;
+    cJ1.alignment = ALIGN_CENTER;
+
+    wsVisitas.mergeCells('O1:Q1');
+    const cO1 = wsVisitas.getCell('O1');
+    cO1.value = 'FOTOS – OPCIONAL';
+    cO1.fill = FILL_FOTO_HEADER;
+    cO1.font = FONT_HEADER_WHITE;
+    cO1.alignment = ALIGN_CENTER;
+
+    const cR1 = wsVisitas.getCell('R1');
+    cR1.value = 'USO DO SISTEMA';
+    cR1.fill = FILL_AGENDA_HEADER;
+    cR1.font = FONT_HEADER_WHITE;
+    cR1.alignment = ALIGN_CENTER;
+
+    // Linha 2 de Visitas
+    const visitasHeaders = [
+      { name: 'Data', fill: FILL_AGENDA_HEADER },
+      { name: 'Dia', fill: FILL_AGENDA_HEADER },
+      { name: 'Cliente', fill: FILL_AGENDA_HEADER },
+      { name: 'Contrato', fill: FILL_AGENDA_HEADER },
+      { name: 'Loja', fill: FILL_AGENDA_HEADER },
+      { name: 'Rede', fill: FILL_AGENDA_HEADER },
+      { name: 'Cidade', fill: FILL_AGENDA_HEADER },
+      { name: 'Promotor', fill: FILL_AGENDA_HEADER },
+      { name: 'Situação atual', fill: FILL_AGENDA_HEADER },
+      { name: 'Executada?', fill: FILL_EXEC_HEADER },
+      { name: 'Início (hh:mm)', fill: FILL_EXEC_HEADER },
+      { name: 'Fim (hh:mm)', fill: FILL_EXEC_HEADER },
+      { name: 'Motivo (se não executada)', fill: FILL_EXEC_HEADER },
+      { name: 'Observações', fill: FILL_EXEC_HEADER },
+      { name: 'Foto antes (link)', fill: FILL_FOTO_HEADER },
+      { name: 'Foto depois (link)', fill: FILL_FOTO_HEADER },
+      { name: 'Outras fotos (links separados por ;)', fill: FILL_FOTO_HEADER },
+      { name: 'Código da visita', fill: FILL_AGENDA_HEADER }
+    ];
+
+    visitasHeaders.forEach((vh, idx) => {
+      const cell = wsVisitas.getCell(2, idx + 1);
+      cell.value = vh.name;
+      cell.fill = vh.fill;
+      cell.font = FONT_HEADER_WHITE;
+      cell.alignment = [3, 4, 5, 8, 14, 15, 16, 17].includes(idx + 1) ? ALIGN_LEFT : ALIGN_CENTER;
+    });
+
+    // Preencher linhas de visitas
+    let vRowIdx = 3;
+    visitList.forEach(v => {
+      let dtObj = null;
+      let diaNome = '';
+      let horaInicio = '';
+      let horaFim = '';
+
+      if (v.dInicio) {
+        const parts = v.dInicio.split(' ');
+        if (parts[0]) {
+          const ymd = parts[0].split('-');
+          if (ymd.length === 3) {
+            dtObj = new Date(parseInt(ymd[0], 10), parseInt(ymd[1], 10) - 1, parseInt(ymd[2], 10));
+            diaNome = DIAS_SEMANA[dtObj.getDay() === 0 ? 6 : dtObj.getDay() - 1] || '';
+          }
+        }
+        if (parts[1]) {
+          horaInicio = parts[1].substring(0, 5);
+        }
+      }
+      if (v.dFim) {
+        const partsFim = v.dFim.split(' ');
+        if (partsFim[1]) {
+          horaFim = partsFim[1].substring(0, 5);
+        }
+      }
+
+      // Observações
+      const obsParts = [];
+      if (v.caixas) obsParts.push(`Caixas abastecidas: ${v.caixas}`);
+      if (v.obsGerente) obsParts.push(`Gerente: ${v.obsGerente}`);
+      const obsFinal = obsParts.join(' | ');
+
+      // Fotos
+      const fotoAntesMain = v.fotosAntes[0] || '';
+      const fotoDepoisMain = v.fotosDepois[0] || '';
+      const outrasArr = [];
+      if (v.fotosAntes.length > 1) outrasArr.push(...v.fotosAntes.slice(1));
+      if (v.fotosDepois.length > 1) outrasArr.push(...v.fotosDepois.slice(1));
+      if (v.outrasFotos.length > 0) outrasArr.push(...v.outrasFotos);
+      const outrasFinal = outrasArr.join('; ');
+
+      // Rede inteligente
+      let redeCalculada = '';
+      if (v.loja) {
+        redeCalculada = typeof getRowRede === 'function' ? getRowRede({ 'Local de Atendimento Descrição': v.loja }) : '';
+        if (!redeCalculada || redeCalculada === 'OUTROS') {
+          redeCalculada = v.loja.split(' ')[0] || '';
+        }
+      }
+
+      const rowValues = [
+        dtObj ? dtObj : (v.dInicio ? v.dInicio.split(' ')[0] : ''),
+        diaNome,
+        'MINAS BOM',
+        'Minas Bom – Reposição',
+        v.loja,
+        redeCalculada,
+        '',
+        v.promotor,
+        'Realizada',
+        'Sim',
+        horaInicio,
+        horaFim,
+        '',
+        obsFinal,
+        fotoAntesMain,
+        fotoDepoisMain,
+        outrasFinal,
+        v.execId
+      ];
+
+      rowValues.forEach((val, cIdx) => {
+        const colNum = cIdx + 1;
+        const cell = wsVisitas.getCell(vRowIdx, colNum);
+        cell.value = val;
+        if (colNum <= 9 || colNum === 18) {
+          cell.fill = FILL_AGENDA_ROW;
+          cell.font = colNum === 18 ? FONT_DATA_CODE : FONT_DATA_NORMAL;
+        } else {
+          cell.font = FONT_DATA_NORMAL;
+        }
+        if (colNum === 1 && dtObj) {
+          cell.numFmt = 'yyyy-mm-dd';
+        }
+        cell.alignment = [3, 4, 5, 8, 14, 15, 16, 17].includes(colNum) ? ALIGN_LEFT : ALIGN_CENTER;
+      });
+
+      vRowIdx++;
+    });
+
+    // Larguras das colunas de Visitas
+    const colWidthsVisitas = [12, 10, 26, 24, 38, 18, 18, 26, 16, 12, 14, 13, 28, 34, 30, 30, 40, 22];
+    colWidthsVisitas.forEach((w, idx) => {
+      wsVisitas.getColumn(idx + 1).width = w;
+    });
+
+    // 3. ABA ESTOQUE e 4. ABA VALIDADE
+    const skuNames = Object.keys(allSkus);
+    const totalSkus = skuNames.length;
+    const lastSkuColNum = 4 + totalSkus;
+    const codColNum = lastSkuColNum + 1;
+
+    function buildSkuWorksheet(sheetName, fillTopic, titleTopic, isValidade) {
+      const ws = wb.addWorksheet(sheetName, { views: [{ showGridLines: true }] });
+
+      // Linha 1
+      ws.mergeCells(1, 1, 1, 4);
+      const c1A = ws.getCell(1, 1);
+      c1A.value = 'DA AGENDA – NÃO ALTERAR';
+      c1A.fill = FILL_AGENDA_HEADER;
+      c1A.font = FONT_HEADER_WHITE;
+      c1A.alignment = ALIGN_CENTER;
+
+      ws.mergeCells(1, 5, 1, lastSkuColNum);
+      const c1E = ws.getCell(1, 5);
+      c1E.value = titleTopic;
+      c1E.fill = fillTopic;
+      c1E.font = FONT_HEADER_WHITE;
+      c1E.alignment = ALIGN_CENTER;
+
+      const c1Cod = ws.getCell(1, codColNum);
+      c1Cod.value = 'USO DO SISTEMA';
+      c1Cod.fill = FILL_AGENDA_HEADER;
+      c1Cod.font = FONT_HEADER_WHITE;
+      c1Cod.alignment = ALIGN_CENTER;
+
+      // Linhas 2 e 3 para Colunas Iniciais
+      const fixedHeaders = ['Data', 'Cliente', 'Loja', 'Promotor'];
+      fixedHeaders.forEach((fh, idx) => {
+        const colNum = idx + 1;
+        ws.mergeCells(2, colNum, 3, colNum);
+        const cell = ws.getCell(2, colNum);
+        cell.value = fh;
+        cell.fill = FILL_AGENDA_HEADER;
+        cell.font = FONT_HEADER_WHITE;
+        cell.alignment = ALIGN_CENTER;
+      });
+
+      // Linhas 2 e 3 para SKUs
+      skuNames.forEach((sName, idx) => {
+        const colNum = 5 + idx;
+        const c2 = ws.getCell(2, colNum);
+        c2.value = sName;
+        c2.fill = fillTopic;
+        c2.font = FONT_HEADER_WHITE;
+        c2.alignment = ALIGN_CENTER;
+
+        const sId = allSkus[sName] || '';
+        const c3 = ws.getCell(3, colNum);
+        c3.value = sId;
+        c3.fill = fillTopic;
+        c3.font = FONT_HEADER_SUB;
+        c3.alignment = ALIGN_CENTER;
+
+        ws.getColumn(colNum).width = Math.max(16, Math.floor(sName.length * 0.7));
+      });
+
+      // Linhas 2 e 3 para Código da Visita
+      ws.mergeCells(2, codColNum, 3, codColNum);
+      const cCodH = ws.getCell(2, codColNum);
+      cCodH.value = 'Código da visita';
+      cCodH.fill = FILL_AGENDA_HEADER;
+      cCodH.font = FONT_HEADER_WHITE;
+      cCodH.alignment = ALIGN_CENTER;
+
+      ws.getColumn(1).width = 12;
+      ws.getColumn(2).width = 16;
+      ws.getColumn(3).width = 38;
+      ws.getColumn(4).width = 26;
+      ws.getColumn(codColNum).width = 22;
+
+      // Linha 4 em diante: Dados das visitas
+      let sRowIdx = 4;
+      visitList.forEach(v => {
+        const dtVal = v.dInicio ? v.dInicio.split(' ')[0] : '';
+        const cA = ws.getCell(sRowIdx, 1);
+        cA.value = dtVal;
+        cA.fill = FILL_AGENDA_ROW;
+        cA.font = FONT_DATA_NORMAL;
+        cA.alignment = ALIGN_CENTER;
+
+        const cB = ws.getCell(sRowIdx, 2);
+        cB.value = 'Minas Bom';
+        cB.fill = FILL_AGENDA_ROW;
+        cB.font = FONT_DATA_NORMAL;
+        cB.alignment = ALIGN_CENTER;
+
+        const cC = ws.getCell(sRowIdx, 3);
+        cC.value = v.loja;
+        cC.fill = FILL_AGENDA_ROW;
+        cC.font = FONT_DATA_NORMAL;
+        cC.alignment = ALIGN_LEFT;
+
+        const cD = ws.getCell(sRowIdx, 4);
+        cD.value = v.promotor;
+        cD.fill = FILL_AGENDA_ROW;
+        cD.font = FONT_DATA_NORMAL;
+        cD.alignment = ALIGN_LEFT;
+
+        skuNames.forEach((sName, idx) => {
+          const colNum = 5 + idx;
+          const cell = ws.getCell(sRowIdx, colNum);
+          const item = v.itens[sName];
+          let val = null;
+
+          if (item) {
+            if (!isValidade) {
+              // Estoque: Ruptura Sim -> 0
+              if (item.ruptura === 'SIM') {
+                val = 0;
+              } else if (item.qtdUn) {
+                const num = parseFloat(item.qtdUn.replace(',', '.'));
+                val = isNaN(num) ? item.qtdUn : num;
+              }
+            } else {
+              // Validade: Data de vencimento se informada
+              if (item.validade) {
+                val = item.validade;
+              }
+            }
+          }
+
+          cell.value = val;
+          cell.font = FONT_DATA_NORMAL;
+          cell.alignment = ALIGN_CENTER;
+        });
+
+        const cLast = ws.getCell(sRowIdx, codColNum);
+        cLast.value = v.execId;
+        cLast.fill = FILL_AGENDA_ROW;
+        cLast.font = FONT_DATA_CODE;
+        cLast.alignment = ALIGN_CENTER;
+
+        sRowIdx++;
+      });
+    }
+
+    buildSkuWorksheet('Estoque', FILL_ESTOQUE_HEADER, 'ESTOQUE – MINAS BOM', false);
+    buildSkuWorksheet('Validade', FILL_VALIDADE_HEADER, 'VALIDADE – MINAS BOM', true);
+
+    // Gravar buffer e fazer download
+    const buffer = await wb.xlsx.writeBuffer();
+    const now = new Date();
+    const dateFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const filename = `execucao_visitas_minas_bom_${dateFormatted}.xlsx`;
+
+    downloadFile(buffer, filename, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+    toggleLoading(false);
+    showAlert(
+      'Exportação Concluída!',
+      `O arquivo "${filename}" foi gerado com sucesso contendo ${visitList.length} visita(s) e ${skuNames.length} SKUs no modelo oficial de Execução de Visitas.`,
+      'success'
+    );
+
+  } catch (err) {
+    toggleLoading(false);
+    console.error('Erro na exportação de Execução de Visitas:', err);
+    showAlert('Erro', 'Ocorreu um erro ao gerar a planilha de Execução de Visitas. Verifique o console.', 'error');
+  }
+}
+
+if (downloadExecucaoVisitasBtn) {
+  downloadExecucaoVisitasBtn.addEventListener('click', exportExecucaoVisitasMinasBom);
+}
+
 function autoDetectDelimiter(text) {
   const firstLines = (text || '').split(/\r?\n/).slice(0, 5).join('\n');
   const countSemi = (firstLines.match(/;/g) || []).length;
@@ -1915,7 +2462,11 @@ function processCsv(content, originalFileName) {
     showAlert('Erro', 'O arquivo possui formato inválido ou está vazio.', 'error');
     return null;
   }
-  return processRows(parsed, originalFileName);
+  const res = processRows(parsed, originalFileName);
+  if (res) {
+    res.rawContent = content;
+  }
+  return res;
 }
 
 function detectHeaderRow(rows) {
@@ -2077,7 +2628,7 @@ function processRows(parsedRows, originalFileName) {
     return transformed.some(row => String(row[col] ?? '').trim() !== '');
   });
 
-  return { originalFileName, rows: transformed, columns: exportColumns };
+  return { originalFileName, rows: transformed, columns: exportColumns, rawParsedRows: parsedRows };
 }
 
 function parsePrice(val) {

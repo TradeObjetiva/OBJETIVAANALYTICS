@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS tb_campanha_colaboradores (
   pontos_pontualidade INTEGER DEFAULT 0,
   bonus_4_semanas BOOLEAN DEFAULT FALSE,
   pontos_extras INTEGER DEFAULT 0,
+  pontos_efetividade INTEGER DEFAULT 0,
   pontos_total_geral INTEGER DEFAULT 0,
   status_folha TEXT DEFAULT 'OK',
   periodos JSONB DEFAULT '[]'::jsonb,
