@@ -1605,7 +1605,7 @@ async function processScores() {
 
 // Processador no cliente com suporte a leitura de planilhas .xlsx e .csv
 async function executarProcessamentoClienteComSheetJS() {
-  // Se o usuário selecionou uma nova planilha de Campanha (.xlsx)
+  // 1. Se o usuário selecionou uma nova planilha de Campanha (.xlsx)
   if (selectedCampFile && typeof XLSX !== 'undefined') {
     const parsed = await parseCampanhaComSheetJS(selectedCampFile);
     if (parsed && parsed.length > 0) {
@@ -1613,10 +1613,16 @@ async function executarProcessamentoClienteComSheetJS() {
     }
   }
 
-  // Aplica faltas oficiais de tb_assiduidade
+  // 2. Se o usuário selecionou a Folha de Ponto (.xlsx): processa atrasos e pontualidade (+1 pt/dia)
+  if (selectedFolhaFile && typeof XLSX !== 'undefined') {
+    await parseFolhaComSheetJS(selectedFolhaFile);
+  }
+
+  // 3. Aplica faltas oficiais de tb_assiduidade (-50 pts por falta)
+  // REGRA: Assiduidade é 100% controlada pela tb_assiduidade. A folha só afere atrasos.
   aplicarFaltasEmAllPromotores();
 
-  // Aplica dados previamente salvos (modo incremental)
+  // 4. Aplica dados previamente salvos (modo incremental)
   if (campanhaSalvaMap && Object.keys(campanhaSalvaMap).length > 0) {
     allPromotores.forEach(prom => {
       const saved = campanhaSalvaMap[prom.nome];
@@ -1632,12 +1638,300 @@ async function executarProcessamentoClienteComSheetJS() {
     });
   }
 
+  // 5. Recalcula totais gerais de cada colaborador
+  allPromotores.forEach(prom => {
+    recalcularTotaisPromotor(prom);
+  });
+
   updateMetrics();
   applyFilters();
 
   btnDownloadCampanha.disabled = false;
   if (btnSalvarSupabase) btnSalvarSupabase.disabled = false;
-  showToast("✓ Planilhas reconhecidas e processadas no cliente com sucesso!", "success");
+  showToast("✓ Planilhas e Folha de Ponto processadas com sucesso! Atrasos reconhecidos e faltas sincronizadas.", "success");
+}
+
+function parseExcelTimeInSeconds(val) {
+  if (val === null || val === undefined || val === '') return null;
+  if (typeof val === 'number') {
+    return Math.round(val * 86400);
+  }
+  const s = String(val).trim();
+  if (!s || s === '-' || s.toLowerCase() === 'folga' || s.toLowerCase() === 'feriado') return null;
+  const parts = s.split(':');
+  if (parts.length >= 2) {
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const sec = parts.length > 2 ? parseInt(parts[2], 10) : 0;
+    if (!isNaN(h) && !isNaN(m)) {
+      return h * 3600 + m * 60 + (isNaN(sec) ? 0 : sec);
+    }
+  }
+  return null;
+}
+
+function formatSecondsToTime(sec) {
+  if (sec === null || sec === undefined) return '-';
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+// Analisador completo de Folha de Ponto via SheetJS (Cliente)
+// Foco: reconhecer ATRASOS na entrada e ESTOUROS no intervalo para pontuar PONTUALIDADE (+1 pt/dia)
+// Faltas são 100% controladas pela Tabela Oficial de Assiduidade (tb_assiduidade)
+async function parseFolhaComSheetJS(file) {
+  try {
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array' });
+    if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) return;
+
+    const toleranceMin = parseInt(toleranceInput ? toleranceInput.value : 10, 10) || 10;
+    const toleranceSeconds = toleranceMin * 60;
+    const bonusTarget = parseInt(bonusInput ? bonusInput.value : 30, 10) || 30;
+
+    let sheetsProcessed = 0;
+
+    allPromotores.forEach(prom => {
+      const nomeClean = (prom.nome || '').trim().toUpperCase();
+      let sheetName = wb.SheetNames.find(s => s.trim().toUpperCase() === nomeClean);
+      if (!sheetName) {
+        sheetName = wb.SheetNames.find(s => {
+          const sc = s.trim().toUpperCase();
+          return nomeClean.startsWith(sc) || sc.startsWith(nomeClean.slice(0, 25));
+        });
+      }
+      if (!sheetName) return;
+
+      const ws = wb.Sheets[sheetName];
+      if (!ws) return;
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+      if (!data || data.length < 11) return;
+
+      sheetsProcessed++;
+
+      // Extrai registros diários (linhas 11 a 45)
+      const dailyRecords = [];
+      for (let r = 10; r < Math.min(data.length, 45); r++) {
+        const row = data[r];
+        if (!row || !row[0]) continue;
+
+        const dtCell = String(row[0]).trim();
+        const p = dtCell.split('/');
+        if (p.length !== 3) continue;
+
+        const dayP = String(p[0]).padStart(2, '0');
+        const monthP = String(p[1]).padStart(2, '0');
+        const yearP = p[2].length === 2 ? '20' + p[2] : p[2];
+        const dtIso = `${yearP}-${monthP}-${dayP}`;
+        const dtBr = `${dayP}/${monthP}/${yearP}`;
+
+        dailyRecords.push({
+          row: r + 1,
+          date_br: dtBr,
+          date_iso: dtIso,
+          dia_sem: String(row[1] || ''),
+          exec_in: row[2],
+          exec_int_out: row[3],
+          exec_int_ret: row[4],
+          exec_out: row[5],
+          exec_int_time: row[6],
+          plan_in: row[8],
+          plan_out: row[9],
+          plan_int_time: row[10],
+          obs: String(row[13] || '')
+        });
+      }
+
+      // Conjunto de faltas oficiais de tb_assiduidade
+      const faltasAssiduidade = new Set(
+        (faltasAssiduidadeMap[nomeClean] || []).map(d => normalizarDataParaISO(d)).filter(Boolean)
+      );
+
+      let consecutivePunctualPeriods = 0;
+
+      activeCampaignPeriods.forEach((per, pIdx) => {
+        let pObj = (prom.periodos || []).find(x => x.period_id === per.id || x.period_name === per.name);
+        if (!pObj) {
+          pObj = {
+            period_id: per.id,
+            period_name: per.name,
+            pontos_assiduidade: 0,
+            pontos_pontualidade: 0,
+            pontos_pontualidade_total: 0,
+            dias_pontuais: 0,
+            dias_trabalhados: 0,
+            dias_planejados: 0,
+            dias_com_atraso: 0,
+            faltas: 0,
+            ganhou_bonus: false,
+            detalhes_dias: []
+          };
+          prom.periodos.push(pObj);
+        }
+
+        const pDays = dailyRecords.filter(d => per.start && per.end && d.date_iso >= per.start && d.date_iso <= per.end);
+
+        let diasPlanejados = 0;
+        let diasTrabalhados = 0;
+        let diasPontuais = 0;
+        let diasComAtraso = 0;
+        let faltasPeriodo = 0;
+        const detalhesDias = [];
+        const diasProcessadosIso = new Set();
+
+        pDays.forEach(d => {
+          diasProcessadosIso.add(d.date_iso);
+          const planInSec = parseExcelTimeInSeconds(d.plan_in);
+          const execInSec = parseExcelTimeInSeconds(d.exec_in);
+          const planIntSec = parseExcelTimeInSeconds(d.plan_int_time);
+          const execIntSec = parseExcelTimeInSeconds(d.exec_int_time);
+
+          let dayStatus = 'FOLGA';
+          let pontualHoje = false;
+          let motivoFalta = '';
+          let atrasoMin = 0;
+          let estouroIntMin = 0;
+
+          // REGRA OFICIAL:
+          // Apenas dias cadastrados na tb_assiduidade são faltas (-50 pts).
+          // Folha de ponto é utilizada para avaliar ATRASOS na entrada e almoço (+1 pt se pontual).
+          if (faltasAssiduidade.has(d.date_iso)) {
+            diasPlanejados++;
+            dayStatus = 'FALTA';
+            faltasPeriodo++;
+            motivoFalta = 'Falta registrada na Tabela Oficial de Assiduidade';
+          } else if (planInSec !== null && planInSec > 0) {
+            diasPlanejados++;
+
+            if (execInSec === null) {
+              // Sem batida: não desconta falta se não estiver em tb_assiduidade
+              dayStatus = 'AUSENCIA';
+              motivoFalta = d.obs || 'Sem batida na folha (assiduidade regular na tabela oficial)';
+            } else {
+              diasTrabalhados++;
+              dayStatus = 'TRABALHADO';
+
+              const delayStartSec = Math.max(0, execInSec - planInSec);
+              atrasoMin = Math.max(0, Math.round((delayStartSec / 60) * 10) / 10);
+              const isInPontual = (delayStartSec <= toleranceSeconds);
+
+              let isIntPontual = true;
+              if (planIntSec !== null && planIntSec > 0) {
+                if (execIntSec !== null) {
+                  const excessIntSec = Math.max(0, execIntSec - planIntSec);
+                  if (excessIntSec > toleranceSeconds) {
+                    isIntPontual = false;
+                    estouroIntMin = Math.round((excessIntSec / 60) * 10) / 10;
+                  }
+                }
+              }
+
+              if (isInPontual && isIntPontual) {
+                pontualHoje = true;
+                diasPontuais++;
+              } else {
+                diasComAtraso++;
+              }
+            }
+          }
+
+          detalhesDias.push({
+            date_br: d.date_br,
+            dia_sem: d.dia_sem,
+            status: dayStatus,
+            exec_in: (typeof d.exec_in === 'number') ? formatSecondsToTime(execInSec) : (d.exec_in || '-'),
+            plan_in: (typeof d.plan_in === 'number') ? formatSecondsToTime(planInSec) : (d.plan_in || '-'),
+            exec_int: (typeof d.exec_int_time === 'number') ? formatSecondsToTime(execIntSec) : (d.exec_int_time || '-'),
+            plan_int: (typeof d.plan_int_time === 'number') ? formatSecondsToTime(planIntSec) : (d.plan_int_time || '-'),
+            pontual: pontualHoje,
+            atraso_min: atrasoMin,
+            estouro_int_min: estouroIntMin,
+            obs: d.obs,
+            motivo_falta: motivoFalta
+          });
+        });
+
+        // Inclui faltas da tb_assiduidade que não apareceram na folha
+        faltasAssiduidade.forEach(dtIso => {
+          if (per.start && per.end && dtIso >= per.start && dtIso <= per.end && !diasProcessadosIso.has(dtIso)) {
+            faltasPeriodo++;
+            diasPlanejados++;
+            const pParts = dtIso.split('-');
+            const dtBr = `${pParts[2]}/${pParts[1]}/${pParts[0]}`;
+            detalhesDias.push({
+              date_br: dtBr,
+              dia_sem: '',
+              status: 'FALTA',
+              exec_in: '-',
+              plan_in: '08:00',
+              exec_int: '-',
+              plan_int: '-',
+              pontual: false,
+              atraso_min: 0,
+              estouro_int_min: 0,
+              obs: 'Falta registrada em tb_assiduidade',
+              motivo_falta: 'Falta reconhecida via Tabela de Assiduidade'
+            });
+          }
+        });
+
+        const pontosPontualidadeBase = diasPontuais;
+        const isPeriodPerfect = (diasTrabalhados > 0 && diasComAtraso === 0 && faltasPeriodo === 0);
+        if (isPeriodPerfect) {
+          consecutivePunctualPeriods++;
+        } else {
+          consecutivePunctualPeriods = 0;
+        }
+
+        let ganhouBonus = false;
+        let bonusComplemento = 0;
+        if (consecutivePunctualPeriods === 4) {
+          ganhouBonus = true;
+          let soma3Anteriores = 0;
+          for (let i = pIdx - 3; i < pIdx; i++) {
+            if (prom.periodos[i]) {
+              soma3Anteriores += (prom.periodos[i].pontos_pontualidade_total || prom.periodos[i].pontos_pontualidade || 0);
+            }
+          }
+          bonusComplemento = Math.max(0, bonusTarget - (soma3Anteriores + pontosPontualidadeBase));
+        }
+
+        pObj.dias_planejados = diasPlanejados;
+        pObj.dias_trabalhados = diasTrabalhados;
+        pObj.dias_pontuais = diasPontuais;
+        pObj.dias_com_atraso = diasComAtraso;
+        pObj.faltas = faltasPeriodo;
+        pObj.pontos_assiduidade = -50 * faltasPeriodo;
+        pObj.pontos_pontualidade = pontosPontualidadeBase;
+        pObj.bonus_pontualidade = bonusComplemento;
+        pObj.ganhou_bonus = ganhouBonus;
+        pObj.pontos_pontualidade_total = pontosPontualidadeBase + bonusComplemento;
+        pObj.detalhes_dias = detalhesDias;
+      });
+    });
+
+    console.log(`✓ Folha de ponto reconciliada com sucesso no cliente: ${sheetsProcessed} colaboradores analisados.`);
+  } catch (err) {
+    console.error("Erro ao analisar folha de ponto no cliente:", err);
+    throw err;
+  }
+}
+
+function recalcularTotaisPromotor(p) {
+  let somaAssid = 0;
+  let somaPont = 0;
+  let somaExtras = 0;
+
+  (p.periodos || []).forEach(per => {
+    somaAssid += (per.pontos_assiduidade || 0);
+    somaPont += (per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.pontos_pontualidade || 0));
+    somaExtras += (per.ilha || 0) + (per.meia_ilha || 0) + (per.ponta || 0) + (per.meia_ponta || 0);
+    per.total_pontos = (per.pontos_assiduidade || 0) + (per.efetividade || 0) + (per.pontos_pontualidade_total || per.pontos_pontualidade || 0) + (per.ilha || 0) + (per.meia_ilha || 0) + (per.ponta || 0) + (per.meia_ponta || 0);
+  });
+
+  const totalEfetividade = Object.values(p.pontos_efetividade_meses || {}).reduce((a, b) => a + (Number(b) || 0), 0) || (p.pontos_efetividade || 0);
+  p.pontos_total_geral = somaAssid + somaPont + somaExtras + totalEfetividade;
 }
 
 async function parseCampanhaComSheetJS(file) {

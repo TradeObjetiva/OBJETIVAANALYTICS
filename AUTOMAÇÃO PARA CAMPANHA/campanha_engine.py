@@ -198,24 +198,21 @@ class CampanhaProcessor:
                 atraso_min = 0
                 estouro_int_min = 0
                 
-                # VERIFICAÇÃO 1: RECONHECIMENTO DIRETO DA TABELA DE ASSIDUIDADE (tb_assiduidade)
+                # REGRA OFICIAL DE ASSIDUIDADE:
+                # A assiduidade é controlada 100% pela Tabela Oficial de Assiduidade (tb_assiduidade).
+                # A folha de ponto é utilizada exclusivamente para aferir ATRASOS e PONTUALIDADE.
                 if d['date_iso'] in faltas_datas_set:
                     dias_planejados += 1
                     day_status = 'FALTA'
                     faltas += 1
-                    motivo_falta = 'Falta registrada diretamente na Tabela de Assiduidade'
+                    motivo_falta = 'Falta registrada na Tabela Oficial de Assiduidade'
                 elif plan_in_sec is not None and plan_in_sec > 0:
                     dias_planejados += 1
                     
                     if exec_in_sec is None:
-                        is_just, justificativa = is_justified_absence(d['obs'], d['date_br'])
-                        if is_just:
-                            day_status = 'AUSENCIA_JUSTIFICADA'
-                            motivo_falta = justificativa
-                        else:
-                            day_status = 'FALTA'
-                            faltas += 1
-                            motivo_falta = justificativa
+                        # Dia sem batida: como não há falta registrada na tabela de assiduidade, não desconta -50
+                        day_status = 'AUSENCIA'
+                        motivo_falta = d['obs'] or 'Sem batida na folha (assiduidade regular na tabela oficial)'
                     else:
                         dias_trabalhados += 1
                         day_status = 'TRABALHADO'

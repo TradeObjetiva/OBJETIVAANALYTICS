@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../style.css">
-  <link rel="stylesheet" href="style.css?v=20261106_ciclos_v2">
+  <link rel="stylesheet" href="style.css?v=20261106_v5">
   <script>
     (function() {
       try {
@@ -192,12 +192,41 @@
             </div>
           </div>
 
-          <!-- Banner Informativo: Reconhecimento Incremental e Faltas via Assiduidade -->
+          <!-- Banner Informativo: Assiduidade Oficial e Pontualidade via Folha -->
           <div class="incremental-info-banner">
-            <span class="banner-icon">🔄</span>
+            <span class="banner-icon">🎯</span>
             <div>
-              <strong>Reconhecimento Incremental & Vigência da Campanha (27/08 a 19/12):</strong>
-              <span>O sistema preserva automaticamente dados já salvos e auditorias no Supabase, processando e ajustando apenas colaboradores novos ou períodos pendentes. As faltas são reconhecidas diretamente da tabela oficial de assiduidade (<code style="color: var(--primary);">tb_assiduidade</code>) de cada colaborador.</span>
+              <strong>Regra de Apuração: Assiduidade Oficial & Pontualidade da Folha:</strong>
+              <span>A <strong>Assiduidade</strong> é captada exclusivamente da Tabela Oficial (<code style="color: var(--primary);">tb_assiduidade</code>). A <strong>Folha de Ponto</strong> importada é utilizada pelo motor para reconhecer os <strong>atrasos de entrada e estouros de intervalo</strong>, gerando a pontualidade diária (+1 pt/dia trabalhado pontual).</span>
+            </div>
+          </div>
+
+          <!-- Barra Superior de Seleção de Ciclo / Mês -->
+          <div class="ciclos-bar-container" style="display: flex !important; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(59, 130, 246, 0.45); border-radius: 12px; padding: 12px 18px; margin-bottom: 16px;">
+            <div class="ciclos-bar-title" style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.3rem;">🗓️</span>
+              <div>
+                <div style="font-weight: 800; font-size: 0.92rem; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.6px;">Seletor de Ciclo / Mês da Campanha:</div>
+                <small style="color: var(--text-muted); font-size: 0.74rem;">Selecione o mês para apurar atrasos, pontuar efetividade e visualizar a matriz</small>
+              </div>
+            </div>
+
+            <div class="ciclos-pills-group" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <button type="button" class="btn-ciclo active" data-mes="Setembro/2026">
+                📅 Setembro <small style="font-size: 0.72rem; opacity: 0.85;">(P1 a P5)</small>
+              </button>
+              <button type="button" class="btn-ciclo" data-mes="Outubro/2026">
+                📅 Outubro <small style="font-size: 0.72rem; opacity: 0.85;">(P6 a P9)</small>
+              </button>
+              <button type="button" class="btn-ciclo" data-mes="Novembro/2026">
+                📅 Novembro <small style="font-size: 0.72rem; opacity: 0.85;">(P10 a P13)</small>
+              </button>
+              <button type="button" class="btn-ciclo" data-mes="Dezembro/2026">
+                📅 Dezembro <small style="font-size: 0.72rem; opacity: 0.85;">(P14 a P16)</small>
+              </button>
+              <button type="button" class="btn-ciclo btn-ciclo-todos" data-mes="TODOS">
+                🌐 Todos os Meses
+              </button>
             </div>
           </div>
 
@@ -217,12 +246,12 @@
             </div>
 
             <div class="param-item">
-              <label for="toleranceInput">Tolerância de Horário (CLT)</label>
+              <label for="toleranceInput">Tolerância de Atraso (CLT)</label>
               <div class="input-with-unit">
                 <input type="number" id="toleranceInput" value="10" min="0" max="60">
                 <span>minutos</span>
               </div>
-              <small class="param-help">Entrada e Intervalo vs Planejado</small>
+              <small class="param-help">Atraso na Entrada e Estouro no Almoço</small>
             </div>
 
             <div class="param-item">
@@ -235,15 +264,15 @@
             </div>
 
             <div class="param-item">
-              <label>Pontos por Falta Injustificada</label>
+              <label>Assiduidade Oficial (tb_assiduidade)</label>
               <div class="static-pill badge-danger">-50 pontos / falta</div>
-              <small class="param-help">Atestados e férias não descontam</small>
+              <small class="param-help">Captada diretamente da tabela de assiduidade</small>
             </div>
 
             <div class="param-item">
-              <label>Pontos por Dia Pontual</label>
+              <label>Pontualidade (Folha de Ponto)</label>
               <div class="static-pill badge-success">+1 ponto / dia trabalhado</div>
-              <small class="param-help">Entrada e almoço dentro da tolerância</small>
+              <small class="param-help">Entrada e almoço sem atraso além da tolerância</small>
             </div>
 
             <div class="param-action">
@@ -1004,7 +1033,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../js/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="campanha_base_data.js?v=20261106_ciclos_v2"></script>
-  <script src="app.js?v=20261106_ciclos_v2"></script>
+  <script src="campanha_base_data.js?v=20261106_v5"></script>
+  <script src="app.js?v=20261106_v5"></script>
 </body>
 </html>
