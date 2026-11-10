@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../style.css">
-  <link rel="stylesheet" href="style.css?v=20261106_v5">
+  <link rel="stylesheet" href="style.css?v=20261110_v1">
   <script>
     (function() {
       try {
@@ -437,6 +437,15 @@
               <option value="bonus">Ativos com Super Bônus (30 pts)</option>
               <option value="inativos">⚠️ Ver Inativos / Desligados</option>
             </select>
+
+            <button type="button" class="btn btn-secondary btn-import-efet-trigger" id="btnImportarEfetividadeToolbar" style="border-color: rgba(59, 130, 246, 0.45); color: #60a5fa; background: rgba(59, 130, 246, 0.12); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 0.85rem;" title="Importar pontuação de efetividade do mês fechado via planilha CSV ou Excel">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              📥 Importar Efetividade
+            </button>
           </div>
         </div>
 
@@ -1033,7 +1042,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../js/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="campanha_base_data.js?v=20261106_v5"></script>
-  <script src="app.js?v=20261106_v5"></script>
+  <script src="campanha_base_data.js?v=20261110_v1"></script>
+  <script src="app.js?v=20261110_v1"></script>
 </body>
 </html>

@@ -666,6 +666,13 @@ function setupEventListeners() {
   if (btnImportarEfetividade && modalImportEfetividade) {
     btnImportarEfetividade.addEventListener('click', abrirModalImportEfetividade);
   }
+  const btnImportarEfetividadeToolbar = document.getElementById('btnImportarEfetividadeToolbar');
+  if (btnImportarEfetividadeToolbar && modalImportEfetividade) {
+    btnImportarEfetividadeToolbar.addEventListener('click', abrirModalImportEfetividade);
+  }
+  document.querySelectorAll('.btn-import-efet-trigger').forEach(btn => {
+    btn.addEventListener('click', abrirModalImportEfetividade);
+  });
   if (btnCloseImportEfetModal && modalImportEfetividade) {
     btnCloseImportEfetModal.addEventListener('click', fecharModalImportEfetividade);
     modalImportEfetividade.addEventListener('click', (e) => {
