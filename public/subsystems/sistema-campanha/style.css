@@ -2023,10 +2023,16 @@ select option {
   line-height: 1.45;
 }
 
-.incremental-info-banner strong {
+.incremental-info-banner .banner-title {
   color: var(--text-main);
   display: block;
+  font-weight: 700;
   margin-bottom: 2px;
+}
+
+.incremental-info-banner strong {
+  color: var(--text-main);
+  display: inline;
 }
 
 .incremental-info-banner .banner-icon {
