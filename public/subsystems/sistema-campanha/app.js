@@ -1302,15 +1302,14 @@ function downloadTemplateEfetividade() {
     }
 
     const rows = promotoresAtivos.map(p => {
-      normalizarPromotorEfetividade(p);
       return {
         'NOME': p.nome,
         'PROJETO': p.projeto || 'GERAL',
         'EQUIPE': p.equipe || 'PROMOTOR',
-        'SETEMBRO_P5': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Setembro/2026']) || 0,
-        'OUTUBRO_P9': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Outubro/2026']) || 0,
-        'NOVEMBRO_P13': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Novembro/2026']) || 0,
-        'DEZEMBRO_P16': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Dezembro/2026']) || 0
+        'SETEMBRO_P5': 0,
+        'OUTUBRO_P9': 0,
+        'NOVEMBRO_P13': 0,
+        'DEZEMBRO_P16': 0
       };
     });
 
