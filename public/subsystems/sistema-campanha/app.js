@@ -1020,6 +1020,45 @@ function atualizarTodosPeriodosFechamento() {
   });
 }
 
+// ========================================================
+// REGRA OFICIAL DE EFETIVIDADE DA CAMPANHA OBJETIVA:
+// 100% ou mais = 20 pontos
+// 95% a 99% = 10 pontos
+// 90% a 94% = 5 pontos
+// 89% ou menos = 0 pontos (não pontua)
+// ========================================================
+function converterEfetividadePercentualParaPontos(valor) {
+  if (valor === null || valor === undefined || valor === '') return 0;
+  
+  const strVal = String(valor).trim().replace(',', '.');
+  const hasPercent = strVal.includes('%');
+  const num = parseFloat(strVal.replace(/[^\d.-]/g, ''));
+  if (isNaN(num)) return 0;
+
+  // Se num veio como decimal de porcentagem (ex: 1.0 = 100%, 0.95 = 95%, 0.90 = 90%)
+  let pct = num;
+  if (!hasPercent && num > 0 && num <= 1.0) {
+    pct = num * 100;
+  }
+
+  // Se tem '%' ou se o valor for percentual típico (> 20)
+  if (hasPercent || pct > 20) {
+    if (pct >= 100) return 20;
+    if (pct >= 95) return 10;
+    if (pct >= 90) return 5;
+    return 0; // 89% ou menos = não pontua
+  }
+
+  // Se o usuário digitou diretamente os pontos oficiais da campanha (20, 10, 5 ou 0)
+  const roundNum = Math.round(num);
+  if ([20, 10, 5, 0].includes(roundNum)) {
+    return roundNum;
+  }
+
+  // Qualquer outro valor <= 20 que não seja ponto oficial cai na regra <= 89% = 0 pontos
+  return 0;
+}
+
 function atualizarEfetividadeColaborador(nome, novoValor, silencioso = false, mesAlvo = null) {
   const nomeClean = (nome || '').trim().toUpperCase();
   const p = allPromotores.find(x => (x.nome || '').trim().toUpperCase() === nomeClean);
@@ -1028,7 +1067,7 @@ function atualizarEfetividadeColaborador(nome, novoValor, silencioso = false, me
   normalizarPromotorEfetividade(p);
   const mesDestino = mesAlvo || 
     (filterMes && filterMes.value !== 'TODOS' ? filterMes.value : (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026'));
-  const pts = Math.max(0, parseInt(novoValor, 10) || 0);
+  const pts = converterEfetividadePercentualParaPontos(novoValor);
 
   p.pontos_efetividade_meses[mesDestino] = pts;
   p.pontos_efetividade = pts;
@@ -1050,16 +1089,18 @@ function atualizarEfetividadeColaborador(nome, novoValor, silencioso = false, me
 window.handleInlineEfetividadeChange = function(inputEl) {
   const nome = inputEl.getAttribute('data-nome');
   const mes = inputEl.getAttribute('data-mes') || null;
-  const valor = parseInt(inputEl.value, 10) || 0;
-  atualizarEfetividadeColaborador(nome, valor, false, mes);
+  const pontos = converterEfetividadePercentualParaPontos(inputEl.value);
+  inputEl.value = pontos;
+  atualizarEfetividadeColaborador(nome, pontos, false, mes);
 };
 
 window.handleMatrixEfetividadeChange = function(inputEl) {
   const nome = inputEl.getAttribute('data-nome');
   const periodId = parseInt(inputEl.getAttribute('data-period-id'), 10);
   const mes = FECHAMENTO_PERIODOS_MAP[periodId] || 'Setembro/2026';
-  const valor = parseInt(inputEl.value, 10) || 0;
-  atualizarEfetividadeColaborador(nome, valor, false, mes);
+  const pontos = converterEfetividadePercentualParaPontos(inputEl.value);
+  inputEl.value = pontos;
+  atualizarEfetividadeColaborador(nome, pontos, false, mes);
 };
 
 window.handleInlineEfetividadeKeydown = function(e, inputEl) {
@@ -1212,19 +1253,19 @@ async function handleEfetFileUpload(file) {
 
       if (modoMultiMes) {
         if (colSet && r[colSet] !== '') {
-          parsedEfetividadeMap[matchRealName]['Setembro/2026'] = Math.max(0, parseInt(String(r[colSet]).replace(/[^\d]/g, ''), 10) || 0);
+          parsedEfetividadeMap[matchRealName]['Setembro/2026'] = converterEfetividadePercentualParaPontos(r[colSet]);
         }
         if (colOut && r[colOut] !== '') {
-          parsedEfetividadeMap[matchRealName]['Outubro/2026'] = Math.max(0, parseInt(String(r[colOut]).replace(/[^\d]/g, ''), 10) || 0);
+          parsedEfetividadeMap[matchRealName]['Outubro/2026'] = converterEfetividadePercentualParaPontos(r[colOut]);
         }
         if (colNov && r[colNov] !== '') {
-          parsedEfetividadeMap[matchRealName]['Novembro/2026'] = Math.max(0, parseInt(String(r[colNov]).replace(/[^\d]/g, ''), 10) || 0);
+          parsedEfetividadeMap[matchRealName]['Novembro/2026'] = converterEfetividadePercentualParaPontos(r[colNov]);
         }
         if (colDez && r[colDez] !== '') {
-          parsedEfetividadeMap[matchRealName]['Dezembro/2026'] = Math.max(0, parseInt(String(r[colDez]).replace(/[^\d]/g, ''), 10) || 0);
+          parsedEfetividadeMap[matchRealName]['Dezembro/2026'] = converterEfetividadePercentualParaPontos(r[colDez]);
         }
       } else if (colGenerica) {
-        const pts = Math.max(0, parseInt(String(r[colGenerica]).replace(/[^\d]/g, ''), 10) || 0);
+        const pts = converterEfetividadePercentualParaPontos(r[colGenerica]);
         parsedEfetividadeMap[matchRealName][mesDestinoFixo] = pts;
       }
 
@@ -1249,7 +1290,7 @@ async function handleEfetFileUpload(file) {
       importEfetFeedback.style.display = 'block';
       importEfetFeedback.style.background = 'rgba(16, 185, 129, 0.15)';
       importEfetFeedback.style.color = '#34d399';
-      importEfetFeedback.innerHTML = `✓ <strong>${matchedCount} colaboradores reconhecidos com sucesso!</strong><br><small style="color:var(--text-light);">${descrModo}.${ignoredCount > 0 ? ` (${ignoredCount} linhas ignoradas)` : ''}</small>`;
+      importEfetFeedback.innerHTML = `✓ <strong>${matchedCount} colaboradores reconhecidos com sucesso!</strong><br><small style="color:var(--text-light);">${descrModo}. Regra aplicada: 100%=20pts | 95%=10pts | 90%=5pts | ≤89%=0pts.${ignoredCount > 0 ? ` (${ignoredCount} linhas ignoradas)` : ''}</small>`;
     }
 
     if (btnConfirmarImportEfet) {
@@ -2567,10 +2608,10 @@ function renderPromotorsHeader(mesAtivo) {
       <tr>
         <th>Promotor</th>
         <th>Projeto / Equipe</th>
-        <th class="th-center" title="Fechamento de Setembro (28/09 a 30/09)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Set (P5)</th>
-        <th class="th-center" title="Fechamento de Outubro (22/10 a 31/10)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Out (P9)</th>
-        <th class="th-center" title="Fechamento de Novembro (22/11 a 30/11)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Nov (P13)</th>
-        <th class="th-center" title="Fechamento de Dezembro (15/12 a 19/12)" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Dez (P16)</th>
+        <th class="th-center" title="Fechamento de Setembro (P5) - Regra: 100%=20pts | 95%=10pts | 90%=5pts | ≤89%=0pts" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Set (P5)</th>
+        <th class="th-center" title="Fechamento de Outubro (P9) - Regra: 100%=20pts | 95%=10pts | 90%=5pts | ≤89%=0pts" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Out (P9)</th>
+        <th class="th-center" title="Fechamento de Novembro (P13) - Regra: 100%=20pts | 95%=10pts | 90%=5pts | ≤89%=0pts" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Nov (P13)</th>
+        <th class="th-center" title="Fechamento de Dezembro (P16) - Regra: 100%=20pts | 95%=10pts | 90%=5pts | ≤89%=0pts" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efet. Dez (P16)</th>
         <th class="th-center" title="Bônus de 4 semanas consecutivas">Bônus 4x</th>
         <th class="th-center" title="Total de Efetividade Somada (Set+Out+Nov+Dez)" style="color: #93c5fd; font-weight: 700;">Total Efet.</th>
         <th class="th-center" title="Pontos Extras Totais Conquistados">Pontos Extras</th>
@@ -2596,7 +2637,7 @@ function renderPromotorsHeader(mesAtivo) {
       <th>Projeto / Equipe</th>
       ${colsPeriodosHtml}
       <th class="th-center">Bônus 4x</th>
-      <th class="th-center" title="Efetividade apurada e somada somente no mês fechado (${info.nome})" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efetividade (${info.nome})</th>
+      <th class="th-center" title="Efetividade Oficial: 100% = 20 pts | 95% a 99% = 10 pts | 90% a 94% = 5 pts | ≤ 89% = 0 pts" style="color: #60a5fa; background: rgba(59,130,246,0.08);">Efetividade (${info.nome})</th>
       <th class="th-center" title="Pontos Extras Totais Conquistados">Pontos Extras</th>
       <th class="th-center" title="Pontuação Geral Acumulada">Total Geral</th>
       <th class="th-action">Auditoria</th>
@@ -2761,7 +2802,7 @@ function renderTable(promotores) {
                  data-mes="${escapeHtml(mesAtivo)}" 
                  onchange="handleInlineEfetividadeChange(this)" 
                  onkeydown="handleInlineEfetividadeKeydown(event, this)" 
-                 title="Efetividade (${info.nome}) - Pressione Enter ou Tab para avançar" />
+                 title="Efetividade (${info.nome}): 100%=20pts | 95-99%=10pts | 90-94%=5pts | ≤89%=0pts (Enter para avançar)" />
           <span class="efet-unit">pts</span>
         </div>
       </td>
@@ -2806,10 +2847,10 @@ function openPromotorDetail(nome) {
   if (btnSalvarEfetModal) {
     btnSalvarEfetModal.onclick = () => {
       if (!currentPromotor) return;
-      const vSet = Math.max(0, parseInt(modalEfetSet ? modalEfetSet.value : 0, 10) || 0);
-      const vOut = Math.max(0, parseInt(modalEfetOut ? modalEfetOut.value : 0, 10) || 0);
-      const vNov = Math.max(0, parseInt(modalEfetNov ? modalEfetNov.value : 0, 10) || 0);
-      const vDez = Math.max(0, parseInt(modalEfetDez ? modalEfetDez.value : 0, 10) || 0);
+      const vSet = converterEfetividadePercentualParaPontos(modalEfetSet ? modalEfetSet.value : 0);
+      const vOut = converterEfetividadePercentualParaPontos(modalEfetOut ? modalEfetOut.value : 0);
+      const vNov = converterEfetividadePercentualParaPontos(modalEfetNov ? modalEfetNov.value : 0);
+      const vDez = converterEfetividadePercentualParaPontos(modalEfetDez ? modalEfetDez.value : 0);
 
       atualizarEfetividadeColaborador(currentPromotor.nome, vSet, true, 'Setembro/2026');
       atualizarEfetividadeColaborador(currentPromotor.nome, vOut, true, 'Outubro/2026');

@@ -34,6 +34,62 @@ def parse_time_str(val):
     except (ValueError, TypeError):
         return None
 
+def converter_efetividade_percentual_para_pontos(valor):
+    """
+    Regra Oficial de Efetividade da Campanha Objetiva:
+    - 100% ou mais = 20 pontos
+    - 95% a 99% = 10 pontos
+    - 90% a 94% = 5 pontos
+    - 89% ou menos = 0 pontos (não pontua)
+    
+    Suporta percentuais (100%, 95%), decimais (0.95), inteiros percentuais (100, 95)
+    e também os pontos finais já calculados (20, 10, 5, 0).
+    """
+    if valor is None or valor == '':
+        return 0
+    if isinstance(valor, (int, float)):
+        val_num = float(valor)
+        if 0 < val_num <= 1.0:
+            val_num = val_num * 100.0
+        if val_num > 20:
+            if val_num >= 100.0:
+                return 20
+            elif val_num >= 95.0:
+                return 10
+            elif val_num >= 90.0:
+                return 5
+            else:
+                return 0
+        round_val = int(round(val_num))
+        if round_val in (20, 10, 5, 0):
+            return round_val
+        return 0
+
+    s = str(valor).strip().replace(',', '.')
+    has_pct = '%' in s
+    clean = re.sub(r'[^\d.-]', '', s)
+    if not clean:
+        return 0
+    try:
+        val_num = float(clean)
+    except ValueError:
+        return 0
+    if not has_pct and 0 < val_num <= 1.0:
+        val_num = val_num * 100.0
+    if has_pct or val_num > 20:
+        if val_num >= 100.0:
+            return 20
+        elif val_num >= 95.0:
+            return 10
+        elif val_num >= 90.0:
+            return 5
+        else:
+            return 0
+    round_val = int(round(val_num))
+    if round_val in (20, 10, 5, 0):
+        return round_val
+    return 0
+
 def is_justified_absence(obs_str, dt_str):
     """
     Checks if an absence is justified.
@@ -421,11 +477,15 @@ class CampanhaProcessor:
             efet_data = efet_map.get(nome_clean, 0)
             efet_meses = {}
             if isinstance(efet_data, dict):
-                efet_meses = efet_data
-            elif isinstance(efet_data, (int, float)) and efet_data > 0:
-                efet_meses = { mes_referencia: efet_data }
+                efet_meses = { k: converter_efetividade_percentual_para_pontos(v) for k, v in efet_data.items() }
+            elif isinstance(efet_data, (int, float, str)) and str(efet_data).strip() not in ('', '0'):
+                efet_meses = { mes_referencia: converter_efetividade_percentual_para_pontos(efet_data) }
             elif saved_colab:
-                efet_meses = saved_colab.get('pontos_efetividade_meses') or { mes_referencia: saved_colab.get('pontos_efetividade', 0) }
+                saved_raw_meses = saved_colab.get('pontos_efetividade_meses') or { mes_referencia: saved_colab.get('pontos_efetividade', 0) }
+                if isinstance(saved_raw_meses, dict):
+                    efet_meses = { k: converter_efetividade_percentual_para_pontos(v) for k, v in saved_raw_meses.items() }
+                else:
+                    efet_meses = { mes_referencia: converter_efetividade_percentual_para_pontos(saved_raw_meses) }
 
             fechamentos_periodo = {
                 5: 'Setembro/2026',
@@ -491,13 +551,13 @@ class CampanhaProcessor:
             sheet_name = self.find_sheet(wb_folha, nome) if wb_folha else None
             analysis = self.analyze_promotor(wb_folha[sheet_name], nome) if sheet_name else None
             
-            # Mapeamento de efetividade multi-mês
+            # Mapeamento de efetividade multi-mês com conversão oficial
             efet_data = efet_map.get(nome_clean, 0)
             efet_meses = {}
             if isinstance(efet_data, dict):
-                efet_meses = efet_data
-            elif isinstance(efet_data, (int, float)) and efet_data > 0:
-                efet_meses = { mes_referencia: efet_data }
+                efet_meses = { k: converter_efetividade_percentual_para_pontos(v) for k, v in efet_data.items() }
+            elif isinstance(efet_data, (int, float, str)) and str(efet_data).strip() not in ('', '0'):
+                efet_meses = { mes_referencia: converter_efetividade_percentual_para_pontos(efet_data) }
             
             for p in self.periods:
                 p_res = next((res for res in analysis['periodos'] if res['period_id'] == p['id']), None) if analysis else None

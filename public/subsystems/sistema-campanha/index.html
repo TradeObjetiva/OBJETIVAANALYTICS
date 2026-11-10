@@ -970,9 +970,37 @@
           </select>
         </div>
 
+        <!-- TABELA DE REGRA OFICIAL DE EFETIVIDADE -->
+        <div style="background: rgba(30, 58, 138, 0.25); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+          <div style="font-size: 0.8rem; font-weight: 700; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>🎯</span> Regra Oficial de Efetividade da Campanha
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center;">
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 6px 4px;">
+              <div style="font-size: 0.75rem; color: #a7f3d0; font-weight: 600;">100%</div>
+              <div style="font-size: 0.95rem; color: #34d399; font-weight: 800;">20 pts</div>
+            </div>
+            <div style="background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 6px 4px;">
+              <div style="font-size: 0.75rem; color: #bfdbfe; font-weight: 600;">95% a 99%</div>
+              <div style="font-size: 0.95rem; color: #60a5fa; font-weight: 800;">10 pts</div>
+            </div>
+            <div style="background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 6px; padding: 6px 4px;">
+              <div style="font-size: 0.75rem; color: #fef08a; font-weight: 600;">90% a 94%</div>
+              <div style="font-size: 0.95rem; color: #facc15; font-weight: 800;">5 pts</div>
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 6px; padding: 6px 4px;">
+              <div style="font-size: 0.75rem; color: #fca5a5; font-weight: 600;">≤ 89%</div>
+              <div style="font-size: 0.95rem; color: #f87171; font-weight: 800;">0 pts</div>
+            </div>
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-light); margin-top: 8px;">
+            * A conversão é automática: você pode importar/digitar percentuais (ex: 100%, 95%, 90%) ou diretamente os pontos (20, 10, 5, 0).
+          </div>
+        </div>
+
         <p style="font-size: 0.88rem; color: var(--text-light); margin-bottom: 16px;">
           Suba uma planilha (<strong>.xlsx</strong> ou <strong>.csv</strong>) contendo <strong>NOME</strong> e as colunas de cada mês (ou coluna <strong>EFETIVIDADE</strong>).
-          O sistema fará o cruzamento automático com os colaboradores e somará os pontos no fechamento mensal correspondente.
+          O sistema converterá automaticamente percentuais para os pontos oficiais e somará no mês correspondente.
         </p>
 
         <div class="drop-zone" id="efetDropZone" style="border: 2px dashed rgba(59, 130, 246, 0.4); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: rgba(59, 130, 246, 0.03);">
