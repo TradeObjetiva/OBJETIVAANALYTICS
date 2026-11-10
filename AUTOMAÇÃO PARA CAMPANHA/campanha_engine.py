@@ -481,11 +481,12 @@ class CampanhaProcessor:
             elif isinstance(efet_data, (int, float, str)) and str(efet_data).strip() not in ('', '0'):
                 efet_meses = { mes_referencia: converter_efetividade_percentual_para_pontos(efet_data) }
             elif saved_colab:
-                saved_raw_meses = saved_colab.get('pontos_efetividade_meses') or { mes_referencia: saved_colab.get('pontos_efetividade', 0) }
+                saved_mes = saved_colab.get('mes_referencia')
+                saved_raw_meses = saved_colab.get('pontos_efetividade_meses')
                 if isinstance(saved_raw_meses, dict):
                     efet_meses = { k: converter_efetividade_percentual_para_pontos(v) for k, v in saved_raw_meses.items() }
-                else:
-                    efet_meses = { mes_referencia: converter_efetividade_percentual_para_pontos(saved_raw_meses) }
+                elif saved_mes and saved_colab.get('pontos_efetividade') is not None:
+                    efet_meses = { saved_mes: converter_efetividade_percentual_para_pontos(saved_colab.get('pontos_efetividade', 0)) }
 
             fechamentos_periodo = {
                 5: 'Setembro/2026',

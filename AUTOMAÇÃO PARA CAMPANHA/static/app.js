@@ -935,33 +935,23 @@ function normalizarPromotorEfetividade(p) {
   if (!p) return;
   if (!p.pontos_efetividade_meses) {
     p.pontos_efetividade_meses = {
-      'Setembro/2026': Number(p.pontos_efetividade) || 0,
+      'Setembro/2026': 0,
       'Outubro/2026': 0,
       'Novembro/2026': 0,
       'Dezembro/2026': 0
     };
   }
   ['Setembro/2026', 'Outubro/2026', 'Novembro/2026', 'Dezembro/2026'].forEach(m => {
-    if (p.pontos_efetividade_meses[m] === undefined) {
+    if (p.pontos_efetividade_meses[m] === undefined || p.pontos_efetividade_meses[m] === null) {
       p.pontos_efetividade_meses[m] = 0;
+    } else {
+      // Converte qualquer valor percentual ou antigo (ex: 100 vira 20 pts oficiais)
+      p.pontos_efetividade_meses[m] = converterEfetividadePercentualParaPontos(p.pontos_efetividade_meses[m]);
     }
   });
 
-  // Se já possuía registros em períodos de fechamento, aproveita
-  if (p.periodos && Array.isArray(p.periodos)) {
-    p.periodos.forEach(per => {
-      if (per.efetividade && per.efetividade > 0) {
-        if (per.period_id === 5 && !p.pontos_efetividade_meses['Setembro/2026']) {
-          p.pontos_efetividade_meses['Setembro/2026'] = per.efetividade;
-        } else if (per.period_id === 9 && !p.pontos_efetividade_meses['Outubro/2026']) {
-          p.pontos_efetividade_meses['Outubro/2026'] = per.efetividade;
-        } else if (per.period_id === 13 && !p.pontos_efetividade_meses['Novembro/2026']) {
-          p.pontos_efetividade_meses['Novembro/2026'] = per.efetividade;
-        } else if (per.period_id === 16 && !p.pontos_efetividade_meses['Dezembro/2026']) {
-          p.pontos_efetividade_meses['Dezembro/2026'] = per.efetividade;
-        }
-      }
-    });
+  if (p.pontos_efetividade !== undefined && p.pontos_efetividade !== null) {
+    p.pontos_efetividade = converterEfetividadePercentualParaPontos(p.pontos_efetividade);
   }
 }
 
@@ -1417,13 +1407,16 @@ async function carregarCampanhaSalvaIncremental() {
           existing.ativo = true;
           normalizarPromotorEfetividade(existing);
           if (saved.periodos && saved.periodos.length > 0) {
-            existing.periodos = saved.periodos;
+            existing.periodos = saved.periodos.map(per => ({
+              ...per,
+              efetividade: 0 // Recalculado exclusivamente por atualizarTodosPeriodosFechamento()
+            }));
           }
           if (saved.pontos_extras !== undefined) {
             existing.pontos_extras = saved.pontos_extras;
           }
           if (saved.mes_referencia && saved.pontos_efetividade !== undefined) {
-            existing.pontos_efetividade_meses[saved.mes_referencia] = Number(saved.pontos_efetividade) || 0;
+            existing.pontos_efetividade_meses[saved.mes_referencia] = converterEfetividadePercentualParaPontos(saved.pontos_efetividade);
           }
           if (saved.status_folha) {
             existing.status = saved.status_folha;
@@ -1439,17 +1432,19 @@ async function carregarCampanhaSalvaIncremental() {
             ativo: true,
             sem_contrato: false,
             pontos_extras: saved.pontos_extras || 0,
-            pontos_efetividade: Number(saved.pontos_efetividade) || 0,
+            pontos_efetividade: 0,
             pontos_efetividade_meses: {
               'Setembro/2026': 0,
               'Outubro/2026': 0,
               'Novembro/2026': 0,
               'Dezembro/2026': 0
             },
-            periodos: saved.periodos || []
+            periodos: (saved.periodos || []).map(per => ({ ...per, efetividade: 0 }))
           };
           if (saved.mes_referencia && saved.pontos_efetividade !== undefined) {
-            novoProm.pontos_efetividade_meses[saved.mes_referencia] = Number(saved.pontos_efetividade) || 0;
+            const ptsOficiais = converterEfetividadePercentualParaPontos(saved.pontos_efetividade);
+            novoProm.pontos_efetividade_meses[saved.mes_referencia] = ptsOficiais;
+            novoProm.pontos_efetividade = ptsOficiais;
           }
           allPromotores.push(novoProm);
         }
@@ -1996,7 +1991,7 @@ function recalcularTotaisPromotor(p) {
     per.total_pontos = (per.pontos_assiduidade || 0) + (per.efetividade || 0) + (per.pontos_pontualidade_total || per.pontos_pontualidade || 0) + (per.ilha || 0) + (per.meia_ilha || 0) + (per.ponta || 0) + (per.meia_ponta || 0);
   });
 
-  const totalEfetividade = Object.values(p.pontos_efetividade_meses || {}).reduce((a, b) => a + (Number(b) || 0), 0) || (p.pontos_efetividade || 0);
+  const totalEfetividade = Object.values(p.pontos_efetividade_meses || {}).reduce((a, b) => a + (Number(b) || 0), 0);
   p.pontos_total_geral = somaAssid + somaPont + somaExtras + totalEfetividade;
 }
 
@@ -2970,8 +2965,10 @@ async function salvarCampanhaNoSupabase() {
       const ptsPont = periodos.reduce((acc, per) => acc + (per.pontos_pontualidade_total || 0), 0);
       const temBonus = periodos.some(per => per.ganhou_bonus);
       const ptsExtras = p.pontos_extras || 0;
-      const ptsEfet = p.pontos_efetividade_meses[mesRef] || p.pontos_efetividade || 0;
-      const totalGeral = p.pontos_total_geral || (ptsAssid + ptsPont + ptsExtras + ptsEfet);
+      const ptsEfet = (p.pontos_efetividade_meses && p.pontos_efetividade_meses[mesRef] !== undefined) ? 
+        p.pontos_efetividade_meses[mesRef] : 0;
+      const totalGeral = ptsAssid + ptsPont + ptsExtras + ptsEfet;
+      const fechId = getFechamentoPeriodId(mesRef);
 
       return {
         nome: (p.nome || '').trim().toUpperCase(),
@@ -2988,7 +2985,10 @@ async function salvarCampanhaNoSupabase() {
         pontos_efetividade: ptsEfet,
         pontos_total_geral: totalGeral,
         status_folha: p.status || 'OK',
-        periodos: periodos,
+        periodos: periodos.map(per => ({
+          ...per,
+          efetividade: (per.period_id === fechId || per.id === fechId) ? ptsEfet : 0
+        })),
         updated_at: new Date().toISOString()
       };
     });
