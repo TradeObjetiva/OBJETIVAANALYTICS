@@ -580,7 +580,10 @@ function setupEventListeners() {
   if (btnSalvarSupabase) {
     btnSalvarSupabase.addEventListener('click', salvarCampanhaNoSupabase);
   }
-  btnDownloadCampanha.addEventListener('click', () => window.location.href = getApiUrl('/api/download'));
+  if (btnDownloadCampanha) {
+    btnDownloadCampanha.disabled = false;
+    btnDownloadCampanha.addEventListener('click', exportarMatrizGeralExcel);
+  }
   if (btnDownloadPdfCampanha) {
     btnDownloadPdfCampanha.addEventListener('click', () => window.location.href = getApiUrl('/api/download-pdf-campanha'));
   }
@@ -1361,6 +1364,188 @@ function downloadTemplateEfetividade() {
     showToast("Erro ao exportar modelo de efetividade: " + e.message, "danger");
   }
 }
+
+// ========================================================
+// EXPORTAÇÃO COMPLETA DA MATRIZ GERAL DA CAMPANHA (.XLSX)
+// ========================================================
+
+function exportarMatrizGeralExcel() {
+  try {
+    if (typeof XLSX === 'undefined') {
+      showToast("Carregando biblioteca do Excel. Aguarde um instante...", "warning");
+      return;
+    }
+
+    let lista = (allPromotores && allPromotores.length > 0) ? allPromotores : [];
+    if (lista.length === 0 && Array.isArray(colaboradoresObjetiva) && colaboradoresObjetiva.length > 0) {
+      lista = colaboradoresObjetiva;
+    }
+    if (lista.length === 0 && typeof CAMPANHA_BASE_DATA !== 'undefined' && Array.isArray(CAMPANHA_BASE_DATA)) {
+      lista = CAMPANHA_BASE_DATA;
+    }
+
+    // Filtra promotores ativos (ou toda a lista se não houver ativos filtrados)
+    let promotoresExport = lista.filter(p => isPromotorAtivo(p));
+    if (promotoresExport.length === 0) {
+      promotoresExport = lista;
+    }
+
+    if (promotoresExport.length === 0) {
+      showToast("Nenhum dado de colaboradores disponível para exportação.", "warning");
+      return;
+    }
+
+    // Garante que todas as pontuações e regras oficiais estejam calculadas
+    atualizarTodosPeriodosFechamento();
+
+    const wb = XLSX.utils.book_new();
+
+    // --------------------------------------------------------
+    // ABA 1: MATRIZ GERAL COMPLETA (Padrão Excel Oficial P1 a P16)
+    // --------------------------------------------------------
+    const rowsMatriz = promotoresExport.map(p => {
+      normalizarPromotorEfetividade(p);
+      const row = {
+        'NOME DO COLABORADOR': p.nome || '',
+        'PROJETO': p.projeto || 'GERAL',
+        'EQUIPE': p.equipe || 'PROMOTOR'
+      };
+
+      let somaAssid = 0;
+      let somaPont = 0;
+      let somaExtras = 0;
+
+      CAMPANHA_PERIODOS_PADRAO.forEach(pRef => {
+        const per = (p.periodos || []).find(x => x.period_id === pRef.id || x.id === pRef.id) || {};
+        const assid = per.pontos_assiduidade !== undefined ? per.pontos_assiduidade : ((per.faltas || 0) * -50);
+        const efet = per.efetividade || 0;
+        const pont = per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.dias_pontuais || 0);
+        const ilha = per.ilha || 0;
+        const mIlha = per.meia_ilha || 0;
+        const ponta = per.ponta || 0;
+        const mPonta = per.meia_ponta || 0;
+        const totalPer = Number(assid) + Number(efet) + Number(pont) + Number(ilha) + Number(mIlha) + Number(ponta) + Number(mPonta);
+
+        somaAssid += Number(assid);
+        somaPont += Number(pont);
+        somaExtras += Number(ilha) + Number(mIlha) + Number(ponta) + Number(mPonta);
+
+        row[`P${pRef.id}_ASSID`] = Number(assid) || 0;
+        row[`P${pRef.id}_EFET`] = Number(efet) || 0;
+        row[`P${pRef.id}_PONT`] = Number(pont) || 0;
+        row[`P${pRef.id}_ILHA`] = Number(ilha) || 0;
+        row[`P${pRef.id}_M.ILHA`] = Number(mIlha) || 0;
+        row[`P${pRef.id}_PONTA`] = Number(ponta) || 0;
+        row[`P${pRef.id}_M.PONTA`] = Number(mPonta) || 0;
+        row[`P${pRef.id}_TOTAL`] = totalPer;
+      });
+
+      const totalEfet = getEfetividadeTotalPromotor(p);
+      const totalExtrasFinal = p.pontos_extras || somaExtras;
+      const totalGeral = somaAssid + somaPont + totalEfet + totalExtrasFinal;
+
+      row['TOTAL_ASSIDUIDADE'] = somaAssid;
+      row['TOTAL_PONTUALIDADE'] = somaPont;
+      row['TOTAL_EFETIVIDADE'] = totalEfet;
+      row['TOTAL_PONTOS_EXTRAS'] = totalExtrasFinal;
+      row['TOTAL_GERAL_CAMPANHA'] = totalGeral;
+
+      return row;
+    });
+
+    const wsMatriz = XLSX.utils.json_to_sheet(rowsMatriz);
+    XLSX.utils.book_append_sheet(wb, wsMatriz, "Matriz_Geral_Completa");
+
+    // --------------------------------------------------------
+    // ABA 2: RESUMO CONSOLIDADO POR MÊS E PONTOS
+    // --------------------------------------------------------
+    const rowsResumo = promotoresExport.map(p => {
+      normalizarPromotorEfetividade(p);
+      const efetSet = p.pontos_efetividade_meses['Setembro/2026'] || 0;
+      const efetOut = p.pontos_efetividade_meses['Outubro/2026'] || 0;
+      const efetNov = p.pontos_efetividade_meses['Novembro/2026'] || 0;
+      const efetDez = p.pontos_efetividade_meses['Dezembro/2026'] || 0;
+      const totalEfet = efetSet + efetOut + efetNov + efetDez;
+
+      const assidTotal = (p.periodos || []).reduce((acc, per) => acc + (per.pontos_assiduidade || 0), 0);
+      const pontTotal = (p.periodos || []).reduce((acc, per) => acc + (per.pontos_pontualidade_total || 0), 0);
+      const extrasTotal = p.pontos_extras || 0;
+      const totalGeral = assidTotal + pontTotal + extrasTotal + totalEfet;
+
+      return {
+        'NOME DO COLABORADOR': p.nome || '',
+        'PROJETO': p.projeto || 'GERAL',
+        'EQUIPE': p.equipe || 'PROMOTOR',
+        'STATUS': p.status || 'OK',
+        'EFETIVIDADE_SETEMBRO (P5)': efetSet,
+        'EFETIVIDADE_OUTUBRO (P9)': efetOut,
+        'EFETIVIDADE_NOVEMBRO (P13)': efetNov,
+        'EFETIVIDADE_DEZEMBRO (P16)': efetDez,
+        'TOTAL_EFETIVIDADE': totalEfet,
+        'TOTAL_ASSIDUIDADE': assidTotal,
+        'TOTAL_PONTUALIDADE': pontTotal,
+        'TOTAL_PONTOS_EXTRAS': extrasTotal,
+        'TOTAL_GERAL_CAMPANHA': totalGeral
+      };
+    });
+
+    const wsResumo = XLSX.utils.json_to_sheet(rowsResumo);
+    XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo_Consolidado");
+
+    // --------------------------------------------------------
+    // ABA 3: CICLO SELECIONADO NA VISUALIZAÇÃO ATUAL
+    // --------------------------------------------------------
+    const mesAtivo = (filterMes && filterMes.value !== 'TODOS') ? 
+      filterMes.value : 
+      (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026');
+    const infoMes = MESES_CAMPANHA_INFO[mesAtivo];
+
+    if (infoMes) {
+      const periodosMes = CAMPANHA_PERIODOS_PADRAO.filter(pr => infoMes.periodIds.includes(pr.id));
+      const rowsCiclo = promotoresExport.map(p => {
+        const row = {
+          'NOME DO COLABORADOR': p.nome || '',
+          'PROJETO': p.projeto || 'GERAL',
+          'EQUIPE': p.equipe || 'PROMOTOR'
+        };
+
+        periodosMes.forEach(pRef => {
+          const per = (p.periodos || []).find(x => x.period_id === pRef.id || x.id === pRef.id) || {};
+          const assid = per.pontos_assiduidade !== undefined ? per.pontos_assiduidade : ((per.faltas || 0) * -50);
+          const pont = per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.dias_pontuais || 0);
+          const efet = per.efetividade || 0;
+          const extras = (per.ilha || 0) + (per.meia_ilha || 0) + (per.ponta || 0) + (per.meia_ponta || 0);
+          const tot = Number(assid) + Number(efet) + Number(pont) + extras;
+
+          row[`P${pRef.id}_ASSID`] = Number(assid) || 0;
+          row[`P${pRef.id}_EFET`] = Number(efet) || 0;
+          row[`P${pRef.id}_PONT`] = Number(pont) || 0;
+          row[`P${pRef.id}_EXTRAS`] = extras;
+          row[`P${pRef.id}_TOTAL`] = tot;
+        });
+
+        row[`EFETIVIDADE_${infoMes.nome.toUpperCase()}`] = p.pontos_efetividade_meses[mesAtivo] || 0;
+        row['PONTOS_EXTRAS'] = p.pontos_extras || 0;
+        row['TOTAL_GERAL'] = p.pontos_total_geral || 0;
+        return row;
+      });
+
+      const wsCiclo = XLSX.utils.json_to_sheet(rowsCiclo);
+      XLSX.utils.book_append_sheet(wb, wsCiclo, `Ciclo_${infoMes.nome}`);
+    }
+
+    const dataHoraStr = new Date().toISOString().slice(0, 10);
+    const fileName = `MATRIZ_GERAL_CAMPANHA_OBJETIVA_${dataHoraStr}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    showToast(`📊 Matriz Geral exportada com sucesso: ${fileName}`, 'success', 5000);
+  } catch (err) {
+    console.error("Erro ao exportar Matriz Geral:", err);
+    showToast("Erro ao exportar Matriz Geral: " + err.message, "danger");
+  }
+}
+
+window.exportarMatrizGeralExcel = exportarMatrizGeralExcel;
 
 // ========================================================
 // RECONHECIMENTO INCREMENTAL DE CAMPANHA SALVA
