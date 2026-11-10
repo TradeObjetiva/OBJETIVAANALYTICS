@@ -408,6 +408,16 @@
                 Resumo por Colaborador
               </button>
             </div>
+
+            <!-- BOTÃO DE EXPORTAR MATRIZ GERAL EM DESTAQUE DIRETO AO LADO DOS BOTÕES -->
+            <button type="button" class="btn btn-primary" onclick="exportarMatrizGeralExcel()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); color: #ffffff; cursor: pointer; font-size: 0.88rem;" title="Clique para exportar a planilha completa da Matriz Geral da Campanha em Excel (.xlsx)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Exportar Matriz (.xlsx)</span>
+            </button>
           </div>
 
           <div class="ciclos-pills-group" id="ciclosPillsGroup" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
@@ -483,6 +493,20 @@
 
         <!-- Matriz Geral Panorâmica (Padrão CAMPANHA (1).xlsx) -->
         <div class="matrix-table-wrapper" id="mod1MatrixWrapper">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(30, 41, 59, 0.7); border-bottom: 1px solid var(--border); border-radius: 8px 8px 0 0;">
+            <div style="font-weight: 700; color: #93c5fd; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+              <span>📊</span>
+              <span>Matriz Geral da Campanha (Panorâmica Completa - Períodos P1 a P16)</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="exportarMatrizGeralExcel()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; color: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);" title="Exportar Matriz Geral da Campanha com todos os períodos e pontuações em Excel (.xlsx)">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar Esta Matriz (.xlsx)
+            </button>
+          </div>
           <table class="matrix-table" id="matrixTableMod1">
             <thead id="matrixHeadMod1">
               <!-- Renderizado dinamicamente via app.js -->
@@ -1102,7 +1126,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../js/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="campanha_base_data.js?v=20261110_v4"></script>
-  <script src="app.js?v=20261110_v4"></script>
+  <script src="campanha_base_data.js?v=20261110_v8"></script>
+  <script src="app.js?v=20261110_v8"></script>
 </body>
 </html>
