@@ -1548,6 +1548,280 @@ function exportarMatrizGeralExcel() {
 window.exportarMatrizGeralExcel = exportarMatrizGeralExcel;
 
 // ========================================================
+// CONTROLE DO MODAL DE EXPORTAÇÃO PERSONALIZADA (CONSOLIDADO E PERÍODOS)
+// ========================================================
+
+function abrirModalExportarCampanha() {
+  const modal = document.getElementById('modalExportarCampanha');
+  if (!modal) {
+    exportarMatrizGeralExcel();
+    return;
+  }
+
+  // Popula o grid de checkboxes dos 16 períodos
+  const grid = document.getElementById('exportPeriodosGrid');
+  if (grid) {
+    grid.innerHTML = '';
+
+    // Determina pré-seleção baseada no filtro ativo na tela
+    const mesAtivo = (filterMes && filterMes.value !== 'TODOS') ? 
+      filterMes.value : 
+      (mesReferenciaSelect ? mesReferenciaSelect.value : 'Setembro/2026');
+
+    let preSelecionados = [];
+    if (filterMes && filterMes.value === 'TODOS') {
+      preSelecionados = CAMPANHA_PERIODOS_PADRAO.map(p => p.id);
+    } else if (MESES_CAMPANHA_INFO[mesAtivo]) {
+      preSelecionados = MESES_CAMPANHA_INFO[mesAtivo].periodIds;
+    } else {
+      preSelecionados = [1, 2, 3, 4, 5];
+    }
+
+    CAMPANHA_PERIODOS_PADRAO.forEach(p => {
+      const isFech = Boolean(FECHAMENTO_PERIODOS_MAP[p.id]);
+      const isChecked = preSelecionados.includes(p.id);
+      const itemDiv = document.createElement('label');
+      itemDiv.style.cssText = `display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--text-main); background: rgba(255,255,255,0.04); padding: 5px 8px; border-radius: 6px; cursor: pointer; border: 1px solid ${isFech ? 'rgba(59,130,246,0.35)' : 'var(--border)'};`;
+      if (isFech) itemDiv.style.background = 'rgba(59,130,246,0.08)';
+
+      itemDiv.innerHTML = `
+        <input type="checkbox" class="chk-export-period" value="${p.id}" ${isChecked ? 'checked' : ''} onchange="atualizarResumoPeriodosExport()" style="accent-color: #10b981;">
+        <span title="${p.name}"><strong>P${p.id}</strong> <small style="color:var(--text-light); font-size:0.68rem;">(${p.name})</small>${isFech ? ' ⭐' : ''}</span>
+      `;
+      grid.appendChild(itemDiv);
+    });
+
+    atualizarResumoPeriodosExport();
+  }
+
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+}
+
+function fecharModalExportarCampanha() {
+  const modal = document.getElementById('modalExportarCampanha');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+  }
+}
+
+function handleExportFormatChange() {
+  const radConsolidado = document.querySelector('input[name="optExportFormat"][value="consolidado"]');
+  const lblConsolidado = document.getElementById('lblExportConsolidado');
+  const lblMatriz = document.getElementById('lblExportMatriz');
+
+  if (radConsolidado && radConsolidado.checked) {
+    if (lblConsolidado) {
+      lblConsolidado.style.borderColor = '#10b981';
+      lblConsolidado.style.background = 'rgba(16, 185, 129, 0.12)';
+    }
+    if (lblMatriz) {
+      lblMatriz.style.borderColor = 'var(--border)';
+      lblMatriz.style.background = 'rgba(255, 255, 255, 0.03)';
+    }
+  } else {
+    if (lblConsolidado) {
+      lblConsolidado.style.borderColor = 'var(--border)';
+      lblConsolidado.style.background = 'rgba(255, 255, 255, 0.03)';
+    }
+    if (lblMatriz) {
+      lblMatriz.style.borderColor = '#10b981';
+      lblMatriz.style.background = 'rgba(16, 185, 129, 0.12)';
+    }
+  }
+}
+
+function selecionarTodosPeriodosExport(marcar = true) {
+  const chks = document.querySelectorAll('.chk-export-period');
+  chks.forEach(chk => { chk.checked = marcar; });
+  atualizarResumoPeriodosExport();
+}
+
+function selecionarCicloExport(periodIds) {
+  const chks = document.querySelectorAll('.chk-export-period');
+  chks.forEach(chk => {
+    const pid = parseInt(chk.value, 10);
+    chk.checked = Array.isArray(periodIds) && periodIds.includes(pid);
+  });
+  atualizarResumoPeriodosExport();
+}
+
+function atualizarResumoPeriodosExport() {
+  const selecionados = Array.from(document.querySelectorAll('.chk-export-period:checked')).map(c => parseInt(c.value, 10));
+  const elResumo = document.getElementById('exportPeriodosResumo');
+  if (elResumo) {
+    if (selecionados.length === 0) {
+      elResumo.textContent = '⚠️ Nenhum período selecionado!';
+      elResumo.style.color = '#f87171';
+    } else {
+      elResumo.textContent = `✓ ${selecionados.length} período(s) selecionado(s): P${selecionados.join(', P')}`;
+      elResumo.style.color = '#34d399';
+    }
+  }
+}
+
+function confirmarExportacaoPersonalizada() {
+  try {
+    const chks = Array.from(document.querySelectorAll('.chk-export-period:checked')).map(c => parseInt(c.value, 10));
+    if (chks.length === 0) {
+      showToast("Selecione pelo menos um período para exportar.", "warning");
+      return;
+    }
+
+    const radConsolidado = document.querySelector('input[name="optExportFormat"]:checked');
+    const formato = radConsolidado ? radConsolidado.value : 'consolidado';
+
+    gerarPlanilhaPersonalizada(chks, formato);
+    fecharModalExportarCampanha();
+  } catch (err) {
+    console.error("Erro na exportação personalizada:", err);
+    showToast("Erro ao gerar exportação: " + err.message, "danger");
+  }
+}
+
+function gerarPlanilhaPersonalizada(periodIdsSelecionados, formato = 'consolidado') {
+  if (typeof XLSX === 'undefined') {
+    showToast("Carregando biblioteca do Excel. Aguarde um instante...", "warning");
+    return;
+  }
+
+  let lista = (allPromotores && allPromotores.length > 0) ? allPromotores : [];
+  if (lista.length === 0 && Array.isArray(colaboradoresObjetiva) && colaboradoresObjetiva.length > 0) {
+    lista = colaboradoresObjetiva;
+  }
+  if (lista.length === 0 && typeof CAMPANHA_BASE_DATA !== 'undefined' && Array.isArray(CAMPANHA_BASE_DATA)) {
+    lista = CAMPANHA_BASE_DATA;
+  }
+
+  let promotoresExport = lista.filter(p => isPromotorAtivo(p));
+  if (promotoresExport.length === 0) promotoresExport = lista;
+
+  if (promotoresExport.length === 0) {
+    showToast("Nenhum colaborador encontrado para exportação.", "warning");
+    return;
+  }
+
+  atualizarTodosPeriodosFechamento();
+
+  const periodosFiltrados = CAMPANHA_PERIODOS_PADRAO.filter(p => periodIdsSelecionados.includes(p.id));
+  const descrPeriodos = `P${periodIdsSelecionados.join('_P')}`;
+  const wb = XLSX.utils.book_new();
+
+  // --------------------------------------------------------
+  // ABA 1: CONSOLIDADO FINAL DOS PERÍODOS SELECIONADOS
+  // --------------------------------------------------------
+  const rowsConsolidado = promotoresExport.map(p => {
+    normalizarPromotorEfetividade(p);
+
+    let somaAssid = 0;
+    let somaPont = 0;
+    let somaExtras = 0;
+    let somaEfet = 0;
+
+    periodosFiltrados.forEach(pRef => {
+      const per = (p.periodos || []).find(x => x.period_id === pRef.id || x.id === pRef.id) || {};
+      const assid = per.pontos_assiduidade !== undefined ? per.pontos_assiduidade : ((per.faltas || 0) * -50);
+      const pont = per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.dias_pontuais || 0);
+      const ilha = per.ilha || 0;
+      const mIlha = per.meia_ilha || 0;
+      const ponta = per.ponta || 0;
+      const mPonta = per.meia_ponta || 0;
+      const efet = per.efetividade || 0;
+
+      somaAssid += Number(assid) || 0;
+      somaPont += Number(pont) || 0;
+      somaExtras += (Number(ilha) || 0) + (Number(mIlha) || 0) + (Number(ponta) || 0) + (Number(mPonta) || 0);
+      somaEfet += Number(efet) || 0;
+    });
+
+    const totalConsolidado = somaAssid + somaPont + somaEfet + somaExtras;
+
+    return {
+      'NOME DO COLABORADOR': p.nome || '',
+      'PROJETO': p.projeto || 'GERAL',
+      'EQUIPE': p.equipe || 'PROMOTOR',
+      'STATUS': p.status || 'OK',
+      'PERÍODOS CONSIDERADOS': `P${periodIdsSelecionados.join(', P')}`,
+      'PONTOS ASSIDUIDADE': somaAssid,
+      'PONTOS EFETIVIDADE': somaEfet,
+      'PONTOS PONTUALIDADE': somaPont,
+      'PONTOS EXTRAS': somaExtras,
+      'TOTAL CONSOLIDADO': totalConsolidado
+    };
+  });
+
+  const wsConsolidado = XLSX.utils.json_to_sheet(rowsConsolidado);
+  XLSX.utils.book_append_sheet(wb, wsConsolidado, "Consolidado_Final");
+
+  // Se o usuário selecionou Matriz Panorâmica, inclui também a aba detalhada com os períodos
+  if (formato === 'matriz') {
+    const rowsMatriz = promotoresExport.map(p => {
+      normalizarPromotorEfetividade(p);
+      const row = {
+        'NOME DO COLABORADOR': p.nome || '',
+        'PROJETO': p.projeto || 'GERAL',
+        'EQUIPE': p.equipe || 'PROMOTOR'
+      };
+
+      let somaAssid = 0;
+      let somaPont = 0;
+      let somaExtras = 0;
+      let somaEfet = 0;
+
+      periodosFiltrados.forEach(pRef => {
+        const per = (p.periodos || []).find(x => x.period_id === pRef.id || x.id === pRef.id) || {};
+        const assid = per.pontos_assiduidade !== undefined ? per.pontos_assiduidade : ((per.faltas || 0) * -50);
+        const efet = per.efetividade || 0;
+        const pont = per.pontos_pontualidade_total !== undefined ? per.pontos_pontualidade_total : (per.dias_pontuais || 0);
+        const ilha = per.ilha || 0;
+        const mIlha = per.meia_ilha || 0;
+        const ponta = per.ponta || 0;
+        const mPonta = per.meia_ponta || 0;
+        const tot = Number(assid) + Number(efet) + Number(pont) + Number(ilha) + Number(mIlha) + Number(ponta) + Number(mPonta);
+
+        somaAssid += Number(assid) || 0;
+        somaPont += Number(pont) || 0;
+        somaExtras += (Number(ilha) || 0) + (Number(mIlha) || 0) + (Number(ponta) || 0) + (Number(mPonta) || 0);
+        somaEfet += Number(efet) || 0;
+
+        row[`P${pRef.id}_ASSID`] = Number(assid) || 0;
+        row[`P${pRef.id}_EFET`] = Number(efet) || 0;
+        row[`P${pRef.id}_PONT`] = Number(pont) || 0;
+        row[`P${pRef.id}_EXTRAS`] = (Number(ilha) || 0) + (Number(mIlha) || 0) + (Number(ponta) || 0) + (Number(mPonta) || 0);
+        row[`P${pRef.id}_TOTAL`] = tot;
+      });
+
+      row['TOTAL_ASSIDUIDADE'] = somaAssid;
+      row['TOTAL_EFETIVIDADE'] = somaEfet;
+      row['TOTAL_PONTUALIDADE'] = somaPont;
+      row['TOTAL_EXTRAS'] = somaExtras;
+      row['TOTAL_CONSOLIDADO'] = somaAssid + somaPont + somaEfet + somaExtras;
+
+      return row;
+    });
+
+    const wsMatriz = XLSX.utils.json_to_sheet(rowsMatriz);
+    XLSX.utils.book_append_sheet(wb, wsMatriz, "Matriz_Detalhada");
+  }
+
+  const dataHoraStr = new Date().toISOString().slice(0, 10);
+  const tipoStr = (formato === 'consolidado') ? 'CONSOLIDADO_FINAL' : 'MATRIZ_E_CONSOLIDADO';
+  const fileName = `${tipoStr}_${descrPeriodos}_${dataHoraStr}.xlsx`;
+  XLSX.writeFile(wb, fileName);
+
+  showToast(`🎉 Planilha exportada com sucesso: ${fileName}`, 'success', 5000);
+}
+
+window.abrirModalExportarCampanha = abrirModalExportarCampanha;
+window.fecharModalExportarCampanha = fecharModalExportarCampanha;
+window.handleExportFormatChange = handleExportFormatChange;
+window.selecionarTodosPeriodosExport = selecionarTodosPeriodosExport;
+window.selecionarCicloExport = selecionarCicloExport;
+window.atualizarResumoPeriodosExport = atualizarResumoPeriodosExport;
+window.confirmarExportacaoPersonalizada = confirmarExportacaoPersonalizada;
+
+// ========================================================
 // RECONHECIMENTO INCREMENTAL DE CAMPANHA SALVA
 // ========================================================
 

@@ -60,7 +60,7 @@
           </svg>
           Relatório Executivo (.pdf)
         </button>
-        <button id="btnDownloadCampanha" class="btn btn-primary" onclick="exportarMatrizGeralExcel()" title="Exportar Matriz Geral e Resumo Consolidado da Campanha em formato Excel (.xlsx)" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); font-weight: 600;">
+        <button id="btnDownloadCampanha" class="btn btn-primary" onclick="abrirModalExportarCampanha()" title="Exportar Matriz Geral e Resumo Consolidado da Campanha em formato Excel (.xlsx)" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); border: none; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35); font-weight: 600;">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -410,7 +410,7 @@
             </div>
 
             <!-- BOTÃO DE EXPORTAR MATRIZ GERAL EM DESTAQUE DIRETO AO LADO DOS BOTÕES -->
-            <button type="button" class="btn btn-primary" onclick="exportarMatrizGeralExcel()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); color: #ffffff; cursor: pointer; font-size: 0.88rem;" title="Clique para exportar a planilha completa da Matriz Geral da Campanha em Excel (.xlsx)">
+            <button type="button" class="btn btn-primary" onclick="abrirModalExportarCampanha()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); color: #ffffff; cursor: pointer; font-size: 0.88rem;" title="Clique para exportar a planilha com consolidado e escolha de períodos em Excel (.xlsx)">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -480,7 +480,7 @@
               📥 Importar Efetividade
             </button>
 
-            <button type="button" class="btn btn-primary" id="btnExportarMatrizGeral" onclick="exportarMatrizGeralExcel()" style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 7px 15px; border-radius: 8px; font-size: 0.85rem; background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); color: #ffffff;" title="Exportar Matriz Geral Completa da Campanha com todos os períodos e pontuações em Excel (.xlsx)">
+            <button type="button" class="btn btn-primary" id="btnExportarMatrizGeral" onclick="abrirModalExportarCampanha()" style="font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 7px 15px; border-radius: 8px; font-size: 0.85rem; background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35); color: #ffffff;" title="Exportar Matriz Geral e Consolidado Final em Excel (.xlsx)">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -498,7 +498,7 @@
               <span>📊</span>
               <span>Matriz Geral da Campanha (Panorâmica Completa - Períodos P1 a P16)</span>
             </div>
-            <button type="button" class="btn btn-primary btn-sm" onclick="exportarMatrizGeralExcel()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; color: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);" title="Exportar Matriz Geral da Campanha com todos os períodos e pontuações em Excel (.xlsx)">
+            <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalExportarCampanha()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; color: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);" title="Exportar Matriz Geral da Campanha com todos os períodos e pontuações em Excel (.xlsx)">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -1068,6 +1068,100 @@
     </div>
   </div>
 
+  <!-- MODAL DE EXPORTAÇÃO PERSONALIZADA DA CAMPANHA (CONSOLIDADO E PERÍODOS SELECIONÁVEIS) -->
+  <div class="modal-backdrop" id="modalExportarCampanha" style="display: none;">
+    <div class="modal-card" style="max-width: 640px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding: 18px 24px;">
+        <div>
+          <span class="badge-dot pulse" style="background: #10b981;"></span>
+          <h3 class="modal-title" style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">Exportar Pontuações da Campanha</h3>
+          <span class="text-muted text-sm">Escolha o formato e os períodos para gerar a planilha (.xlsx)</span>
+        </div>
+        <button type="button" class="btn-icon" onclick="fecharModalExportarCampanha()">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body" style="padding: 22px 24px;">
+        <!-- 1. Formato da Exportação -->
+        <div style="margin-bottom: 18px;">
+          <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: block;">
+            1. Formato da Planilha:
+          </label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <label id="lblExportConsolidado" class="export-format-card active" style="border: 2px solid #10b981; background: rgba(16, 185, 129, 0.12); border-radius: 8px; padding: 12px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; transition: all 0.2s;">
+              <input type="radio" name="optExportFormat" value="consolidado" checked onchange="handleExportFormatChange()" style="margin-top: 3px; accent-color: #10b981;">
+              <div>
+                <strong style="color: #34d399; font-size: 0.92rem; display: block;">Consolidado Final Resumido</strong>
+                <span style="font-size: 0.74rem; color: var(--text-light); line-height: 1.3; display: block; margin-top: 3px;">
+                  Exporta apenas a tabela consolidada com os totais de Assiduidade, Efetividade, Pontualidade, Extras e Total dos períodos selecionados.
+                </span>
+              </div>
+            </label>
+
+            <label id="lblExportMatriz" class="export-format-card" style="border: 1px solid var(--border); background: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 12px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; transition: all 0.2s;">
+              <input type="radio" name="optExportFormat" value="matriz" onchange="handleExportFormatChange()" style="margin-top: 3px; accent-color: #10b981;">
+              <div>
+                <strong style="color: var(--text-main); font-size: 0.92rem; display: block;">Matriz Panorâmica Completa</strong>
+                <span style="font-size: 0.74rem; color: var(--text-light); line-height: 1.3; display: block; margin-top: 3px;">
+                  Inclui todas as colunas abertas período a período (ASSID, EFET, PONT, EXTRAS) + aba de consolidado.
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. Escolha dos Períodos -->
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
+              2. Escolha os Períodos a Considerar no Consolidado:
+            </label>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="selecionarTodosPeriodosExport(true)" style="padding: 3px 8px; font-size: 0.74rem;">Marcar Todos</button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="selecionarTodosPeriodosExport(false)" style="padding: 3px 8px; font-size: 0.74rem;">Desmarcar Todos</button>
+            </div>
+          </div>
+
+          <!-- Atalhos rápidos por Ciclo -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selecionarCicloExport([1,2,3,4,5])" style="font-size: 0.75rem; padding: 4px 8px;">📅 Setembro (P1 a P5)</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selecionarCicloExport([6,7,8,9])" style="font-size: 0.75rem; padding: 4px 8px;">📅 Outubro (P6 a P9)</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selecionarCicloExport([10,11,12,13])" style="font-size: 0.75rem; padding: 4px 8px;">📅 Novembro (P10 a P13)</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selecionarCicloExport([14,15,16])" style="font-size: 0.75rem; padding: 4px 8px;">📅 Dezembro (P14 a P16)</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="selecionarCicloExport([1,2,3,4,5,6,7,8,9])" style="font-size: 0.75rem; padding: 4px 8px; color: #60a5fa; border-color: rgba(96,165,250,0.4);">⚡ Set + Out (P1 a P9)</button>
+          </div>
+
+          <!-- Grid dos 16 Períodos com Checkboxes -->
+          <div id="exportPeriodosGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; max-height: 190px; overflow-y: auto; padding: 10px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border); border-radius: 8px;">
+            <!-- Preenchido via app.js -->
+          </div>
+          <div id="exportPeriodosResumo" style="font-size: 0.76rem; color: #93c5fd; margin-top: 6px; font-weight: 600;">
+            16 períodos selecionados
+          </div>
+        </div>
+
+        <!-- 3. Ações do Modal -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--border);">
+          <button type="button" class="btn btn-secondary" onclick="fecharModalExportarCampanha()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" onclick="confirmarExportacaoPersonalizada()" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 700; padding: 9px 22px; font-size: 0.92rem; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Gerar e Baixar (.xlsx)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- LIGHTBOX / ZOOM HD MODAL PARA FOTOS DO PDV -->
   <div class="modal-backdrop lightbox-backdrop" id="lightboxModal">
     <div class="lightbox-dialog">
@@ -1126,7 +1220,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../js/supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="campanha_base_data.js?v=20261110_v8"></script>
-  <script src="app.js?v=20261110_v8"></script>
+  <script src="campanha_base_data.js?v=20261110_v9"></script>
+  <script src="app.js?v=20261110_v9"></script>
 </body>
 </html>
