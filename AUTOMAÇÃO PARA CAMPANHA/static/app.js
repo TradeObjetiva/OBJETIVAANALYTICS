@@ -1089,14 +1089,21 @@ function abrirModalImportEfetividade() {
   if (btnConfirmarImportEfet) btnConfirmarImportEfet.disabled = true;
   parsedEfetividadeMap = {};
   modalImportEfetividade.style.display = 'flex';
+  modalImportEfetividade.classList.add('active');
 }
 
 function fecharModalImportEfetividade() {
   if (!modalImportEfetividade) return;
+  modalImportEfetividade.classList.remove('active');
   modalImportEfetividade.style.display = 'none';
   if (efetFileInput) efetFileInput.value = '';
   parsedEfetividadeMap = {};
 }
+
+// Expõe globalmente no window para chamadas inline onclick
+window.abrirModalImportEfetividade = abrirModalImportEfetividade;
+window.fecharModalImportEfetividade = fecharModalImportEfetividade;
+window.downloadTemplateEfetividade = downloadTemplateEfetividade;
 
 function normalizeStr(str) {
   return (str || '')
@@ -1281,22 +1288,34 @@ function confirmarImportEfetividade() {
 
 function downloadTemplateEfetividade() {
   try {
-    const promotoresAtivos = allPromotores.filter(p => isPromotorAtivo(p));
+    let promotoresAtivos = (allPromotores || []).filter(p => isPromotorAtivo(p));
+    if (promotoresAtivos.length === 0 && Array.isArray(colaboradoresObjetiva) && colaboradoresObjetiva.length > 0) {
+      promotoresAtivos = colaboradoresObjetiva.filter(p => isPromotorAtivo(p));
+    }
+    if (promotoresAtivos.length === 0 && typeof CAMPANHA_BASE_DATA !== 'undefined' && Array.isArray(CAMPANHA_BASE_DATA)) {
+      promotoresAtivos = CAMPANHA_BASE_DATA.filter(p => isPromotorAtivo(p));
+    }
+
+    if (promotoresAtivos.length === 0) {
+      showToast("Aguarde o carregamento dos colaboradores para gerar o modelo.", "warning");
+      return;
+    }
+
     const rows = promotoresAtivos.map(p => {
       normalizarPromotorEfetividade(p);
       return {
         'NOME': p.nome,
         'PROJETO': p.projeto || 'GERAL',
         'EQUIPE': p.equipe || 'PROMOTOR',
-        'SETEMBRO_P5': p.pontos_efetividade_meses['Setembro/2026'] || 0,
-        'OUTUBRO_P9': p.pontos_efetividade_meses['Outubro/2026'] || 0,
-        'NOVEMBRO_P13': p.pontos_efetividade_meses['Novembro/2026'] || 0,
-        'DEZEMBRO_P16': p.pontos_efetividade_meses['Dezembro/2026'] || 0
+        'SETEMBRO_P5': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Setembro/2026']) || 0,
+        'OUTUBRO_P9': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Outubro/2026']) || 0,
+        'NOVEMBRO_P13': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Novembro/2026']) || 0,
+        'DEZEMBRO_P16': (p.pontos_efetividade_meses && p.pontos_efetividade_meses['Dezembro/2026']) || 0
       };
     });
 
-    if (rows.length === 0) {
-      showToast("Nenhum colaborador ativo carregado na base para gerar o modelo.", "warning");
+    if (typeof XLSX === 'undefined') {
+      showToast("Carregando biblioteca Excel...", "warning");
       return;
     }
 
@@ -1306,10 +1325,10 @@ function downloadTemplateEfetividade() {
 
     const fileNameSafe = `MODELO_EFETIVIDADE_CAMPANHA_COMPLETO.xlsx`;
     XLSX.writeFile(wb, fileNameSafe);
-    showToast(`Modelo exportado: ${fileNameSafe}`, "success");
+    showToast(`Modelo exportado com sucesso: ${fileNameSafe}`, "success");
   } catch (e) {
     console.error("Erro ao gerar template:", e);
-    showToast("Erro ao exportar modelo de efetividade.", "danger");
+    showToast("Erro ao exportar modelo de efetividade: " + e.message, "danger");
   }
 }
 

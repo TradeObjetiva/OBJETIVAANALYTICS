@@ -1,4 +1,4 @@
-const CACHE_NAME = 'objetiva-analytics-v13.0.3';
+const CACHE_NAME = 'objetiva-analytics-v13.0.4';
 const ASSETS = [
     './',
     './index.html',

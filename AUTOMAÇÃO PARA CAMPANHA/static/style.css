@@ -881,6 +881,12 @@ select option {
   visibility: visible;
 }
 
+#modalImportEfetividade.active {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 .modal-card {
   background: var(--bg-card);
   border: 1px solid var(--border-bright);
