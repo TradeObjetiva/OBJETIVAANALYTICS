@@ -1802,14 +1802,43 @@
         const observationsList = document.getElementById('observations-list');
 
         async function init() {
-            if (!window.supabase && window.parent.supabase) {
-                window.supabase = window.parent.supabase;
+            const getClient = () => {
+                if (window.supabase && typeof window.supabase.from === 'function') return window.supabase;
+                try {
+                    if (window.parent && window.parent.supabase && typeof window.parent.supabase.from === 'function') {
+                        return window.parent.supabase;
+                    }
+                } catch (e) {}
+
+                const url = window.SUPABASE_URL || 'https://xgbvokegqxqxpgznpxiq.supabase.co';
+                const key = window.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhnYnZva2VncXhxeHBnem5weGlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjYzNjMsImV4cCI6MjA5MTk0MjM2M30.4VfzUCKCv_A2oXMgW5rPhWad1gHS2hWp_LXKmXzVjsM';
+
+                if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    window.supabase = window.supabase.createClient(url, key);
+                    return window.supabase;
+                }
+                if (window.supabaseLib && typeof window.supabaseLib.createClient === 'function') {
+                    window.supabase = window.supabaseLib.createClient(url, key);
+                    return window.supabase;
+                }
+                return null;
+            };
+
+            let client = getClient();
+            let retries = 0;
+            while ((!client || typeof client.from !== 'function') && retries < 40) {
+                await new Promise(r => setTimeout(r, 100));
+                client = getClient();
+                retries++;
             }
 
-            if (!window.supabase) {
-                tableBody.innerHTML = `<tr><td colspan="40" style="text-align:center; padding:20px; color:red;">Erro: Supabase não inicializado.</td></tr>`;
+            if (!client || typeof client.from !== 'function') {
+                if (tableBody) {
+                    tableBody.innerHTML = `<tr><td colspan="40" style="text-align:center; padding:20px; color:red;">Erro: Supabase não inicializado.</td></tr>`;
+                }
                 return;
             }
+            window.supabase = client;
 
             try {
                 // Sincronização em tempo real entre abas/iframes
@@ -2977,43 +3006,132 @@
             });
         };
 
+        // Processador reutilizável de métricas de faltas por período
+        function processAbsenceData(records, staff) {
+            const dayNamesFull = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            const todayStr = getLocalDateString(new Date());
+
+            // Mapa completo de colaboradores para normalização ágil
+            const staffMap = {};
+            (fullStaffList || []).forEach(s => {
+                const k = (s.name || s.nome || '').trim().toLowerCase();
+                if (k) staffMap[k] = s;
+            });
+            (staff || []).forEach(s => {
+                const k = (s.name || s.nome || '').trim().toLowerCase();
+                if (k) staffMap[k] = s;
+            });
+
+            const byPromoter = {};
+            const byDayOfWeek = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+            const byEquipeMap = {};
+
+            (records || []).forEach(r => {
+                const rawName = r.collaborator_name;
+                if (!rawName) return;
+                // Ignora datas futuras para faltas não consolidadas
+                if (r.date && r.date > todayStr) return;
+
+                const normName = rawName.trim().toLowerCase();
+                const s = staffMap[normName] || {};
+                const equipe = (s.equipe && s.equipe.trim()) ? s.equipe.trim() : 'GERAL';
+                const projeto = (s.project || s.projeto || 'GERAL').trim();
+                const cargo = (s.cargo || 'PROMOTOR').trim();
+                const displayName = (s.name || s.nome || rawName).trim();
+
+                // Herda filtros ativos da tela principal se definidos
+                if (activeFilters && activeFilters.projects && activeFilters.projects.length > 0) {
+                    if (!activeFilters.projects.includes(projeto)) return;
+                }
+                if (activeFilters && activeFilters.equipes && activeFilters.equipes.length > 0) {
+                    if (!activeFilters.equipes.includes(equipe)) return;
+                }
+
+                if (!byPromoter[normName]) {
+                    byPromoter[normName] = { name: displayName, equipe, projeto, cargo, dates: [] };
+                }
+                if (r.date && !byPromoter[normName].dates.includes(r.date)) {
+                    byPromoter[normName].dates.push(r.date);
+                }
+
+                if (r.date) {
+                    const parts = r.date.split('-');
+                    if (parts.length === 3) {
+                        const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                        const dow = dObj.getDay();
+                        byDayOfWeek[dow] = (byDayOfWeek[dow] || 0) + 1;
+                    }
+                }
+
+                if (!byEquipeMap[equipe]) {
+                    byEquipeMap[equipe] = { equipe, projeto, totalAbsences: 0, promoters: new Set() };
+                }
+                byEquipeMap[equipe].totalAbsences++;
+                byEquipeMap[equipe].promoters.add(normName);
+            });
+
+            // Ordena datas em ordem cronológica para cada promotor
+            Object.values(byPromoter).forEach(p => p.dates.sort());
+
+            const list = Object.values(byPromoter).sort((a, b) => b.dates.length - a.dates.length);
+            const totalAbsences = list.reduce((acc, p) => acc + p.dates.length, 0);
+            const uniquePromoters = list.length;
+            const recurrentCount = list.filter(p => p.dates.length >= 3).length;
+
+            let maxDowCount = 0;
+            let criticalDayIndex = -1;
+            Object.entries(byDayOfWeek).forEach(([d, count]) => {
+                if (count > maxDowCount) {
+                    maxDowCount = count;
+                    criticalDayIndex = Number(d);
+                }
+            });
+            const criticalDay = criticalDayIndex >= 0 ? `${dayNamesFull[criticalDayIndex]} (${maxDowCount} faltas)` : 'N/A';
+
+            const byEquipe = Object.values(byEquipeMap).map(e => ({
+                equipe: e.equipe,
+                projeto: e.projeto,
+                totalAbsences: e.totalAbsences,
+                promotersCount: e.promoters.size,
+                sharePercent: totalAbsences > 0 ? Math.round((e.totalAbsences / totalAbsences) * 100) : 0
+            })).sort((a, b) => b.totalAbsences - a.totalAbsences);
+
+            return { totalAbsences, uniquePromoters, recurrentCount, criticalDay, byDayOfWeek, byEquipe, list };
+        }
+
         window.openAbsenceDetailsModal = function() {
             const theme = getSwalTheme();
             const absData = kpiModalData.absences || { totalAbsences: 0, uniquePromoters: 0, recurrentCount: 0, criticalDay: 'N/A', byDayOfWeek: {}, byEquipe: [], list: [] };
-            const list = absData.list || [];
+            
+            // Base da lista do período atual selecionado
+            let baseAbsenceList = (absData.list && absData.list.length > 0) ? [...absData.list] : [];
+            let currentFilteredList = [...baseAbsenceList];
 
-            if (list.length === 0 || absData.totalAbsences === 0) {
-                Swal.fire({
-                    title: '❌ Relatório de Faltas',
-                    html: `<div style="padding: 30px; text-align: center; color: var(--text-dim);"><div style="font-size: 36px; margin-bottom: 10px;">🎉</div><div style="font-size: 15px; font-weight: 700; color: #10b981;">Nenhuma falta registrada no período!</div></div>`,
-                    background: theme.background,
-                    color: theme.color,
-                    confirmButtonColor: '#10b981'
-                });
-                return;
-            }
-
-            const totalStaff = (kpiModalData.staff || []).length;
-            const impactPct = totalStaff > 0 ? ((absData.uniquePromoters / totalStaff) * 100).toFixed(0) : 0;
+            const totalStaff = (staffList && staffList.length > 0) ? staffList.length : ((kpiModalData.staff || []).length || 1);
             const dayNamesShort = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
             const dayNamesFull = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-            const equipesList = [...new Set(list.map(a => a.equipe))].sort();
 
             // 1. Visão consolidada por equipe
-            const equipeRows = (absData.byEquipe || []).map(e => `
-                <tr style="border-bottom: 1px solid ${theme.border}; font-size: 11px;">
-                    <td style="padding: 6px 10px; font-weight: 700; color: var(--text-main);">${e.equipe}</td>
-                    <td style="padding: 6px 10px; color: var(--text-dim); font-size: 10px;">${e.projeto}</td>
-                    <td style="padding: 6px 10px; text-align: center; font-weight: 800; color: #ef4444;">${e.totalAbsences}</td>
-                    <td style="padding: 6px 10px; text-align: center; font-size: 11px; color: var(--text-dim);">${e.promotersCount}</td>
-                    <td style="padding: 6px 10px; text-align: center; font-weight: 700; color: #f59e0b;">${e.sharePercent}%</td>
-                </tr>
-            `).join('');
+            const renderEquipeRows = (equipes) => {
+                if (!equipes || equipes.length === 0) {
+                    return `<tr><td colspan="5" style="padding: 12px; text-align: center; color: var(--text-dim); font-size: 11px;">Nenhum registro por equipe para este filtro.</td></tr>`;
+                }
+                return equipes.map(e => `
+                    <tr style="border-bottom: 1px solid ${theme.border}; font-size: 11px;">
+                        <td style="padding: 6px 10px; font-weight: 700; color: var(--text-main);">${e.equipe}</td>
+                        <td style="padding: 6px 10px; color: var(--text-dim); font-size: 10px;">${e.projeto}</td>
+                        <td style="padding: 6px 10px; text-align: center; font-weight: 800; color: #ef4444;">${e.totalAbsences}</td>
+                        <td style="padding: 6px 10px; text-align: center; font-size: 11px; color: var(--text-dim);">${e.promotersCount}</td>
+                        <td style="padding: 6px 10px; text-align: center; font-weight: 700; color: #f59e0b;">${e.sharePercent}%</td>
+                    </tr>
+                `).join('');
+            };
 
             // 2. Distribuição por dia da semana
-            const dowHtml = [1, 2, 3, 4, 5, 6, 0].map(d => {
-                const count = (absData.byDayOfWeek && absData.byDayOfWeek[d]) ? absData.byDayOfWeek[d] : 0;
-                const maxVal = absData.byDayOfWeek ? Math.max(...Object.values(absData.byDayOfWeek)) : 0;
+            const renderDowHtml = (byDow) => [1, 2, 3, 4, 5, 6, 0].map(d => {
+                const count = (byDow && byDow[d]) ? byDow[d] : 0;
+                const vals = byDow ? Object.values(byDow) : [];
+                const maxVal = vals.length > 0 ? Math.max(...vals) : 0;
                 const isCritical = count > 0 && count === maxVal;
                 return `
                     <div style="flex: 1; text-align: center; padding: 6px 4px; background: ${isCritical ? 'rgba(239, 68, 68, 0.15)' : theme.cardBg}; border: 1px solid ${isCritical ? 'rgba(239, 68, 68, 0.4)' : theme.border}; border-radius: 8px;">
@@ -3024,87 +3142,331 @@
             }).join('');
 
             // 3. Renderiza linhas detalhadas por promotor
-            const rowsHtml = list.map(item => {
-                const sub = (item.projeto && item.projeto !== 'GERAL') ? `${item.projeto} • ${item.equipe}` : (item.equipe || 'Equipe Geral');
-                const count = item.dates.length;
-                
-                let severityTag = '';
-                if (count >= 5) {
-                    severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(239, 68, 68, 0.2); color: #ef4444; text-transform: uppercase;">🔴 Crítico (${count})</span>`;
-                } else if (count >= 3) {
-                    severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; text-transform: uppercase;">🟠 Alerta (${count})</span>`;
-                } else if (count === 2) {
-                    severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(234, 179, 8, 0.15); color: #eab308; text-transform: uppercase;">🟡 2 faltas</span>`;
-                } else {
-                    severityTag = `<span style="font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(148, 163, 184, 0.15); color: var(--text-dim); text-transform: uppercase;">1 falta</span>`;
+            const renderRowsHtml = (listItems) => {
+                if (!listItems || listItems.length === 0) {
+                    return `
+                        <tr>
+                            <td colspan="4" style="padding: 24px; text-align: center; color: var(--text-dim);">
+                                <div style="font-size: 24px; margin-bottom: 6px;">🔍</div>
+                                <div style="font-weight: 700; color: var(--text-main); font-size: 12px;">Nenhum colaborador encontrado</div>
+                                <div style="font-size: 11px; margin-top: 2px;">Tente alterar os filtros ou o período selecionado.</div>
+                            </td>
+                        </tr>
+                    `;
                 }
 
-                const pillsHtml = item.dates.map(dStr => {
-                    const parts = dStr.split('-');
-                    const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                    const dFmt = (parts.length === 3) ? `${parts[2]}/${parts[1]}` : dStr;
-                    const dow = dayNamesShort[dObj.getDay()];
-                    return `<span style="display: inline-block; padding: 2px 6px; margin: 2px; border-radius: 6px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); font-size: 10px; font-weight: 700; color: var(--text-main);" title="${formatISOToBR(dStr)} (${dayNamesFull[dObj.getDay()]})">${dFmt} (${dow})</span>`;
+                return listItems.map(item => {
+                    const sub = (item.projeto && item.projeto !== 'GERAL') ? `${item.projeto} • ${item.equipe}` : (item.equipe || 'Equipe Geral');
+                    const count = item.dates.length;
+                    
+                    let severityTag = '';
+                    if (count >= 5) {
+                        severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(239, 68, 68, 0.2); color: #ef4444; text-transform: uppercase;">🔴 Crítico (${count})</span>`;
+                    } else if (count >= 3) {
+                        severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; text-transform: uppercase;">🟠 Alerta (${count})</span>`;
+                    } else if (count === 2) {
+                        severityTag = `<span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(234, 179, 8, 0.15); color: #eab308; text-transform: uppercase;">🟡 2 faltas</span>`;
+                    } else {
+                        severityTag = `<span style="font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(148, 163, 184, 0.15); color: var(--text-dim); text-transform: uppercase;">1 falta</span>`;
+                    }
+
+                    const pillsHtml = item.dates.map(dStr => {
+                        const parts = dStr.split('-');
+                        let dow = '';
+                        let dFmt = dStr;
+                        let fullTitle = dStr;
+                        if (parts.length === 3) {
+                            const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                            dFmt = `${parts[2]}/${parts[1]}`;
+                            dow = dayNamesShort[dObj.getDay()];
+                            fullTitle = `${formatISOToBR(dStr)} (${dayNamesFull[dObj.getDay()]})`;
+                        }
+                        return `<span style="display: inline-block; padding: 2px 6px; margin: 2px; border-radius: 6px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); font-size: 10px; font-weight: 700; color: var(--text-main);" title="${fullTitle}">${dFmt} (${dow})</span>`;
+                    }).join('');
+
+                    return `
+                        <tr class="swal-absence-row" style="border-bottom: 1px solid ${theme.border};">
+                            <td style="padding: 8px 10px;">
+                                <strong style="font-size: 12px; color: var(--text-main); display: block;">${item.name}</strong>
+                                <span style="font-size: 10px; color: var(--text-dim);">${item.cargo || 'PROMOTOR'}</span>
+                            </td>
+                            <td style="padding: 8px 10px; color: var(--text-dim); font-size: 11px;">${sub}</td>
+                            <td style="padding: 8px 10px; text-align: center;">${severityTag}</td>
+                            <td style="padding: 8px 10px; font-size: 11px;">${pillsHtml}</td>
+                        </tr>
+                    `;
                 }).join('');
+            };
 
-                return `
-                    <tr class="swal-absence-row" data-equipe="${item.equipe.toLowerCase()}" data-name="${item.name.toLowerCase()}" style="border-bottom: 1px solid ${theme.border};">
-                        <td style="padding: 8px 10px;">
-                            <strong style="font-size: 12px; color: var(--text-main); display: block;">${item.name}</strong>
-                            <span style="font-size: 10px; color: var(--text-dim);">${item.cargo || 'PROMOTOR'}</span>
-                        </td>
-                        <td style="padding: 8px 10px; color: var(--text-dim); font-size: 11px;">${sub}</td>
-                        <td style="padding: 8px 10px; text-align: center;">${severityTag}</td>
-                        <td style="padding: 8px 10px; font-size: 11px;">${pillsHtml}</td>
-                    </tr>
-                `;
-            }).join('');
+            // Função reativa de filtragem em tempo real (atualiza KPIs, DOW, Equipes e Tabela)
+            window._applyAbsenceFilters = function() {
+                const eqEl = document.getElementById('swal-absence-filter-equipe');
+                const searchEl = document.getElementById('swal-absence-search');
 
-            // Função de exportação CSV
+                const filterEquipe = eqEl ? eqEl.value.trim().toLowerCase() : '';
+                const searchStr = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+                currentFilteredList = baseAbsenceList.filter(item => {
+                    const itemEq = (item.equipe || '').trim().toLowerCase();
+                    const itemName = (item.name || '').trim().toLowerCase();
+                    const matchEq = !filterEquipe || itemEq === filterEquipe;
+                    const matchName = !searchStr || itemName.includes(searchStr);
+                    return matchEq && matchName;
+                });
+
+                // Recalcula métricas para o subconjunto filtrado
+                const totalAbsences = currentFilteredList.reduce((acc, p) => acc + p.dates.length, 0);
+                const uniquePromoters = currentFilteredList.length;
+                const recurrentCount = currentFilteredList.filter(p => p.dates.length >= 3).length;
+                const impactPct = totalStaff > 0 ? ((uniquePromoters / totalStaff) * 100).toFixed(0) : 0;
+
+                const byDow = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+                const byEquipeMap = {};
+
+                currentFilteredList.forEach(item => {
+                    item.dates.forEach(dStr => {
+                        const parts = dStr.split('-');
+                        if (parts.length === 3) {
+                            const dObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                            const dow = dObj.getDay();
+                            byDow[dow] = (byDow[dow] || 0) + 1;
+                        }
+                    });
+
+                    const eq = item.equipe || 'GERAL';
+                    if (!byEquipeMap[eq]) {
+                        byEquipeMap[eq] = { equipe: eq, projeto: item.projeto || 'GERAL', totalAbsences: 0, promoters: new Set() };
+                    }
+                    byEquipeMap[eq].totalAbsences += item.dates.length;
+                    byEquipeMap[eq].promoters.add(item.name);
+                });
+
+                let maxDowCount = 0;
+                let criticalDayIndex = -1;
+                Object.entries(byDow).forEach(([d, count]) => {
+                    if (count > maxDowCount) {
+                        maxDowCount = count;
+                        criticalDayIndex = Number(d);
+                    }
+                });
+                const criticalDay = criticalDayIndex >= 0 ? `${dayNamesFull[criticalDayIndex]} (${maxDowCount} faltas)` : 'N/A';
+
+                const byEquipe = Object.values(byEquipeMap).map(e => ({
+                    equipe: e.equipe,
+                    projeto: e.projeto,
+                    totalAbsences: e.totalAbsences,
+                    promotersCount: e.promoters.size,
+                    sharePercent: totalAbsences > 0 ? Math.round((e.totalAbsences / totalAbsences) * 100) : 0
+                })).sort((a, b) => b.totalAbsences - a.totalAbsences);
+
+                // Atualiza DOM
+                const elTotal = document.getElementById('swal-stat-total-faltas');
+                const elProm = document.getElementById('swal-stat-promotores');
+                const elRec = document.getElementById('swal-stat-recorrentes');
+                const elCrit = document.getElementById('swal-stat-dia-critico');
+                const elDow = document.getElementById('swal-stat-dow-container');
+                const elEquipeTbody = document.getElementById('swal-stat-equipe-tbody');
+                const elTbody = document.getElementById('swal-absence-tbody');
+                const elCountBadge = document.getElementById('swal-absence-filter-count');
+
+                if (elTotal) elTotal.textContent = totalAbsences;
+                if (elProm) elProm.innerHTML = `${uniquePromoters} <span style="font-size:10px; color:var(--text-dim);">(${impactPct}%)</span>`;
+                if (elRec) elRec.textContent = recurrentCount;
+                if (elCrit) {
+                    elCrit.textContent = criticalDay;
+                    elCrit.title = criticalDay;
+                }
+                if (elDow) elDow.innerHTML = renderDowHtml(byDow);
+                if (elEquipeTbody) elEquipeTbody.innerHTML = renderEquipeRows(byEquipe);
+                if (elTbody) elTbody.innerHTML = renderRowsHtml(currentFilteredList);
+                if (elCountBadge) elCountBadge.textContent = `${uniquePromoters} colaborador(es) • ${totalAbsences} falta(s)`;
+            };
+
+            // Função de exportação CSV (exporta exatamente o que está visível / filtrado)
             window._exportAbsencesCSV = function() {
-                let csvContent = 'data:text/csv;charset=utf-8,Colaborador;Cargo;Equipe;Projeto;Qtd Faltas;Datas das Faltas\n';
-                list.forEach(item => {
+                let csvContent = '\uFEFFColaborador;Cargo;Equipe;Projeto;Qtd Faltas;Datas das Faltas\n';
+                currentFilteredList.forEach(item => {
                     const datesStr = item.dates.map(d => formatISOToBR(d)).join(' | ');
                     csvContent += `"${item.name}";"${item.cargo || 'PROMOTOR'}";"${item.equipe}";"${item.projeto}";${item.dates.length};"${datesStr}"\n`;
                 });
-                const encodedUri = encodeURI(csvContent);
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
-                link.setAttribute('href', encodedUri);
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
                 link.setAttribute('download', `relatorio_faltas_${getLocalDateString(new Date())}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                URL.revokeObjectURL(url);
             };
 
+            // Atualiza opções do select de equipe mantendo seleção se ainda válida
+            const updateEquipeSelectOptions = (list) => {
+                const equipeSelect = document.getElementById('swal-absence-filter-equipe');
+                if (!equipeSelect) return;
+                const currentVal = equipeSelect.value;
+                const availableEquipes = [...new Set((list || []).map(a => a.equipe).filter(Boolean))].sort();
+                
+                let html = '<option value="">Todas as Equipes</option>';
+                availableEquipes.forEach(eq => {
+                    const isSel = (currentVal && currentVal.toLowerCase() === eq.toLowerCase()) ? 'selected' : '';
+                    html += `<option value="${eq}" ${isSel}>${eq}</option>`;
+                });
+                equipeSelect.innerHTML = html;
+            };
+
+            // Função para alternar o período sob demanda dentro do modal
+            window._changeAbsencePeriod = async function(periodKey) {
+                const bodyWrap = document.getElementById('swal-absence-body-wrap');
+                const subTitle = document.getElementById('swal-period-subtitle');
+                if (bodyWrap) bodyWrap.style.opacity = '0.4';
+                if (subTitle) subTitle.innerHTML = '⏳ <em>Carregando dados do período...</em>';
+
+                try {
+                    const now = new Date();
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    let sDate = '';
+                    let eDate = getLocalDateString(now);
+
+                    if (periodKey === 'CURRENT') {
+                        sDate = getLocalDateString(new Date(year, month, 21));
+                        eDate = getLocalDateString(new Date(year, month + 1, 20));
+                    } else if (periodKey === 'LAST_CYCLE') {
+                        sDate = getLocalDateString(new Date(year, month - 1, 21));
+                        eDate = getLocalDateString(new Date(year, month, 20));
+                    } else if (periodKey === 'LAST_7') {
+                        const p = new Date(now); p.setDate(p.getDate() - 7);
+                        sDate = getLocalDateString(p);
+                    } else if (periodKey === 'LAST_15') {
+                        const p = new Date(now); p.setDate(p.getDate() - 15);
+                        sDate = getLocalDateString(p);
+                    } else if (periodKey === 'LAST_30') {
+                        const p = new Date(now); p.setDate(p.getDate() - 30);
+                        sDate = getLocalDateString(p);
+                    } else if (periodKey === 'LAST_60') {
+                        const p = new Date(now); p.setDate(p.getDate() - 60);
+                        sDate = getLocalDateString(p);
+                    } else if (periodKey === 'LAST_90') {
+                        const p = new Date(now); p.setDate(p.getDate() - 90);
+                        sDate = getLocalDateString(p);
+                    } else if (periodKey === 'LAST_180') {
+                        const p = new Date(now); p.setDate(p.getDate() - 180);
+                        sDate = getLocalDateString(p);
+                    } else if (periodKey === 'YEAR') {
+                        sDate = `${now.getFullYear()}-01-01`;
+                        eDate = getLocalDateString(now);
+                    }
+
+                    const client = (window.parent && window.parent.supabase && typeof window.parent.supabase.from === 'function')
+                        ? window.parent.supabase
+                        : (window.supabase && typeof window.supabase.from === 'function' ? window.supabase : null);
+
+                    if (!client) {
+                        throw new Error('Supabase client não está inicializado.');
+                    }
+
+                    let allRecords = [];
+                    let fromR = 0, stepR = 999, hasMoreR = true;
+                    while (hasMoreR) {
+                        const { data, error } = await client
+                            .from('tb_assiduidade')
+                            .select('collaborator_name, date, status, observation')
+                            .in('status', ['FT', 'F', 'FALTA'])
+                            .gte('date', sDate)
+                            .lte('date', eDate)
+                            .range(fromR, fromR + stepR);
+
+                        if (error) {
+                            console.error('Erro ao consultar faltas no período:', error);
+                            break;
+                        }
+                        if (data && data.length > 0) {
+                            allRecords = allRecords.concat(data);
+                            fromR += stepR + 1;
+                        }
+                        if (!data || data.length <= stepR) hasMoreR = false;
+                    }
+
+                    const newAbs = processAbsenceData(allRecords, staffList);
+                    baseAbsenceList = newAbs.list;
+
+                    if (subTitle) {
+                        subTitle.textContent = `Período: ${formatISOToBR(sDate)} até ${formatISOToBR(eDate)} • ${newAbs.totalAbsences} falta(s) no total`;
+                    }
+
+                    updateEquipeSelectOptions(baseAbsenceList);
+                    window._applyAbsenceFilters();
+                } catch (err) {
+                    console.error('Erro ao buscar faltas no período:', err);
+                    if (subTitle) subTitle.innerHTML = `<span style="color:#ef4444;">Erro ao carregar dados: ${err.message || err}</span>`;
+                } finally {
+                    if (bodyWrap) bodyWrap.style.opacity = '1';
+                }
+            };
+
+            const initialEquipesList = [...new Set(baseAbsenceList.map(a => a.equipe).filter(Boolean))].sort();
+
+            const yearInit = currentDate.getFullYear();
+            const monthInit = currentDate.getMonth();
+            const sDateInit = getLocalDateString(new Date(yearInit, monthInit, 21));
+            const eDateInit = getLocalDateString(new Date(yearInit, monthInit + 1, 20));
+            const initialSubtitle = `Período: ${formatISOToBR(sDateInit)} até ${formatISOToBR(eDateInit)} • ${absData.totalAbsences} faltas pré-carregadas`;
+
             Swal.fire({
-                title: `<span style="display:flex; align-items:center; justify-content:center; gap:8px;">❌ Central Analítica de Faltas (${absData.totalAbsences})</span>`,
+                title: `<span style="display:flex; align-items:center; justify-content:center; gap:8px;">❌ Central Analítica de Faltas</span>`,
                 html: `
-                    <div style="text-align: left; max-height: 540px; overflow-y: auto; padding: 4px;">
+                    <div id="swal-absence-body-wrap" style="text-align: left; max-height: 560px; overflow-y: auto; padding: 4px; transition: opacity 0.2s;">
+                        
+                        <!-- Barra de Seleção de Período / Cortes -->
+                        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); padding: 12px 16px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <span style="font-size: 11px; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.5px; display: block;">
+                                    📅 Selecionar Período / Corte de Assiduidade:
+                                </span>
+                                <span id="swal-period-subtitle" style="font-size: 11px; color: var(--text-dim); margin-top: 2px; display: block;">
+                                    ${initialSubtitle}
+                                </span>
+                            </div>
+                            <select id="swal-absence-period-select" onchange="window._changeAbsencePeriod(this.value)"
+                                style="padding: 8px 14px; border-radius: 10px; background: ${theme.cardBg}; color: var(--text-main); border: 1px solid rgba(239, 68, 68, 0.4); font-size: 12px; font-weight: 700; cursor: pointer; outline: none;">
+                                <option value="CURRENT" selected>📅 Ciclo Vigente (Corte 21 a 20)</option>
+                                <option value="LAST_CYCLE">🗓️ Ciclo Anterior Completo (21 a 20)</option>
+                                <option value="LAST_7">⚡ Últimos 7 dias</option>
+                                <option value="LAST_15">🗓️ Últimos 15 dias</option>
+                                <option value="LAST_30">🗓️ Últimos 30 dias</option>
+                                <option value="LAST_60">🗓️ Últimos 60 dias (Bimestre)</option>
+                                <option value="LAST_90">🗓️ Últimos 90 dias (Trimestre)</option>
+                                <option value="LAST_180">🗓️ Últimos 6 meses (Semestre)</option>
+                                <option value="YEAR">🏆 Ano Atual Completo (Consolidado)</option>
+                            </select>
+                        </div>
+
                         <!-- 4 Mini Cards Analíticos -->
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
                             <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
                                 <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Total Faltas</span>
-                                <div style="font-size: 18px; font-weight: 800; color: #ef4444; margin-top: 2px;">${absData.totalAbsences}</div>
+                                <div id="swal-stat-total-faltas" style="font-size: 18px; font-weight: 800; color: #ef4444; margin-top: 2px;">${absData.totalAbsences}</div>
                             </div>
                             <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
                                 <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Promotores</span>
-                                <div style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 2px;">${absData.uniquePromoters} <span style="font-size: 10px; color: var(--text-dim);">(${impactPct}%)</span></div>
+                                <div id="swal-stat-promotores" style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 2px;">${absData.uniquePromoters} <span style="font-size: 10px; color: var(--text-dim);">(${totalStaff > 0 ? ((absData.uniquePromoters / totalStaff) * 100).toFixed(0) : 0}%)</span></div>
                             </div>
                             <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
                                 <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Recorrentes (3+)</span>
-                                <div style="font-size: 18px; font-weight: 800; color: #f59e0b; margin-top: 2px;">${absData.recurrentCount}</div>
+                                <div id="swal-stat-recorrentes" style="font-size: 18px; font-weight: 800; color: #f59e0b; margin-top: 2px;">${absData.recurrentCount}</div>
                             </div>
                             <div style="background: ${theme.cardBg}; border: 1px solid ${theme.border}; padding: 8px 10px; border-radius: 10px; text-align: center;">
                                 <span style="font-size: 9px; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">Dia Crítico</span>
-                                <div style="font-size: 12px; font-weight: 800; color: #ef4444; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${absData.criticalDay}">${absData.criticalDay}</div>
+                                <div id="swal-stat-dia-critico" style="font-size: 12px; font-weight: 800; color: #ef4444; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${absData.criticalDay}">${absData.criticalDay}</div>
                             </div>
                         </div>
 
                         <!-- Distribuição por Dia da Semana -->
                         <div style="margin-bottom: 14px;">
                             <span style="font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; display: block;">📅 Concentração por Dia da Semana:</span>
-                            <div style="display: flex; gap: 6px;">
-                                ${dowHtml}
+                            <div id="swal-stat-dow-container" style="display: flex; gap: 6px;">
+                                ${renderDowHtml(absData.byDayOfWeek)}
                             </div>
                         </div>
 
@@ -3123,40 +3485,32 @@
                                         <th style="padding: 6px 10px; text-align: center;">Impacto (%)</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    ${equipeRows}
+                                <tbody id="swal-stat-equipe-tbody">
+                                    ${renderEquipeRows(absData.byEquipe)}
                                 </tbody>
                             </table>
                         </div>
 
                         <!-- Barra de Filtros e Exportação -->
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center;">
-                            <select id="swal-absence-filter-equipe" onchange="
-                                const eq = this.value.toLowerCase();
-                                const q = document.getElementById('swal-absence-search').value.toLowerCase();
-                                document.querySelectorAll('.swal-absence-row').forEach(r => {
-                                    const matchEq = !eq || r.getAttribute('data-equipe') === eq;
-                                    const matchName = !q || r.getAttribute('data-name').includes(q);
-                                    r.style.display = (matchEq && matchName) ? '' : 'none';
-                                });
-                            " style="flex: 1; min-width: 150px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
-                                <option value="">Todas as Equipes (${equipesList.length})</option>
-                                ${equipesList.map(e => `<option value="${e}">${e}</option>`).join('')}
+                        <div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; align-items: center;">
+                            <select id="swal-absence-filter-equipe" onchange="window._applyAbsenceFilters()"
+                                style="flex: 1; min-width: 150px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
+                                <option value="">Todas as Equipes</option>
+                                ${initialEquipesList.map(e => `<option value="${e}">${e}</option>`).join('')}
                             </select>
 
-                            <input type="text" id="swal-absence-search" placeholder="🔍 Filtrar promotor..." oninput="
-                                const q = this.value.toLowerCase();
-                                const eq = document.getElementById('swal-absence-filter-equipe').value.toLowerCase();
-                                document.querySelectorAll('.swal-absence-row').forEach(r => {
-                                    const matchEq = !eq || r.getAttribute('data-equipe') === eq;
-                                    const matchName = !q || r.getAttribute('data-name').includes(q);
-                                    r.style.display = (matchEq && matchName) ? '' : 'none';
-                                });
-                            " style="flex: 2; min-width: 170px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
+                            <input type="text" id="swal-absence-search" placeholder="🔍 Filtrar promotor..." oninput="window._applyAbsenceFilters()"
+                                style="flex: 2; min-width: 170px; padding: 8px 12px; border-radius: 8px; background: ${theme.inputBg}; color: ${theme.color}; border: 1px solid ${theme.inputBorder}; font-size: 11px; outline: none;">
 
                             <button onclick="_exportAbsencesCSV()" style="padding: 8px 12px; border-radius: 8px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; font-weight: 700; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                                📥 CSV
+                                📥 Exportar CSV
                             </button>
+                        </div>
+
+                        <!-- Sub-barra informativa de contagem -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 4px; font-size: 11px; color: var(--text-dim);">
+                            <span>Listagem detalhada:</span>
+                            <span id="swal-absence-filter-count" style="font-weight: 700; color: var(--text-main);">${absData.uniquePromoters} colaborador(es) • ${absData.totalAbsences} falta(s)</span>
                         </div>
 
                         <!-- Tabela de Promotores -->
@@ -3170,16 +3524,19 @@
                                 </tr>
                             </thead>
                             <tbody id="swal-absence-tbody">
-                                ${rowsHtml}
+                                ${renderRowsHtml(currentFilteredList)}
                             </tbody>
                         </table>
                     </div>
                 `,
-                width: '780px',
+                width: '800px',
                 background: theme.background,
                 color: theme.color,
                 confirmButtonText: 'Fechar',
-                confirmButtonColor: '#ef4444'
+                confirmButtonColor: '#ef4444',
+                didOpen: () => {
+                    window._applyAbsenceFilters();
+                }
             });
         };
 
@@ -5648,6 +6005,23 @@
 
         async function fetchLunchControlData(showToast = false) {
             try {
+                if (!window.supabase || typeof window.supabase.from !== 'function') {
+                    try {
+                        if (window.parent && window.parent.supabase && typeof window.parent.supabase.from === 'function') {
+                            window.supabase = window.parent.supabase;
+                        }
+                    } catch (e) {}
+                    let retries = 0;
+                    while ((!window.supabase || typeof window.supabase.from !== 'function') && retries < 30) {
+                        await new Promise(r => setTimeout(r, 100));
+                        retries++;
+                    }
+                }
+                if (!window.supabase || typeof window.supabase.from !== 'function') {
+                    console.error('[Almoço] Supabase não inicializado.');
+                    return;
+                }
+
                 const sDate = lunchState.startDate;
                 const eDate = lunchState.endDate;
 
@@ -6491,9 +6865,14 @@
             }
         }
 
-        if (window.location.hash === '#almoco') {
-            setTimeout(showLunchControlFullView, 400);
-        }
+        try {
+            const isLunch = window.location.hash === '#almoco' || 
+                            (window.parent && window.parent.location.hash === '#almoco');
+            if (isLunch) {
+                setTimeout(showLunchControlFullView, 200);
+                setTimeout(showLunchControlFullView, 600);
+            }
+        } catch (e) {}
     </script>
 </body>
 

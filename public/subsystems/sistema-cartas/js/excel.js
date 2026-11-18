@@ -1,3 +1,15 @@
+function formatCpf(val) {
+    if (!val) return '';
+    const digits = String(val).replace(/\D/g, '');
+    if (digits.length === 11) {
+        return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    if (digits.length === 10) {
+        return ('0' + digits).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+    return String(val).trim();
+}
+
 function agruparLojas(rows) {
     const map = new Map();
     const registroCpfAgentes = new Map();
@@ -9,7 +21,7 @@ function agruparLojas(rows) {
     rows.forEach((row, index) => {
         const agente = String(getValue(row, "AGENTE") || "").trim();
         const local = String(getValue(row, "LOCAL") || "").trim();
-        const cpf = String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim();
+        const cpf = formatCpf(String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim());
         const rg = String(getValue(row, "RG") || "").trim();
         const ctps = String(getValue(row, "CTPS") || "").trim();
 
@@ -49,7 +61,7 @@ function agruparLojas(rows) {
                 local,
                 agente,
                 // Busca no registro global primeiro, depois na linha
-                cpf: registroCpfAgentes.get(nomeNormalizado) || String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim(),
+                cpf: formatCpf(registroCpfAgentes.get(nomeNormalizado) || String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim()),
                 rg: registroRgAgentes.get(nomeNormalizado) || String(getValue(row, "RG") || "").trim(),
                 ctps: registroCtpsAgentes.get(nomeNormalizado) || String(getValue(row, "CTPS") || "").trim(),
                 endereco: montarEndereco(row),
@@ -66,7 +78,7 @@ function agruparLojas(rows) {
         if (marca) grupo.marcas.push(marca);
 
         // Reforço caso dados apareçam em linhas posteriores para o mesmo grupo
-        const cpfLinha = String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim();
+        const cpfLinha = formatCpf(String(getValue(row, "CPF") || getValue(row, "DOC") || "").trim());
         if (!grupo.cpf && cpfLinha) grupo.cpf = cpfLinha;
 
         const rgLinha = String(getValue(row, "RG") || "").trim();

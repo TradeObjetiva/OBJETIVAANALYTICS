@@ -85,8 +85,10 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
     modal.classList.remove('hidden');
 
     try {
-        const supabaseProxyBase = (window.SUPABASE_URL || 'https://xgbvokegqxqxpgznpxiq.supabase.co') + '/functions/v1/laivon-proxy';
-        const apiKey = localStorage.getItem('laivon_api_key') || 'pk_live_W4OMfCgBGyhp.ofbx_r2HlbcXsXH98jm8HW0wut3K_6Y-vSgmOzq2xj8';
+        const envBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || window.SUPABASE_URL || 'https://xgbvokegqxqxpgznpxiq.supabase.co';
+        const supabaseProxyBase = envBase + '/functions/v1/laivon-proxy';
+        const envApiKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_LAIVON_API_KEY) || '';
+        const apiKey = localStorage.getItem('laivon_api_key') || envApiKey || 'pk_live_W4OMfCgBGyhp.ofbx_r2HlbcXsXH98jm8HW0wut3K_6Y-vSgmOzq2xj8';
         const headers = { 'X-API-Key': apiKey };
         
         const [photosRes, tasksRes, localsRes] = await Promise.allSettled([
@@ -287,6 +289,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.data.type === 'THEME_CHANGE') {
                 applyTheme(event.data.theme, false);
             }
+            if (event.data.type === 'STAFF_UPDATED') {
+                const activeContainer = document.querySelector('.view-container.active');
+                if (activeContainer && activeContainer.id === 'colaboradores-base' && typeof loadStaffBaseList === 'function') {
+                    loadStaffBaseList();
+                }
+            }
         };
 
         // Deep Linking
@@ -402,8 +410,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             };
-            setTimeout(toggleAssiduidadeSubView, 100);
-            setTimeout(toggleAssiduidadeSubView, 400);
+            toggleAssiduidadeSubView();
+            setTimeout(toggleAssiduidadeSubView, 150);
+            setTimeout(toggleAssiduidadeSubView, 500);
+            setTimeout(toggleAssiduidadeSubView, 1200);
+
+            const iframe = document.querySelector('#assiduidade iframe');
+            if (iframe && !iframe.dataset.listenerSubView) {
+                iframe.dataset.listenerSubView = 'true';
+                iframe.addEventListener('load', () => {
+                    const currentTarget = (window.location.hash || '').replace('#', '').split('?')[0];
+                    if (currentTarget === 'almoco' || currentTarget === 'assiduidade') {
+                        setTimeout(toggleAssiduidadeSubView, 100);
+                    }
+                });
+            }
         }
 
         // Auto-load data based on tab
@@ -969,6 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadMainDashboardProductivity = async (selectedProject = 'TODOS') => {
+        if (document.getElementById('react-home-root')) return; // Gerenciado nativamente via React Component
         const promotersBody = document.getElementById('main-prod-promoters-body');
         const projSelect = document.getElementById('main-prod-proj-select');
         const periodSelect = document.getElementById('main-prod-period-select');
@@ -2082,6 +2104,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Staff Base (Colaboradores) Management ---
 
+    const formatCpf = (cpf) => {
+        if (!cpf) return '';
+        const clean = String(cpf).replace(/\D/g, '');
+        if (clean.length === 11) {
+            return clean.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+        return cpf;
+    };
+
     const loadStaffBaseList = async () => {
         const listBody = document.getElementById('staff-base-list');
         if (!listBody || !window.supabase) return;
@@ -2130,6 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const admFmt = formatDateSafe(s.data_admissao);
             const demFmt = formatDateSafe(s.data_desativacao);
+            const cpfFmt = formatCpf(s.cpf);
 
             return `
                 <tr style="height: 70px; ${!isAtivo ? 'opacity: 0.6;' : ''}">
@@ -2141,6 +2173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div>
                                 <strong style="font-size: 14px; letter-spacing: -0.2px;">${s.nome}</strong>
                                 <div style="font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+                                    ${cpfFmt ? '<span style="color: var(--primary); font-weight: 700;">CPF: ' + cpfFmt + '</span> • ' : ''}
                                     ${admFmt ? 'Adm: ' + admFmt : 'Sem data adm.'}
                                     ${demFmt ? ' | Dem: ' + demFmt : ''}
                                 </div>
@@ -2174,18 +2207,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 '<div style="text-align: left; font-size: 14px;">' +
                 '<label style="color: var(--text-muted);">Nome Completo:</label>' +
                 '<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" placeholder="Ex: JOÃO SILVA">' +
-                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">' +
+                '<div>' +
+                '<label style="color: var(--text-muted);">CPF (Login):</label>' +
+                '<input id="swal-cpf" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="000.000.000-00" maxlength="14" oninput="this.value = this.value.replace(/\\D/g, \'\').replace(/(\\d{3})(\\d{3})(\\d{3})(\\d{2})/, \'$1.$2.$3-$4\').substring(0, 14)">' +
+                '</div>' +
                 '<div>' +
                 '<label style="color: var(--text-muted);">Função:</label>' +
                 '<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: PROMOTOR">' +
                 '</div>' +
+                '</div>' +
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
                 '<div>' +
                 '<label style="color: var(--text-muted);">Projeto:</label>' +
                 '<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: GERAL">' +
                 '</div>' +
-                '</div>' +
+                '<div>' +
                 '<label style="color: var(--text-muted);">Equipe:</label>' +
-                '<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" placeholder="Ex: EQUIPE ALPHA">' +
+                '<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; width: 100%;" placeholder="Ex: EQUIPE ALPHA">' +
+                '</div>' +
+                '</div>' +
                 '<label style="color: var(--text-muted);">Data de Admissão:</label>' +
                 '<input id="swal-admission" type="date" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;">' +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
@@ -2200,8 +2241,10 @@ document.addEventListener('DOMContentLoaded', () => {
             preConfirm: () => {
                 const nome = document.getElementById('swal-name').value.toUpperCase().trim();
                 if (!nome) { Swal.showValidationMessage('O nome é obrigatório'); return false; }
+                const cpfRaw = document.getElementById('swal-cpf') ? document.getElementById('swal-cpf').value.trim() : '';
                 return {
                     nome: nome,
+                    cpf: cpfRaw ? cpfRaw.replace(/\D/g, '') : null,
                     cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
                     projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
                     equipe: document.getElementById('swal-equipe').value.toUpperCase().trim() || 'GERAL',
@@ -2243,18 +2286,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 '<div style="text-align: left; font-size: 14px;">' +
                 '<label style="color: var(--text-muted);">Nome Completo:</label>' +
                 `<input id="swal-name" class="swal2-input" style="margin-top: 5px; margin-bottom: 15px;" value="${data.nome}">` +
-                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">' +
+                '<div>' +
+                '<label style="color: var(--text-muted);">CPF (Login):</label>' +
+                `<input id="swal-cpf" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.cpf ? formatCpf(data.cpf) : ''}" placeholder="000.000.000-00" maxlength="14" oninput="this.value = this.value.replace(/\\D/g, \'\').replace(/(\\d{3})(\\d{3})(\\d{3})(\\d{2})/, \'$1.$2.$3-$4\').substring(0, 14)">` +
+                '</div>' +
                 '<div>' +
                 '<label style="color: var(--text-muted);">Função:</label>' +
                 `<input id="swal-cargo" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.cargo || ''}">` +
                 '</div>' +
+                '</div>' +
+                '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">' +
                 '<div>' +
                 '<label style="color: var(--text-muted);">Projeto:</label>' +
                 `<input id="swal-project" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.projeto || ''}">` +
                 '</div>' +
-                '</div>' +
+                '<div>' +
                 '<label style="color: var(--text-muted);">Equipe:</label>' +
-                `<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" value="${data.equipe || ''}">` +
+                `<input id="swal-equipe" class="swal2-input" style="margin-top: 5px; width: 100%;" value="${data.equipe || ''}">` +
+                '</div>' +
+                '</div>' +
                 '<label style="color: var(--text-muted);">Data de Admissão:</label>' +
                 `<input id="swal-admission" type="date" class="swal2-input" style="margin-top: 5px; margin-bottom: 20px; width: 100%;" value="${data.data_admissao || ''}">` +
                 '<label style="color: var(--text-muted); display: block; margin-bottom: 10px;">Escala de Trabalho (Dias Ativos):</label>' +
@@ -2269,8 +2320,10 @@ document.addEventListener('DOMContentLoaded', () => {
             preConfirm: () => {
                 const nome = document.getElementById('swal-name').value.toUpperCase().trim();
                 if (!nome) { Swal.showValidationMessage('O nome é obrigatório'); return false; }
+                const cpfRaw = document.getElementById('swal-cpf') ? document.getElementById('swal-cpf').value.trim() : '';
                 return {
                     nome: nome,
+                    cpf: cpfRaw ? cpfRaw.replace(/\D/g, '') : null,
                     cargo: document.getElementById('swal-cargo').value.toUpperCase().trim() || 'PROMOTOR',
                     projeto: document.getElementById('swal-project').value.toUpperCase().trim() || 'GERAL',
                     equipe: document.getElementById('swal-equipe').value.toUpperCase().trim() || 'GERAL',
@@ -2392,9 +2445,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Importação de Base Fixa via Planilha ---
     window.downloadStaffBaseTemplate = () => {
         const data = [
-            ["NOME", "FUNCAO", "PROJETO", "EQUIPE"],
-            ["JOAO SILVA", "PROMOTOR", "GERAL", "EQUIPE A"],
-            ["MARIA SOUZA", "PROMOTOR", "GERAL", "EQUIPE B"]
+            ["NOME", "CPF", "FUNCAO", "PROJETO", "EQUIPE"],
+            ["JOAO SILVA", "123.456.789-00", "PROMOTOR", "GERAL", "EQUIPE A"],
+            ["MARIA SOUZA", "987.654.321-00", "PROMOTOR", "GERAL", "EQUIPE B"]
         ];
         const ws = XLSX.utils.aoa_to_sheet(data);
         const wb = XLSX.utils.book_new();
@@ -2430,7 +2483,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const { data, error } = await window.supabase
                 .from('tb_colaboradores')
-                .select('nome, cargo, projeto, equipe, ativo, data_admissao, data_desativacao, seg, ter, qua, qui, sex, sab, dom')
+                .select('nome, cpf, cargo, projeto, equipe, ativo, data_admissao, data_desativacao, seg, ter, qua, qui, sex, sab, dom')
                 .order('nome', { ascending: true });
 
             if (error) throw error;
@@ -2466,6 +2519,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isAtivo = s.ativo !== false;
                 return {
                     'NOME': s.nome,
+                    'CPF': formatCpf(s.cpf) || '',
                     'FUNÇÃO': s.cargo || '',
                     'PROJETO': s.projeto || '',
                     'EQUIPE': s.equipe || '',
@@ -2527,16 +2581,66 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error("A planilha está vazia ou no formato incorreto.");
                 }
 
-                const staffToUpsert = jsonData.map(row => ({
-                    nome: (row.NOME || row.nome || "").toString().trim().toUpperCase(),
-                    cargo: (row.FUNCAO || row.funcao || row.CARGO || row.cargo || "PROMOTOR").toString().trim().toUpperCase(),
-                    projeto: (row.PROJETO || row.projeto || "GERAL").toString().trim().toUpperCase(),
-                    equipe: (row.EQUIPE || row.equipe || "GERAL").toString().trim().toUpperCase(),
-                    data_admissao: row.ADMISSAO || row.admissao || null
-                })).filter(s => s.nome !== "");
+                // Buscar colaboradores existentes para mesclar dados caso a planilha tenha colunas parciais (ex: apenas NOME e CPF)
+                const { data: existingStaff } = await window.supabase
+                    .from('tb_colaboradores')
+                    .select('*');
+
+                const existingMap = new Map();
+                (existingStaff || []).forEach(s => {
+                    if (s.nome) existingMap.set(s.nome.trim().toUpperCase(), s);
+                });
+
+                // Helper flexível para buscar colunas independentemente de acentos ou maiúsculas
+                const getRowVal = (rowObj, targetKeys) => {
+                    for (const k of Object.keys(rowObj)) {
+                        const normK = k.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                        for (const target of targetKeys) {
+                            const normT = target.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                            if (normK === normT) {
+                                const val = rowObj[k];
+                                return val !== undefined && val !== null ? String(val).trim() : null;
+                            }
+                        }
+                    }
+                    return null;
+                };
+
+                const staffToUpsert = jsonData.map(row => {
+                    const nomeVal = getRowVal(row, ['nome', 'colaborador', 'nomedoagente', 'agente', 'promotor', 'funcionario']);
+                    if (!nomeVal) return null;
+
+                    const nome = nomeVal.toUpperCase();
+                    const existing = existingMap.get(nome);
+
+                    const cpfVal = getRowVal(row, ['cpf', 'login', 'doc', 'documento', 'agentlogin', 'cpfdoc']);
+                    const cleanCpf = cpfVal ? cpfVal.replace(/\D/g, '') : null;
+
+                    const cargoVal = getRowVal(row, ['funcao', 'cargo', 'perfil']);
+                    const projetoVal = getRowVal(row, ['projeto', 'campanha', 'operacao']);
+                    const equipeVal = getRowVal(row, ['equipe', 'time', 'grupo']);
+                    const admissaoVal = getRowVal(row, ['dataadmissao', 'admissao', 'dtadmissao']);
+
+                    return {
+                        nome: nome,
+                        cpf: cleanCpf || (existing ? existing.cpf : null),
+                        cargo: (cargoVal || (existing ? existing.cargo : 'PROMOTOR')).toUpperCase(),
+                        projeto: (projetoVal || (existing ? existing.projeto : 'GERAL')).toUpperCase(),
+                        equipe: (equipeVal || (existing ? existing.equipe : 'GERAL')).toUpperCase(),
+                        data_admissao: admissaoVal || (existing ? existing.data_admissao : null),
+                        ativo: existing ? (existing.ativo !== false) : true,
+                        seg: existing ? existing.seg : true,
+                        ter: existing ? existing.ter : true,
+                        qua: existing ? existing.qua : true,
+                        qui: existing ? existing.qui : true,
+                        sex: existing ? existing.sex : true,
+                        sab: existing ? existing.sab : true,
+                        dom: existing ? existing.dom : false
+                    };
+                }).filter(Boolean);
 
                 if (staffToUpsert.length === 0) {
-                    throw new Error("Nenhum colaborador válido encontrado. Verifique se as colunas NOME e PROJETO existem.");
+                    throw new Error("Nenhum colaborador válido encontrado. Verifique se a planilha possui a coluna NOME.");
                 }
 
                 const { error } = await window.supabase
@@ -2545,7 +2649,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (error) throw error;
 
-                Swal.fire('Sucesso!', `${staffToUpsert.length} colaboradores foram sincronizados na base fixa.`, 'success');
+                Swal.fire('Sucesso!', `${staffToUpsert.length} colaboradores foram atualizados e sincronizados na base fixa.`, 'success');
                 loadStaffBaseList();
                 syncChannel.postMessage({ type: 'STAFF_UPDATED' });
             } catch (err) {

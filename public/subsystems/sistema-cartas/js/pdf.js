@@ -195,19 +195,32 @@ async function buildPdfBytes(targetGroups) {
             cy = addrY - 40;
         }
 
+        function formatCpf(val) {
+            if (!val) return '';
+            const digits = String(val).replace(/\D/g, '');
+            if (digits.length === 11) {
+                return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            }
+            if (digits.length === 10) {
+                return ('0' + digits).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            }
+            return String(val).trim();
+        }
+
         // Formatação inteligente e dinâmica dos tipos de documento
         let docText = "";
         let tipoD = sZ(docTipo?.value || "CPF");
+        const cpfFormatado = formatCpf(grupo.cpf) || "-";
         if (tipoD === "CPF") {
-            docText = `CPF: <b>${sZ(grupo.cpf || "-")}</b>`;
+            docText = `CPF: <b>${sZ(cpfFormatado)}</b>`;
         } else if (tipoD === "RG") {
             docText = `RG: <b>${sZ(grupo.rg || "-")}</b>`;
         } else if (tipoD === "CPF e RG") {
-            docText = `CPF: <b>${sZ(grupo.cpf || "-")}</b> e RG: <b>${sZ(grupo.rg || "-")}</b>`;
+            docText = `CPF: <b>${sZ(cpfFormatado)}</b> e RG: <b>${sZ(grupo.rg || "-")}</b>`;
         } else if (tipoD === "CTPS DIGITAL, RG e CPF") {
-            docText = `CTPS DIGITAL: <b>${sZ(grupo.ctps || "-")}</b>, RG: <b>${sZ(grupo.rg || "-")}</b> e CPF: <b>${sZ(grupo.cpf || "-")}</b>`;
+            docText = `CTPS DIGITAL: <b>${sZ(grupo.ctps || "-")}</b>, RG: <b>${sZ(grupo.rg || "-")}</b> e CPF: <b>${sZ(cpfFormatado)}</b>`;
         } else {
-            docText = `${tipoD}: <b>${sZ(grupo.cpf || "-")}</b>`;
+            docText = `${tipoD}: <b>${sZ(cpfFormatado)}</b>`;
         }
 
         let cg = sZ(grupo.cargo || cargo?.value || "Promotor de Merchandising");

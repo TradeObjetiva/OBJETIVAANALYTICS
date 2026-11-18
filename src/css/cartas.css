@@ -1,0 +1,428 @@
+/* Estilos do Gerador de Cartas de Apresentação */
+#react-cartas-root {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+#react-cartas-root .cartas-shell {
+  display: grid;
+  grid-template-columns: 410px 1fr;
+  gap: 20px;
+  height: 100%;
+  max-height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#react-cartas-root .cartas-panel {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#react-cartas-root .form-panel {
+  padding: 22px;
+  overflow-y: auto;
+}
+
+#react-cartas-root .preview-panel {
+  padding: 22px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#react-cartas-root h1 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: var(--text-main, #0f172a);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#react-cartas-root h2 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main, #0f172a);
+}
+
+#react-cartas-root .cartas-subtitle {
+  color: var(--text-dim, #64748b);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0 0 16px 0;
+}
+
+#react-cartas-root .field-group {
+  margin-bottom: 14px;
+}
+
+#react-cartas-root .field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+#react-cartas-root label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main, #0f172a);
+}
+
+#react-cartas-root input[type="text"],
+#react-cartas-root select,
+#react-cartas-root textarea {
+  width: 100%;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 10px;
+  padding: 9px 12px;
+  background: var(--bg-main, #ffffff);
+  color: var(--text-main, #0f172a);
+  font-size: 13px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#react-cartas-root input[type="text"]:focus,
+#react-cartas-root select:focus {
+  border-color: var(--primary, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+#react-cartas-root select {
+  cursor: pointer;
+}
+
+/* Drag & Drop Zone */
+#react-cartas-root .drag-zone .drop-area {
+  border: 2px dashed var(--border, #cbd5e1);
+  border-radius: 12px;
+  padding: 18px 14px;
+  background: var(--bg-hover, rgba(0, 0, 0, 0.02));
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+#react-cartas-root .drag-zone .drop-area:hover,
+#react-cartas-root .drag-zone .drop-area.drag-over {
+  border-color: var(--primary, #3b82f6);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+#react-cartas-root .drop-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim, #64748b);
+  line-height: 1.4;
+}
+
+#react-cartas-root .badge-default {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+
+/* Multi-Select Dropdowns */
+#react-cartas-root .multi-select-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+#react-cartas-root .multi-select-summary {
+  width: 100%;
+  background-color: var(--bg-main, #ffffff);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 10px;
+  color: var(--text-main, #0f172a);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 12px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+#react-cartas-root .multi-select-summary:hover {
+  border-color: var(--primary, #3b82f6);
+}
+
+#react-cartas-root .multi-select-summary.has-selection {
+  border-color: var(--primary, #3b82f6);
+  background-color: rgba(59, 130, 246, 0.06);
+  color: var(--primary, #2563eb);
+}
+
+#react-cartas-root .multi-select-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 99;
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+#react-cartas-root .multi-select-search {
+  width: 100%;
+  background: var(--bg-hover, #f8fafc);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 6px;
+  color: var(--text-main, #0f172a);
+  font-size: 12px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+#react-cartas-root .multi-select-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-main, #0f172a);
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+#react-cartas-root .multi-select-item:hover {
+  background: var(--bg-hover, rgba(59, 130, 246, 0.1));
+}
+
+#react-cartas-root .select-all-row {
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  margin-bottom: 4px;
+  padding-bottom: 6px;
+  font-weight: 700;
+  color: var(--primary, #2563eb);
+}
+
+/* Botões */
+#react-cartas-root .button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+#react-cartas-root .cartas-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--bg-main, #ffffff);
+  color: var(--text-main, #0f172a);
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+#react-cartas-root .cartas-btn:hover {
+  background: var(--bg-hover, #f1f5f9);
+}
+
+#react-cartas-root .cartas-btn.primary {
+  background: var(--primary, #2563eb);
+  border-color: var(--primary, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+#react-cartas-root .cartas-btn.primary:hover {
+  background: #1d4ed8;
+}
+
+#react-cartas-root .cartas-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Progress bar */
+#react-cartas-root .progress-container {
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: rgba(37, 99, 235, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+#react-cartas-root .progress-bar-wrapper {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+#react-cartas-root .progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  transition: width 0.2s ease;
+}
+
+#react-cartas-root .progress-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary, #2563eb);
+}
+
+/* Warnings */
+#react-cartas-root .warning-panel {
+  margin: 14px 0;
+  padding: 12px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+#react-cartas-root .warning-panel h3 {
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #ef4444;
+}
+
+#react-cartas-root .warning-panel ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 11px;
+  color: #b91c1c;
+  max-height: 90px;
+  overflow-y: auto;
+}
+
+/* Preview Area */
+#react-cartas-root .preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+#react-cartas-root .preview-iframe-wrapper {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border, #cbd5e1);
+  background: #525659;
+}
+
+#react-cartas-root .preview-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+  color: var(--text-dim, #64748b);
+}
+
+/* Editor Individual */
+#react-cartas-root .card-manager {
+  background: var(--bg-hover, #f8fafc);
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border, #e2e8f0);
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+#react-cartas-root .card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#react-cartas-root .editable-card-item {
+  background: var(--bg-card, #ffffff);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #cbd5e1);
+}
+
+#react-cartas-root .editable-card-item h4 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main, #0f172a);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#react-cartas-root .editable-card-item .edit-fields {
+  display: grid;
+  gap: 8px;
+}
+
+#react-cartas-root .editable-card-item input {
+  font-size: 11px;
+  padding: 6px 8px;
+}
+
+#react-cartas-root .editable-card-item label {
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: var(--text-dim, #64748b);
+  text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 1080px) {
+  #react-cartas-root .cartas-shell {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow-y: auto;
+  }
+}
+

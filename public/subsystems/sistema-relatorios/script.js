@@ -1168,13 +1168,7 @@ downloadExcelBtn.addEventListener('click', async () => {
         const headersRuptura = [
           'Local',
           'Produto',
-          'Tipo de Ruptura',
-          'Total de Visitas',
-          'Visitas Ruptura Total',
-          'Visitas Ruptura Parcial',
           'Total Visitas com Ruptura',
-          '% Ruptura Total',
-          '% Ruptura Parcial',
           '% Ruptura Geral'
         ];
         
@@ -1234,49 +1228,20 @@ downloadExcelBtn.addEventListener('click', async () => {
         mapRuptura.forEach(item => {
           const totalRupturas = item.rupturasTotais + item.rupturasParciais;
 
-          let tipoRupText = 'NENHUMA';
-          if (item.rupturasTotais > 0 && item.rupturasParciais > 0) {
-            tipoRupText = 'RUPTURA TOTAL / RUPTURA PARCIAL';
-          } else if (item.rupturasTotais > 0) {
-            tipoRupText = 'RUPTURA TOTAL';
-          } else if (item.rupturasParciais > 0) {
-            tipoRupText = 'RUPTURA PARCIAL';
-          }
-
           const r = wsRuptura.getRow(rRupIdx++);
           r.getCell(4).value = item.local;
           r.getCell(5).value = item.produto;
-          r.getCell(6).value = tipoRupText;
-          r.getCell(7).value = item.totalVisitas;
-          r.getCell(8).value = item.rupturasTotais;
-          r.getCell(9).value = item.rupturasParciais;
-          r.getCell(10).value = `${totalRupturas}/${item.totalVisitas}`;
+          r.getCell(6).value = `${totalRupturas}/${item.totalVisitas}`;
 
-          const pctTotal = item.totalVisitas > 0 ? (item.rupturasTotais / item.totalVisitas) : 0;
-          const pctParcial = item.totalVisitas > 0 ? (item.rupturasParciais / item.totalVisitas) : 0;
           const pctGeral = item.totalVisitas > 0 ? (totalRupturas / item.totalVisitas) : 0;
 
-          r.getCell(11).value = pctTotal;
-          r.getCell(11).numFmt = '0.0%';
+          r.getCell(7).value = pctGeral;
+          r.getCell(7).numFmt = '0.0%';
 
-          r.getCell(12).value = pctParcial;
-          r.getCell(12).numFmt = '0.0%';
-
-          r.getCell(13).value = pctGeral;
-          r.getCell(13).numFmt = '0.0%';
-
-          for (let i = 4; i <= 13; i++) {
+          for (let i = 4; i <= 7; i++) {
             r.getCell(i).font = DATA_FONT;
             r.getCell(i).border = ORANGE_BORDER;
             r.getCell(i).alignment = { horizontal: 'center', vertical: 'middle' };
-          }
-
-          if (tipoRupText === 'RUPTURA TOTAL') {
-            r.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFDEDEC' } };
-          } else if (tipoRupText === 'RUPTURA PARCIAL') {
-            r.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEEFDB' } };
-          } else if (tipoRupText === 'RUPTURA TOTAL / RUPTURA PARCIAL') {
-            r.getCell(6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5EEF8' } };
           }
         });
 
@@ -1284,19 +1249,13 @@ downloadExcelBtn.addEventListener('click', async () => {
 
         wsRuptura.autoFilter = {
           from: { row: 1, column: 4 },
-          to: { row: Math.max(rRupIdx - 1, 1), column: 13 }
+          to: { row: Math.max(rRupIdx - 1, 1), column: 7 }
         };
 
         wsRuptura.getColumn(4).width = 46;  // Local
         wsRuptura.getColumn(5).width = 46;  // Produto
-        wsRuptura.getColumn(6).width = 34;  // Tipo de Ruptura
-        wsRuptura.getColumn(7).width = 16;  // Total de Visitas
-        wsRuptura.getColumn(8).width = 20;  // Visitas Ruptura Total
-        wsRuptura.getColumn(9).width = 20;  // Visitas Ruptura Parcial
-        wsRuptura.getColumn(10).width = 24; // Total Visitas com Ruptura
-        wsRuptura.getColumn(11).width = 16; // % Ruptura Total
-        wsRuptura.getColumn(12).width = 16; // % Ruptura Parcial
-        wsRuptura.getColumn(13).width = 16; // % Ruptura Geral
+        wsRuptura.getColumn(6).width = 24;  // Total Visitas com Ruptura
+        wsRuptura.getColumn(7).width = 16;  // % Ruptura Geral
       }
 
       // ==========================================
