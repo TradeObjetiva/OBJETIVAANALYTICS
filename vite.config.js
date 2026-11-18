@@ -8,11 +8,11 @@ function copyPublicCompatPlugin() {
     name: 'copy-public-compat',
     closeBundle() {
       try {
-        const distSubsystems = path.resolve(__dirname, 'dist/subsystems');
-        const distPublicSubsystems = path.resolve(__dirname, 'dist/public/subsystems');
-        if (fs.existsSync(distSubsystems)) {
-          fs.mkdirSync(path.resolve(__dirname, 'dist/public'), { recursive: true });
-          fs.cpSync(distSubsystems, distPublicSubsystems, { recursive: true });
+        const srcPublic = path.resolve(__dirname, 'public');
+        const destPublic = path.resolve(__dirname, 'dist/public');
+        if (fs.existsSync(srcPublic)) {
+          fs.cpSync(srcPublic, destPublic, { recursive: true });
+          console.log('[copyPublicCompatPlugin] public/ espelhado com sucesso em dist/public/');
         }
       } catch (e) {
         console.warn('Compat copy warning:', e.message);
