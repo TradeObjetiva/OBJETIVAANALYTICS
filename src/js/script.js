@@ -428,6 +428,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Auto-load data based on tab
+        if (['home', 'relatorio', 'cartas'].includes(targetId)) {
+            if (typeof window.mountReactApps === 'function') {
+                window.mountReactApps();
+            }
+        }
         if (targetId === 'colaboradores-base') loadStaffBaseList();
         if (targetId === 'users') {
             loadUsersList();
