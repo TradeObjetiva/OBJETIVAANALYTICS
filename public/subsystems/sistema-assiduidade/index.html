@@ -1077,7 +1077,7 @@
                 <!-- Linha 1: Título + Navegação + Filtros -->
                 <div class="header-top-row">
                     <div class="header-title">
-                        <h1>Controle de Assiduidade</h1>
+                        <h1>Controle de Assiduidade <span id="rh-readonly-badge" style="display:none; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(6, 182, 212, 0.14); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.35); vertical-align: middle; margin-left: 8px;">🔒 Modo RH (Somente Leitura)</span></h1>
                         <p>Monitoramento em tempo real e gestão administrativa.</p>
                     </div>
 
@@ -1136,6 +1136,17 @@
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
                         </svg>
                         Exportar Grade
+                    </button>
+
+                    <button class="sync-btn" id="btn-export-rh-summary" onclick="exportRhPayrollSummary()"
+                        style="background: rgba(6, 182, 212, 0.12); border: 1px solid rgba(6, 182, 212, 0.35); color: #06b6d4;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="8" y1="13" x2="16" y2="13"></line>
+                            <line x1="8" y1="17" x2="16" y2="17"></line>
+                        </svg>
+                        Resumo Folha RH (.xlsx)
                     </button>
 
                     <button class="sync-btn" id="btn-productivity-dashboard" onclick="showProductivityDashboard()"
@@ -1800,7 +1811,18 @@
         // Controle de Acesso
         const userProfile = JSON.parse(localStorage.getItem('currentUserProfile') || '{}');
         const isMaster = userProfile.role === 'admin' || userProfile.role === 'master';
+        const isRH = userProfile.role === 'rh';
         const allowedProjects = userProfile.allowed_projects || [];
+
+        if (isRH) {
+            const rhBadge = document.getElementById('rh-readonly-badge');
+            if (rhBadge) rhBadge.style.display = 'inline-block';
+            ['btn-detect-empty', 'btn-open-reconcile', 'btn-insert-holiday', 'btn-manage-staff', 'btn-manage-legends', 'missing-staff-alert']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+        }
 
         const tableBody = document.getElementById('attendance-body');
         const headerRow = document.getElementById('header-row');
@@ -2396,16 +2418,19 @@
                     td.dataset.date = dateStr;
                     td.dataset.collaborator = person.name;
 
-                    // Eventos de Arrastar
-                    td.onmousedown = (e) => startDragSelection(e, td);
-                    td.onmouseenter = (e) => updateDragSelection(e, td);
-                    td.onmouseup = (e) => endDragSelection(e, td);
-                    // Fallback para clique simples
-                    td.onclick = (e) => {
-                        if (selectedRange.length <= 1) {
-                            openStatusSelector(e, td);
-                        }
-                    };
+                    // Eventos de Arrastar / Edição (bloqueado no Modo RH somente-leitura)
+                    if (!isRH) {
+                        td.onmousedown = (e) => startDragSelection(e, td);
+                        td.onmouseenter = (e) => updateDragSelection(e, td);
+                        td.onmouseup = (e) => endDragSelection(e, td);
+                        td.onclick = (e) => {
+                            if (selectedRange.length <= 1) {
+                                openStatusSelector(e, td);
+                            }
+                        };
+                    } else {
+                        td.style.cursor = 'default';
+                    }
 
                     if (status) td.innerHTML = `<span class="status-badge status-${status}">${status}</span>`;
                     tr.appendChild(td);
@@ -6571,6 +6596,216 @@
 
         function showProductivityDashboard() {
             showLunchControlFullView();
+        }
+
+        async function exportRhPayrollSummary() {
+            try {
+                if (!lastFilteredStaff || lastFilteredStaff.length === 0 || !lastDays || lastDays.length === 0) {
+                    Swal.fire('Aviso', 'Nenhum dado carregado na grade atual para exportar.', 'info');
+                    return;
+                }
+
+                if (typeof ExcelJS === 'undefined') {
+                    Swal.fire('Erro', 'Biblioteca ExcelJS não carregada.', 'error');
+                    return;
+                }
+
+                const monthLabelRaw = (document.getElementById('month-display')?.textContent || 'Período Atual').trim();
+                const startDt = lastDays[0];
+                const endDt = lastDays[lastDays.length - 1];
+                const fmtDate = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                const periodRange = `${fmtDate(startDt)} a ${fmtDate(endDt)}`;
+
+                const valOrDash = (n) => (n > 0 ? n : '-');
+
+                let sumP = 0, sumFT = 0, sumATT = 0, sumFR = 0, sumFG = 0, sumFE = 0, sumOut = 0, sumTot = 0;
+
+                const dataRows = lastFilteredStaff.map(person => {
+                    let presencas = 0, faltas = 0, atestados = 0, ferias = 0, folgas = 0, feriados = 0, outros = 0;
+
+                    lastDays.forEach(d => {
+                        const dateStr = d.toISOString().split('T')[0];
+                        const status = (lastAttendanceMap[`${person.name}_${dateStr}`] || '').toUpperCase();
+                        if (!status) return;
+                        if (status === 'P') presencas++;
+                        else if (status === 'FT') faltas++;
+                        else if (status === 'ATT' || status === 'ATH') atestados++;
+                        else if (status === 'FR') ferias++;
+                        else if (status === 'FG') folgas++;
+                        else if (status === 'FE') feriados++;
+                        else outros++;
+                    });
+
+                    const total = presencas + faltas + atestados + ferias + folgas + feriados + outros;
+                    sumP += presencas; sumFT += faltas; sumATT += atestados;
+                    sumFR += ferias; sumFG += folgas; sumFE += feriados; sumOut += outros; sumTot += total;
+
+                    return {
+                        nome: person.name,
+                        funcao: person.role || 'PROMOTOR',
+                        projeto: person.project || 'GERAL',
+                        equipe: person.equipe || 'GERAL',
+                        status: person.ativo === false ? 'INATIVO' : 'ATIVO',
+                        presencas,
+                        faltas,
+                        atestados,
+                        ferias,
+                        folgas,
+                        feriados,
+                        outros,
+                        total
+                    };
+                });
+
+                const wb = new ExcelJS.Workbook();
+                wb.creator = 'Objetiva Analytics';
+                wb.created = new Date();
+
+                const ws = wb.addWorksheet('Resumo Folha RH', {
+                    views: [{ state: 'frozen', ySplit: 5 }]
+                });
+
+                // Cabeçalho Executivo (Linhas 1 a 3)
+                ws.mergeCells('A1:M1');
+                const titleCell = ws.getCell('A1');
+                titleCell.value = 'OBJETIVA ANALYTICS — RESUMO DE ASSIDUIDADE (FOLHA RH)';
+                titleCell.font = { name: 'Calibri', size: 15, bold: true, color: { argb: 'FFFFFFFF' } };
+                titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+                titleCell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                ws.getRow(1).height = 30;
+
+                ws.mergeCells('A2:M2');
+                const subCell = ws.getCell('A2');
+                subCell.value = `Período: ${monthLabelRaw.toUpperCase()} (${periodRange})   |   Colaboradores: ${dataRows.length}   |   Gerado em: ${new Date().toLocaleString('pt-BR')}`;
+                subCell.font = { name: 'Calibri', size: 10, italic: true, color: { argb: 'FFE2E8F0' } };
+                subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+                subCell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                ws.getRow(2).height = 20;
+
+                ws.mergeCells('A3:M3');
+                const kpiCell = ws.getCell('A3');
+                kpiCell.value = `Totais do Período →   Presenças: ${sumP}   |   Faltas: ${sumFT}   |   Atestados: ${sumATT}   |   Férias: ${sumFR}   |   Folgas: ${sumFG}   |   Feriados: ${sumFE}`;
+                kpiCell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+                kpiCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+                kpiCell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+                ws.getRow(3).height = 22;
+
+                ws.getRow(4).height = 8;
+
+                // Cabeçalho da Tabela (Linha 5)
+                const headers = [
+                    'Colaborador', 'Função', 'Projeto', 'Equipe', 'Status',
+                    'Presenças (P)', 'Faltas (FT)', 'Atestados (ATT/ATH)', 'Férias (FR)',
+                    'Folgas (FG)', 'Feriados (FE)', 'Outros', 'Total Lançamentos'
+                ];
+
+                const headerRow = ws.getRow(5);
+                headerRow.height = 26;
+                headers.forEach((h, idx) => {
+                    const cell = headerRow.getCell(idx + 1);
+                    cell.value = h;
+                    cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FFFFFFFF' } };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E40AF' } };
+                    cell.alignment = { horizontal: idx < 4 ? 'left' : 'center', vertical: 'middle', wrapText: true };
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FF1E3A8A' } },
+                        bottom: { style: 'medium', color: { argb: 'FF1E3A8A' } },
+                        left: { style: 'thin', color: { argb: 'FF3B82F6' } },
+                        right: { style: 'thin', color: { argb: 'FF3B82F6' } }
+                    };
+                });
+
+                ws.autoFilter = { from: 'A5', to: 'M5' };
+
+                const thinBorder = {
+                    top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+                };
+
+                // Linhas de Dados
+                dataRows.forEach((d, idx) => {
+                    const row = ws.getRow(6 + idx);
+                    row.height = 20;
+                    const zebraBg = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
+
+                    const values = [
+                        d.nome, d.funcao, d.projeto, d.equipe, d.status,
+                        valOrDash(d.presencas), valOrDash(d.faltas), valOrDash(d.atestados),
+                        valOrDash(d.ferias), valOrDash(d.folgas), valOrDash(d.feriados),
+                        valOrDash(d.outros), valOrDash(d.total)
+                    ];
+
+                    values.forEach((val, cIdx) => {
+                        const cell = row.getCell(cIdx + 1);
+                        cell.value = val;
+                        cell.border = thinBorder;
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: zebraBg } };
+                        cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF1E293B' }, bold: cIdx === 0 || cIdx === 12 };
+                        cell.alignment = { horizontal: cIdx < 4 ? 'left' : 'center', vertical: 'middle' };
+
+                        // Estilo especial para '-'
+                        if (val === '-') {
+                            cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF94A3B8' } };
+                        }
+
+                        // Badge de Status
+                        if (cIdx === 4) {
+                            const isAtivo = val === 'ATIVO';
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: isAtivo ? 'FFDCFCE7' : 'FFFEE2E2' } };
+                            cell.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: isAtivo ? 'FF15803D' : 'FFB91C1C' } };
+                        }
+
+                        // Destaque para Faltas > 0
+                        if (cIdx === 6 && typeof val === 'number' && val > 0) {
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+                            cell.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FFB91C1C' } };
+                        }
+                    });
+                });
+
+                // Linha de Totais Gerais
+                const totalRow = ws.getRow(6 + dataRows.length);
+                totalRow.height = 24;
+                const totalVals = [
+                    `TOTAL GERAL (${dataRows.length} colaboradores)`, '', '', '', '',
+                    valOrDash(sumP), valOrDash(sumFT), valOrDash(sumATT),
+                    valOrDash(sumFR), valOrDash(sumFG), valOrDash(sumFE),
+                    valOrDash(sumOut), valOrDash(sumTot)
+                ];
+                totalVals.forEach((val, cIdx) => {
+                    const cell = totalRow.getCell(cIdx + 1);
+                    cell.value = val;
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+                    cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: 'FF0F172A' } };
+                    cell.alignment = { horizontal: cIdx < 4 ? 'left' : 'center', vertical: 'middle' };
+                    cell.border = {
+                        top: { style: 'medium', color: { argb: 'FF64748B' } },
+                        bottom: { style: 'medium', color: { argb: 'FF0F172A' } },
+                        left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                        right: { style: 'thin', color: { argb: 'FFCBD5E1' } }
+                    };
+                });
+
+                const colWidths = [36, 22, 18, 18, 11, 14, 12, 19, 12, 12, 14, 10, 18];
+                colWidths.forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+
+                const buffer = await wb.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const monthSlug = monthLabelRaw.replace(/\s+/g, '_').replace(/[^\w\-]/g, '');
+                a.href = url;
+                a.download = `RESUMO_FOLHA_RH_${monthSlug.toUpperCase()}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error('Erro ao gerar Resumo Folha RH:', err);
+                Swal.fire('Erro', 'Não foi possível gerar a planilha de Resumo Folha RH.', 'error');
+            }
         }
 
         async function exportFullGrid() {

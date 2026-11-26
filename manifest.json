@@ -8,8 +8,8 @@
   "theme_color": "#4F46E5",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3261/3261301.png",
-      "sizes": "512x512",
+      "src": "./assets/logo-fp-natal.png",
+      "sizes": "302x302",
       "type": "image/png",
       "purpose": "any maskable"
     }

@@ -1884,6 +1884,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <select class="custom-select small" onchange="updateUserRole('${u.id}', this.value)" style="padding: 4px; border-radius: 6px; background: var(--bg-accent); color: var(--text-main); border: 1px solid var(--border); margin-top: 5px;">
                         <option value="user" ${u.role === 'user' ? 'selected' : ''}>Colaborador</option>
+                        <option value="rh" ${u.role === 'rh' ? 'selected' : ''}>RH (Consulta &amp; Folha)</option>
                         <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador</option>
                         <option value="master" ${u.role === 'master' ? 'selected' : ''}>Mestre</option>
                     </select>
