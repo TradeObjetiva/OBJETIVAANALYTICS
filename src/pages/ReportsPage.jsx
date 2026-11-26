@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import JSZip from 'jszip';
 import {
   FileSpreadsheet,
   Upload,
@@ -168,14 +169,41 @@ export function ReportsPage() {
     setCurrentPage(1);
   };
 
-  // Exportar Excel Oficial
-  const handleExportOfficial = async () => {
+  const exportExcelBatchOrSingle = async (generatorFn, zipPrefix) => {
     if (!activeFile) return;
     setLoading(true);
-    setLoadingMessage('Construindo Relatório Excel com abas e botões dinâmicos...');
     try {
-      const { blob, fileName } = await generateOfficialExcelBlob(activeFile, selectedRedes);
-      downloadFile(blob, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      if (files.length <= 1) {
+        setLoadingMessage('Construindo Relatório Excel...');
+        const { blob, fileName } = await generatorFn(activeFile, selectedRedes);
+        downloadFile(blob, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        return;
+      }
+
+      const zip = new JSZip();
+      const usedNames = new Set();
+      for (let i = 0; i < files.length; i++) {
+        const fileItem = files[i];
+        setLoadingMessage(`Gerando arquivo ${i + 1} de ${files.length}: ${fileItem.originalFileName}...`);
+        const fileRedes =
+          i === activeFileIndex
+            ? selectedRedes
+            : new Set((fileItem.availableRedes || []).map((r) => r.name));
+        const { blob, fileName } = await generatorFn(fileItem, fileRedes);
+        let finalName = fileName;
+        let counter = 2;
+        while (usedNames.has(finalName)) {
+          finalName = fileName.replace(/(\.[^.]+)$/, `_${counter}$1`);
+          counter++;
+        }
+        usedNames.add(finalName);
+        zip.file(finalName, blob);
+      }
+
+      setLoadingMessage('Compactando relatórios em arquivo .ZIP...');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(zipBlob, `${zipPrefix}_${dateStr}.zip`, 'application/zip');
     } catch (err) {
       console.error(err);
       alert('Erro ao gerar relatório Excel: ' + err.message);
@@ -184,32 +212,45 @@ export function ReportsPage() {
     }
   };
 
-  // Exportar Execução de Visitas
-  const handleExportExecution = async () => {
-    if (!activeFile) return;
-    setLoading(true);
-    setLoadingMessage('Gerando modelo de Execução de Visitas...');
-    try {
-      const { blob, fileName } = await generateVisitsExecutionBlob(activeFile, selectedRedes);
-      downloadFile(blob, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    } catch (err) {
-      console.error(err);
-      alert('Erro ao gerar modelo de visitas: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Exportar Excel Oficial (único ou lote .ZIP)
+  const handleExportOfficial = () =>
+    exportExcelBatchOrSingle(generateOfficialExcelBlob, 'relatorios_oficiais');
 
-  // Exportar CSV
-  const handleExportCsv = () => {
+  // Exportar Execução de Visitas (único ou lote .ZIP)
+  const handleExportExecution = () =>
+    exportExcelBatchOrSingle(generateVisitsExecutionBlob, 'execucao_visitas');
+
+  // Exportar CSV (único ou lote .ZIP)
+  const handleExportCsv = async () => {
     if (!activeFile) return;
     try {
-      const csv = buildCsv(activeFile.columns, filteredRows);
-      const name = `${activeFile.originalFileName}_tratado.csv`;
-      downloadFile(csv, name, 'text/csv;charset=utf-8;');
+      if (files.length <= 1) {
+        const csv = buildCsv(activeFile.columns, filteredRows);
+        const name = `${activeFile.originalFileName}_tratado.csv`;
+        downloadFile(csv, name, 'text/csv;charset=utf-8;');
+        return;
+      }
+
+      setLoading(true);
+      setLoadingMessage('Compactando CSVs em arquivo .ZIP...');
+      const zip = new JSZip();
+      files.forEach((fileItem, i) => {
+        const fileRedes =
+          i === activeFileIndex
+            ? selectedRedes
+            : new Set((fileItem.availableRedes || []).map((r) => r.name));
+        const rows = filterRowsByRedes(fileItem.rows || [], fileRedes);
+        const csv = buildCsv(fileItem.columns, rows);
+        zip.file(`${fileItem.originalFileName}_tratado.csv`, csv);
+      });
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(zipBlob, `relatorios_csv_${dateStr}.zip`, 'application/zip');
     } catch (err) {
       console.error(err);
       alert('Erro ao exportar CSV: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -680,7 +721,9 @@ export function ReportsPage() {
                 }}
               >
                 <Download size={15} />
-                Exportar Relatório Excel Oficial
+                {files.length > 1
+                  ? `Exportar Todos em Excel (${files.length} arquivos .ZIP)`
+                  : 'Exportar Relatório Excel Oficial'}
               </button>
 
               <button
