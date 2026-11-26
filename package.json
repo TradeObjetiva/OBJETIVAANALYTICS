@@ -15,11 +15,9 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.105.2",
     "chart.js": "^4.4.0",
-    "dotenv": "^17.4.2",
     "exceljs": "^4.4.0",
     "jszip": "^3.10.2",
     "lucide-react": "^1.74.0",
-    "mysql2": "^3.22.3",
     "pdf-lib": "^1.17.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

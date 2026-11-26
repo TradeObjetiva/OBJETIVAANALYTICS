@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================== INTEGRAÇÃO LAIVON API ===============================
-const DEFAULT_LAIVON_KEY = 'pk_live_W4OMfCgBGyhp.ofbx_r2HlbcXsXH98jm8HW0wut3K_6Y-vSgmOzq2xj8';
+const DEFAULT_LAIVON_KEY = 'pk_live_uvq5Eqe4cZ3p.Up_FNAo8HoxsmHjEu7GNjNiBnROlxyEUV2y0vtwVHzE';
 
 function getLaivonApiKey() {
     const saved = localStorage.getItem('laivon_api_key');

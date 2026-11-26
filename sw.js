@@ -1,19 +1,17 @@
-const CACHE_NAME = 'objetiva-analytics-v13.7.6';
+const CACHE_NAME = 'objetiva-analytics-v13.7.7';
 const ASSETS = [
     './',
     './index.html',
-    './src/css/style.css',
-    './src/js/script.js',
     './manifest.json',
     './public/subsystems/sistema-assiduidade/index.html'
 ];
 
-// Instalação: Cacheia os arquivos essenciais
+// Instalação: Cacheia os arquivos essenciais de forma resiliente
 self.addEventListener('install', (event) => {
     self.skipWaiting(); // Força a atualização imediata
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS);
+            return Promise.allSettled(ASSETS.map((url) => cache.add(url)));
         })
     );
 });

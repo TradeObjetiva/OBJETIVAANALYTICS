@@ -206,6 +206,8 @@
             overflow: auto;
             max-height: calc(100vh - 220px);
             position: relative;
+            contain: layout style paint;
+            will-change: scroll-position;
         }
 
         .table-wrapper::-webkit-scrollbar {
@@ -223,6 +225,12 @@
             border-collapse: separate;
             border-spacing: 0;
             font-size: 12px;
+        }
+
+        .table-wrapper tbody tr {
+            content-visibility: auto;
+            contain-intrinsic-size: auto 46px;
+            contain: layout style;
         }
 
         th {
@@ -298,7 +306,7 @@
             font-size: 10px;
             /* Reduzi levemente para caber melhor */
             pointer-events: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(0, 0, 0, 0.12);
             line-height: 1;
         }
 
@@ -389,7 +397,6 @@
             position: sticky;
             z-index: 40;
             border-left: 1px solid var(--border) !important;
-            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
         }
 
         .summary-col:nth-last-child(1) {
@@ -406,6 +413,7 @@
 
         .summary-col:nth-last-child(4) {
             right: 132px;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
         }
 
         thead th.summary-col {
@@ -4420,7 +4428,7 @@
         }
 
         async function toggleGridSearch() {
-            const names = [...new Set(staffList.map(s => s.name))].sort();
+            const names = [...new Set(staffList.filter(s => s.ativo !== false).map(s => s.name))].sort();
             const theme = getSwalTheme();
             const icon = document.getElementById('grid-search-icon');
 

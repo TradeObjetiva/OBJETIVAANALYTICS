@@ -37,9 +37,23 @@ export function Dashboard() {
     setAuditModalOpen(true);
   };
 
-  const handleSelectCheckinFromFeed = (checkinItem) => {
-    const parts = (checkinItem.activity_id || '').split(';');
-    const clientParts = (checkinItem.client_id || '').split(';');
+  const handleSelectCheckinFromFeed = (feedItem) => {
+    // Suporta tanto visita unificada quanto evento bruto
+    if (feedItem && feedItem.storeName !== undefined) {
+      setSelectedVisit({
+        agentName: feedItem.agentName || 'Agente',
+        clientId: feedItem.storeName || 'Loja',
+        laivonLocalId: feedItem.laivonLocalId || null,
+        inTime: feedItem.inTime || null,
+        outTime: feedItem.outTime || null,
+        durationMin: feedItem.durationMin || 0,
+      });
+      setAuditModalOpen(true);
+      return;
+    }
+
+    const parts = (feedItem.activity_id || '').split(';');
+    const clientParts = (feedItem.client_id || '').split(';');
     const agentName = parts[0]?.trim() || 'Agente';
     const storeName = clientParts[0]?.trim() || 'Loja';
     const localId = clientParts[1]?.trim() || null;
@@ -48,8 +62,8 @@ export function Dashboard() {
       agentName,
       clientId: storeName,
       laivonLocalId: localId,
-      inTime: checkinItem.created_at,
-      outTime: checkinItem.task_id?.toUpperCase().includes('OUT') ? checkinItem.created_at : null,
+      inTime: feedItem.created_at,
+      outTime: feedItem.task_id?.toUpperCase().includes('OUT') ? feedItem.created_at : null,
       durationMin: 0,
     });
     setAuditModalOpen(true);

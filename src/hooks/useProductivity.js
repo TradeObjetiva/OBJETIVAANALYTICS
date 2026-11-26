@@ -42,9 +42,10 @@ export function useProductivity() {
       let checkins = [];
       let page = 0;
       const pageSize = 1000;
+      const MAX_PAGES = 50;
       let fetchMore = true;
 
-      while (fetchMore) {
+      while (fetchMore && page < MAX_PAGES) {
         const { data: pageData, error: pageErr } = await supabase
           .from('checkins')
           .select('activity_id, created_at, task_id, client_id, history_id')
@@ -52,7 +53,10 @@ export function useProductivity() {
           .order('created_at', { ascending: true })
           .range(page * pageSize, (page + 1) * pageSize - 1);
 
-        if (pageErr || !pageData || pageData.length === 0) {
+        if (pageErr) {
+          throw new Error(pageErr.message || 'Erro ao consultar checkins');
+        }
+        if (!pageData || pageData.length === 0) {
           fetchMore = false;
         } else {
           checkins = checkins.concat(pageData);
@@ -77,6 +81,30 @@ export function useProductivity() {
   useEffect(() => {
     fetchCheckins();
   }, [fetchCheckins]);
+
+  // Recarrega colaboradores e check-ins de hoje após login / restauração de sessão
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+        fetchStaff();
+        fetchCheckins();
+      } else if (event === 'SIGNED_OUT') {
+        setStaffList([]);
+        setRawCheckins([]);
+      }
+    });
+
+    const handleAuthReady = () => {
+      fetchStaff();
+      fetchCheckins();
+    };
+    window.addEventListener('objetiva:auth-ready', handleAuthReady);
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+      window.removeEventListener('objetiva:auth-ready', handleAuthReady);
+    };
+  }, [fetchStaff, fetchCheckins]);
 
   // 3. Processamento e cálculo de métricas de permanência e produtividade
   const processedData = useMemo(() => {

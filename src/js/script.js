@@ -88,7 +88,11 @@ window.openVisitAuditModal = async function(agentName, storeName, inTime, outTim
         const envBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || window.SUPABASE_URL || 'https://xgbvokegqxqxpgznpxiq.supabase.co';
         const supabaseProxyBase = envBase + '/functions/v1/laivon-proxy';
         const envApiKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_LAIVON_API_KEY) || '';
-        const apiKey = localStorage.getItem('laivon_api_key') || envApiKey || 'pk_live_W4OMfCgBGyhp.ofbx_r2HlbcXsXH98jm8HW0wut3K_6Y-vSgmOzq2xj8';
+        const OLD_LAIVON_KEY = 'pk_live_W4OMfCgBGyhp.ofbx_r2HlbcXsXH98jm8HW0wut3K_6Y-vSgmOzq2xj8';
+        if (localStorage.getItem('laivon_api_key') === OLD_LAIVON_KEY) {
+            localStorage.removeItem('laivon_api_key');
+        }
+        const apiKey = localStorage.getItem('laivon_api_key') || envApiKey || 'pk_live_uvq5Eqe4cZ3p.Up_FNAo8HoxsmHjEu7GNjNiBnROlxyEUV2y0vtwVHzE';
         const headers = { 'X-API-Key': apiKey };
         
         const [photosRes, tasksRes, localsRes] = await Promise.allSettled([
@@ -1308,6 +1312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Auth state changed:', event);
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                 checkAuth();
+                window.dispatchEvent(new CustomEvent('objetiva:auth-ready'));
             } else if (event === 'SIGNED_OUT') {
                 updateUIForAuth(null);
             }

@@ -41,6 +41,23 @@ serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabaseClient = createClient(supabaseUrl, supabaseKey)
 
+    // Idempotência: evita duplicatas caso o webhook seja reenviado com o mesmo evento
+    const { data: existing } = await supabaseClient
+      .from('checkins')
+      .select('id, history_id, task_id, activity_id, client_id')
+      .eq('activity_id', activityId)
+      .eq('history_id', historyId)
+      .eq('task_id', taskId)
+      .limit(1)
+
+    if (existing && existing.length > 0) {
+      console.log("Duplicate webhook ignored (idempotent):", existing[0].id)
+      return new Response(JSON.stringify({ success: true, deduplicated: true, message: "Check-in já registrado.", data: existing }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
+
     // Insere os dados na tabela 'checkins'
     const { data: insertedData, error: insertError } = await supabaseClient
       .from('checkins')

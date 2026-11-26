@@ -25,26 +25,17 @@
                 navigator.serviceWorker.register('sw.js')
                     .then(reg => {
                         console.log('SW Registered');
-                        // Se houver uma nova versão, recarregar automaticamente
                         reg.onupdatefound = () => {
                             const installingWorker = reg.installing;
+                            if (!installingWorker) return;
                             installingWorker.onstatechange = () => {
                                 if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    window.location.reload();
+                                    console.log('SW: Nova versão disponível para o próximo carregamento.');
                                 }
                             };
                         };
                     })
                     .catch(err => console.log('SW Error', err));
-            });
-
-            // Recarrega quando o novo SW assume o controle
-            let refreshing = false;
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!refreshing) {
-                    window.location.reload();
-                    refreshing = true;
-                }
             });
         }
     </script>
