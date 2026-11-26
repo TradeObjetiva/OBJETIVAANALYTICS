@@ -30,6 +30,32 @@
     overflow: visible !important;
 }
 
+.logo-icon:has(.fp-custom-logo) {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-header .logo-icon:has(.fp-custom-logo) {
+    width: 76px !important;
+    height: 76px !important;
+    margin: 0 auto 12px auto;
+}
+
+.fp-custom-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.35));
+}
+
 .santa-hat {
     position: absolute;
     top: -16px;
