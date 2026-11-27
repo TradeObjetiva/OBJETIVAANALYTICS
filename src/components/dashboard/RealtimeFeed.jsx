@@ -46,7 +46,7 @@ function formatTime(isoString) {
   }
 }
 
-export function RealtimeFeed({ onSelectCheckin }) {
+export function RealtimeFeed({ onSelectCheckin, allowedProjects = null, selectedProject = 'TODOS', staffProjectMap = {} }) {
   const {
     visits,
     totalVisitsCount,
@@ -62,7 +62,7 @@ export function RealtimeFeed({ onSelectCheckin }) {
     currentPage,
     setCurrentPage,
     pageSize,
-  } = useRealtimeCheckins();
+  } = useRealtimeCheckins({ allowedProjects, selectedProject, staffProjectMap });
 
   const [viewMode, setViewMode] = useState('visits'); // 'visits' | 'events'
   const [expandedPhotos, setExpandedPhotos] = useState(null); // { inUrl, outUrl, title }

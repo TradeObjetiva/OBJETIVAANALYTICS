@@ -1703,10 +1703,13 @@
 
             header.onclick = (e) => { e.stopPropagation(); toggleMultiSelect(containerId); };
 
-            let html = `<div class="multi-select-option" onclick="event.stopPropagation()">
-                <input type="checkbox" id="all-${containerId}" onchange="toggleAllOptions('${containerId}', '${filterKey}', this.checked, ${onUpdate.name})">
-                <label for="all-${containerId}" style="cursor:pointer; font-weight:800;">SELECIONAR TODOS</label>
-            </div>`;
+            let html = '';
+            if (options.length > 1) {
+                html += `<div class="multi-select-option" onclick="event.stopPropagation()">
+                    <input type="checkbox" id="all-${containerId}" onchange="toggleAllOptions('${containerId}', '${filterKey}', this.checked, ${onUpdate.name})">
+                    <label for="all-${containerId}" style="cursor:pointer; font-weight:800;">SELECIONAR TODOS</label>
+                </div>`;
+            }
 
             options.forEach(opt => {
                 const isChecked = activeFilters[filterKey].includes(opt);
@@ -1755,9 +1758,16 @@
             const isEquipe = containerId.toLowerCase().includes('equipe');
             const defaultLabel = isEquipe ? 'TODAS' : 'TODOS';
 
-            if (count === 0 || (count === total && total > 0)) span.textContent = defaultLabel;
-            else if (count === 1) span.textContent = activeFilters[filterKey][0];
-            else span.textContent = `${count} SELECIONADOS`;
+            if (total === 1) {
+                const onlyOpt = document.querySelector(`#${containerId} .opt-check`)?.value;
+                span.textContent = onlyOpt || defaultLabel;
+            } else if (count === 0 || (count === total && total > 0)) {
+                span.textContent = defaultLabel;
+            } else if (count === 1) {
+                span.textContent = activeFilters[filterKey][0];
+            } else {
+                span.textContent = `${count} SELECIONADOS`;
+            }
         }
 
         document.addEventListener('click', () => {
@@ -1946,9 +1956,14 @@
 
                 fullStaffList = mappedStaff;
 
-                // Apply Project Restriction
-                if (!isMaster && allowedProjects.length > 0) {
-                    mappedStaff = mappedStaff.filter(s => allowedProjects.includes(s.project));
+                // Apply Project Restriction (sempre que allowed_projects estiver preenchido no perfil)
+                const latestProfile = JSON.parse(localStorage.getItem('currentUserProfile') || '{}');
+                const activeAllowedProjects = (Array.isArray(latestProfile.allowed_projects) ? latestProfile.allowed_projects : allowedProjects)
+                    .map(p => String(p || '').trim().toUpperCase())
+                    .filter(Boolean);
+
+                if (activeAllowedProjects.length > 0) {
+                    mappedStaff = mappedStaff.filter(s => activeAllowedProjects.includes(String(s.project || '').trim().toUpperCase()));
                 }
 
                 staffList = mappedStaff;
@@ -1956,6 +1971,11 @@
                 // Populate Project & Equipe Filters
                 const projects = [...new Set(staffList.map(s => s.project))].sort();
                 const equipes = [...new Set(staffList.map(s => s.equipe))].sort();
+
+                if (projects.length === 1) {
+                    activeFilters.projects = [projects[0]];
+                    activeFilters.obsProjects = [projects[0]];
+                }
 
                 initMultiSelect('project-multi-select', projects, 'projects', renderGrid);
                 initMultiSelect('equipe-multi-select', equipes, 'equipes', renderGrid);
@@ -4077,7 +4097,7 @@
                         .not('observation', 'eq', 'Feriado Geral');
 
                     // Se o usuário possui restrição de projeto ou se há filtros ativos
-                    if (!isMaster && allowedProjects.length > 0) {
+                    if (allowedProjects.length > 0) {
                         let filteredNames = staffList;
                         if (activeFilters.obsProjects.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsProjects.includes(s.project));
                         if (activeFilters.obsEquipes.length > 0) filteredNames = filteredNames.filter(s => activeFilters.obsEquipes.includes(s.equipe));
@@ -4122,7 +4142,7 @@
                 const personInUserStaff = staffList.find(s => s.name.trim().toLowerCase() === rec.collaborator_name.trim().toLowerCase());
 
                 // Se o usuário possui restrição de projeto, o colaborador DEVE estar na lista permitida dele
-                if (!isMaster && allowedProjects.length > 0 && !personInUserStaff) {
+                if (allowedProjects.length > 0 && !personInUserStaff) {
                     return false;
                 }
 

@@ -781,8 +781,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const fullName = rawName.trim();
             const isMaster = profile?.role === 'admin' || profile?.role === 'master';
 
-            // Salva perfil no localStorage para os subsistemas (iframes)
-            localStorage.setItem('currentUserProfile', JSON.stringify(profile));
+            // Salva perfil no localStorage para os subsistemas (iframes) e notifica módulos React
+            localStorage.setItem('currentUserProfile', JSON.stringify(profile || {}));
+            window.dispatchEvent(new CustomEvent('objetiva:auth-ready', { detail: profile }));
 
             // Populate Skeletons after a small visual delay
             setTimeout(() => populateDashboardData(displayName), 800);
@@ -1312,8 +1313,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Auth state changed:', event);
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
                 checkAuth();
-                window.dispatchEvent(new CustomEvent('objetiva:auth-ready'));
             } else if (event === 'SIGNED_OUT') {
+                localStorage.removeItem('currentUserProfile');
                 updateUIForAuth(null);
             }
         });

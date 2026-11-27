@@ -99,7 +99,7 @@ function pairTodayVisits(rawEvents) {
   return visits.sort((a, b) => b.lastActivityAt - a.lastActivityAt);
 }
 
-export function useRealtimeCheckins() {
+export function useRealtimeCheckins({ allowedProjects = null, selectedProject = 'TODOS', staffProjectMap = {} } = {}) {
   const [allTodayCheckins, setAllTodayCheckins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -190,8 +190,31 @@ export function useRealtimeCheckins() {
     };
   }, []);
 
-  // Visitas unificadas (Entrada + Saída)
-  const allUnifiedVisits = useMemo(() => pairTodayVisits(allTodayCheckins), [allTodayCheckins]);
+  const isAgentAllowed = useCallback(
+    (agentName) => {
+      if (Object.keys(staffProjectMap).length === 0) return false;
+      const normName = String(agentName || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toUpperCase();
+      const proj = (staffProjectMap[normName] || 'GERAL').toUpperCase();
+      if (allowedProjects && !allowedProjects.includes(proj)) return false;
+      if (selectedProject && selectedProject !== 'TODOS' && proj !== selectedProject.toUpperCase()) return false;
+      return true;
+    },
+    [staffProjectMap, allowedProjects, selectedProject]
+  );
+
+  // Visitas unificadas (Entrada + Saída) já filtradas por projeto permitido/selecionado
+  const allUnifiedVisits = useMemo(() => {
+    const visits = pairTodayVisits(allTodayCheckins);
+    if (!allowedProjects && (!selectedProject || selectedProject === 'TODOS')) {
+      return visits;
+    }
+    return visits.filter((v) => isAgentAllowed(v.agentName));
+  }, [allTodayCheckins, allowedProjects, selectedProject, isAgentAllowed]);
 
   const statusCounts = useMemo(() => {
     const counts = { all: allUnifiedVisits.length, em_loja: 0, curta: 0, concluida: 0 };
@@ -215,17 +238,27 @@ export function useRealtimeCheckins() {
     });
   }, [allUnifiedVisits, statusFilter, searchQuery]);
 
+  const projectFilteredRawCheckins = useMemo(() => {
+    if (!allowedProjects && (!selectedProject || selectedProject === 'TODOS')) {
+      return allTodayCheckins;
+    }
+    return allTodayCheckins.filter((c) => {
+      const agentName = (c.activity_id || '').split(';')[0]?.trim() || '';
+      return isAgentAllowed(agentName);
+    });
+  }, [allTodayCheckins, allowedProjects, selectedProject, isAgentAllowed]);
+
   const filteredRawCheckins = useMemo(() => {
     const term = searchQuery.trim().toLowerCase();
-    if (!term) return allTodayCheckins;
-    return allTodayCheckins.filter((c) => {
+    if (!term) return projectFilteredRawCheckins;
+    return projectFilteredRawCheckins.filter((c) => {
       return (
         (c.activity_id || '').toLowerCase().includes(term) ||
         (c.client_id || '').toLowerCase().includes(term) ||
         (c.task_id || '').toLowerCase().includes(term)
       );
     });
-  }, [allTodayCheckins, searchQuery]);
+  }, [projectFilteredRawCheckins, searchQuery]);
 
   const paginatedVisits = useMemo(() => {
     const start = currentPage * pageSize;
@@ -241,7 +274,7 @@ export function useRealtimeCheckins() {
     visits: paginatedVisits,
     totalVisitsCount: filteredVisits.length,
     checkins: paginatedRawCheckins,
-    totalCount: allTodayCheckins.length,
+    totalCount: projectFilteredRawCheckins.length,
     filteredRawCount: filteredRawCheckins.length,
     statusCounts,
     statusFilter,

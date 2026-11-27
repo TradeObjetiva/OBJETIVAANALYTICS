@@ -10,6 +10,8 @@ export function Dashboard() {
   const {
     loading,
     projects,
+    allowedProjects,
+    staffProjectMap,
     selectedProject,
     setSelectedProject,
     periodDays,
@@ -182,7 +184,11 @@ export function Dashboard() {
                 outline: 'none',
               }}
             >
-              <option value="TODOS">TODOS OS PROJETOS</option>
+              {(!allowedProjects || projects.length > 1) && (
+                <option value="TODOS">
+                  {allowedProjects ? 'TODOS OS PERMITIDOS' : 'TODOS OS PROJETOS'}
+                </option>
+              )}
               {projects.map((p) => (
                 <option key={p} value={p}>
                   {p}
@@ -262,7 +268,12 @@ export function Dashboard() {
 
         {/* Coluna Direita: Feed Realtime com Fotos */}
         <div>
-          <RealtimeFeed onSelectCheckin={handleSelectCheckinFromFeed} />
+          <RealtimeFeed
+            onSelectCheckin={handleSelectCheckinFromFeed}
+            allowedProjects={allowedProjects}
+            selectedProject={selectedProject}
+            staffProjectMap={staffProjectMap}
+          />
         </div>
       </div>
 

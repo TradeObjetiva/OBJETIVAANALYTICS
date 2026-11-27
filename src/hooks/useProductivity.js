@@ -1,10 +1,33 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../services/supabase.js';
 
+function normalizeName(str) {
+  return String(str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
+function getRestrictedProjectsFromProfile(profileOverride = null) {
+  try {
+    const profile = profileOverride || JSON.parse(localStorage.getItem('currentUserProfile') || 'null');
+    if (!profile) return null;
+    if (Array.isArray(profile?.allowed_projects) && profile.allowed_projects.length > 0) {
+      return profile.allowed_projects.map((p) => String(p).trim().toUpperCase()).filter(Boolean);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function useProductivity() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [staffList, setStaffList] = useState([]);
+  const [allowedProjects, setAllowedProjects] = useState(() => getRestrictedProjectsFromProfile());
   const [selectedProject, setSelectedProject] = useState('TODOS');
   const [periodDays, setPeriodDays] = useState(0); // 0 = Hoje, 7, 15, 30
 
@@ -84,25 +107,33 @@ export function useProductivity() {
 
   // Recarrega colaboradores e check-ins de hoje após login / restauração de sessão
   useEffect(() => {
+    const syncAuthAndData = (evt) => {
+      const restricted = getRestrictedProjectsFromProfile(evt?.detail || null);
+      setAllowedProjects(restricted);
+      if (restricted && restricted.length === 1) {
+        setSelectedProject(restricted[0]);
+      } else {
+        setSelectedProject('TODOS');
+      }
+      fetchStaff();
+      fetchCheckins();
+    };
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-        fetchStaff();
-        fetchCheckins();
+        syncAuthAndData();
       } else if (event === 'SIGNED_OUT') {
+        setAllowedProjects(null);
         setStaffList([]);
         setRawCheckins([]);
       }
     });
 
-    const handleAuthReady = () => {
-      fetchStaff();
-      fetchCheckins();
-    };
-    window.addEventListener('objetiva:auth-ready', handleAuthReady);
+    window.addEventListener('objetiva:auth-ready', syncAuthAndData);
 
     return () => {
       authListener?.subscription?.unsubscribe();
-      window.removeEventListener('objetiva:auth-ready', handleAuthReady);
+      window.removeEventListener('objetiva:auth-ready', syncAuthAndData);
     };
   }, [fetchStaff, fetchCheckins]);
 
@@ -146,11 +177,14 @@ export function useProductivity() {
       const lastIdx = key.lastIndexOf('_');
       const name = key.substring(0, lastIdx);
 
-      const person = staffList.find((s) => s.nome === name);
-      const proj = person?.projeto || 'GERAL';
+      const normName = normalizeName(name);
+      const person = staffList.find((s) => normalizeName(s.nome) === normName);
+      const proj = (person?.projeto || 'GERAL').trim().toUpperCase();
       const eq = person?.equipe || 'GERAL';
 
-      if (selectedProject !== 'TODOS' && proj !== selectedProject) return;
+      // Segue à risca a restrição de projetos permitidos do usuário
+      if (allowedProjects && !allowedProjects.includes(proj)) return;
+      if (selectedProject !== 'TODOS' && proj !== selectedProject.toUpperCase()) return;
 
       const events = visitsMap[key];
       events.sort((a, b) => a.timestamp - b.timestamp);
@@ -274,16 +308,31 @@ export function useProductivity() {
       detailedShortVisits,
       detailedOpenVisits,
     };
-  }, [rawCheckins, staffList, selectedProject]);
+  }, [rawCheckins, staffList, selectedProject, allowedProjects]);
 
   const projects = useMemo(() => {
-    return [...new Set(staffList.map((s) => s.projeto).filter(Boolean))].sort();
+    const all = [...new Set(staffList.map((s) => (s.projeto || '').trim().toUpperCase()).filter(Boolean))].sort();
+    if (allowedProjects) {
+      return all.filter((p) => allowedProjects.includes(p));
+    }
+    return all;
+  }, [staffList, allowedProjects]);
+
+  const staffProjectMap = useMemo(() => {
+    const map = {};
+    staffList.forEach((s) => {
+      const n = normalizeName(s.nome);
+      if (n) map[n] = (s.projeto || 'GERAL').trim().toUpperCase();
+    });
+    return map;
   }, [staffList]);
 
   return {
     loading,
     error,
     projects,
+    allowedProjects,
+    staffProjectMap,
     selectedProject,
     setSelectedProject,
     periodDays,
