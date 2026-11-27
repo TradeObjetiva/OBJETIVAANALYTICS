@@ -214,9 +214,6 @@
         const homeView = document.getElementById('react-home-root');
         if (!homeView) return;
 
-        // Verifica se já foi fechado nesta sessão
-        if (sessionStorage.getItem('xmas-countdown-closed') === 'true') return;
-
         function getRemaining() {
             const now = new Date();
             const year = now.getMonth() === 11 && now.getDate() > 25 ? now.getFullYear() + 1 : now.getFullYear();
@@ -274,7 +271,6 @@
                         <span class="xmas-pill-lbl">SEG</span>
                     </div>
                 </div>
-                <button class="xmas-countdown-close" onclick="this.closest('#xmas-countdown-banner').remove(); sessionStorage.setItem('xmas-countdown-closed', 'true');" title="Dispensar aviso" aria-label="Fechar">✕</button>
             </div>
         `;
 
